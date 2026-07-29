@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Phone, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Sparkles, Phone, ShieldCheck, RefreshCw } from 'lucide-react';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { PhoneAuthModal } from '../../components/common/PhoneAuthModal';
 
-export const Login: React.FC = () => {
+const GOOGLE_CLIENT_ID = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || '1088492019482-homemindai.apps.googleusercontent.com';
+
+export const LoginContent: React.FC = () => {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState('');
@@ -13,28 +16,24 @@ export const Login: React.FC = () => {
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleSuccess = async (credentialResponse: any) => {
     setLoadingGoogle(true);
     setError('');
 
     try {
-      // Simulate Google OAuth Token Payload Callback
-      const googlePayload = {
-        token: 'google-oauth2-access-token',
-        googleId: 'g_' + Math.random().toString(36).substring(2, 10),
-        email: 'alex.rivera@gmail.com',
-        name: 'Alex Rivera',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
-      };
-
-      const res = await apiClient.post('/auth/google', googlePayload);
+      const idToken = credentialResponse.credential;
+      const res = await apiClient.post('/auth/google', { idToken });
       setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Google Authentication failed');
+      setError(err.response?.data?.error || 'Real Google Authentication failed. Token verification error.');
     } finally {
       setLoadingGoogle(false);
     }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google OAuth Login popup was closed or unverified.');
   };
 
   return (
@@ -53,54 +52,47 @@ export const Login: React.FC = () => {
         </div>
 
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-xs rounded-xl text-center">
+          <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-xs rounded-xl text-center font-medium">
             {error}
           </div>
         )}
 
         <div className="space-y-3 pt-2">
-          {/* Google OAuth Button */}
-          <button
-            onClick={handleGoogleLogin}
-            disabled={loadingGoogle}
-            className="w-full bg-slate-900 hover:bg-slate-850 border border-slate-700/80 hover:border-blue-500/50 text-slate-100 font-semibold py-3 px-4 rounded-2xl text-xs flex items-center justify-center gap-3 shadow-lg transition-all"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+          {/* Real Google OAuth Identity Services Button */}
+          <div className="flex justify-center w-full">
+            {loadingGoogle ? (
+              <div className="flex items-center gap-2 text-xs text-blue-400 py-3">
+                <RefreshCw className="w-4 h-4 animate-spin" /> Verifying Google Account Signature...
+              </div>
+            ) : (
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                useOneTap
+                theme="filled_black"
+                shape="pill"
+                size="large"
+                text="continue_with"
+                width="340"
               />
-              <path
-                fill="#34A853"
-                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.1 0-5.74-2.09-6.68-4.91H1.36v3.15C3.34 21.28 7.37 24 12 24z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.32 14.27c-.24-.72-.38-1.49-.38-2.27s.14-1.55.38-2.27V6.58H1.36C.49 8.31 0 10.1 0 12s.49 3.69 1.36 5.42l3.96-3.15z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.34 2.72 1.36 6.58l3.96 3.15c.94-2.82 3.58-4.98 6.68-4.98z"
-              />
-            </svg>
-            Continue with Google
-          </button>
+            )}
+          </div>
 
-          {/* Mobile Phone OTP Button */}
+          {/* Real Mobile Phone OTP Button */}
           <button
             onClick={() => setShowPhoneModal(true)}
-            className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-3 px-4 rounded-2xl text-xs flex items-center justify-center gap-3 shadow-lg shadow-emerald-600/20 transition-all"
+            className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-3 px-4 rounded-full text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition-all mt-2"
           >
             <Phone className="w-4 h-4" />
             Continue with Mobile Number
           </button>
         </div>
 
-        <div className="pt-4 text-center text-[11px] text-slate-500 space-y-1">
+        <div className="pt-4 text-center text-[11px] text-slate-500 space-y-1 border-t border-slate-800/60">
           <p className="flex items-center justify-center gap-1 font-semibold text-slate-400">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Enterprise Multi-Tenant Data Isolation
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Real-Time Security Verification
           </p>
-          <p className="text-[10px] text-slate-500">Every account starts with an isolated Household context.</p>
+          <p className="text-[10px] text-slate-500">Live Google OAuth 2.0 & Cryptographic SMS OTP Authentication.</p>
         </div>
       </div>
 
@@ -110,5 +102,13 @@ export const Login: React.FC = () => {
         onSuccess={() => navigate('/')}
       />
     </div>
+  );
+};
+
+export const Login: React.FC = () => {
+  return (
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <LoginContent />
+    </GoogleOAuthProvider>
   );
 };

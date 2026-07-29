@@ -23,6 +23,7 @@
     "morgan": "^1.10.0",
     "pdfkit": "^0.15.0",
     "socket.io": "^4.7.5",
+    "twilio": "^6.0.2",
     "zod": "^3.22.4"
   },
   "devDependencies": {

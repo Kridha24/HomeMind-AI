@@ -1,10 +1,16 @@
 export interface User {
   id: string;
-  email: string;
+  email?: string;
+  phoneNumber?: string;
   name: string;
-  role: 'ADMIN' | 'MEMBER' | 'CHILD' | 'GUEST';
+  role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST';
   householdId?: string;
+  avatar?: string;
   avatarUrl?: string;
+  provider?: 'GOOGLE' | 'PHONE';
+  isVerified?: boolean;
+  isActive?: boolean;
+  lastLogin?: string;
 }
 
 export interface Household {
@@ -21,7 +27,7 @@ export interface Expense {
   category: string;
   date: string;
   isRecurring: boolean;
-  user?: { name: string; email: string };
+  user?: { name: string; email?: string };
 }
 
 export interface Income {

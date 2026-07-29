@@ -1,6 +1,6 @@
 import React from 'react';
 import { Bell, Bot, CloudSun, Search, Sparkles } from 'lucide-react';
-import { useAuthStore } from '../../stores/useAuthStore';
+import { ProfileMenu } from '../common/ProfileMenu';
 
 interface NavbarProps {
   onOpenAIChat: () => void;
@@ -11,10 +11,8 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenAIChat,
   onOpenNotifications,
-  unreadCount = 3,
+  unreadCount = 0,
 }) => {
-  const { household } = useAuthStore();
-
   return (
     <header className="h-16 bg-slate-900/40 backdrop-blur-xl border-b border-slate-800/60 sticky top-0 z-30 ml-64 flex items-center justify-between px-6">
       {/* Search Input */}
@@ -23,13 +21,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search bills, groceries, medicines, tasks or ask AI..."
+            placeholder="Search household expenses, groceries, tasks..."
             className="w-full bg-slate-950/60 border border-slate-800/80 rounded-xl pl-9 pr-4 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/50 transition-colors"
           />
         </div>
       </div>
 
-      {/* Right Header Widget Actions */}
+      {/* Right Header Actions */}
       <div className="flex items-center gap-4">
         {/* Live Weather Widget */}
         <div className="hidden md:flex items-center gap-2 bg-slate-950/40 border border-slate-800/60 px-3 py-1.5 rounded-xl text-xs text-slate-300">
@@ -60,6 +58,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             </span>
           )}
         </button>
+
+        {/* User Profile Menu & Logout Dropdown */}
+        <ProfileMenu />
       </div>
     </header>
   );

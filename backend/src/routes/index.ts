@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate, attachHousehold, validateSession, authorize } from '../middleware/auth';
 import * as authController from '../controllers/authController';
 import * as dashboardController from '../controllers/dashboardController';
 import * as expenseController from '../controllers/expenseController';
@@ -15,60 +15,68 @@ import * as reportController from '../controllers/reportController';
 
 const router = Router();
 
-// Public Authentication Endpoints (Google OAuth & Mobile Phone OTP ONLY)
+// ==========================================
+// PUBLIC AUTHENTICATION ENDPOINTS
+// ==========================================
 router.post('/auth/google', authController.googleLogin);
-router.post('/auth/phone/send-otp', authController.sendPhoneOTP);
+router.post('/auth/phone/request-otp', authController.requestPhoneOTP);
 router.post('/auth/phone/verify-otp', authController.verifyPhoneOTP);
 router.post('/auth/refresh', authController.refresh);
+router.post('/auth/logout', authController.logout);
 
-// Protected routes requiring valid JWT containing householdId
-router.use(authenticateToken);
+// ==========================================
+// PROTECTED API ROUTES (JWT + Household Isolation)
+// ==========================================
+router.use(authenticate);
+router.use(attachHousehold);
+router.use(validateSession);
 
-// User Profile
-router.get('/auth/profile', authController.getProfile);
+// Session Profile & Devices
+router.get('/auth/me', authController.getMe);
+router.post('/auth/logout-all', authController.logoutAllDevices);
 
 // Dashboard Overview Telemetry
 router.get('/dashboard/summary', dashboardController.getDashboardSummary);
 
 // Expense Management
 router.get('/expenses', expenseController.getExpenses);
-router.post('/expenses', expenseController.createExpense);
-router.delete('/expenses/:id', expenseController.deleteExpense);
+router.post('/expenses', authorize(['OWNER', 'ADMIN', 'MEMBER']), expenseController.createExpense);
+router.delete('/expenses/:id', authorize(['OWNER', 'ADMIN']), expenseController.deleteExpense);
 
 // Bills Management
 router.get('/bills', billController.getBills);
-router.post('/bills', billController.createBill);
-router.put('/bills/:id/pay', billController.markBillPaid);
+router.post('/bills', authorize(['OWNER', 'ADMIN', 'MEMBER']), billController.createBill);
+router.put('/bills/:id/pay', authorize(['OWNER', 'ADMIN', 'MEMBER']), billController.markBillPaid);
 
 // Grocery Inventory
 router.get('/inventory', inventoryController.getInventory);
-router.post('/inventory', inventoryController.createGroceryItem);
-router.put('/inventory/:id/quantity', inventoryController.updateQuantity);
-router.delete('/inventory/:id', inventoryController.deleteGroceryItem);
+router.post('/inventory', authorize(['OWNER', 'ADMIN', 'MEMBER']), inventoryController.createGroceryItem);
+router.put('/inventory/:id/quantity', authorize(['OWNER', 'ADMIN', 'MEMBER']), inventoryController.updateQuantity);
+router.delete('/inventory/:id', authorize(['OWNER', 'ADMIN']), inventoryController.deleteGroceryItem);
 
 // Appliance Manager
 router.get('/appliances', applianceController.getAppliances);
-router.post('/appliances', applianceController.createAppliance);
-router.post('/appliances/:id/maintenance', applianceController.logMaintenance);
+router.post('/appliances', authorize(['OWNER', 'ADMIN', 'MEMBER']), applianceController.createAppliance);
+router.post('/appliances/:id/maintenance', authorize(['OWNER', 'ADMIN', 'MEMBER']), applianceController.logMaintenance);
 
 // Medicine Manager
 router.get('/medicines', medicineController.getMedicines);
-router.post('/medicines', medicineController.createMedicine);
-router.put('/medicines/schedules/:scheduleId/taken', medicineController.toggleScheduleTaken);
+router.post('/medicines', authorize(['OWNER', 'ADMIN', 'MEMBER']), medicineController.createMedicine);
+router.put('/medicines/schedules/:scheduleId/taken', authorize(['OWNER', 'ADMIN', 'MEMBER']), medicineController.toggleScheduleTaken);
 
 // Household Task Workspace
 router.get('/tasks', taskController.getTasks);
-router.post('/tasks', taskController.createTask);
-router.put('/tasks/:id/status', taskController.updateTaskStatus);
+router.post('/tasks', authorize(['OWNER', 'ADMIN', 'MEMBER']), taskController.createTask);
+router.put('/tasks/:id/status', authorize(['OWNER', 'ADMIN', 'MEMBER']), taskController.updateTaskStatus);
 
-// Family Workspace
+// Family Workspace & Permissions
 router.get('/family/members', familyController.getHouseholdMembers);
-router.put('/family/members/:userId/role', familyController.updateMemberRole);
+router.put('/family/members/:userId/role', authorize(['OWNER', 'ADMIN']), familyController.updateMemberRole);
 router.post('/family/join', familyController.joinHouseholdWithCode);
 
-// AI Services (OCR, Recipe Engine, Forecasting, DB Chat)
+// AI Security & DB Context Proxy
 router.get('/ai/forecasts', aiController.getAIForecasts);
-router.post('/ai/ocr', aiController.scanReceiptOrPantry);
+router.post('/ai/ocr', authorize(['OWNER', 'ADMIN', 'MEMBER']), aiController.scanReceiptOrPantry);
 router.get('/ai/recipes', aiController.getRecipeRecommendations);
 router.post('/ai/chat', aiController.chatWithAI);
 
@@ -76,7 +84,7 @@ router.post('/ai/chat', aiController.chatWithAI);
 router.get('/notifications', notificationController.getNotifications);
 router.put('/notifications/:id/read', notificationController.markAsRead);
 
-// Reports Exporter
+// Executive Reports Exporter
 router.get('/reports/monthly/pdf', reportController.exportMonthlyReport);
 
 export default router;
