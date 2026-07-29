@@ -1,0 +1,448 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             String         @id @default(uuid())
+  name           String
+  email          String?        @unique
+  phoneNumber    String?        @unique
+  provider       String         @default("GOOGLE") // GOOGLE, PHONE
+  googleId       String?        @unique
+  avatar         String?
+  role           String         @default("OWNER") // OWNER, ADMIN, MEMBER, GUEST
+  householdId    String
+  household      Household      @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  refreshTokens  RefreshToken[]
+  assignedTasks  Task[]         @relation("AssignedTasks")
+  createdTasks   Task[]         @relation("CreatedTasks")
+  expenses       Expense[]
+  createdBy      String?
+  updatedBy      String?
+  softDelete     Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([householdId])
+  @@index([email])
+  @@index([phoneNumber])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Household {
+  id                    String                 @id @default(uuid())
+  name                  String
+  inviteCode            String                 @unique
+  members               User[]
+  expenses              Expense[]
+  expenseCategories     ExpenseCategory[]
+  incomes               Income[]
+  budgets               Budget[]
+  bills                 Bill[]
+  billCategories        BillCategory[]
+  groceryItems          GroceryItem[]
+  inventoryHistory      InventoryHistory[]
+  appliances            Appliance[]
+  medicines             Medicine[]
+  tasks                 Task[]
+  notifications         Notification[]
+  sustainabilityMetrics SustainabilityMetric[]
+  aiRecommendations     AIRecommendation[]
+  aiForecasts           AIForecast[]
+  settings              Setting[]
+  aiConversations       AIConversation[]
+  auditLogs             AuditLog[]
+  reports               Report[]
+  createdBy             String?
+  updatedBy             String?
+  softDelete            Boolean                @default(false)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+}
+
+model ExpenseCategory {
+  id          String    @id @default(uuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  name        String
+  createdBy   String?
+  updatedBy   String?
+  softDelete  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Expense {
+  id          String    @id @default(uuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  title       String
+  amount      Float
+  category    String
+  date        DateTime
+  isRecurring Boolean   @default(false)
+  receiptUrl  String?
+  createdBy   String?
+  updatedBy   String?
+  softDelete  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([householdId, date])
+}
+
+model Income {
+  id          String    @id @default(uuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  title       String
+  amount      Float
+  source      String
+  date        DateTime
+  createdBy   String?
+  updatedBy   String?
+  softDelete  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Budget {
+  id           String    @id @default(uuid())
+  householdId  String
+  household    Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  category     String
+  monthlyLimit Float
+  month        String    // e.g. "2026-07"
+  createdBy    String?
+  updatedBy    String?
+  softDelete   Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([householdId, category, month])
+}
+
+model BillCategory {
+  id          String    @id @default(uuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  name        String
+  createdBy   String?
+  updatedBy   String?
+  softDelete  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Bill {
+  id          String    @id @default(uuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  title       String
+  category    String    // Electricity, Water, Gas, Internet, Rent, etc.
+  amount      Float
+  dueDate     DateTime
+  status      String    @default("UNPAID") // UNPAID, PAID, OVERDUE
+  paidAt      DateTime?
+  provider    String?
+  notes       String?
+  createdBy   String?
+  updatedBy   String?
+  softDelete  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([householdId, status, dueDate])
+}
+
+model GroceryItem {
+  id               String             @id @default(uuid())
+  householdId      String
+  household        Household          @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  name             String
+  category         String             // Vegetables, Fruits, Rice, Oil, Milk, Bread, Snacks, Cleaning, Personal Care
+  quantity         Float
+  unit             String             // kg, L, pcs, pack
+  minThreshold     Float              @default(1)
+  expiryDate       DateTime?
+  purchaseDate     DateTime?
+  barcode          String?
+  dailyConsumption Float              @default(0.1)
+  history          InventoryHistory[]
+  createdBy        String?
+  updatedBy        String?
+  softDelete       Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([householdId, category])
+}
+
+model InventoryHistory {
+  id            String      @id @default(uuid())
+  householdId   String
+  household     Household   @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  groceryItemId String
+  groceryItem   GroceryItem @relation(fields: [groceryItemId], references: [id], onDelete: Cascade)
+  changeQty     Float
+  action        String      // ADDED, CONSUMED, EXPIRED, UPDATED
+  createdBy     String?
+  updatedBy     String?
+  softDelete    Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Recipe {
+  id           String             @id @default(uuid())
+  title        String
+  description  String
+  prepTimeMins Int
+  category     String
+  calories     Int
+  isVegetarian Boolean            @default(false)
+  ingredients  RecipeIngredient[]
+  instructions String
+  createdBy    String?
+  updatedBy    String?
+  softDelete   Boolean            @default(false)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model RecipeIngredient {
+  id       String @id @default(uuid())
+  recipeId String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  name     String
+  quantity Float
+  unit     String
+}
+
+model Appliance {
+  id                 String                 @id @default(uuid())
+  householdId        String
+  household          Household              @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  name               String                 // AC, Fridge, Washing Machine, RO, Microwave, TV, Laptop, Water Heater
+  brand              String
+  modelNumber        String?
+  purchaseDate       DateTime
+  warrantyYears      Int                    @default(1)
+  lastServicedDate   DateTime?
+  nextServiceDueDate DateTime?
+  maintenanceLogs    ApplianceMaintenance[]
+  createdBy          String?
+  updatedBy          String?
+  softDelete         Boolean                @default(false)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  @@index([householdId])
+}
+
+model ApplianceMaintenance {
+  id          String    @id @default(uuid())
+  applianceId String
+  appliance   Appliance @relation(fields: [applianceId], references: [id], onDelete: Cascade)
+  cost        Float
+  description String
+  serviceDate DateTime
+  status      String    @default("COMPLETED") // SCHEDULED, COMPLETED, OVERDUE
+  technician  String?
+  createdBy   String?
+  updatedBy   String?
+  softDelete  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Medicine {
+  id          String             @id @default(uuid())
+  householdId String
+  household   Household          @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  name        String
+  dosage      String             // e.g. "500mg"
+  stockCount  Int
+  expiryDate  DateTime
+  doctorName  String?
+  schedules   MedicineSchedule[]
+  createdBy   String?
+  updatedBy   String?
+  softDelete  Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([householdId])
+}
+
+model MedicineSchedule {
+  id             String   @id @default(uuid())
+  medicineId     String
+  medicine       Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
+  timeOfDay      String   // e.g. "08:30", "20:00"
+  memberAssignee String
+  taken          Boolean  @default(false)
+  createdBy      String?
+  updatedBy      String?
+  softDelete     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  priority    String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status      String    @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  dueDate     DateTime
+  isRecurring Boolean   @default(false)
+  assigneeId  String?
+  assignee    User?     @relation("AssignedTasks", fields: [assigneeId], references: [id])
+  creatorId   String
+  creator     User      @relation("CreatedTasks", fields: [creatorId], references: [id])
+  createdBy   String?
+  updatedBy   String?
+  softDelete  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([householdId, status])
+}
+
+model Notification {
+  id          String    @id @default(uuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  title       String
+  message     String
+  type        String    // BILL_DUE, GROCERY_EXPIRING, LOW_STOCK, MEDICINE_REMINDER, MAINTENANCE_DUE, AI_ALERT
+  isRead      Boolean   @default(false)
+  createdBy   String?
+  updatedBy   String?
+  softDelete  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([householdId, isRead])
+}
+
+model SustainabilityMetric {
+  id                String    @id @default(uuid())
+  householdId       String
+  household         Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  month             String    // e.g. "2026-07"
+  waterUsageLitre   Float     @default(0)
+  electricityKwh    Float     @default(0)
+  foodWasteKg       Float     @default(0)
+  plasticRecycledKg Float     @default(0)
+  ecoScore          Float     @default(100) // 0 - 100
+  createdBy         String?
+  updatedBy         String?
+  softDelete        Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model AIRecommendation {
+  id              String    @id @default(uuid())
+  householdId     String
+  household       Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  module          String
+  title           String
+  description     String
+  impactLevel     String    // HIGH, MEDIUM, LOW
+  savingsEstimate Float?
+  isDismissed     Boolean   @default(false)
+  createdBy       String?
+  updatedBy       String?
+  softDelete      Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model AIForecast {
+  id             String    @id @default(uuid())
+  householdId    String
+  household      Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  targetModule   String
+  forecastDate   DateTime
+  predictedValue Float
+  confidence     Float     // 0.0 - 1.0
+  metadata       String?
+  createdBy      String?
+  updatedBy      String?
+  softDelete     Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Report {
+  id          String    @id @default(uuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  title       String
+  type        String    // MONTHLY_FINANCIAL, INVENTORY_AUDIT, APPLIANCE_MAINTENANCE
+  fileUrl     String?
+  createdBy   String?
+  updatedBy   String?
+  softDelete  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Setting {
+  id                String    @id @default(uuid())
+  householdId       String
+  household         Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  currency          String    @default("USD")
+  theme             String    @default("dark")
+  pushNotifications Boolean   @default(true)
+  emailAlerts       Boolean   @default(true)
+  createdBy         String?
+  updatedBy         String?
+  softDelete        Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model AIConversation {
+  id          String    @id @default(uuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  userQuery   String
+  aiResponse  String
+  createdBy   String?
+  updatedBy   String?
+  softDelete  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model AuditLog {
+  id          String    @id @default(uuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  action      String    // CREATE, UPDATE, DELETE, LOGIN
+  entity      String    // Expense, Grocery, User, etc.
+  details     String?
+  performedBy String
+  createdAt   DateTime  @default(now())
+}

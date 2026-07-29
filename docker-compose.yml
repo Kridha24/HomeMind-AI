@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: homemind_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: homemind_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: homemind_backend
+    ports:
+      - "5001:5001"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgrespassword@postgres:5432/homemind_db?schema=public
+      PORT: 5001
+      AI_SERVICE_URL: http://ai-service:8000
+    depends_on:
+      - postgres
+
+  ai-service:
+    build: ./ai-service
+    container_name: homemind_ai_service
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: homemind_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
