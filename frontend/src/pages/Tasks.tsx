@@ -1,90 +1,130 @@
 import React, { useState, useEffect } from 'react';
-import { CheckSquare, Plus, Clock, User, CheckCircle2, AlertCircle } from 'lucide-react';
+import { CheckSquare, Plus, Calendar, Clock, CheckCircle2 } from 'lucide-react';
 import apiClient from '../services/apiClient';
+import { Task } from '../types';
+import { EmptyState } from '../components/common/EmptyState';
+import { AddTaskModal } from '../components/common/AddTaskModal';
 
 export const Tasks: React.FC = () => {
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const fetchTasks = async () => {
+    try {
+      const res = await apiClient.get('/tasks');
+      setTasks(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchTasks();
   }, []);
 
-  const fetchTasks = async () => {
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
     try {
-      const res = await apiClient.get('/tasks');
-      setTasks(res.data.tasks);
+      const newStatus = currentStatus === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
+      await apiClient.put(`/tasks/${id}/status`, { status: newStatus });
+      fetchTasks();
     } catch (e) {
-      setTasks([
-        { id: '1', title: 'Clean HVAC Filters', description: 'Clean dust mesh in living room AC unit', priority: 'HIGH', status: 'PENDING', dueDate: '2026-08-02', assignee: { name: 'Sarah Rivera' } },
-        { id: '2', title: 'Pay Electricity Utility Bill', description: 'Pay before discount deadline', priority: 'URGENT', status: 'PENDING', dueDate: '2026-08-05', assignee: { name: 'Alex Rivera' } },
-        { id: '3', title: 'Organize Recycling Bins', description: 'Separate glass and paper', priority: 'LOW', status: 'COMPLETED', dueDate: '2026-07-28', assignee: { name: 'Leo Rivera' } }
-      ]);
+      console.error(e);
     }
   };
 
-  const toggleTaskStatus = async (id: string, currentStatus: string) => {
-    const nextStatus = currentStatus === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, status: nextStatus } : t));
-    try {
-      await apiClient.put(`/tasks/${id}/status`, { status: nextStatus });
-    } catch (e) {}
-  };
-
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-          Household Task Workspace
-          <CheckSquare className="w-5 h-5 text-blue-400" />
-        </h1>
-        <p className="text-xs text-slate-400">Assign tasks to family members, track priority, recurrence and due dates</p>
+    <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-slate-800">
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2">
+            <CheckSquare className="w-6 h-6 text-indigo-400" /> Household Tasks & Chores Workspace
+          </h1>
+          <p className="text-xs text-slate-400">Assign recurring chores, maintenance tasks & family task workspace</p>
+        </div>
+
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-indigo-600/25 transition-all"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add Task</span>
+        </button>
       </div>
 
-      <div className="space-y-3">
-        {tasks.map((task) => (
-          <div
-            key={task.id}
-            className={`glass-panel p-4 flex items-center justify-between transition-all ${
-              task.status === 'COMPLETED' ? 'opacity-60 bg-slate-900/30' : ''
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => toggleTaskStatus(task.id, task.status)}
-                className={`p-2 rounded-xl border transition-colors ${
-                  task.status === 'COMPLETED'
-                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-                    : 'bg-slate-950 border-slate-800 text-slate-500 hover:text-slate-200'
-                }`}
-              >
-                <CheckCircle2 className="w-5 h-5" />
-              </button>
-              <div>
-                <h3 className={`font-semibold text-sm ${task.status === 'COMPLETED' ? 'line-through text-slate-400' : 'text-slate-100'}`}>
-                  {task.title}
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">{task.description}</p>
+      {/* List / Empty State */}
+      {loading ? (
+        <div className="text-center py-12 text-xs text-slate-400">Loading household tasks from database...</div>
+      ) : tasks.length === 0 ? (
+        <EmptyState
+          icon={CheckSquare}
+          title="No household tasks"
+          description="Keep your household organized by creating tasks, setting priorities, and assigning chores to family members."
+          actionLabel="+ Add Task"
+          onAction={() => setShowAddModal(true)}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tasks.map((task) => (
+            <div
+              key={task.id}
+              className={`glass-panel p-5 border-slate-800 space-y-4 hover:border-slate-700 transition-all ${
+                task.status === 'COMPLETED' ? 'opacity-60' : ''
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <span
+                    className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                      task.priority === 'URGENT'
+                        ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                        : task.priority === 'HIGH'
+                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                    }`}
+                  >
+                    {task.priority} Priority
+                  </span>
+                  <h3
+                    className={`font-bold text-base text-slate-100 ${
+                      task.status === 'COMPLETED' ? 'line-through text-slate-400' : ''
+                    }`}
+                  >
+                    {task.title}
+                  </h3>
+                  {task.description && <p className="text-xs text-slate-400">{task.description}</p>}
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-1 text-slate-400">
-                <User className="w-3.5 h-3.5" />
-                <span>{task.assignee?.name || 'Unassigned'}</span>
+              <div className="flex items-center justify-between border-t border-slate-800/80 pt-3 text-xs">
+                <span className="text-slate-400 flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                  Due: {new Date(task.dueDate).toLocaleDateString()}
+                </span>
+                <button
+                  onClick={() => handleToggleStatus(task.id, task.status)}
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all ${
+                    task.status === 'COMPLETED'
+                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                  }`}
+                >
+                  {task.status === 'COMPLETED' ? 'Completed ✓' : 'Mark Done'}
+                </button>
               </div>
-              <span className={`font-bold px-2.5 py-1 rounded-lg text-[10px] border ${
-                task.priority === 'URGENT'
-                  ? 'bg-red-500/10 text-red-400 border-red-500/30'
-                  : task.priority === 'HIGH'
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                  : 'bg-slate-800 text-slate-400 border-slate-700'
-              }`}>
-                {task.priority}
-              </span>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
+
+      <AddTaskModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={fetchTasks}
+      />
     </div>
   );
 };

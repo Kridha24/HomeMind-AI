@@ -12,6 +12,7 @@ import * as familyController from '../controllers/familyController';
 import * as aiController from '../controllers/aiController';
 import * as notificationController from '../controllers/notificationController';
 import * as reportController from '../controllers/reportController';
+import * as settingController from '../controllers/settingController';
 
 const router = Router();
 
@@ -34,6 +35,10 @@ router.use(validateSession);
 // Session Profile & Devices
 router.get('/auth/me', authController.getMe);
 router.post('/auth/logout-all', authController.logoutAllDevices);
+
+// Household Settings & Currency Engine
+router.get('/settings', settingController.getSettings);
+router.put('/settings', authorize(['OWNER', 'ADMIN']), settingController.updateSettings);
 
 // Dashboard Overview Telemetry
 router.get('/dashboard/summary', dashboardController.getDashboardSummary);

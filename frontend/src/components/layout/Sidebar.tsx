@@ -1,9 +1,9 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
-  Wallet,
-  Receipt,
+  CreditCard,
+  FileText,
   ShoppingBag,
   Camera,
   UtensilsCrossed,
@@ -11,107 +11,78 @@ import {
   Pill,
   CheckSquare,
   Users,
-  BarChart3,
   Leaf,
+  BarChart3,
   FileSpreadsheet,
-  Bot,
-  LogOut,
-  Sparkles
+  Settings as SettingsIcon,
+  User,
+  Sparkles,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/useAuthStore';
 
-const navItems = [
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/expenses', label: 'Expenses', icon: Wallet },
-  { path: '/bills', label: 'Bills', icon: Receipt },
-  { path: '/inventory', label: 'Inventory', icon: ShoppingBag },
-  { path: '/pantry-vision', label: 'Pantry Vision', icon: Camera, badge: 'AI OCR' },
-  { path: '/recipes', label: 'Recipes', icon: UtensilsCrossed },
-  { path: '/appliances', label: 'Appliances', icon: Tv },
-  { path: '/medicines', label: 'Medicines', icon: Pill },
-  { path: '/tasks', label: 'Family Tasks', icon: CheckSquare },
-  { path: '/family', label: 'Family Workspace', icon: Users },
-  { path: '/analytics', label: 'Analytics', icon: BarChart3 },
-  { path: '/sustainability', label: 'Sustainability', icon: Leaf },
-  { path: '/reports', label: 'Reports', icon: FileSpreadsheet },
-];
-
 export const Sidebar: React.FC = () => {
-  const { logout, user, household } = useAuthStore();
-  const navigate = useNavigate();
+  const { household, user } = useAuthStore();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const navItems = [
+    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'Expenses', path: '/expenses', icon: CreditCard },
+    { name: 'Bills', path: '/bills', icon: FileText },
+    { name: 'Grocery Inventory', path: '/inventory', icon: ShoppingBag },
+    { name: 'Pantry Vision OCR', path: '/pantry-vision', icon: Camera },
+    { name: 'AI Recipes', path: '/recipes', icon: UtensilsCrossed },
+    { name: 'Appliances', path: '/appliances', icon: Tv },
+    { name: 'Medicine Tracker', path: '/medicines', icon: Pill },
+    { name: 'Household Tasks', path: '/tasks', icon: CheckSquare },
+    { name: 'Family Workspace', path: '/family', icon: Users },
+    { name: 'Sustainability', path: '/sustainability', icon: Leaf },
+    { name: 'Analytics', path: '/analytics', icon: BarChart3 },
+    { name: 'Reports', path: '/reports', icon: FileSpreadsheet },
+    { name: 'Profile', path: '/profile', icon: User },
+    { name: 'Settings', path: '/settings', icon: SettingsIcon },
+  ];
 
   return (
-    <aside className="w-64 bg-slate-900/80 backdrop-blur-xl border-r border-slate-800/80 flex flex-col h-screen fixed left-0 top-0 z-40">
-      {/* Brand Header */}
-      <div className="p-5 border-b border-slate-800/60 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <Sparkles className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <h1 className="font-bold text-lg text-slate-100 tracking-tight flex items-center gap-1.5">
-            HomeMind <span className="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded font-mono">AI</span>
-          </h1>
-          <p className="text-xs text-slate-400 truncate max-w-[140px]">{household?.name || 'Household OS'}</p>
-        </div>
-      </div>
-
-      {/* Navigation items */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        <div className="px-3 pb-2 text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
-          Operating Modules
+    <aside className="w-64 bg-slate-950 border-r border-slate-800/80 h-screen fixed left-0 top-0 z-40 flex flex-col justify-between p-4">
+      <div className="space-y-6">
+        {/* Brand Header */}
+        <div className="flex items-center gap-3 px-2 py-1">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+            <Sparkles className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="font-extrabold text-sm text-slate-100 tracking-tight leading-none">HomeMind AI</h2>
+            <span className="text-[10px] text-blue-400 font-semibold tracking-wider uppercase">Household OS</span>
+          </div>
         </div>
 
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
+        {/* Navigation Links */}
+        <nav className="space-y-1 overflow-y-auto max-h-[calc(100vh-180px)] pr-1 scrollbar-thin">
+          {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                   isActive
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 shadow-sm shadow-blue-500/10'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                 }`
               }
             >
-              <Icon className="w-4 h-4 transition-transform group-hover:scale-110" />
-              <span className="flex-1">{item.label}</span>
-              {item.badge && (
-                <span className="text-[10px] font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white px-1.5 py-0.5 rounded-full shadow-sm">
-                  {item.badge}
-                </span>
-              )}
+              <item.icon className="w-4 h-4" />
+              <span>{item.name}</span>
             </NavLink>
-          );
-        })}
+          ))}
+        </nav>
       </div>
 
-      {/* Footer Profile & Logout */}
-      <div className="p-3 border-t border-slate-800/60 bg-slate-950/40">
-        <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-900/50 border border-slate-800/60">
-          <img
-            src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Alex')}&background=3b82f6&color=fff`}
-            alt="Avatar"
-            className="w-8 h-8 rounded-full border border-blue-500/30 object-cover"
-          />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-slate-200 truncate">{user?.name || 'Alex Rivera'}</p>
-            <p className="text-[10px] text-slate-400 capitalize truncate">{user?.role || 'Admin'}</p>
-          </div>
-          <button
-            onClick={handleLogout}
-            title="Logout"
-            className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+      {/* Active Household Info Footer */}
+      <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between">
+        <div className="truncate">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Household</span>
+          <span className="text-xs font-bold text-slate-200 truncate block">{household?.name || 'Home Residence'}</span>
         </div>
+        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
       </div>
     </aside>
   );

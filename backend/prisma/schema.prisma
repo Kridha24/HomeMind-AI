@@ -436,7 +436,12 @@ model Setting {
   id                String    @id @default(uuid())
   householdId       String
   household         Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  country           String    @default("US")
   currency          String    @default("USD")
+  timeZone          String    @default("America/New_York")
+  dateFormat        String    @default("MM/DD/YYYY")
+  unitSystem        String    @default("Imperial")
+  language          String    @default("English")
   theme             String    @default("dark")
   pushNotifications Boolean   @default(true)
   emailAlerts       Boolean   @default(true)

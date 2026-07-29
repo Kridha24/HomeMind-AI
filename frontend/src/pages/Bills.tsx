@@ -1,102 +1,149 @@
 import React, { useState, useEffect } from 'react';
-import { Receipt, CheckCircle, AlertTriangle, Zap, Droplet, Flame, Wifi, Home } from 'lucide-react';
+import { FileText, Plus, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import { Bill } from '../types';
+import { useSettingStore } from '../stores/useSettingStore';
+import { EmptyState } from '../components/common/EmptyState';
+import { AddBillModal } from '../components/common/AddBillModal';
 
 export const Bills: React.FC = () => {
   const [bills, setBills] = useState<Bill[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const { format } = useSettingStore();
+
+  const fetchBills = async () => {
+    try {
+      const res = await apiClient.get('/bills');
+      setBills(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchBills();
   }, []);
 
-  const fetchBills = async () => {
-    try {
-      const res = await apiClient.get('/bills');
-      setBills(res.data.bills);
-    } catch (e) {
-      setBills([
-        { id: '1', title: 'City Electricity Grid', category: 'Electricity', amount: 142.50, dueDate: '2026-08-05', status: 'UNPAID', provider: 'EcoPower Inc' },
-        { id: '2', title: 'Municipal Water Supply', category: 'Water', amount: 54.20, dueDate: '2026-08-12', status: 'UNPAID', provider: 'City Water Dept' },
-        { id: '3', title: 'Piped Natural Gas', category: 'Gas', amount: 38.90, dueDate: '2026-08-18', status: 'UNPAID', provider: 'National Gas' },
-        { id: '4', title: 'High Speed Fiber Internet', category: 'Internet', amount: 89.99, dueDate: '2026-07-15', status: 'PAID', provider: 'GigaFiber' }
-      ]);
-    }
-  };
-
-  const handlePay = async (id: string) => {
+  const handleMarkPaid = async (id: string) => {
     try {
       await apiClient.put(`/bills/${id}/pay`);
       fetchBills();
     } catch (e) {
-      setBills(prev => prev.map(b => b.id === id ? { ...b, status: 'PAID' } : b));
+      console.error(e);
     }
   };
 
-  const getCategoryIcon = (cat: string) => {
-    switch (cat) {
-      case 'Electricity': return <Zap className="w-5 h-5 text-amber-400" />;
-      case 'Water': return <Droplet className="w-5 h-5 text-blue-400" />;
-      case 'Gas': return <Flame className="w-5 h-5 text-orange-400" />;
-      case 'Internet': return <Wifi className="w-5 h-5 text-purple-400" />;
-      default: return <Home className="w-5 h-5 text-emerald-400" />;
-    }
-  };
+  const unpaidTotal = bills
+    .filter((b) => b.status === 'UNPAID')
+    .reduce((acc, curr) => acc + curr.amount, 0);
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-          Bills & Utilities Manager
-          <Receipt className="w-5 h-5 text-amber-400" />
-        </h1>
-        <p className="text-xs text-slate-400">Track electricity, water, gas, internet, rent and late payment warnings</p>
+    <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-slate-800">
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2">
+            <FileText className="w-6 h-6 text-amber-400" /> Utility Bills & Recurring Payments
+          </h1>
+          <p className="text-xs text-slate-400">Monitor upcoming due dates, recurring utilities & payment records</p>
+        </div>
+
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-amber-600/25 transition-all"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add New Bill</span>
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {bills.map((bill) => (
-          <div key={bill.id} className="glass-panel p-5 space-y-4 relative overflow-hidden">
-            <div className="flex items-start justify-between">
-              <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
-                {getCategoryIcon(bill.category)}
-              </div>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                bill.status === 'PAID'
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                  : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-              }`}>
-                {bill.status}
-              </span>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-sm text-slate-100">{bill.title}</h3>
-              <p className="text-xs text-slate-400">{bill.provider}</p>
-            </div>
-
-            <div className="flex items-baseline justify-between border-t border-slate-800/80 pt-3">
-              <div>
-                <span className="text-[10px] text-slate-500 block">Due Date</span>
-                <span className="text-xs font-semibold text-slate-300">{bill.dueDate.split('T')[0]}</span>
-              </div>
-              <span className="text-lg font-bold text-slate-100">${bill.amount.toFixed(2)}</span>
-            </div>
-
-            {bill.status === 'UNPAID' ? (
-              <button
-                onClick={() => handlePay(bill.id)}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-xl text-xs transition-colors shadow-lg shadow-amber-500/20"
-              >
-                Mark as Paid
-              </button>
-            ) : (
-              <div className="flex items-center justify-center gap-1 text-xs text-emerald-400 font-semibold py-2">
-                <CheckCircle className="w-4 h-4" /> Paid Successfully
-              </div>
-            )}
+      {/* Summary Card */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="glass-panel p-5 border-slate-800 flex items-center justify-between">
+          <div>
+            <span className="text-xs text-slate-400 font-semibold block">Outstanding Bill Total</span>
+            <span className="text-2xl font-extrabold text-amber-400 font-mono mt-1 block">
+              {format(unpaidTotal)}
+            </span>
           </div>
-        ))}
+          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+            <Clock className="w-5 h-5" />
+          </div>
+        </div>
       </div>
+
+      {/* Bill List / Empty State */}
+      {loading ? (
+        <div className="text-center py-12 text-xs text-slate-400">Loading utility bills from database...</div>
+      ) : bills.length === 0 ? (
+        <EmptyState
+          icon={FileText}
+          title="No bills added yet"
+          description="Keep your household utilities organized by adding upcoming electricity, water, internet, and rent bills to track due dates and avoid late fees."
+          actionLabel="+ Add Bill"
+          onAction={() => setShowAddModal(true)}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {bills.map((bill) => (
+            <div
+              key={bill.id}
+              className="glass-panel p-5 border-slate-800 space-y-4 hover:border-slate-700 transition-all"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    {bill.category}
+                  </span>
+                  <h3 className="font-bold text-base text-slate-100 mt-0.5">{bill.title}</h3>
+                  {bill.provider && <p className="text-xs text-slate-400 mt-0.5">{bill.provider}</p>}
+                </div>
+                <span
+                  className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                    bill.status === 'PAID'
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      : bill.status === 'OVERDUE'
+                      ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                      : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  }`}
+                >
+                  {bill.status}
+                </span>
+              </div>
+
+              <div className="flex items-baseline justify-between border-t border-b border-slate-800/80 py-3">
+                <span className="text-xs text-slate-400 font-semibold">Amount Due</span>
+                <span className="text-xl font-extrabold font-mono text-slate-100">{format(bill.amount)}</span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-amber-400" />
+                  Due: {new Date(bill.dueDate).toLocaleDateString()}
+                </span>
+                {bill.status === 'UNPAID' && (
+                  <button
+                    onClick={() => handleMarkPaid(bill.id)}
+                    className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl transition-all"
+                  >
+                    Mark as Paid
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <AddBillModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={fetchBills}
+      />
     </div>
   );
 };

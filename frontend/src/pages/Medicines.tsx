@@ -1,103 +1,130 @@
 import React, { useState, useEffect } from 'react';
-import { Pill, CheckCircle2, Circle, Calendar, User } from 'lucide-react';
+import { Pill, Plus, Calendar, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import apiClient from '../services/apiClient';
+import { Medicine } from '../types';
+import { EmptyState } from '../components/common/EmptyState';
+import { AddMedicineModal } from '../components/common/AddMedicineModal';
 
 export const Medicines: React.FC = () => {
-  const [medicines, setMedicines] = useState<any[]>([]);
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const fetchMedicines = async () => {
+    try {
+      const res = await apiClient.get('/medicines');
+      setMedicines(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchMedicines();
   }, []);
 
-  const fetchMedicines = async () => {
+  const handleToggleSchedule = async (scheduleId: string, currentStatus: boolean) => {
     try {
-      const res = await apiClient.get('/medicines');
-      setMedicines(res.data.medicines);
-    } catch (e) {
-      setMedicines([
-        {
-          id: '1',
-          name: 'Multivitamin Complex',
-          dosage: '1 Tablet',
-          stockCount: 28,
-          expiryDate: '2027-01-01',
-          doctorName: 'Dr. Emily Vance',
-          schedules: [
-            { id: 's1', timeOfDay: '08:30', memberAssignee: 'Alex Rivera', taken: false }
-          ]
-        }
-      ]);
-    }
-  };
-
-  const toggleTaken = async (schedId: string) => {
-    try {
-      await apiClient.put(`/medicines/schedules/${schedId}/taken`);
+      await apiClient.put(`/medicines/schedules/${scheduleId}/taken`, { taken: !currentStatus });
       fetchMedicines();
     } catch (e) {
-      setMedicines(prev => prev.map(m => ({
-        ...m,
-        schedules: m.schedules.map((s: any) => s.id === schedId ? { ...s, taken: !s.taken } : s)
-      })));
+      console.error(e);
     }
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-          Family Medicine & Prescription Tracker
-          <Pill className="w-5 h-5 text-pink-400" />
-        </h1>
-        <p className="text-xs text-slate-400">Track prescriptions, pill counts, expiry alerts, doctor details and intake schedules</p>
+    <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-slate-800">
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2">
+            <Pill className="w-6 h-6 text-purple-400" /> Family Medicine & Prescription Intake Tracker
+          </h1>
+          <p className="text-xs text-slate-400">Prescription dosages, pill counts, doctor details & daily intake schedules</p>
+        </div>
+
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-purple-600/25 transition-all"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add Medicine</span>
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {medicines.map((med) => (
-          <div key={med.id} className="glass-panel p-5 space-y-4 border-slate-800">
-            <div className="flex items-start justify-between">
-              <div>
-                <span className="text-[10px] font-semibold text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-full border border-pink-500/20">
-                  {med.dosage}
-                </span>
-                <h3 className="font-bold text-base text-slate-100 mt-1">{med.name}</h3>
-              </div>
-              <span className="text-xs font-bold text-slate-300 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
-                {med.stockCount} Pills Left
-              </span>
-            </div>
-
-            <div className="text-xs text-slate-400 space-y-1">
-              <p className="flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-slate-500" /> Doctor: {med.doctorName || 'General Practitioner'}</p>
-              <p className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-slate-500" /> Expiry: {med.expiryDate.split('T')[0]}</p>
-            </div>
-
-            <div className="border-t border-slate-800 pt-3 space-y-2">
-              <h4 className="text-xs font-semibold text-slate-300">Daily Intake Schedule:</h4>
-              {med.schedules?.map((s: any) => (
-                <div
-                  key={s.id}
-                  onClick={() => toggleTaken(s.id)}
-                  className={`glass-card p-3 flex items-center justify-between cursor-pointer transition-all ${
-                    s.taken ? 'border-emerald-500/40 bg-emerald-950/20' : 'border-slate-800'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    {s.taken ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Circle className="w-4 h-4 text-slate-500" />}
-                    <div>
-                      <span className="text-xs font-semibold text-slate-200">{s.timeOfDay}</span>
-                      <span className="text-[10px] text-slate-400 block">{s.memberAssignee}</span>
-                    </div>
-                  </div>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${s.taken ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-400'}`}>
-                    {s.taken ? 'TAKEN' : 'PENDING'}
+      {/* List / Empty State */}
+      {loading ? (
+        <div className="text-center py-12 text-xs text-slate-400">Loading prescription schedules from database...</div>
+      ) : medicines.length === 0 ? (
+        <EmptyState
+          icon={Pill}
+          title="No medicines added"
+          description="Keep your family's health on track by adding prescriptions, dosage details, and daily intake schedules with automated reminders."
+          actionLabel="+ Add Medicine"
+          onAction={() => setShowAddModal(true)}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {medicines.map((medicine) => (
+            <div
+              key={medicine.id}
+              className="glass-panel p-5 border-slate-800 space-y-4 hover:border-slate-700 transition-all"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Dosage: {medicine.dosage}
                   </span>
+                  <h3 className="font-bold text-base text-slate-100 mt-0.5">{medicine.name}</h3>
+                  {medicine.doctorName && (
+                    <p className="text-xs text-purple-400 font-medium mt-0.5">Prescribed by {medicine.doctorName}</p>
+                  )}
                 </div>
-              ))}
+                <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
+                  <Pill className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-b border-slate-800/80 py-3 text-xs">
+                <span className="text-slate-400">Pills Remaining</span>
+                <span className="font-bold font-mono text-purple-300">{medicine.stockCount} Pills</span>
+              </div>
+
+              {medicine.schedules && medicine.schedules.length > 0 && (
+                <div className="space-y-2 pt-1">
+                  <span className="text-[11px] font-semibold text-slate-400 block">Daily Intake Schedule</span>
+                  {medicine.schedules.map((sch) => (
+                    <div
+                      key={sch.id}
+                      onClick={() => handleToggleSchedule(sch.id, sch.taken)}
+                      className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
+                        sch.taken
+                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                          : 'bg-slate-950/60 border-slate-800/80 text-slate-300 hover:border-slate-700'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5 font-mono">
+                        <Clock className="w-3.5 h-3.5 text-purple-400" /> {sch.timeOfDay}
+                      </span>
+                      <span className="flex items-center gap-1 font-semibold text-[11px]">
+                        {sch.taken ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : 'Take Pill'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
+
+      <AddMedicineModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={fetchMedicines}
+      />
     </div>
   );
 };

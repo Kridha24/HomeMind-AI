@@ -1,340 +1,190 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Wallet,
-  Receipt,
+  CreditCard,
+  FileText,
   ShoppingBag,
   Tv,
+  Pill,
+  CheckSquare,
   Sparkles,
   TrendingUp,
   Plus,
-  Home,
-  Users,
+  AlertTriangle,
+  ArrowRight,
   ShieldCheck,
-  Zap,
-  ArrowRight
 } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import apiClient from '../services/apiClient';
+import { useAuthStore } from '../stores/useAuthStore';
+import { useSettingStore } from '../stores/useSettingStore';
+
+// Modals
+import { AddBillModal } from '../components/common/AddBillModal';
+import { AddGroceryModal } from '../components/common/AddGroceryModal';
+import { AddApplianceModal } from '../components/common/AddApplianceModal';
+import { AddTaskModal } from '../components/common/AddTaskModal';
 
 export const Dashboard: React.FC = () => {
-  const [data, setData] = useState<any>(null);
+  const { user, household } = useAuthStore();
+  const { format, currencySymbol } = useSettingStore();
+
+  const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Quick Action Modal states
-  const [activeModal, setActiveModal] = useState<string | null>(null);
+  // Active Modals
+  const [showBillModal, setShowBillModal] = useState(false);
+  const [showGroceryModal, setShowGroceryModal] = useState(false);
+  const [showApplianceModal, setShowApplianceModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
 
-  // Form Inputs
-  const [expenseTitle, setExpenseTitle] = useState('');
-  const [expenseAmount, setExpenseAmount] = useState('');
-  const [groceryName, setGroceryName] = useState('');
-  const [groceryQty, setGroceryQty] = useState('1');
-  const [applianceName, setApplianceName] = useState('');
-  const [applianceBrand, setApplianceBrand] = useState('');
-
-  useEffect(() => {
-    fetchSummary();
-  }, []);
-
-  const fetchSummary = async () => {
+  const fetchDashboardData = async () => {
     try {
       const res = await apiClient.get('/dashboard/summary');
-      setData(res.data);
+      setSummary(res.data);
     } catch (e) {
-      setData({
-        isNewUser: true,
-        summary: { totalExpense: 0, totalIncome: 0, savings: 0, savingsRate: 0, sustainabilityScore: 100 },
-        upcomingBills: [],
-        pendingTasks: [],
-        expiringGroceries: [],
-        lowStockGroceries: [],
-        upcomingApplianceServices: [],
-        aiRecommendations: []
-      });
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddExpense = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await apiClient.post('/expenses', { title: expenseTitle, amount: expenseAmount, category: 'General' });
-      setActiveModal(null);
-      setExpenseTitle('');
-      setExpenseAmount('');
-      fetchSummary();
-    } catch (err) {
-      alert('Error creating expense');
-    }
-  };
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
-  const handleAddGrocery = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await apiClient.post('/inventory', { name: groceryName, quantity: groceryQty, unit: 'pcs', category: 'Household Items' });
-      setActiveModal(null);
-      setGroceryName('');
-      setGroceryQty('1');
-      fetchSummary();
-    } catch (err) {
-      alert('Error creating grocery item');
-    }
-  };
-
-  const handleAddAppliance = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await apiClient.post('/appliances', { name: applianceName, brand: applianceBrand, purchaseDate: new Date().toISOString() });
-      setActiveModal(null);
-      setApplianceName('');
-      setApplianceBrand('');
-      fetchSummary();
-    } catch (err) {
-      alert('Error adding appliance');
-    }
-  };
-
-  const isNewUser = data?.isNewUser || (data?.summary?.totalExpense === 0 && data?.upcomingBills?.length === 0);
+  const totalSpent = summary?.monthlyExpenses || 0;
+  const totalBillsDue = summary?.unpaidBillsTotal || 0;
+  const isNewUser = summary && summary.totalExpensesCount === 0 && summary.totalBillsCount === 0;
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
-            Household Command Center
-            <Sparkles className="w-5 h-5 text-blue-400" />
-          </h1>
-          <p className="text-xs text-slate-400">Live PostgreSQL telemetry & isolated household intelligence</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="glass-panel px-4 py-2 flex items-center gap-3 border-emerald-500/30">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Eco Score</p>
-              <p className="text-sm font-bold text-emerald-400">{data?.summary?.sustainabilityScore || 100} / 100</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* NEW USER ONBOARDING BANNER */}
+    <div className="space-y-8 animate-in fade-in duration-200 pb-12">
+      {/* Onboarding Welcome Hero for Clean Slate New Accounts */}
       {isNewUser ? (
-        <div className="glass-panel p-8 space-y-6 border-blue-500/40 bg-gradient-to-r from-slate-900 via-blue-950/20 to-slate-900 glow-effect">
-          <div className="max-w-2xl space-y-2">
-            <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/30 px-3 py-1 rounded-full text-xs font-semibold text-blue-400">
-              <Home className="w-3.5 h-3.5" /> Welcome to HomeMind AI
+        <div className="glass-panel p-8 relative overflow-hidden bg-gradient-to-r from-blue-950/40 via-indigo-950/40 to-slate-950 border-blue-500/30 shadow-2xl">
+          <div className="relative z-10 space-y-4 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
+              <Sparkles className="w-3.5 h-3.5" /> Welcome to HomeMind AI — Let's Setup Your Home
             </div>
-            <h2 className="text-2xl font-extrabold text-slate-100">Let's setup your intelligent household.</h2>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Your household starts completely clean. Add your first expense, grocery item, appliance, or invite family members to begin generating AI predictions and telemetry.
+            <h1 className="text-3xl font-extrabold text-slate-100 tracking-tight leading-tight">
+              Hello, {user?.name || 'Homeowner'}! Your Household OS is Ready.
+            </h1>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Your household starts completely empty with zero demo records. Click quick buttons below to add your first expense, utility bill, grocery item, appliance or family member.
             </p>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-            <button
-              onClick={() => setActiveModal('EXPENSE')}
-              className="glass-card p-4 flex items-center gap-3 hover:border-blue-500 text-left transition-all group"
-            >
-              <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
-                <Wallet className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-slate-100 flex items-center gap-1">
-                  + Add Expense <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </h4>
-                <p className="text-[10px] text-slate-400">Log initial household outlays</p>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveModal('GROCERY')}
-              className="glass-card p-4 flex items-center gap-3 hover:border-purple-500 text-left transition-all group"
-            >
-              <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
-                <ShoppingBag className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-slate-100 flex items-center gap-1">
-                  + Add Grocery <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </h4>
-                <p className="text-[10px] text-slate-400">Track initial pantry stock</p>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveModal('APPLIANCE')}
-              className="glass-card p-4 flex items-center gap-3 hover:border-indigo-500 text-left transition-all group"
-            >
-              <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:scale-110 transition-transform">
-                <Tv className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-slate-100 flex items-center gap-1">
-                  + Add Appliance <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </h4>
-                <p className="text-[10px] text-slate-400">Track equipment maintenance</p>
-              </div>
-            </button>
-
-            <a
-              href="/family"
-              className="glass-card p-4 flex items-center gap-3 hover:border-emerald-500 text-left transition-all group"
-            >
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform">
-                <Users className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-slate-100 flex items-center gap-1">
-                  + Invite Family <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </h4>
-                <p className="text-[10px] text-slate-400">Share household workspace</p>
-              </div>
-            </a>
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <button
+                onClick={() => (window.location.href = '/expenses')}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs shadow-lg shadow-blue-600/25 transition-all"
+              >
+                <Plus className="w-4 h-4" /> + Add Expense
+              </button>
+              <button
+                onClick={() => setShowBillModal(true)}
+                className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs shadow-lg shadow-amber-600/25 transition-all"
+              >
+                <Plus className="w-4 h-4" /> + Add Bill
+              </button>
+              <button
+                onClick={() => setShowGroceryModal(true)}
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs shadow-lg shadow-emerald-600/25 transition-all"
+              >
+                <Plus className="w-4 h-4" /> + Add Grocery
+              </button>
+              <button
+                onClick={() => setShowApplianceModal(true)}
+                className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs shadow-lg shadow-cyan-600/25 transition-all"
+              >
+                <Plus className="w-4 h-4" /> + Add Appliance
+              </button>
+            </div>
           </div>
         </div>
       ) : (
-        /* STANDARD DASHBOARD KPI GRID */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="glass-panel p-4 space-y-2 border-blue-500/30">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400">Monthly Expenses</span>
-              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400"><Wallet className="w-4 h-4" /></div>
-            </div>
-            <div className="text-2xl font-bold text-slate-100">${data?.summary?.totalExpense?.toFixed(2) || '0.00'}</div>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-slate-800">
+          <div>
+            <h1 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-blue-400" /> Command Center Overview
+            </h1>
+            <p className="text-xs text-slate-400">
+              Operating telemetry for {household?.name || 'Home Residence'} ({currencySymbol})
+            </p>
           </div>
-          <div className="glass-panel p-4 space-y-2 border-emerald-500/30">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400">Net Savings</span>
-              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400"><TrendingUp className="w-4 h-4" /></div>
-            </div>
-            <div className="text-2xl font-bold text-emerald-400">${data?.summary?.savings?.toFixed(2) || '0.00'}</div>
-          </div>
-          <div className="glass-panel p-4 space-y-2 border-amber-500/30">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400">Upcoming Bills</span>
-              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400"><Receipt className="w-4 h-4" /></div>
-            </div>
-            <div className="text-2xl font-bold text-amber-400">{data?.upcomingBills?.length || 0} Bills</div>
-          </div>
-          <div className="glass-panel p-4 space-y-2 border-purple-500/30">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400">Inventory Alert</span>
-              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400"><ShoppingBag className="w-4 h-4" /></div>
-            </div>
-            <div className="text-2xl font-bold text-purple-300">{(data?.expiringGroceries?.length || 0) + (data?.lowStockGroceries?.length || 0)} Items</div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowBillModal(true)}
+              className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold py-2 px-3 rounded-xl text-slate-200 transition-all"
+            >
+              <Plus className="w-3.5 h-3.5 text-amber-400" /> Bill
+            </button>
+            <button
+              onClick={() => setShowGroceryModal(true)}
+              className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold py-2 px-3 rounded-xl text-slate-200 transition-all"
+            >
+              <Plus className="w-3.5 h-3.5 text-emerald-400" /> Grocery
+            </button>
+            <button
+              onClick={() => setShowTaskModal(true)}
+              className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold py-2 px-3 rounded-xl text-slate-200 transition-all"
+            >
+              <Plus className="w-3.5 h-3.5 text-indigo-400" /> Task
+            </button>
           </div>
         </div>
       )}
 
-      {/* QUICK ADD MODALS */}
-      {activeModal === 'EXPENSE' && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
-            <h3 className="font-bold text-base text-slate-100">Add Household Expense</h3>
-            <form onSubmit={handleAddExpense} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-400 block mb-1">Title</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Supermarket Groceries"
-                  value={expenseTitle}
-                  onChange={(e) => setExpenseTitle(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-400 block mb-1">Amount ($)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  placeholder="45.50"
-                  value={expenseAmount}
-                  onChange={(e) => setExpenseAmount(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setActiveModal(null)} className="px-4 py-2 rounded-xl text-xs text-slate-400">Cancel</button>
-                <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-semibold">Save Expense</button>
-              </div>
-            </form>
+      {/* Main Metric Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="glass-panel p-6 border-slate-800 space-y-2 hover:border-blue-500/40 transition-all">
+          <div className="flex items-center justify-between text-xs text-slate-400 font-semibold">
+            <span>Monthly Expenses</span>
+            <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+              <CreditCard className="w-4 h-4" />
+            </div>
           </div>
+          <span className="text-2xl font-extrabold text-slate-100 font-mono block">{format(totalSpent)}</span>
+          <span className="text-[11px] text-slate-400 block">{summary?.totalExpensesCount || 0} Transactions logged</span>
         </div>
-      )}
 
-      {activeModal === 'GROCERY' && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
-            <h3 className="font-bold text-base text-slate-100">Add Grocery Item</h3>
-            <form onSubmit={handleAddGrocery} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-400 block mb-1">Item Name</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Organic Milk 2L"
-                  value={groceryName}
-                  onChange={(e) => setGroceryName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-400 block mb-1">Quantity</label>
-                <input
-                  type="number"
-                  required
-                  value={groceryQty}
-                  onChange={(e) => setGroceryQty(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setActiveModal(null)} className="px-4 py-2 rounded-xl text-xs text-slate-400">Cancel</button>
-                <button type="submit" className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl text-xs font-semibold">Save Grocery</button>
-              </div>
-            </form>
+        <div className="glass-panel p-6 border-slate-800 space-y-2 hover:border-amber-500/40 transition-all">
+          <div className="flex items-center justify-between text-xs text-slate-400 font-semibold">
+            <span>Unpaid Utility Bills</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+              <FileText className="w-4 h-4" />
+            </div>
           </div>
+          <span className="text-2xl font-extrabold text-amber-400 font-mono block">{format(totalBillsDue)}</span>
+          <span className="text-[11px] text-slate-400 block">{summary?.unpaidBillsCount || 0} Outstanding due bills</span>
         </div>
-      )}
 
-      {activeModal === 'APPLIANCE' && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
-            <h3 className="font-bold text-base text-slate-100">Add Appliance</h3>
-            <form onSubmit={handleAddAppliance} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-400 block mb-1">Appliance Name</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Living Room AC"
-                  value={applianceName}
-                  onChange={(e) => setApplianceName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-400 block mb-1">Brand</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Daikin"
-                  value={applianceBrand}
-                  onChange={(e) => setApplianceBrand(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setActiveModal(null)} className="px-4 py-2 rounded-xl text-xs text-slate-400">Cancel</button>
-                <button type="submit" className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold">Save Appliance</button>
-              </div>
-            </form>
+        <div className="glass-panel p-6 border-slate-800 space-y-2 hover:border-emerald-500/40 transition-all">
+          <div className="flex items-center justify-between text-xs text-slate-400 font-semibold">
+            <span>Pantry Items</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <ShoppingBag className="w-4 h-4" />
+            </div>
           </div>
+          <span className="text-2xl font-extrabold text-slate-100 font-mono block">{summary?.totalGroceriesCount || 0}</span>
+          <span className="text-[11px] text-emerald-400 font-semibold block">{summary?.lowStockCount || 0} Low stock warnings</span>
         </div>
-      )}
+
+        <div className="glass-panel p-6 border-slate-800 space-y-2 hover:border-purple-500/40 transition-all">
+          <div className="flex items-center justify-between text-xs text-slate-400 font-semibold">
+            <span>Registered Appliances</span>
+            <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
+              <Tv className="w-4 h-4" />
+            </div>
+          </div>
+          <span className="text-2xl font-extrabold text-slate-100 font-mono block">{summary?.totalAppliancesCount || 0}</span>
+          <span className="text-[11px] text-slate-400 block">Warranty telemetry active</span>
+        </div>
+      </div>
+
+      {/* Quick Universal Add Modals */}
+      <AddBillModal isOpen={showBillModal} onClose={() => setShowBillModal(false)} onSuccess={fetchDashboardData} />
+      <AddGroceryModal isOpen={showGroceryModal} onClose={() => setShowGroceryModal(false)} onSuccess={fetchDashboardData} />
+      <AddApplianceModal isOpen={showApplianceModal} onClose={() => setShowApplianceModal(false)} onSuccess={fetchDashboardData} />
+      <AddTaskModal isOpen={showTaskModal} onClose={() => setShowTaskModal(false)} onSuccess={fetchDashboardData} />
     </div>
   );
 };
