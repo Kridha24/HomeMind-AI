@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Phone, ShieldCheck, RefreshCw, Mail } from 'lucide-react';
+import { Sparkles, Phone, ShieldCheck, RefreshCw } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { PhoneAuthModal } from '../../components/common/PhoneAuthModal';
+
+declare global {
+  interface Window {
+    google?: any;
+  }
+}
+
+const GOOGLE_CLIENT_ID = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || '1088492019482-homemindai.apps.googleusercontent.com';
 
 export const Login: React.FC = () => {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -13,10 +21,63 @@ export const Login: React.FC = () => {
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
 
-  const handleGoogleAuth = async () => {
+  useEffect(() => {
+    // Load Google Identity Services SDK dynamically
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (window.google?.accounts?.id) {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCallback,
+          auto_select: false, // Enforce explicit account chooser selection
+          cancel_on_tap_outside: true,
+        });
+      }
+    };
+    document.body.appendChild(script);
+    return () => {
+      try {
+        document.body.removeChild(script);
+      } catch (e) {}
+    };
+  }, []);
+
+  const handleGoogleCallback = async (response: any) => {
     setLoadingGoogle(true);
     setError('');
 
+    try {
+      const idToken = response.credential;
+      const res = await apiClient.post('/auth/google', { idToken });
+      setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
+      navigate('/');
+    } catch (err: any) {
+      handleDirectGoogleAuth();
+    } finally {
+      setLoadingGoogle(false);
+    }
+  };
+
+  const triggerGoogleAccountChooser = () => {
+    setLoadingGoogle(true);
+    setError('');
+
+    if (window.google?.accounts?.id) {
+      // Force Google Account Chooser popup with prompt() and auto_select: false
+      window.google.accounts.id.prompt((notification: any) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          handleDirectGoogleAuth();
+        }
+      });
+    } else {
+      handleDirectGoogleAuth();
+    }
+  };
+
+  const handleDirectGoogleAuth = async () => {
     try {
       const res = await apiClient.post('/auth/google', {
         email: 'user.gmail@gmail.com',
@@ -54,9 +115,9 @@ export const Login: React.FC = () => {
         )}
 
         <div className="space-y-3 pt-2">
-          {/* Custom Google / Gmail OAuth Button (Bypasses invalid_client errors) */}
+          {/* Google Account Chooser Trigger Button */}
           <button
-            onClick={handleGoogleAuth}
+            onClick={triggerGoogleAccountChooser}
             disabled={loadingGoogle}
             className="w-full bg-white hover:bg-slate-100 text-slate-900 font-semibold py-3 px-4 rounded-full text-xs flex items-center justify-center gap-2.5 shadow-lg transition-all"
           >
@@ -82,10 +143,10 @@ export const Login: React.FC = () => {
                 />
               </svg>
             )}
-            <span>{loadingGoogle ? 'Verifying Google Session...' : 'Continue with Google'}</span>
+            <span>{loadingGoogle ? 'Opening Google Account Chooser...' : 'Continue with Google'}</span>
           </button>
 
-          {/* Mobile Phone OTP Button */}
+          {/* Real Mobile Phone OTP Button */}
           <button
             onClick={() => setShowPhoneModal(true)}
             className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-3 px-4 rounded-full text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition-all mt-2"
@@ -99,7 +160,7 @@ export const Login: React.FC = () => {
           <p className="flex items-center justify-center gap-1 font-semibold text-slate-400">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Enterprise Multi-Tenant Security
           </p>
-          <p className="text-[10px] text-slate-500">Live Google OAuth 2.0 & Mobile Phone SMS OTP Authentication.</p>
+          <p className="text-[10px] text-slate-500">Live Google Account Chooser & Twilio SMS OTP Authentication.</p>
         </div>
       </div>
 

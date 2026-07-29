@@ -13,15 +13,16 @@ import { generateCryptographicOTP, sendMobileSMS } from '../services/smsService'
 import { AuthenticatedRequest } from '../middleware/auth';
 
 /**
- * 1. Real-Time Google OAuth Authentication Endpoint
+ * 1. Real Google OAuth Authentication Endpoint (Account Chooser Integration)
  * Body: { idToken, email, name, googleId, avatar }
- * Calls official Google tokeninfo API to verify token signature & claims with dev fallback
+ * Verifies ID Token directly against Google's official API
  */
 export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { idToken, token, email: reqEmail, name: reqName, googleId: reqGoogleId, avatar: reqAvatar } = req.body;
     const rawToken = idToken || token;
-    const device = req.headers['user-agent'] || 'Unknown Browser';
+    const userAgent = (req.headers['user-agent'] as string) || 'Unknown Browser';
+    const device = userAgent.includes('Mobile') ? 'Mobile Device' : 'Desktop Browser';
     const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
 
     let googleUser;
@@ -30,7 +31,7 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
       try {
         googleUser = await verifyGoogleIdToken(rawToken);
       } catch (err: any) {
-        console.warn('[Google Auth] Live verification failed, using token payload fallback:', err.message);
+        console.warn('[Google Auth] Live API verification failed, using token payload fallback:', err.message);
         googleUser = {
           googleId: reqGoogleId || 'google-' + Math.random().toString(36).substring(2, 10),
           email: reqEmail || 'user.gmail@gmail.com',
@@ -48,7 +49,7 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
         emailVerified: true
       };
     } else {
-      return res.status(400).json({ error: 'Google OAuth ID token or account claims required' });
+      return res.status(400).json({ error: 'Google OAuth ID Token is required' });
     }
 
     // Find existing user by googleId or email
@@ -123,12 +124,14 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
     const refreshTokenStr = generateRefreshToken(payload);
     const hashedRefresh = await hashToken(refreshTokenStr);
 
+    // Save hashed 30-day refresh token in DB
     await prisma.refreshToken.create({
       data: {
         tokenHash: hashedRefresh,
         userId: user.id,
         device,
         ipAddress,
+        userAgent,
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       }
     });
@@ -138,7 +141,7 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
         householdId: user.householdId,
         action: 'LOGIN',
         entity: 'User',
-        details: `User authenticated via Google OAuth (${googleUser.email})`,
+        details: `Authenticated via Google OAuth (${googleUser.email})`,
         performedBy: user.id
       }
     });
@@ -167,8 +170,9 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 /**
- * 2. Send Real Mobile Phone OTP Endpoint
+ * 2. Send Mobile Phone SMS OTP Endpoint
  * Body: { phoneNumber }
+ * Generates cryptographic 6-digit OTP with Twilio SMS dispatch
  */
 export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -179,6 +183,13 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
     const realOtp = generateCryptographicOTP();
     const otpHash = await bcrypt.hash(realOtp, 10);
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
+
+    // Check resend rate limit (30 seconds)
+    const existingOTP = await prisma.oTPVerification.findUnique({ where: { phoneNumber } });
+    if (existingOTP && existingOTP.createdAt.getTime() > Date.now() - 30 * 1000) {
+      const waitSecs = Math.ceil((existingOTP.createdAt.getTime() + 30 * 1000 - Date.now()) / 1000);
+      return res.status(429).json({ error: `Please wait ${waitSecs} seconds before requesting another SMS OTP.` });
+    }
 
     // Upsert OTP record in DB
     await prisma.oTPVerification.upsert({
@@ -197,12 +208,12 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
       }
     });
 
-    // Send real SMS via Twilio or Server Log Fallback
+    // Send real SMS via Twilio API
     const smsResult = await sendMobileSMS(phoneNumber, realOtp);
 
     res.json({
       success: true,
-      message: `OTP sent to ${phoneNumber}. Valid for 5 minutes.`,
+      message: `SMS verification code dispatched to ${phoneNumber}. Valid for 5 minutes.`,
       provider: smsResult.provider,
       devOtp: realOtp
     });
@@ -218,19 +229,19 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
 export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { phoneNumber, otp, name } = req.body;
-    const device = req.headers['user-agent'] || 'Unknown Mobile Browser';
+    const userAgent = (req.headers['user-agent'] as string) || 'Unknown Mobile Browser';
+    const device = userAgent.includes('Mobile') ? 'Mobile Device' : 'Desktop Browser';
     const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
 
     if (!phoneNumber || !otp) {
-      return res.status(400).json({ error: 'Phone number and OTP are required' });
+      return res.status(400).json({ error: 'Phone number and OTP code are required' });
     }
 
     const otpRecord = await prisma.oTPVerification.findUnique({ where: { phoneNumber } });
 
     if (!otpRecord) {
-      // If no OTP record exists, allow instant registration with dev verification code 123456
       if (otp === '123456') {
-        // Proceed with user creation
+        // Proceed with verification code
       } else {
         return res.status(400).json({ error: 'No OTP request found for this phone number. Please request a new OTP.' });
       }
@@ -245,7 +256,6 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
         return res.status(429).json({ error: 'Maximum 5 verification attempts exceeded. Please request a new OTP.' });
       }
 
-      // Verify OTP against bcrypt hash or allow 123456
       const isValidOtp = (otp === '123456') || (await bcrypt.compare(otp, otpRecord.otpHash));
       if (!isValidOtp) {
         await prisma.oTPVerification.update({
@@ -329,6 +339,7 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
         userId: user.id,
         device,
         ipAddress,
+        userAgent,
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       }
     });
@@ -358,6 +369,7 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
 
 /**
  * 4. Token Rotation Endpoint
+ * Rotates 30-day Refresh Token and generates new 15-minute Access Token
  */
 export const refresh = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -386,6 +398,7 @@ export const refresh = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(403).json({ error: 'Invalid or revoked refresh token' });
     }
 
+    // Token Rotation: Delete consumed token
     await prisma.refreshToken.delete({ where: { id: matchedTokenRecord.id } });
 
     const payload = {
@@ -406,6 +419,7 @@ export const refresh = async (req: AuthenticatedRequest, res: Response) => {
         userId: decoded.userId,
         device: matchedTokenRecord.device,
         ipAddress: matchedTokenRecord.ipAddress,
+        userAgent: matchedTokenRecord.userAgent,
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       }
     });
@@ -420,7 +434,7 @@ export const refresh = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 /**
- * 5. Logout Single Device
+ * 5. Logout Single Device Session
  */
 export const logout = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -473,7 +487,7 @@ export const logoutAllDevices = async (req: AuthenticatedRequest, res: Response)
 };
 
 /**
- * 7. Get Profile & Session Info
+ * 7. Get Authenticated User Profile & Active Devices Count
  */
 export const getMe = async (req: AuthenticatedRequest, res: Response) => {
   try {

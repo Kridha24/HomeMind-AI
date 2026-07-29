@@ -52,11 +52,11 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
       const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber });
       setStep('OTP');
       setTimeLeft(300);
-      setResendCooldown(60);
+      setResendCooldown(30); // 30s resend cooldown
       setDevOtp(res.data.devOtp);
-      setInfoMessage(res.data.message || `OTP sent to ${phoneNumber}`);
+      setInfoMessage(res.data.message || `SMS verification code sent to ${phoneNumber}`);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to dispatch SMS verification OTP');
+      setError(err.response?.data?.error || 'Failed to send SMS OTP');
     } finally {
       setLoading(false);
     }
@@ -110,7 +110,7 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
           <p className="text-xs text-slate-400">
             {step === 'PHONE'
               ? 'Enter your mobile number to receive a cryptographic SMS OTP'
-              : `Verification SMS dispatched to ${phoneNumber}`}
+              : `Verification SMS sent to ${phoneNumber}`}
           </p>
         </div>
 
@@ -155,7 +155,7 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
               className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition-all"
             >
               {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
-              Dispatch SMS Verification Code
+              Send Real SMS Code
             </button>
           </form>
         ) : (
