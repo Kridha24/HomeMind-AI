@@ -21,7 +21,7 @@ import {
 import { useAuthStore } from '../../stores/useAuthStore';
 
 export const Sidebar: React.FC = () => {
-  const { household, user } = useAuthStore();
+  const { household } = useAuthStore();
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -51,7 +51,7 @@ export const Sidebar: React.FC = () => {
           </div>
           <div>
             <h2 className="font-extrabold text-sm text-slate-100 tracking-tight leading-none">HomeMind AI</h2>
-            <span className="text-[10px] text-blue-400 font-semibold tracking-wider uppercase">Household OS</span>
+            <span className="text-[10px] text-blue-400 font-semibold tracking-wider uppercase">Web Application</span>
           </div>
         </div>
 

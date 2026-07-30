@@ -22,7 +22,6 @@ export const Login: React.FC = () => {
   const { setAuth } = useAuthStore();
 
   useEffect(() => {
-    // Load Google Identity Services SDK dynamically
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
@@ -32,7 +31,7 @@ export const Login: React.FC = () => {
         window.google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
           callback: handleGoogleCallback,
-          auto_select: false, // Enforce explicit account chooser selection
+          auto_select: false,
           cancel_on_tap_outside: true,
         });
       }
@@ -66,7 +65,6 @@ export const Login: React.FC = () => {
     setError('');
 
     if (window.google?.accounts?.id) {
-      // Force Google Account Chooser popup with prompt() and auto_select: false
       window.google.accounts.id.prompt((notification: any) => {
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
           handleDirectGoogleAuth();
@@ -105,7 +103,7 @@ export const Login: React.FC = () => {
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">HomeMind AI</h1>
-          <p className="text-xs text-slate-400">Intelligent Household Operating System</p>
+          <p className="text-xs text-slate-400 font-medium">Intelligent Household Management Web Application</p>
         </div>
 
         {error && (
@@ -158,9 +156,9 @@ export const Login: React.FC = () => {
 
         <div className="pt-4 text-center text-[11px] text-slate-500 space-y-1 border-t border-slate-800/60">
           <p className="flex items-center justify-center gap-1 font-semibold text-slate-400">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Enterprise Multi-Tenant Security
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Enterprise Web Application Authentication
           </p>
-          <p className="text-[10px] text-slate-500">Live Google Account Chooser & Twilio SMS OTP Authentication.</p>
+          <p className="text-[10px] text-slate-500">Live Google Account Chooser & Twilio Real-Time SMS OTP.</p>
         </div>
       </div>
 
