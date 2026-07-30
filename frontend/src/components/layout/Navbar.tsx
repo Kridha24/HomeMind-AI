@@ -61,15 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </div>
 
-        {/* AI Assistant Quick Trigger */}
-        <button
-          onClick={onOpenAIChat}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-lg shadow-blue-600/25 transition-all hover:scale-105 active:scale-95"
-        >
-          <Bot className="w-4 h-4" />
-          <span>Ask HomeMind AI</span>
-          <Sparkles className="w-3 h-3 text-blue-200" />
-        </button>
+
 
         {/* Notification Bell */}
         <button
