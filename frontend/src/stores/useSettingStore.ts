@@ -9,7 +9,7 @@ interface SettingState {
   timeZone: string;
   dateFormat: string;
   unitSystem: 'Metric' | 'Imperial';
-  theme: 'dark' | 'light';
+  theme: 'dark' | 'light' | 'glass';
   language: string;
   pushNotifications: boolean;
   emailAlerts: boolean;
@@ -22,7 +22,7 @@ interface SettingState {
   // Actions
   setCountry: (countryCode: string) => void;
   setCurrency: (currencyCode: string) => void;
-  setTheme: (theme: 'dark' | 'light') => void;
+  setTheme: (theme: 'dark' | 'light' | 'glass') => void;
   updateSettings: (newSettings: Partial<SettingState>) => Promise<void>;
   fetchSettings: () => Promise<void>;
   format: (amount: number) => string;
@@ -35,7 +35,7 @@ export const useSettingStore = create<SettingState>((set, get) => ({
   timeZone: localStorage.getItem('hm_timeZone') || 'America/New_York',
   dateFormat: localStorage.getItem('hm_dateFormat') || 'MM/DD/YYYY',
   unitSystem: (localStorage.getItem('hm_unitSystem') as 'Metric' | 'Imperial') || 'Imperial',
-  theme: (localStorage.getItem('hm_theme') as 'dark' | 'light') || 'dark',
+  theme: (localStorage.getItem('hm_theme') as 'dark' | 'light' | 'glass') || 'dark',
   language: 'English',
   pushNotifications: true,
   emailAlerts: true,
@@ -76,7 +76,7 @@ export const useSettingStore = create<SettingState>((set, get) => ({
     });
   },
 
-  setTheme: (theme: 'dark' | 'light') => {
+  setTheme: (theme: 'dark' | 'light' | 'glass') => {
     localStorage.setItem('hm_theme', theme);
     set({ theme });
   },

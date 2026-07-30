@@ -415,6 +415,55 @@ export const Profile: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Appearance Theme Switcher Card */}
+          <div className="glass-panel p-6 space-y-4 border-slate-800">
+            <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-400" /> Appearance & UI Theme
+            </h2>
+            <p className="text-[11px] text-slate-400">Select your preferred application display aesthetic</p>
+
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => updateSettings({ theme: 'dark' })}
+                className={`p-3 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
+                  useSettingStore.getState().theme === 'dark'
+                    ? 'border-blue-500 bg-blue-500/10 text-blue-400 shadow-md'
+                    : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span className="text-base">🌙</span>
+                <span className="text-[10px] font-bold">Dark Mode</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => updateSettings({ theme: 'light' })}
+                className={`p-3 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
+                  useSettingStore.getState().theme === 'light'
+                    ? 'border-blue-500 bg-blue-500/10 text-blue-400 shadow-md'
+                    : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span className="text-base">☀️</span>
+                <span className="text-[10px] font-bold">Light Mode</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => updateSettings({ theme: 'glass' })}
+                className={`p-3 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
+                  useSettingStore.getState().theme === 'glass'
+                    ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400 shadow-md'
+                    : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span className="text-base">🪐</span>
+                <span className="text-[10px] font-bold">Glass Cyber</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

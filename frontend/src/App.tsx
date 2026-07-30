@@ -32,7 +32,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 export function App() {
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const { fetchSettings } = useSettingStore();
+  const { fetchSettings, theme } = useSettingStore();
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -40,6 +40,12 @@ export function App() {
       fetchSettings();
     }
   }, []);
+
+  const getThemeClass = () => {
+    if (theme === 'light') return 'min-h-screen bg-slate-100 text-slate-900 flex';
+    if (theme === 'glass') return 'min-h-screen bg-slate-950 text-slate-100 flex bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950';
+    return 'min-h-screen bg-slate-950 text-slate-100 flex';
+  };
 
   return (
     <Router>
@@ -49,7 +55,7 @@ export function App() {
           path="/*"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-slate-950 text-slate-100 flex">
+              <div className={getThemeClass()}>
                 <Sidebar />
                 <div className="flex-1 flex flex-col min-w-0">
                   <Navbar
