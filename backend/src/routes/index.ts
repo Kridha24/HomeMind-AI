@@ -85,5 +85,6 @@ router.post('/ai/scan', aiController.scanReceiptOrPantry);
 router.get('/notifications', notificationController.getNotifications);
 router.put('/notifications/:id/read', notificationController.markAsRead);
 router.get('/reports/monthly', reportController.exportMonthlyReport);
+router.get('/reports/monthly/pdf', reportController.exportMonthlyReport);
 
 export default router;
