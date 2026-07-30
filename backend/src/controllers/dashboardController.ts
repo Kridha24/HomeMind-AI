@@ -13,6 +13,8 @@ export const getDashboardSummary = async (req: AuthenticatedRequest, res: Respon
     const [
       expensesThisMonth,
       incomesThisMonth,
+      allTimeExpensesAggregate,
+      allTimeIncomesAggregate,
       upcomingBills,
       pendingTasks,
       expiringGroceries,
@@ -31,6 +33,14 @@ export const getDashboardSummary = async (req: AuthenticatedRequest, res: Respon
       }),
       prisma.income.aggregate({
         where: { householdId, softDelete: false, date: { gte: startOfMonth } },
+        _sum: { amount: true }
+      }),
+      prisma.expense.aggregate({
+        where: { householdId, softDelete: false },
+        _sum: { amount: true }
+      }),
+      prisma.income.aggregate({
+        where: { householdId, softDelete: false },
         _sum: { amount: true }
       }),
       prisma.bill.findMany({
@@ -86,9 +96,13 @@ export const getDashboardSummary = async (req: AuthenticatedRequest, res: Respon
       })
     ]);
 
-    const totalExpense = expensesThisMonth._sum.amount || 0;
-    const totalIncome = incomesThisMonth._sum.amount || 0;
-    const savings = totalIncome - totalExpense;
+    const monthlyExpenses = expensesThisMonth._sum.amount || 0;
+    const monthlyIncome = incomesThisMonth._sum.amount || 0;
+    const overallExpenses = allTimeExpensesAggregate._sum.amount || 0;
+    const overallIncome = allTimeIncomesAggregate._sum.amount || 0;
+
+    const monthlySavings = monthlyIncome - monthlyExpenses;
+    const overallSavings = overallIncome - overallExpenses;
     const upcomingBillsTotal = upcomingBills.reduce((acc, curr) => acc + curr.amount, 0);
 
     // Combine latest expenses & incomes into 5 Recent History entries
@@ -119,14 +133,19 @@ export const getDashboardSummary = async (req: AuthenticatedRequest, res: Respon
 
     res.json({
       isNewUser,
-      monthlyIncome: totalIncome,
-      monthlyExpenses: totalExpense,
+      monthlyIncome,
+      monthlyExpenses,
+      monthlySavings,
+      overallIncome,
+      overallExpenses,
+      overallSavings,
       upcomingBillsTotal,
       summary: {
-        totalExpense,
-        totalIncome,
-        savings,
-        savingsRate: totalIncome > 0 ? Math.round((savings / totalIncome) * 100) : 0,
+        totalExpense: monthlyExpenses,
+        totalIncome: monthlyIncome,
+        savings: monthlySavings,
+        overallSavings,
+        savingsRate: monthlyIncome > 0 ? Math.round((monthlySavings / monthlyIncome) * 100) : 0,
         sustainabilityScore: isNewUser ? 100 : 86.5
       },
       upcomingBills,

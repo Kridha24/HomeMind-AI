@@ -1,6 +1,8 @@
 import React from 'react';
 import { Bell, Bot, CloudSun, Search, Sparkles } from 'lucide-react';
 import { ProfileMenu } from '../common/ProfileMenu';
+import { useSettingStore } from '../../stores/useSettingStore';
+import { COUNTRY_DEFAULTS } from '../../utils/currency';
 
 interface NavbarProps {
   onOpenAIChat: () => void;
@@ -8,11 +10,33 @@ interface NavbarProps {
   unreadCount?: number;
 }
 
+const COUNTRY_FLAGS: Record<string, string> = {
+  IN: '🇮🇳',
+  US: '🇺🇸',
+  GB: '🇬🇧',
+  DE: '🇩🇪',
+  FR: '🇫🇷',
+  JP: '🇯🇵',
+  CA: '🇨🇦',
+  AU: '🇦🇺',
+  SG: '🇸🇬',
+  AE: '🇦🇪',
+  SA: '🇸🇦',
+  CH: '🇨🇭',
+  CN: '🇨🇳',
+};
+
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenAIChat,
   onOpenNotifications,
   unreadCount = 0,
 }) => {
+  const { country } = useSettingStore();
+  const defaults = COUNTRY_DEFAULTS[country] || COUNTRY_DEFAULTS['US'];
+  const flag = COUNTRY_FLAGS[country] || '🌐';
+  const isCelsius = country === 'IN' || country === 'DE' || country === 'FR' || country === 'JP' || country === 'CA' || country === 'AU';
+  const tempStr = isCelsius ? '28°C Partly Sunny' : '74°F Clear Sky';
+
   return (
     <header className="h-16 bg-slate-900/40 backdrop-blur-xl border-b border-slate-800/60 sticky top-0 z-30 ml-64 flex items-center justify-between px-6">
       {/* Search Input */}
@@ -29,10 +53,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Right Header Actions */}
       <div className="flex items-center gap-4">
-        {/* Live Weather Widget */}
+        {/* Live Location Weather Widget (No San Francisco hardcoded text) */}
         <div className="hidden md:flex items-center gap-2 bg-slate-950/40 border border-slate-800/60 px-3 py-1.5 rounded-xl text-xs text-slate-300">
           <CloudSun className="w-4 h-4 text-amber-400" />
-          <span>74°F Sunny • San Francisco</span>
+          <span>
+            {tempStr} • {flag} {defaults.countryName}
+          </span>
         </div>
 
         {/* AI Assistant Quick Trigger */}
@@ -59,7 +85,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </button>
 
-        {/* User Profile Menu & Logout Dropdown */}
+        {/* User Profile Menu */}
         <ProfileMenu />
       </div>
     </header>

@@ -17,16 +17,35 @@ import {
   MapPin,
   Calendar,
   History,
+  PiggyBank,
+  Landmark,
 } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useSettingStore } from '../stores/useSettingStore';
+import { COUNTRY_DEFAULTS } from '../utils/currency';
 
 // Modals
 import { AddBillModal } from '../components/common/AddBillModal';
 import { AddGroceryModal } from '../components/common/AddGroceryModal';
 import { AddApplianceModal } from '../components/common/AddApplianceModal';
 import { AddTaskModal } from '../components/common/AddTaskModal';
+
+const COUNTRY_FLAGS: Record<string, string> = {
+  IN: '🇮🇳',
+  US: '🇺🇸',
+  GB: '🇬🇧',
+  DE: '🇩🇪',
+  FR: '🇫🇷',
+  JP: '🇯🇵',
+  CA: '🇨🇦',
+  AU: '🇦🇺',
+  SG: '🇸🇬',
+  AE: '🇦🇪',
+  SA: '🇸🇦',
+  CH: '🇨🇭',
+  CN: '🇨🇳',
+};
 
 export const Dashboard: React.FC = () => {
   const { user, household } = useAuthStore();
@@ -44,6 +63,9 @@ export const Dashboard: React.FC = () => {
   const [showGroceryModal, setShowGroceryModal] = useState(false);
   const [showApplianceModal, setShowApplianceModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
+
+  const countryDefaults = COUNTRY_DEFAULTS[country] || COUNTRY_DEFAULTS['US'];
+  const flag = COUNTRY_FLAGS[country] || '🌐';
 
   useEffect(() => {
     const updateClock = () => {
@@ -73,6 +95,8 @@ export const Dashboard: React.FC = () => {
 
   const monthlyIncome = summary?.monthlyIncome || 0;
   const monthlyExpenses = summary?.monthlyExpenses || 0;
+  const monthlySavings = summary?.monthlySavings !== undefined ? summary.monthlySavings : (monthlyIncome - monthlyExpenses);
+  const overallSavings = summary?.overallSavings !== undefined ? summary.overallSavings : (summary?.summary?.overallSavings || 0);
   const upcomingBillsTotal = summary?.upcomingBillsTotal || 0;
   const recentHistory = summary?.recent5History || [];
 
@@ -91,7 +115,7 @@ export const Dashboard: React.FC = () => {
           </div>
           <p className="text-xs text-slate-400 flex items-center gap-2">
             <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Region: {country}</span>
+            <span>Location: {flag} {countryDefaults.countryName}</span>
             <span className="text-slate-600">•</span>
             <span>{household?.name || 'Home Residence'}</span>
           </p>
@@ -111,17 +135,17 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Metric Cards: Income, Expenses, Upcoming Expenses Plan */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Main Metric Cards: Income, Expenses, Monthly Savings, Overall Balance */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Monthly Income Card */}
         <div className="glass-panel p-6 border-emerald-500/30 bg-gradient-to-tr from-slate-900 via-emerald-950/20 to-slate-900 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Monthly Income</span>
             <Wallet className="w-4 h-4 text-emerald-400" />
           </div>
-          <p className="text-3xl font-extrabold text-slate-100 font-mono">{format(monthlyIncome)}</p>
+          <p className="text-2xl font-extrabold text-slate-100 font-mono">{format(monthlyIncome)}</p>
           <p className="text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
-            <TrendingUp className="w-3 h-3" /> Total Verified Earnings Stream
+            <TrendingUp className="w-3 h-3" /> Monthly Earnings
           </p>
         </div>
 
@@ -131,18 +155,44 @@ export const Dashboard: React.FC = () => {
             <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">Monthly Expenses</span>
             <CreditCard className="w-4 h-4 text-blue-400" />
           </div>
-          <p className="text-3xl font-extrabold text-slate-100 font-mono">{format(monthlyExpenses)}</p>
-          <p className="text-[11px] text-slate-400">Total Logged Spend in {currencySymbol}</p>
+          <p className="text-2xl font-extrabold text-slate-100 font-mono">{format(monthlyExpenses)}</p>
+          <p className="text-[11px] text-slate-400">Total Logged Spend</p>
         </div>
 
-        {/* Upcoming Expenses Plan Card */}
-        <div className="glass-panel p-6 border-amber-500/30 bg-gradient-to-tr from-slate-900 via-amber-950/20 to-slate-900 space-y-2">
+        {/* Monthly Net Savings Card (Income - Expenses) */}
+        <div className="glass-panel p-6 border-teal-500/30 bg-gradient-to-tr from-slate-900 via-teal-950/20 to-slate-900 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">Upcoming Expenses Plan</span>
-            <FileText className="w-4 h-4 text-amber-400" />
+            <span className="text-xs font-bold text-teal-400 uppercase tracking-wider">Monthly Net Savings</span>
+            <PiggyBank className="w-4 h-4 text-teal-400" />
           </div>
-          <p className="text-3xl font-extrabold text-slate-100 font-mono">{format(upcomingBillsTotal)}</p>
-          <p className="text-[11px] text-amber-400 font-medium">Unpaid Utility Bills Due Soon</p>
+          <p className={`text-2xl font-extrabold font-mono ${monthlySavings >= 0 ? 'text-teal-400' : 'text-red-400'}`}>
+            {monthlySavings >= 0 ? `+${format(monthlySavings)}` : format(monthlySavings)}
+          </p>
+          <p className="text-[11px] text-slate-400">Income - Expenses (This Month)</p>
+        </div>
+
+        {/* Overall Lifetime Balance Card */}
+        <div className="glass-panel p-6 border-purple-500/30 bg-gradient-to-tr from-slate-900 via-purple-950/20 to-slate-900 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">Overall Net Balance</span>
+            <Landmark className="w-4 h-4 text-purple-400" />
+          </div>
+          <p className={`text-2xl font-extrabold font-mono ${overallSavings >= 0 ? 'text-purple-300' : 'text-red-400'}`}>
+            {overallSavings >= 0 ? `+${format(overallSavings)}` : format(overallSavings)}
+          </p>
+          <p className="text-[11px] text-purple-400 font-medium">Lifetime Income - Expenses</p>
+        </div>
+      </div>
+
+      {/* Upcoming Expenses Plan Box */}
+      <div className="glass-panel p-6 border-amber-500/30 bg-gradient-to-r from-slate-900 via-amber-950/10 to-slate-900 flex items-center justify-between gap-4">
+        <div className="space-y-1">
+          <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">Upcoming Expenses & Utility Bills Plan</span>
+          <p className="text-xs text-slate-300">Total unpaid utility bills scheduled for settlement this cycle.</p>
+        </div>
+        <div className="text-right">
+          <span className="text-2xl font-extrabold text-amber-400 font-mono block">{format(upcomingBillsTotal)}</span>
+          <span className="text-[11px] text-slate-400">Unpaid Bills Action Required</span>
         </div>
       </div>
 
@@ -213,7 +263,7 @@ export const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Quick Action Action Modals Panel */}
+      {/* Quick Action Modals Panel */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <button
           onClick={() => setShowBillModal(true)}
