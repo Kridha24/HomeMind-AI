@@ -21,7 +21,9 @@ export const getDashboardSummary = async (req: AuthenticatedRequest, res: Respon
       expiringMedicines,
       recentNotifications,
       aiRecommendations,
-      totalRecordCount
+      totalRecordCount,
+      latestExpenses,
+      latestIncomes
     ] = await Promise.all([
       prisma.expense.aggregate({
         where: { householdId, softDelete: false, date: { gte: startOfMonth } },
@@ -70,18 +72,56 @@ export const getDashboardSummary = async (req: AuthenticatedRequest, res: Respon
         where: { householdId, softDelete: false, isDismissed: false },
         take: 4
       }),
-      prisma.expense.count({ where: { householdId, softDelete: false } })
+      prisma.expense.count({ where: { householdId, softDelete: false } }),
+      prisma.expense.findMany({
+        where: { householdId, softDelete: false },
+        orderBy: { date: 'desc' },
+        take: 5,
+        include: { user: { select: { name: true } } }
+      }),
+      prisma.income.findMany({
+        where: { householdId, softDelete: false },
+        orderBy: { date: 'desc' },
+        take: 5
+      })
     ]);
 
     const totalExpense = expensesThisMonth._sum.amount || 0;
     const totalIncome = incomesThisMonth._sum.amount || 0;
     const savings = totalIncome - totalExpense;
+    const upcomingBillsTotal = upcomingBills.reduce((acc, curr) => acc + curr.amount, 0);
 
-    // Check if user has zero data
+    // Combine latest expenses & incomes into 5 Recent History entries
+    const combinedHistory = [
+      ...latestExpenses.map(e => ({
+        id: e.id,
+        title: e.title,
+        amount: e.amount,
+        type: 'EXPENSE',
+        category: e.category,
+        date: e.date,
+        userName: e.user?.name || 'User'
+      })),
+      ...latestIncomes.map(i => ({
+        id: i.id,
+        title: i.title,
+        amount: i.amount,
+        type: 'INCOME',
+        category: i.source,
+        date: i.date,
+        userName: 'Verified Revenue'
+      }))
+    ]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+
     const isNewUser = totalRecordCount === 0 && upcomingBills.length === 0 && pendingTasks.length === 0;
 
     res.json({
       isNewUser,
+      monthlyIncome: totalIncome,
+      monthlyExpenses: totalExpense,
+      upcomingBillsTotal,
       summary: {
         totalExpense,
         totalIncome,
@@ -90,6 +130,7 @@ export const getDashboardSummary = async (req: AuthenticatedRequest, res: Respon
         sustainabilityScore: isNewUser ? 100 : 86.5
       },
       upcomingBills,
+      recent5History: combinedHistory,
       pendingTasks,
       expiringGroceries,
       lowStockGroceries,
