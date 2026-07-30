@@ -12,6 +12,7 @@ model User {
   name           String
   email          String?        @unique
   phoneNumber    String?        @unique
+  age            Int?
   provider       String         @default("GOOGLE") // GOOGLE, PHONE
   googleId       String?        @unique
   avatar         String?

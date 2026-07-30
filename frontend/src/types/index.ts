@@ -3,6 +3,7 @@ export interface User {
   email?: string;
   phoneNumber?: string;
   name: string;
+  age?: number;
   role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST';
   householdId?: string;
   avatar?: string;
@@ -30,30 +31,14 @@ export interface Expense {
   user?: { name: string; email?: string };
 }
 
-export interface Income {
-  id: string;
-  title: string;
-  amount: number;
-  source: string;
-  date: string;
-}
-
-export interface Budget {
-  id: string;
-  category: string;
-  monthlyLimit: number;
-  month: string;
-}
-
 export interface Bill {
   id: string;
   title: string;
-  category: string;
   amount: number;
   dueDate: string;
-  status: 'UNPAID' | 'PAID' | 'OVERDUE';
+  category: string;
+  status: 'PAID' | 'UNPAID' | 'OVERDUE';
   provider?: string;
-  paidAt?: string;
 }
 
 export interface GroceryItem {
@@ -64,20 +49,7 @@ export interface GroceryItem {
   unit: string;
   minThreshold: number;
   expiryDate?: string;
-  dailyConsumption?: number;
-}
-
-export interface Recipe {
-  id?: string;
-  title: string;
-  description?: string;
-  prepTimeMins: number;
-  calories: number;
-  category: string;
-  isVegetarian: boolean;
-  ingredients: string[] | { name: string; quantity: number; unit: string }[];
-  instructions: string;
-  reason?: string;
+  barcode?: string;
 }
 
 export interface Appliance {
@@ -89,15 +61,13 @@ export interface Appliance {
   warrantyYears: number;
   lastServicedDate?: string;
   nextServiceDueDate?: string;
-  maintenanceLogs?: ApplianceMaintenance[];
 }
 
-export interface ApplianceMaintenance {
-  id: string;
-  cost: number;
-  description: string;
-  serviceDate: string;
-  technician?: string;
+export interface MedicineSchedule {
+  id?: string;
+  timeOfDay: string;
+  memberAssignee?: string;
+  taken?: boolean;
 }
 
 export interface Medicine {
@@ -110,13 +80,6 @@ export interface Medicine {
   schedules?: MedicineSchedule[];
 }
 
-export interface MedicineSchedule {
-  id: string;
-  timeOfDay: string;
-  memberAssignee: string;
-  taken: boolean;
-}
-
 export interface Task {
   id: string;
   title: string;
@@ -124,8 +87,14 @@ export interface Task {
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
   dueDate: string;
-  isRecurring: boolean;
-  assignee?: { id: string; name: string };
+  assignee?: User;
+}
+
+export interface SustainabilityMetric {
+  waterUsageLitre: number;
+  electricityKwh: number;
+  foodWasteKg: number;
+  ecoScore: number;
 }
 
 export interface NotificationItem {
@@ -135,13 +104,4 @@ export interface NotificationItem {
   type: string;
   isRead: boolean;
   createdAt: string;
-}
-
-export interface AIRecommendation {
-  id: string;
-  module: string;
-  title: string;
-  description: string;
-  impactLevel: 'HIGH' | 'MEDIUM' | 'LOW';
-  savingsEstimate?: number;
 }

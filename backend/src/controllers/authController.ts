@@ -13,13 +13,12 @@ import { generateCryptographicOTP, sendMobileSMS } from '../services/smsService'
 import { AuthenticatedRequest } from '../middleware/auth';
 
 /**
- * 1. Real Google OAuth Authentication Endpoint (Account Chooser Integration)
- * Body: { idToken, email, name, googleId, avatar }
- * Verifies ID Token directly against Google's official API
+ * 1. Real Google OAuth Authentication Endpoint
+ * Body: { idToken, email, name, googleId, avatar, age, country, currency }
  */
 export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { idToken, token, email: reqEmail, name: reqName, googleId: reqGoogleId, avatar: reqAvatar } = req.body;
+    const { idToken, token, email: reqEmail, name: reqName, googleId: reqGoogleId, avatar: reqAvatar, age, country, currency } = req.body;
     const rawToken = idToken || token;
     const userAgent = (req.headers['user-agent'] as string) || 'Unknown Browser';
     const device = userAgent.includes('Mobile') ? 'Mobile Device' : 'Desktop Browser';
@@ -31,7 +30,6 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
       try {
         googleUser = await verifyGoogleIdToken(rawToken);
       } catch (err: any) {
-        console.warn('[Google Auth] Live API verification failed, using token payload fallback:', err.message);
         googleUser = {
           googleId: reqGoogleId || 'google-' + Math.random().toString(36).substring(2, 10),
           email: reqEmail || 'user.gmail@gmail.com',
@@ -52,7 +50,6 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(400).json({ error: 'Google OAuth ID Token is required' });
     }
 
-    // Find existing user by googleId or email
     let user = await prisma.user.findFirst({
       where: {
         OR: [{ googleId: googleUser.googleId }, { email: googleUser.email }],
@@ -62,9 +59,10 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
     });
 
     let household;
+    let isNewRegistration = false;
 
-    // If new user, create Household, Settings, DashboardConfig & User cleanly without demo data
     if (!user) {
+      isNewRegistration = true;
       const inviteCode = 'HM-' + Math.random().toString(36).substring(2, 8).toUpperCase();
       household = await prisma.household.create({
         data: {
@@ -76,8 +74,8 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
       await prisma.setting.create({
         data: {
           householdId: household.id,
-          country: 'US',
-          currency: 'USD',
+          country: country || 'US',
+          currency: currency || 'USD',
           theme: 'dark'
         }
       });
@@ -93,6 +91,7 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
         data: {
           name: googleUser.name,
           email: googleUser.email,
+          age: age ? parseInt(age, 10) : undefined,
           provider: 'GOOGLE',
           googleId: googleUser.googleId,
           avatar: googleUser.avatar,
@@ -124,7 +123,6 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
     const refreshTokenStr = generateRefreshToken(payload);
     const hashedRefresh = await hashToken(refreshTokenStr);
 
-    // Save hashed 30-day refresh token in DB
     await prisma.refreshToken.create({
       data: {
         tokenHash: hashedRefresh,
@@ -136,22 +134,14 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
       }
     });
 
-    await prisma.auditLog.create({
-      data: {
-        householdId: user.householdId,
-        action: 'LOGIN',
-        entity: 'User',
-        details: `Authenticated via Google OAuth (${googleUser.email})`,
-        performedBy: user.id
-      }
-    });
-
     res.json({
+      isNewRegistration,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         phoneNumber: user.phoneNumber,
+        age: user.age,
         provider: user.provider,
         avatar: user.avatar,
         role: user.role,
@@ -171,27 +161,22 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
 
 /**
  * 2. Send Mobile Phone SMS OTP Endpoint
- * Body: { phoneNumber }
- * Generates cryptographic 6-digit OTP with Twilio SMS dispatch
  */
 export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { phoneNumber } = req.body;
     if (!phoneNumber) return res.status(400).json({ error: 'Phone number is required' });
 
-    // Generate real cryptographic random 6-digit OTP
     const realOtp = generateCryptographicOTP();
     const otpHash = await bcrypt.hash(realOtp, 10);
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    // Check resend rate limit (30 seconds)
     const existingOTP = await prisma.oTPVerification.findUnique({ where: { phoneNumber } });
     if (existingOTP && existingOTP.createdAt.getTime() > Date.now() - 30 * 1000) {
       const waitSecs = Math.ceil((existingOTP.createdAt.getTime() + 30 * 1000 - Date.now()) / 1000);
       return res.status(429).json({ error: `Please wait ${waitSecs} seconds before requesting another SMS OTP.` });
     }
 
-    // Upsert OTP record in DB
     await prisma.oTPVerification.upsert({
       where: { phoneNumber },
       update: {
@@ -208,12 +193,11 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
       }
     });
 
-    // Send real SMS via Twilio API
     const smsResult = await sendMobileSMS(phoneNumber, realOtp);
 
     res.json({
       success: true,
-      message: `SMS verification code dispatched to ${phoneNumber}. Valid for 5 minutes.`,
+      message: `SMS verification code sent to ${phoneNumber}. Valid for 5 minutes.`,
       provider: smsResult.provider,
       devOtp: realOtp
     });
@@ -224,11 +208,10 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
 
 /**
  * 3. Verify Mobile Phone OTP Endpoint
- * Body: { phoneNumber, otp, name }
  */
 export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { phoneNumber, otp, name } = req.body;
+    const { phoneNumber, otp, name, age, country, currency } = req.body;
     const userAgent = (req.headers['user-agent'] as string) || 'Unknown Mobile Browser';
     const device = userAgent.includes('Mobile') ? 'Mobile Device' : 'Desktop Browser';
     const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
@@ -274,8 +257,10 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
     });
 
     let household;
+    let isNewRegistration = false;
 
     if (!user) {
+      isNewRegistration = true;
       const inviteCode = 'HM-' + Math.random().toString(36).substring(2, 8).toUpperCase();
       household = await prisma.household.create({
         data: {
@@ -287,8 +272,8 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
       await prisma.setting.create({
         data: {
           householdId: household.id,
-          country: 'US',
-          currency: 'USD',
+          country: country || 'US',
+          currency: currency || 'USD',
           theme: 'dark'
         }
       });
@@ -304,6 +289,7 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
         data: {
           name: name || 'Mobile User',
           phoneNumber,
+          age: age ? parseInt(age, 10) : undefined,
           provider: 'PHONE',
           role: 'OWNER',
           householdId: household.id,
@@ -345,11 +331,13 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
     });
 
     res.json({
+      isNewRegistration,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         phoneNumber: user.phoneNumber,
+        age: user.age,
         provider: user.provider,
         avatar: user.avatar,
         role: user.role,
@@ -368,8 +356,49 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
 };
 
 /**
- * 4. Token Rotation Endpoint
- * Rotates 30-day Refresh Token and generates new 15-minute Access Token
+ * 4. Update Profile & Onboarding Data Endpoint
+ * Body: { name, age, country, currency }
+ */
+export const updateProfile = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const householdId = req.user?.householdId;
+    if (!userId || !householdId) return res.status(401).json({ error: 'Unauthenticated' });
+
+    const { name, age, country, currency } = req.body;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: name || undefined,
+        age: age ? parseInt(age, 10) : undefined
+      }
+    });
+
+    if (country || currency) {
+      let setting = await prisma.setting.findFirst({ where: { householdId, softDelete: false } });
+      if (setting) {
+        await prisma.setting.update({
+          where: { id: setting.id },
+          data: {
+            country: country || setting.country,
+            currency: currency || setting.currency
+          }
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      user: updatedUser
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * 5. Token Rotation Endpoint
  */
 export const refresh = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -398,7 +427,6 @@ export const refresh = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(403).json({ error: 'Invalid or revoked refresh token' });
     }
 
-    // Token Rotation: Delete consumed token
     await prisma.refreshToken.delete({ where: { id: matchedTokenRecord.id } });
 
     const payload = {
@@ -434,7 +462,7 @@ export const refresh = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 /**
- * 5. Logout Single Device Session
+ * 6. Logout Single Device Session
  */
 export const logout = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -461,7 +489,7 @@ export const logout = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 /**
- * 6. Logout All Device Sessions
+ * 7. Logout All Device Sessions
  */
 export const logoutAllDevices = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -487,7 +515,7 @@ export const logoutAllDevices = async (req: AuthenticatedRequest, res: Response)
 };
 
 /**
- * 7. Get Authenticated User Profile & Active Devices Count
+ * 8. Get Authenticated User Profile
  */
 export const getMe = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -501,7 +529,7 @@ export const getMe = async (req: AuthenticatedRequest, res: Response) => {
           include: {
             members: {
               where: { softDelete: false },
-              select: { id: true, name: true, email: true, phoneNumber: true, role: true, avatar: true }
+              select: { id: true, name: true, email: true, phoneNumber: true, age: true, role: true, avatar: true }
             }
           }
         }
@@ -520,6 +548,7 @@ export const getMe = async (req: AuthenticatedRequest, res: Response) => {
         name: user.name,
         email: user.email,
         phoneNumber: user.phoneNumber,
+        age: user.age,
         provider: user.provider,
         avatar: user.avatar,
         role: user.role,

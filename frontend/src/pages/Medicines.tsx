@@ -97,8 +97,8 @@ export const Medicines: React.FC = () => {
                   <span className="text-[11px] font-semibold text-slate-400 block">Daily Intake Schedule</span>
                   {medicine.schedules.map((sch) => (
                     <div
-                      key={sch.id}
-                      onClick={() => handleToggleSchedule(sch.id, sch.taken)}
+                      key={sch.id || sch.timeOfDay}
+                      onClick={() => sch.id && handleToggleSchedule(sch.id, !!sch.taken)}
                       className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
                         sch.taken
                           ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'

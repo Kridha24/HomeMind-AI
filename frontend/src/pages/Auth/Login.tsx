@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Phone, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Sparkles, Phone, ShieldCheck, RefreshCw, UserPlus, LogIn } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { PhoneAuthModal } from '../../components/common/PhoneAuthModal';
+import { NewUserOnboardingModal } from '../../components/common/NewUserOnboardingModal';
 
 declare global {
   interface Window {
@@ -14,7 +15,10 @@ declare global {
 const GOOGLE_CLIENT_ID = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || '1088492019482-homemindai.apps.googleusercontent.com';
 
 export const Login: React.FC = () => {
+  const [authTab, setAuthTab] = useState<'NEW_USER' | 'EXISTING_USER'>('NEW_USER');
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [newUserName, setNewUserName] = useState('');
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState('');
 
@@ -52,7 +56,13 @@ export const Login: React.FC = () => {
       const idToken = response.credential;
       const res = await apiClient.post('/auth/google', { idToken });
       setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
-      navigate('/');
+
+      if (authTab === 'NEW_USER' || res.data.isNewRegistration) {
+        setNewUserName(res.data.user.name || '');
+        setShowOnboardingModal(true);
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       handleDirectGoogleAuth();
     } finally {
@@ -83,11 +93,27 @@ export const Login: React.FC = () => {
         googleId: 'google-user-' + Math.floor(Math.random() * 10000),
       });
       setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
-      navigate('/');
+
+      if (authTab === 'NEW_USER' || res.data.isNewRegistration) {
+        setNewUserName(res.data.user.name || '');
+        setShowOnboardingModal(true);
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Google Authentication failed.');
     } finally {
       setLoadingGoogle(false);
+    }
+  };
+
+  const handlePhoneSuccess = (isNewReg?: boolean, userName?: string) => {
+    setShowPhoneModal(false);
+    if (authTab === 'NEW_USER' || isNewReg) {
+      setNewUserName(userName || '');
+      setShowOnboardingModal(true);
+    } else {
+      navigate('/');
     }
   };
 
@@ -106,13 +132,37 @@ export const Login: React.FC = () => {
           <p className="text-xs text-slate-400 font-medium">Intelligent Household Management Web Application</p>
         </div>
 
+        {/* Tab Switcher: New User vs Existing User */}
+        <div className="flex bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800">
+          <button
+            onClick={() => setAuthTab('NEW_USER')}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+              authTab === 'NEW_USER'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <UserPlus className="w-3.5 h-3.5" /> 🆕 New User
+          </button>
+          <button
+            onClick={() => setAuthTab('EXISTING_USER')}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+              authTab === 'EXISTING_USER'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <LogIn className="w-3.5 h-3.5" /> 🔑 Existing User
+          </button>
+        </div>
+
         {error && (
           <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-xs rounded-xl text-center font-medium">
             {error}
           </div>
         )}
 
-        <div className="space-y-3 pt-2">
+        <div className="space-y-3 pt-1">
           {/* Google Account Chooser Trigger Button */}
           <button
             onClick={triggerGoogleAccountChooser}
@@ -141,7 +191,11 @@ export const Login: React.FC = () => {
                 />
               </svg>
             )}
-            <span>{loadingGoogle ? 'Opening Google Account Chooser...' : 'Continue with Google'}</span>
+            <span>
+              {authTab === 'NEW_USER'
+                ? 'Sign Up with Google Email'
+                : 'Sign In with Existing Google Account'}
+            </span>
           </button>
 
           {/* Real Mobile Phone OTP Button */}
@@ -150,22 +204,35 @@ export const Login: React.FC = () => {
             className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-3 px-4 rounded-full text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition-all mt-2"
           >
             <Phone className="w-4 h-4" />
-            Continue with Mobile Number
+            {authTab === 'NEW_USER' ? 'Sign Up with Mobile OTP' : 'Sign In with Mobile OTP'}
           </button>
         </div>
 
         <div className="pt-4 text-center text-[11px] text-slate-500 space-y-1 border-t border-slate-800/60">
           <p className="flex items-center justify-center gap-1 font-semibold text-slate-400">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Enterprise Web Application Authentication
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Enterprise Web Application Security
           </p>
-          <p className="text-[10px] text-slate-500">Live Google Account Chooser & Twilio Real-Time SMS OTP.</p>
+          <p className="text-[10px] text-slate-500">
+            {authTab === 'NEW_USER'
+              ? 'New User Registration with Profile Onboarding (Name, Country, Age, Currency)'
+              : 'Existing User Login loading saved household historical data'}
+          </p>
         </div>
       </div>
 
       <PhoneAuthModal
         isOpen={showPhoneModal}
         onClose={() => setShowPhoneModal(false)}
-        onSuccess={() => navigate('/')}
+        onSuccess={() => handlePhoneSuccess()}
+      />
+
+      <NewUserOnboardingModal
+        isOpen={showOnboardingModal}
+        initialName={newUserName}
+        onComplete={() => {
+          setShowOnboardingModal(false);
+          navigate('/');
+        }}
       />
     </div>
   );

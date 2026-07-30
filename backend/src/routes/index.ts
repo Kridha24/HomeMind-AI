@@ -34,6 +34,7 @@ router.use(validateSession);
 
 // Session Profile & Devices
 router.get('/auth/me', authController.getMe);
+router.put('/auth/profile', authController.updateProfile);
 router.post('/auth/logout-all', authController.logoutAllDevices);
 
 // Household Settings & Currency Engine
@@ -59,37 +60,30 @@ router.post('/inventory', authorize(['OWNER', 'ADMIN', 'MEMBER']), inventoryCont
 router.put('/inventory/:id/quantity', authorize(['OWNER', 'ADMIN', 'MEMBER']), inventoryController.updateQuantity);
 router.delete('/inventory/:id', authorize(['OWNER', 'ADMIN']), inventoryController.deleteGroceryItem);
 
-// Appliance Manager
+// Appliances Management
 router.get('/appliances', applianceController.getAppliances);
 router.post('/appliances', authorize(['OWNER', 'ADMIN', 'MEMBER']), applianceController.createAppliance);
-router.post('/appliances/:id/maintenance', authorize(['OWNER', 'ADMIN', 'MEMBER']), applianceController.logMaintenance);
 
-// Medicine Manager
+// Medicines Tracker
 router.get('/medicines', medicineController.getMedicines);
 router.post('/medicines', authorize(['OWNER', 'ADMIN', 'MEMBER']), medicineController.createMedicine);
-router.put('/medicines/schedules/:scheduleId/taken', authorize(['OWNER', 'ADMIN', 'MEMBER']), medicineController.toggleScheduleTaken);
 
-// Household Task Workspace
+// Tasks & Family Workspace
 router.get('/tasks', taskController.getTasks);
 router.post('/tasks', authorize(['OWNER', 'ADMIN', 'MEMBER']), taskController.createTask);
 router.put('/tasks/:id/status', authorize(['OWNER', 'ADMIN', 'MEMBER']), taskController.updateTaskStatus);
 
-// Family Workspace & Permissions
+// Family Members Workspace
 router.get('/family/members', familyController.getHouseholdMembers);
 router.put('/family/members/:userId/role', authorize(['OWNER', 'ADMIN']), familyController.updateMemberRole);
-router.post('/family/join', familyController.joinHouseholdWithCode);
 
-// AI Security & DB Context Proxy
+// AI Assistance & Telemetry
 router.get('/ai/forecasts', aiController.getAIForecasts);
-router.post('/ai/ocr', authorize(['OWNER', 'ADMIN', 'MEMBER']), aiController.scanReceiptOrPantry);
-router.get('/ai/recipes', aiController.getRecipeRecommendations);
-router.post('/ai/chat', aiController.chatWithAI);
+router.post('/ai/scan', aiController.scanReceiptOrPantry);
 
-// Notifications
+// Notifications & Reports
 router.get('/notifications', notificationController.getNotifications);
 router.put('/notifications/:id/read', notificationController.markAsRead);
-
-// Executive Reports Exporter
-router.get('/reports/monthly/pdf', reportController.exportMonthlyReport);
+router.get('/reports/monthly', reportController.exportMonthlyReport);
 
 export default router;
