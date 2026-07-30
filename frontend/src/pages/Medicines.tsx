@@ -13,9 +13,11 @@ export const Medicines: React.FC = () => {
   const fetchMedicines = async () => {
     try {
       const res = await apiClient.get('/medicines');
-      setMedicines(res.data);
+      const list = Array.isArray(res.data) ? res.data : (res.data?.medicines || []);
+      setMedicines(list);
     } catch (e) {
       console.error(e);
+      setMedicines([]);
     } finally {
       setLoading(false);
     }

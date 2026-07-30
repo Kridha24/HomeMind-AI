@@ -16,9 +16,11 @@ export const Appliances: React.FC = () => {
   const fetchAppliances = async () => {
     try {
       const res = await apiClient.get('/appliances');
-      setAppliances(res.data);
+      const list = Array.isArray(res.data) ? res.data : (res.data?.appliances || []);
+      setAppliances(list);
     } catch (e) {
       console.error(e);
+      setAppliances([]);
     } finally {
       setLoading(false);
     }

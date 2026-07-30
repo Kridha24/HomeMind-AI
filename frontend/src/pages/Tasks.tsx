@@ -13,9 +13,11 @@ export const Tasks: React.FC = () => {
   const fetchTasks = async () => {
     try {
       const res = await apiClient.get('/tasks');
-      setTasks(res.data);
+      const list = Array.isArray(res.data) ? res.data : (res.data?.tasks || []);
+      setTasks(list);
     } catch (e) {
       console.error(e);
+      setTasks([]);
     } finally {
       setLoading(false);
     }

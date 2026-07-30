@@ -21,9 +21,11 @@ export const Expenses: React.FC = () => {
   const fetchExpenses = async () => {
     try {
       const res = await apiClient.get('/expenses');
-      setExpenses(res.data);
+      const list = Array.isArray(res.data) ? res.data : (res.data?.expenses || []);
+      setExpenses(list);
     } catch (e) {
       console.error(e);
+      setExpenses([]);
     } finally {
       setLoading(false);
     }

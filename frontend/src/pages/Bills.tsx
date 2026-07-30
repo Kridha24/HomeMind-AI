@@ -16,9 +16,11 @@ export const Bills: React.FC = () => {
   const fetchBills = async () => {
     try {
       const res = await apiClient.get('/bills');
-      setBills(res.data);
+      const list = Array.isArray(res.data) ? res.data : (res.data?.bills || []);
+      setBills(list);
     } catch (e) {
       console.error(e);
+      setBills([]);
     } finally {
       setLoading(false);
     }

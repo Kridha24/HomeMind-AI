@@ -13,9 +13,11 @@ export const Inventory: React.FC = () => {
   const fetchInventory = async () => {
     try {
       const res = await apiClient.get('/inventory');
-      setItems(res.data);
+      const list = Array.isArray(res.data) ? res.data : (res.data?.items || res.data?.groceries || []);
+      setItems(list);
     } catch (e) {
       console.error(e);
+      setItems([]);
     } finally {
       setLoading(false);
     }
