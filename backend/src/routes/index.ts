@@ -86,6 +86,7 @@ router.put('/family/members/:userId/role', authorize(['OWNER', 'ADMIN']), family
 // AI Assistance & Telemetry
 router.get('/ai/forecasts', aiController.getAIForecasts);
 router.post('/ai/scan', aiController.scanReceiptOrPantry);
+router.post('/ai/chat', aiController.chatWithAI);
 
 // Notifications & Reports
 router.get('/notifications', notificationController.getNotifications);
