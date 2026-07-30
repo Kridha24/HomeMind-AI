@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Bot, Sparkles } from 'lucide-react';
 import { Sidebar } from './components/layout/Sidebar';
 import { Navbar } from './components/layout/Navbar';
 import { AIChatDrawer } from './components/common/AIChatDrawer';
@@ -82,6 +83,19 @@ export function App() {
                     </Routes>
                   </main>
                 </div>
+
+                {/* Floating AI Assistant Trigger Button (Bottom Right Corner) */}
+                <button
+                  onClick={() => setIsAIChatOpen(true)}
+                  className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-4 py-3 rounded-full font-bold text-xs shadow-2xl shadow-blue-500/40 border border-blue-400/30 transition-all hover:scale-105 active:scale-95 group"
+                  title="Ask HomeMind AI Assistant"
+                >
+                  <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center">
+                    <Bot className="w-4 h-4 text-white group-hover:rotate-12 transition-transform" />
+                  </div>
+                  <span>Ask HomeMind AI</span>
+                  <Sparkles className="w-3.5 h-3.5 text-blue-200 animate-pulse" />
+                </button>
 
                 <AIChatDrawer isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />
                 <NotificationDrawer
