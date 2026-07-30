@@ -13,8 +13,11 @@ import {
   ShoppingBag,
   CheckCircle2,
   Lock,
-  Wallet,
   Activity,
+  User,
+  Heart,
+  Smile,
+  Zap,
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -37,9 +40,10 @@ export const Login: React.FC = () => {
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState('');
 
-  // 3D Perspective Mouse Interaction State
+  // 3D Perspective & Cursor Tracking Coordinates (-1 to +1 normalized)
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
+  const [normPos, setNormPos] = useState({ x: 0, y: 0 });
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -69,22 +73,30 @@ export const Login: React.FC = () => {
     };
   }, []);
 
-  // 3D Mouse Tilt Move Handler
+  // 3D Mouse Movement & Cursor-Responsive People Tracking
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
     
-    // Smooth 3D tilt calculation
-    setRotateX(-y / 25);
-    setRotateY(x / 25);
+    // Normalized coordinates from -1 (left/top) to +1 (right/bottom)
+    const nx = (e.clientX - winW / 2) / (winW / 2);
+    const ny = (e.clientY - winH / 2) / (winH / 2);
+    setNormPos({ x: nx, y: ny });
     setMousePos({ x: e.clientX, y: e.clientY });
+
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      setRotateX(-y / 25);
+      setRotateY(x / 25);
+    }
   };
 
   const handleMouseLeave = () => {
     setRotateX(0);
     setRotateY(0);
+    setNormPos({ x: 0, y: 0 });
   };
 
   const handleGoogleCallback = async (response: any) => {
@@ -165,126 +177,201 @@ export const Login: React.FC = () => {
     >
       {/* Dynamic Cursor Light Glow Halo */}
       <div
-        className="fixed pointer-events-none rounded-full w-[450px] h-[450px] bg-blue-500/10 blur-3xl transition-opacity duration-300 z-0"
+        className="fixed pointer-events-none rounded-full w-[500px] h-[500px] bg-blue-500/15 blur-3xl transition-opacity duration-300 z-0"
         style={{
-          left: `${mousePos.x - 225}px`,
-          top: `${mousePos.y - 225}px`,
+          left: `${mousePos.x - 250}px`,
+          top: `${mousePos.y - 250}px`,
         }}
       ></div>
 
-      {/* Background Glowing Mesh Gradient Spheres */}
-      <div className="absolute w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-blue-600/15 via-indigo-600/15 to-purple-600/15 blur-3xl -top-32 -left-32 animate-pulse pointer-events-none"></div>
-      <div className="absolute w-[650px] h-[650px] rounded-full bg-gradient-to-tr from-emerald-600/10 via-teal-600/10 to-blue-600/10 blur-3xl -bottom-40 -right-40 animate-pulse pointer-events-none"></div>
+      {/* ========================================================================= */}
+      {/* REALISTIC ANIMATED SMART HOME ENVIRONMENT BACKGROUND LAYER */}
+      {/* ========================================================================= */}
+      <div
+        className="absolute inset-0 transition-transform duration-300 ease-out pointer-events-none opacity-40"
+        style={{
+          transform: `translate3d(${-normPos.x * 12}px, ${-normPos.y * 12}px, 0)`,
+        }}
+      >
+        {/* Smart Living Room & Kitchen Illumination Gradients */}
+        <div className="absolute top-10 left-1/4 w-96 h-96 rounded-full bg-amber-500/10 blur-3xl"></div>
+        <div className="absolute bottom-10 right-1/4 w-96 h-96 rounded-full bg-blue-500/10 blur-3xl"></div>
+      </div>
 
       {/* ========================================================================= */}
-      {/* ANIMATED BACKGROUND MOTION PICTURE CARDS (EXPENSES & HOME TRACKER TELEMETRY) */}
+      {/* CURSOR-RESPONSIVE PEOPLE / FAMILY CHARACTERS (PEOPLE MOVE WITH CURSOR) */}
       {/* ========================================================================= */}
 
-      {/* 1. Top-Left Animated Card: Expense Tracker Widget */}
-      <div className="absolute top-12 left-12 w-80 glass-panel p-4 border border-slate-800/80 bg-slate-900/60 backdrop-blur-xl shadow-2xl rounded-2xl hidden lg:flex flex-col gap-3 animate-in slide-in-from-left duration-700 pointer-events-none transform -rotate-3 hover:rotate-0 transition-transform">
+      {/* Person 1: Homeowner / Dad Avatar (Left Side - Follows Cursor) */}
+      <div
+        className="absolute top-28 left-20 hidden xl:flex flex-col items-center gap-2 pointer-events-none transition-transform duration-200 ease-out z-0"
+        style={{
+          transform: `translate3d(${normPos.x * 35}px, ${normPos.y * 25}px, 0) rotate(${normPos.x * 8}deg)`,
+        }}
+      >
+        {/* Interactive Speech Bubble */}
+        <div className="glass-panel px-3 py-1.5 border-emerald-500/30 bg-slate-900/80 rounded-2xl text-[10px] text-emerald-300 font-bold shadow-xl flex items-center gap-1.5 animate-bounce-slow">
+          <Zap className="w-3 h-3 text-amber-400" />
+          <span>"Checking Room Rent & Electricity..."</span>
+        </div>
+
+        {/* Realistic Avatar Card */}
+        <div className="relative group">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 p-1 shadow-2xl shadow-blue-500/40 border border-blue-400/40 overflow-hidden flex items-center justify-center">
+            <img
+              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"
+              alt="Homeowner"
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          {/* Eye Gaze Pupil Tracking Light */}
+          <div
+            className="absolute top-4 left-6 w-2.5 h-2.5 bg-blue-400 rounded-full blur-[1px] transition-transform duration-100"
+            style={{
+              transform: `translate(${normPos.x * 4}px, ${normPos.y * 4}px)`,
+            }}
+          ></div>
+        </div>
+        <span className="text-[11px] font-bold text-slate-300 bg-slate-900/80 px-2.5 py-0.5 rounded-full border border-slate-800">
+          Alex • Homeowner
+        </span>
+      </div>
+
+      {/* Person 2: Partner / Mom Avatar (Right Side - Follows Cursor) */}
+      <div
+        className="absolute top-28 right-20 hidden xl:flex flex-col items-center gap-2 pointer-events-none transition-transform duration-200 ease-out z-0"
+        style={{
+          transform: `translate3d(${normPos.x * 40}px, ${normPos.y * 30}px, 0) rotate(${-normPos.x * 8}deg)`,
+        }}
+      >
+        {/* Interactive Speech Bubble */}
+        <div className="glass-panel px-3 py-1.5 border-blue-500/30 bg-slate-900/80 rounded-2xl text-[10px] text-blue-300 font-bold shadow-xl flex items-center gap-1.5 animate-bounce-slow">
+          <ShoppingBag className="w-3 h-3 text-emerald-400" />
+          <span>"Pantry Stock is Healthy! 🟢"</span>
+        </div>
+
+        {/* Realistic Avatar Card */}
+        <div className="relative group">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-purple-600 to-pink-600 p-1 shadow-2xl shadow-purple-500/40 border border-purple-400/40 overflow-hidden flex items-center justify-center">
+            <img
+              src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80"
+              alt="Partner"
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          {/* Eye Gaze Pupil Tracking Light */}
+          <div
+            className="absolute top-4 left-6 w-2.5 h-2.5 bg-purple-400 rounded-full blur-[1px] transition-transform duration-100"
+            style={{
+              transform: `translate(${normPos.x * 4}px, ${normPos.y * 4}px)`,
+            }}
+          ></div>
+        </div>
+        <span className="text-[11px] font-bold text-slate-300 bg-slate-900/80 px-2.5 py-0.5 rounded-full border border-slate-800">
+          Sarah • Partner
+        </span>
+      </div>
+
+      {/* Person 3: Child Avatar (Lower Left - Follows Cursor) */}
+      <div
+        className="absolute bottom-20 left-28 hidden xl:flex flex-col items-center gap-2 pointer-events-none transition-transform duration-200 ease-out z-0"
+        style={{
+          transform: `translate3d(${normPos.x * 25}px, ${normPos.y * 20}px, 0) scale(0.95)`,
+        }}
+      >
+        <div className="glass-panel px-2.5 py-1 border-teal-500/30 bg-slate-900/80 rounded-2xl text-[9px] text-teal-300 font-bold shadow-xl flex items-center gap-1">
+          <Smile className="w-3 h-3 text-amber-400" />
+          <span>"Tasks 88% Done!"</span>
+        </div>
+
+        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-teal-600 to-emerald-600 p-1 shadow-xl border border-teal-400/40 overflow-hidden flex items-center justify-center">
+          <img
+            src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80"
+            alt="Youth"
+            className="w-full h-full object-cover rounded-full"
+          />
+        </div>
+        <span className="text-[10px] font-bold text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded-full border border-slate-800">
+          Leo • Member
+        </span>
+      </div>
+
+      {/* Family Pet: Golden Retriever Avatar (Lower Right - Follows Cursor) */}
+      <div
+        className="absolute bottom-20 right-28 hidden xl:flex flex-col items-center gap-2 pointer-events-none transition-transform duration-200 ease-out z-0"
+        style={{
+          transform: `translate3d(${normPos.x * 45}px, ${normPos.y * 32}px, 0) scale(0.95)`,
+        }}
+      >
+        <div className="glass-panel px-2.5 py-1 border-amber-500/30 bg-slate-900/80 rounded-2xl text-[9px] text-amber-300 font-bold shadow-xl flex items-center gap-1">
+          <Heart className="w-3 h-3 text-red-400 fill-red-400" />
+          <span>"HomeMind AI Active 🐕"</span>
+        </div>
+
+        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-600 to-orange-600 p-1 shadow-xl border border-amber-400/40 overflow-hidden flex items-center justify-center">
+          <img
+            src="https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=300&q=80"
+            alt="Family Pet"
+            className="w-full h-full object-cover rounded-full"
+          />
+        </div>
+        <span className="text-[10px] font-bold text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded-full border border-slate-800">
+          Buddy • Family Pet
+        </span>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* ANIMATED TELEMETRY CARDS LAYER */}
+      {/* ========================================================================= */}
+
+      {/* Top-Left Animated Card: Expense Tracker Widget */}
+      <div
+        className="absolute top-12 left-12 w-72 glass-panel p-4 border border-slate-800/80 bg-slate-900/60 backdrop-blur-xl shadow-2xl rounded-2xl hidden lg:flex flex-col gap-2.5 pointer-events-none transition-transform duration-300 ease-out"
+        style={{
+          transform: `translate3d(${normPos.x * 15}px, ${normPos.y * 10}px, 0) rotate(-2deg)`,
+        }}
+      >
         <div className="flex items-center justify-between border-b border-slate-800 pb-2">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center">
-              <CreditCard className="w-4 h-4" />
+            <div className="w-6 h-6 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center">
+              <CreditCard className="w-3.5 h-3.5" />
             </div>
             <span className="text-xs font-bold text-slate-200">Expense Telemetry</span>
           </div>
           <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-500/10 border border-red-500/20 text-red-400 uppercase tracking-wider">
-            Live Track
+            Live
           </span>
         </div>
 
-        <div className="space-y-1">
+        <div>
           <span className="text-[10px] text-slate-400 block font-medium">Monthly Expenses</span>
-          <span className="text-xl font-extrabold text-red-400 font-mono block">-$1,450.00</span>
-        </div>
-
-        <div className="space-y-1.5 pt-1">
-          <div className="flex justify-between text-[10px] text-slate-300 font-semibold">
-            <span>Room Rent & Mess Fees</span>
-            <span className="text-amber-400 font-mono">$850.00</span>
-          </div>
-          <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-gradient-to-r from-red-500 to-amber-500 h-full w-[70%] animate-pulse"></div>
-          </div>
+          <span className="text-lg font-extrabold text-red-400 font-mono block">-$1,450.00</span>
         </div>
       </div>
 
-      {/* 2. Bottom-Left Animated Card: Home Operating System Tracker */}
-      <div className="absolute bottom-12 left-12 w-80 glass-panel p-4 border border-slate-800/80 bg-slate-900/60 backdrop-blur-xl shadow-2xl rounded-2xl hidden lg:flex flex-col gap-3 animate-in slide-in-from-left duration-1000 pointer-events-none transform rotate-2 hover:rotate-0 transition-transform">
+      {/* Top-Right Animated Card: Cash Flow & Savings Telemetry */}
+      <div
+        className="absolute top-12 right-12 w-72 glass-panel p-4 border border-slate-800/80 bg-slate-900/60 backdrop-blur-xl shadow-2xl rounded-2xl hidden lg:flex flex-col gap-2.5 pointer-events-none transition-transform duration-300 ease-out"
+        style={{
+          transform: `translate3d(${normPos.x * 18}px, ${normPos.y * 12}px, 0) rotate(2deg)`,
+        }}
+      >
         <div className="flex items-center justify-between border-b border-slate-800 pb-2">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
-              <Home className="w-4 h-4" />
-            </div>
-            <span className="text-xs font-bold text-slate-200">Home Tracker OS</span>
-          </div>
-          <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Active
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 text-[10px]">
-          <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center gap-2">
-            <ShoppingBag className="w-3.5 h-3.5 text-blue-400" />
-            <div>
-              <span className="text-slate-400 block">Pantry Stock</span>
-              <span className="text-slate-200 font-bold">Healthy 🟢</span>
-            </div>
-          </div>
-
-          <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center gap-2">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-            <div>
-              <span className="text-slate-400 block">Tasks Done</span>
-              <span className="text-emerald-400 font-bold">88% Done</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Top-Right Animated Card: Cash Flow & Savings Telemetry */}
-      <div className="absolute top-12 right-12 w-80 glass-panel p-4 border border-slate-800/80 bg-slate-900/60 backdrop-blur-xl shadow-2xl rounded-2xl hidden lg:flex flex-col gap-3 animate-in slide-in-from-right duration-700 pointer-events-none transform rotate-3 hover:rotate-0 transition-transform">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4" />
+            <div className="w-6 h-6 rounded-lg bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center">
+              <TrendingUp className="w-3.5 h-3.5" />
             </div>
             <span className="text-xs font-bold text-slate-200">Net Savings Flow</span>
           </div>
           <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-teal-500/10 border border-teal-500/20 text-teal-400 uppercase tracking-wider">
-            +18% Growth
+            +18%
           </span>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-[10px] text-slate-400 block font-medium">Monthly Savings</span>
-            <span className="text-xl font-extrabold text-teal-400 font-mono block">+$2,100.00</span>
-          </div>
-          <div className="w-12 h-8 flex items-end gap-1">
-            <div className="w-2 bg-teal-500/30 h-4 rounded-t"></div>
-            <div className="w-2 bg-teal-500/60 h-6 rounded-t"></div>
-            <div className="w-2 bg-teal-400 h-8 rounded-t animate-pulse"></div>
-          </div>
+        <div>
+          <span className="text-[10px] text-slate-400 block font-medium">Monthly Savings</span>
+          <span className="text-lg font-extrabold text-teal-400 font-mono block">+$2,100.00</span>
         </div>
-      </div>
-
-      {/* 4. Bottom-Right Animated Card: Security & AI Telemetry */}
-      <div className="absolute bottom-12 right-12 w-80 glass-panel p-4 border border-slate-800/80 bg-slate-900/60 backdrop-blur-xl shadow-2xl rounded-2xl hidden lg:flex flex-col gap-3 animate-in slide-in-from-right duration-1000 pointer-events-none transform -rotate-2 hover:rotate-0 transition-transform">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
-              <Activity className="w-4 h-4" />
-            </div>
-            <span className="text-xs font-bold text-slate-200">AI Assistant Grounding</span>
-          </div>
-          <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">256-Bit SSL</span>
-        </div>
-
-        <p className="text-[10px] text-slate-400 leading-relaxed">
-          Grounding real-time database telemetry across Room Rent, Mess Fees, Groceries, and Utility Bills.
-        </p>
       </div>
 
       {/* ========================================================================= */}
