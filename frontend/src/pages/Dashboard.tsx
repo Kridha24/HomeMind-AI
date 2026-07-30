@@ -19,6 +19,7 @@ import {
   History,
   PiggyBank,
   Landmark,
+  Hourglass,
 } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -67,11 +68,21 @@ export const Dashboard: React.FC = () => {
   const countryDefaults = COUNTRY_DEFAULTS[country] || COUNTRY_DEFAULTS['US'];
   const flag = COUNTRY_FLAGS[country] || '🌐';
 
+  // Current Month Telemetry Calculation
+  const now = new Date();
+  const monthName = now.toLocaleString('default', { month: 'long' });
+  const monthShort = now.toLocaleString('default', { month: 'short' });
+  const year = now.getFullYear();
+  const daysInMonth = new Date(year, now.getMonth() + 1, 0).getDate();
+  const currentDay = now.getDate();
+  const daysRemaining = Math.max(0, daysInMonth - currentDay);
+  const dateRangeStr = `${monthShort} 1 – ${monthShort} ${daysInMonth}, ${year}`;
+
   useEffect(() => {
     const updateClock = () => {
-      const now = new Date();
-      setTimeStr(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-      setDateStr(now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }));
+      const currentTime = new Date();
+      setTimeStr(currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      setDateStr(currentTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }));
     };
     updateClock();
     const interval = setInterval(updateClock, 1000);
@@ -121,54 +132,82 @@ export const Dashboard: React.FC = () => {
           </p>
         </div>
 
-        {/* Real-time Digital Clock */}
-        <div className="glass-panel px-4 py-2.5 border-blue-500/30 flex items-center gap-3 bg-slate-900/80">
-          <Clock className="w-5 h-5 text-blue-400 animate-pulse" />
-          <div className="text-right">
-            <span className="font-mono text-base font-extrabold text-slate-100 block tracking-wider leading-none">
-              {timeStr || '12:00:00 PM'}
+        <div className="flex items-center gap-3">
+          {/* Days Left in Month Badge */}
+          <div className="glass-panel px-3.5 py-2 border-emerald-500/30 flex items-center gap-2 bg-emerald-500/10 text-emerald-300 text-xs font-semibold">
+            <Hourglass className="w-4 h-4 text-emerald-400 animate-spin" />
+            <span>
+              {daysRemaining === 0 ? 'Last Day of ' + monthName : `${daysRemaining} Days Left in ${monthName}`}
             </span>
-            <span className="text-[10px] font-semibold text-slate-400 flex items-center gap-1 mt-0.5">
-              <Calendar className="w-3 h-3 text-indigo-400" /> {dateStr}
-            </span>
+          </div>
+
+          {/* Real-time Digital Clock */}
+          <div className="glass-panel px-4 py-2.5 border-blue-500/30 flex items-center gap-3 bg-slate-900/80">
+            <Clock className="w-5 h-5 text-blue-400 animate-pulse" />
+            <div className="text-right">
+              <span className="font-mono text-base font-extrabold text-slate-100 block tracking-wider leading-none">
+                {timeStr || '12:00:00 PM'}
+              </span>
+              <span className="text-[10px] font-semibold text-slate-400 flex items-center gap-1 mt-0.5">
+                <Calendar className="w-3 h-3 text-indigo-400" /> {dateStr}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Metric Cards: Income, Expenses, Monthly Savings, Overall Balance */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Monthly Income Card */}
+        {/* Monthly Income Card with Month Name & Date Range */}
         <div className="glass-panel p-6 border-emerald-500/30 bg-gradient-to-tr from-slate-900 via-emerald-950/20 to-slate-900 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Monthly Income</span>
+            <div>
+              <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">
+                Income ({monthName} {year})
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono block">{dateRangeStr}</span>
+            </div>
             <Wallet className="w-4 h-4 text-emerald-400" />
           </div>
-          <p className="text-2xl font-extrabold text-slate-100 font-mono">{format(monthlyIncome)}</p>
-          <p className="text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
-            <TrendingUp className="w-3 h-3" /> Monthly Earnings
-          </p>
+          <p className="text-2xl font-extrabold text-slate-100 font-mono pt-1">{format(monthlyIncome)}</p>
+          <div className="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[11px]">
+            <span className="text-emerald-400 flex items-center gap-1 font-medium">
+              <TrendingUp className="w-3 h-3" /> Monthly Earnings
+            </span>
+            <span className="text-slate-400 font-mono">{daysRemaining}d remaining</span>
+          </div>
         </div>
 
-        {/* Monthly Expenses Card */}
+        {/* Monthly Expenses Card with Month Name & Date Range */}
         <div className="glass-panel p-6 border-blue-500/30 bg-gradient-to-tr from-slate-900 via-blue-950/20 to-slate-900 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">Monthly Expenses</span>
+            <div>
+              <span className="text-xs font-bold text-blue-400 uppercase tracking-wider block">
+                Expenses ({monthName} {year})
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono block">{dateRangeStr}</span>
+            </div>
             <CreditCard className="w-4 h-4 text-blue-400" />
           </div>
-          <p className="text-2xl font-extrabold text-slate-100 font-mono">{format(monthlyExpenses)}</p>
-          <p className="text-[11px] text-slate-400">Total Logged Spend</p>
+          <p className="text-2xl font-extrabold text-slate-100 font-mono pt-1">{format(monthlyExpenses)}</p>
+          <div className="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[11px]">
+            <span className="text-slate-400">Total Logged Spend</span>
+            <span className="text-slate-400 font-mono">{daysRemaining}d remaining</span>
+          </div>
         </div>
 
         {/* Monthly Net Savings Card (Income - Expenses) */}
         <div className="glass-panel p-6 border-teal-500/30 bg-gradient-to-tr from-slate-900 via-teal-950/20 to-slate-900 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-teal-400 uppercase tracking-wider">Monthly Net Savings</span>
+            <span className="text-xs font-bold text-teal-400 uppercase tracking-wider">Net Savings ({monthShort})</span>
             <PiggyBank className="w-4 h-4 text-teal-400" />
           </div>
-          <p className={`text-2xl font-extrabold font-mono ${monthlySavings >= 0 ? 'text-teal-400' : 'text-red-400'}`}>
+          <p className={`text-2xl font-extrabold font-mono pt-1 ${monthlySavings >= 0 ? 'text-teal-400' : 'text-red-400'}`}>
             {monthlySavings >= 0 ? `+${format(monthlySavings)}` : format(monthlySavings)}
           </p>
-          <p className="text-[11px] text-slate-400">Income - Expenses (This Month)</p>
+          <div className="pt-1 border-t border-slate-800/80 text-[11px] text-slate-400">
+            Income - Expenses ({monthName})
+          </div>
         </div>
 
         {/* Overall Lifetime Balance Card */}
@@ -177,10 +216,12 @@ export const Dashboard: React.FC = () => {
             <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">Overall Net Balance</span>
             <Landmark className="w-4 h-4 text-purple-400" />
           </div>
-          <p className={`text-2xl font-extrabold font-mono ${overallSavings >= 0 ? 'text-purple-300' : 'text-red-400'}`}>
+          <p className={`text-2xl font-extrabold font-mono pt-1 ${overallSavings >= 0 ? 'text-purple-300' : 'text-red-400'}`}>
             {overallSavings >= 0 ? `+${format(overallSavings)}` : format(overallSavings)}
           </p>
-          <p className="text-[11px] text-purple-400 font-medium">Lifetime Income - Expenses</p>
+          <div className="pt-1 border-t border-slate-800/80 text-[11px] text-purple-400 font-medium">
+            Lifetime Income - Expenses
+          </div>
         </div>
       </div>
 
@@ -188,7 +229,7 @@ export const Dashboard: React.FC = () => {
       <div className="glass-panel p-6 border-amber-500/30 bg-gradient-to-r from-slate-900 via-amber-950/10 to-slate-900 flex items-center justify-between gap-4">
         <div className="space-y-1">
           <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">Upcoming Expenses & Utility Bills Plan</span>
-          <p className="text-xs text-slate-300">Total unpaid utility bills scheduled for settlement this cycle.</p>
+          <p className="text-xs text-slate-300">Total unpaid utility bills scheduled for settlement during {monthName} {year}.</p>
         </div>
         <div className="text-right">
           <span className="text-2xl font-extrabold text-amber-400 font-mono block">{format(upcomingBillsTotal)}</span>
