@@ -13,6 +13,7 @@ import * as aiController from '../controllers/aiController';
 import * as notificationController from '../controllers/notificationController';
 import * as reportController from '../controllers/reportController';
 import * as settingController from '../controllers/settingController';
+import * as incomeController from '../controllers/incomeController';
 
 const router = Router();
 
@@ -43,6 +44,11 @@ router.put('/settings', authorize(['OWNER', 'ADMIN']), settingController.updateS
 
 // Dashboard Overview Telemetry
 router.get('/dashboard/summary', dashboardController.getDashboardSummary);
+
+// Income Management
+router.get('/income', incomeController.getIncomes);
+router.post('/income', authorize(['OWNER', 'ADMIN', 'MEMBER']), incomeController.createIncome);
+router.delete('/income/:id', authorize(['OWNER', 'ADMIN']), incomeController.deleteIncome);
 
 // Expense Management
 router.get('/expenses', expenseController.getExpenses);

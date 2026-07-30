@@ -5,6 +5,7 @@ import { Navbar } from './components/layout/Navbar';
 import { AIChatDrawer } from './components/common/AIChatDrawer';
 import { NotificationDrawer } from './components/common/NotificationDrawer';
 import { Dashboard } from './pages/Dashboard';
+import { Income } from './pages/Income';
 import { Expenses } from './pages/Expenses';
 import { Bills } from './pages/Bills';
 import { Inventory } from './pages/Inventory';
@@ -58,6 +59,7 @@ export function App() {
                   <main className="flex-1 p-6 overflow-y-auto ml-64">
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
+                      <Route path="/income" element={<Income />} />
                       <Route path="/expenses" element={<Expenses />} />
                       <Route path="/bills" element={<Bills />} />
                       <Route path="/inventory" element={<Inventory />} />
