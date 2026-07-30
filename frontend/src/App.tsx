@@ -10,7 +10,6 @@ import { Expenses } from './pages/Expenses';
 import { Bills } from './pages/Bills';
 import { Inventory } from './pages/Inventory';
 import { PantryVision } from './pages/PantryVision';
-import { Recipes } from './pages/Recipes';
 import { Appliances } from './pages/Appliances';
 import { Medicines } from './pages/Medicines';
 import { Tasks } from './pages/Tasks';
@@ -70,7 +69,6 @@ export function App() {
                       <Route path="/bills" element={<Bills />} />
                       <Route path="/inventory" element={<Inventory />} />
                       <Route path="/pantry-vision" element={<PantryVision />} />
-                      <Route path="/recipes" element={<Recipes />} />
                       <Route path="/appliances" element={<Appliances />} />
                       <Route path="/medicines" element={<Medicines />} />
                       <Route path="/tasks" element={<Tasks />} />

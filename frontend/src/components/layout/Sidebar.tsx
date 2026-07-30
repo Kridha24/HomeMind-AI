@@ -31,7 +31,6 @@ export const Sidebar: React.FC = () => {
     { name: 'Bills', path: '/bills', icon: FileText },
     { name: 'Grocery Inventory', path: '/inventory', icon: ShoppingBag },
     { name: 'Pantry Vision OCR', path: '/pantry-vision', icon: Camera },
-    { name: 'AI Recipes', path: '/recipes', icon: UtensilsCrossed },
     { name: 'Appliances', path: '/appliances', icon: Tv },
     { name: 'Medicine Tracker', path: '/medicines', icon: Pill },
     { name: 'Household Tasks', path: '/tasks', icon: CheckSquare },
