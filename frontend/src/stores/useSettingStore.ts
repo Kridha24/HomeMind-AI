@@ -87,6 +87,9 @@ export const useSettingStore = create<SettingState>((set, get) => ({
   },
 
   updateSettings: async (newSettings: Partial<SettingState>) => {
+    if (newSettings.theme) {
+      localStorage.setItem('hm_theme', newSettings.theme);
+    }
     set((state) => ({ ...state, ...newSettings }));
     try {
       await apiClient.put('/settings', newSettings);
@@ -102,9 +105,11 @@ export const useSettingStore = create<SettingState>((set, get) => ({
       if (res.data) {
         const s = res.data;
         const symbol = SUPPORTED_CURRENCIES[s.currency]?.symbol || '$';
-        
+        const savedTheme = (localStorage.getItem('hm_theme') as 'dark' | 'light' | 'glass') || s.theme || 'dark';
+
         localStorage.setItem('hm_currency', s.currency || 'USD');
         localStorage.setItem('hm_currencySymbol', symbol);
+        localStorage.setItem('hm_theme', savedTheme);
 
         set({
           country: s.country || 'US',
@@ -113,7 +118,7 @@ export const useSettingStore = create<SettingState>((set, get) => ({
           timeZone: s.timeZone || 'America/New_York',
           dateFormat: s.dateFormat || 'MM/DD/YYYY',
           unitSystem: s.unitSystem || 'Imperial',
-          theme: s.theme || 'dark',
+          theme: savedTheme,
           language: s.language || 'English',
           pushNotifications: s.pushNotifications ?? true,
           emailAlerts: s.emailAlerts ?? true,

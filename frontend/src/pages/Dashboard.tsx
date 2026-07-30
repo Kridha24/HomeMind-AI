@@ -106,9 +106,11 @@ export const Dashboard: React.FC = () => {
 
   const monthlyIncome = summary?.monthlyIncome || 0;
   const monthlyExpenses = summary?.monthlyExpenses || 0;
+  const overallExpenses = summary?.overallExpenses || 0;
   const monthlySavings = summary?.monthlySavings !== undefined ? summary.monthlySavings : (monthlyIncome - monthlyExpenses);
   const overallSavings = summary?.overallSavings !== undefined ? summary.overallSavings : (summary?.summary?.overallSavings || 0);
   const upcomingBillsTotal = summary?.upcomingBillsTotal || 0;
+  const upcomingBills = summary?.upcomingBills || [];
   const recentHistory = summary?.recent5History || [];
 
   return (
@@ -156,85 +158,126 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Metric Cards: Income, Expenses, Monthly Savings, Overall Balance */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Monthly Income Card with Month Name & Date Range */}
-        <div className="glass-panel p-6 border-emerald-500/30 bg-gradient-to-tr from-slate-900 via-emerald-950/20 to-slate-900 space-y-2">
+      {/* Main Metric Cards: Income, Monthly Expenses (-), Lifetime Expenses (-), Monthly Savings, Overall Balance */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        {/* Monthly Income Card */}
+        <div className="glass-panel p-5 border-emerald-500/30 bg-gradient-to-tr from-slate-900 via-emerald-950/20 to-slate-900 space-y-2">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">
-                Income ({monthName} {year})
+                Income ({monthShort})
               </span>
               <span className="text-[10px] text-slate-400 font-mono block">{dateRangeStr}</span>
             </div>
             <Wallet className="w-4 h-4 text-emerald-400" />
           </div>
-          <p className="text-2xl font-extrabold text-slate-100 font-mono pt-1">{format(monthlyIncome)}</p>
-          <div className="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[11px]">
+          <p className="text-xl font-extrabold text-slate-100 font-mono pt-1">+{format(monthlyIncome)}</p>
+          <div className="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[10px]">
             <span className="text-emerald-400 flex items-center gap-1 font-medium">
               <TrendingUp className="w-3 h-3" /> Monthly Earnings
             </span>
-            <span className="text-slate-400 font-mono">{daysRemaining}d remaining</span>
           </div>
         </div>
 
-        {/* Monthly Expenses Card with Month Name & Date Range */}
-        <div className="glass-panel p-6 border-blue-500/30 bg-gradient-to-tr from-slate-900 via-blue-950/20 to-slate-900 space-y-2">
+        {/* Monthly Expenses Card with (-) sign */}
+        <div className="glass-panel p-5 border-red-500/30 bg-gradient-to-tr from-slate-900 via-red-950/20 to-slate-900 space-y-2">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-blue-400 uppercase tracking-wider block">
-                Expenses ({monthName} {year})
+              <span className="text-xs font-bold text-red-400 uppercase tracking-wider block">
+                Expenses ({monthShort})
               </span>
               <span className="text-[10px] text-slate-400 font-mono block">{dateRangeStr}</span>
             </div>
-            <CreditCard className="w-4 h-4 text-blue-400" />
+            <CreditCard className="w-4 h-4 text-red-400" />
           </div>
-          <p className="text-2xl font-extrabold text-slate-100 font-mono pt-1">{format(monthlyExpenses)}</p>
-          <div className="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[11px]">
-            <span className="text-slate-400">Total Logged Spend</span>
-            <span className="text-slate-400 font-mono">{daysRemaining}d remaining</span>
+          <p className="text-xl font-extrabold text-red-400 font-mono pt-1">-{format(monthlyExpenses)}</p>
+          <div className="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[10px]">
+            <span className="text-red-400">Total Month Spend</span>
+          </div>
+        </div>
+
+        {/* Lifetime Overall Expenses Card with (-) sign */}
+        <div className="glass-panel p-5 border-rose-500/30 bg-gradient-to-tr from-slate-900 via-rose-950/20 to-slate-900 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-rose-400 uppercase tracking-wider">Lifetime Expenses</span>
+            <CreditCard className="w-4 h-4 text-rose-400" />
+          </div>
+          <p className="text-xl font-extrabold text-rose-400 font-mono pt-1">-{format(overallExpenses)}</p>
+          <div className="pt-1 border-t border-slate-800/80 text-[10px] text-slate-400">
+            Total Historical Spend
           </div>
         </div>
 
         {/* Monthly Net Savings Card (Income - Expenses) */}
-        <div className="glass-panel p-6 border-teal-500/30 bg-gradient-to-tr from-slate-900 via-teal-950/20 to-slate-900 space-y-2">
+        <div className="glass-panel p-5 border-teal-500/30 bg-gradient-to-tr from-slate-900 via-teal-950/20 to-slate-900 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-teal-400 uppercase tracking-wider">Net Savings ({monthShort})</span>
             <PiggyBank className="w-4 h-4 text-teal-400" />
           </div>
-          <p className={`text-2xl font-extrabold font-mono pt-1 ${monthlySavings >= 0 ? 'text-teal-400' : 'text-red-400'}`}>
+          <p className={`text-xl font-extrabold font-mono pt-1 ${monthlySavings >= 0 ? 'text-teal-400' : 'text-red-400'}`}>
             {monthlySavings >= 0 ? `+${format(monthlySavings)}` : format(monthlySavings)}
           </p>
-          <div className="pt-1 border-t border-slate-800/80 text-[11px] text-slate-400">
-            Income - Expenses ({monthName})
+          <div className="pt-1 border-t border-slate-800/80 text-[10px] text-slate-400">
+            Income - Expenses
           </div>
         </div>
 
         {/* Overall Lifetime Balance Card */}
-        <div className="glass-panel p-6 border-purple-500/30 bg-gradient-to-tr from-slate-900 via-purple-950/20 to-slate-900 space-y-2">
+        <div className="glass-panel p-5 border-purple-500/30 bg-gradient-to-tr from-slate-900 via-purple-950/20 to-slate-900 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">Overall Net Balance</span>
+            <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">Overall Balance</span>
             <Landmark className="w-4 h-4 text-purple-400" />
           </div>
-          <p className={`text-2xl font-extrabold font-mono pt-1 ${overallSavings >= 0 ? 'text-purple-300' : 'text-red-400'}`}>
+          <p className={`text-xl font-extrabold font-mono pt-1 ${overallSavings >= 0 ? 'text-purple-300' : 'text-red-400'}`}>
             {overallSavings >= 0 ? `+${format(overallSavings)}` : format(overallSavings)}
           </p>
-          <div className="pt-1 border-t border-slate-800/80 text-[11px] text-purple-400 font-medium">
-            Lifetime Income - Expenses
+          <div className="pt-1 border-t border-slate-800/80 text-[10px] text-purple-400 font-medium">
+            Lifetime Net Assets
           </div>
         </div>
       </div>
 
-      {/* Upcoming Expenses Plan Box */}
-      <div className="glass-panel p-6 border-amber-500/30 bg-gradient-to-r from-slate-900 via-amber-950/10 to-slate-900 flex items-center justify-between gap-4">
-        <div className="space-y-1">
-          <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">Upcoming Expenses & Utility Bills Plan</span>
-          <p className="text-xs text-slate-300">Total unpaid utility bills scheduled for settlement during {monthName} {year}.</p>
+      {/* Upcoming Rents & Mess Expenses Planner Section */}
+      <div className="glass-panel p-6 border-amber-500/30 bg-gradient-to-r from-slate-900 via-amber-950/10 to-slate-900 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+              <FileText className="w-4 h-4" /> Upcoming Rents, Mess Fees & Utility Payments Plan
+            </span>
+            <p className="text-xs text-slate-300">Save and track room rent, mess fees, WiFi, and electricity bills due for settlement during {monthName} {year}.</p>
+          </div>
+          <div className="text-right">
+            <span className="text-2xl font-extrabold text-amber-400 font-mono block">-{format(upcomingBillsTotal)}</span>
+            <span className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider">Total Scheduled Payments</span>
+          </div>
         </div>
-        <div className="text-right">
-          <span className="text-2xl font-extrabold text-amber-400 font-mono block">{format(upcomingBillsTotal)}</span>
-          <span className="text-[11px] text-slate-400">Unpaid Bills Action Required</span>
-        </div>
+
+        {upcomingBills.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+            {upcomingBills.map((bill: any) => (
+              <div key={bill.id} className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-slate-100 block">{bill.title}</span>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 border border-amber-500/20 text-amber-400 uppercase tracking-wider inline-block">
+                    {bill.category || 'Rent/Utility'}
+                  </span>
+                  <p className="text-[10px] text-slate-400 font-mono">Due: {new Date(bill.dueDate).toLocaleDateString()}</p>
+                </div>
+                <span className="text-sm font-extrabold text-red-400 font-mono">-{format(bill.amount)}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 text-center text-xs text-slate-400 flex items-center justify-between">
+            <span>No upcoming rent or mess bill entries logged yet for this cycle.</span>
+            <button
+              onClick={() => setShowBillModal(true)}
+              className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl text-xs font-bold hover:bg-amber-500/20 transition-colors"
+            >
+              + Add Room Rent / Mess Bill
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 5 History Table Section */}

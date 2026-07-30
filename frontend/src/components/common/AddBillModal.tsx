@@ -106,13 +106,14 @@ export const AddBillModal: React.FC<AddBillModalProps> = ({ isOpen, onClose, onS
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500/50"
               >
-                <option value="Electricity">Electricity</option>
-                <option value="Water">Water</option>
-                <option value="Gas">Gas</option>
-                <option value="Internet">Internet</option>
-                <option value="Rent">Rent</option>
-                <option value="Insurance">Insurance</option>
-                <option value="Subscription">Subscription</option>
+                <option value="Room Rent">Room Rent 🏠</option>
+                <option value="Mess Fees">Mess / Food Fees 🍲</option>
+                <option value="Electricity">Electricity ⚡</option>
+                <option value="WiFi / Internet">WiFi / Internet 📶</option>
+                <option value="Water">Water 💧</option>
+                <option value="Gas">Gas ⛽</option>
+                <option value="Maintenance">Maintenance / Cleaning 🧹</option>
+                <option value="Subscription">Subscription 📺</option>
               </select>
             </div>
           </div>
