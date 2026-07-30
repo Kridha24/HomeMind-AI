@@ -347,47 +347,77 @@ export const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Quick Action Modals Panel */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <button
-          onClick={() => setShowBillModal(true)}
-          className="p-4 glass-panel border-slate-800 hover:border-amber-500/40 transition-colors flex flex-col items-center gap-2 text-center"
-        >
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
-            <FileText className="w-5 h-5" />
-          </div>
-          <span className="text-xs font-bold text-slate-200">+ Add Bill</span>
-        </button>
+      {/* Quick Action Panel - Vertical Layout */}
+      <div className="glass-panel p-6 border-slate-800 space-y-4">
+        <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+          <Plus className="w-4 h-4 text-blue-400" /> Quick Add Actions
+        </h3>
 
-        <button
-          onClick={() => setShowGroceryModal(true)}
-          className="p-4 glass-panel border-slate-800 hover:border-emerald-500/40 transition-colors flex flex-col items-center gap-2 text-center"
-        >
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
-            <ShoppingBag className="w-5 h-5" />
-          </div>
-          <span className="text-xs font-bold text-slate-200">+ Add Grocery</span>
-        </button>
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={() => setShowBillModal(true)}
+            className="p-3.5 glass-panel border-slate-800/80 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all flex items-center justify-between text-left group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-100 block">+ Add Bill or Room Rent</span>
+                <span className="text-[10px] text-slate-400">Save utility bills, room rent, mess fees</span>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-amber-400 transition-colors" />
+          </button>
 
-        <button
-          onClick={() => setShowApplianceModal(true)}
-          className="p-4 glass-panel border-slate-800 hover:border-blue-500/40 transition-colors flex flex-col items-center gap-2 text-center"
-        >
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
-            <Tv className="w-5 h-5" />
-          </div>
-          <span className="text-xs font-bold text-slate-200">+ Add Appliance</span>
-        </button>
+          <button
+            onClick={() => setShowGroceryModal(true)}
+            className="p-3.5 glass-panel border-slate-800/80 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all flex items-center justify-between text-left group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <ShoppingBag className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-100 block">+ Add Grocery Item</span>
+                <span className="text-[10px] text-slate-400">Track pantry items and stock levels</span>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />
+          </button>
 
-        <button
-          onClick={() => setShowTaskModal(true)}
-          className="p-4 glass-panel border-slate-800 hover:border-purple-500/40 transition-colors flex flex-col items-center gap-2 text-center"
-        >
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
-            <CheckSquare className="w-5 h-5" />
-          </div>
-          <span className="text-xs font-bold text-slate-200">+ Add Task</span>
-        </button>
+          <button
+            onClick={() => setShowApplianceModal(true)}
+            className="p-3.5 glass-panel border-slate-800/80 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all flex items-center justify-between text-left group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+                <Tv className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-100 block">+ Add Appliance</span>
+                <span className="text-[10px] text-slate-400">Log appliances and service dates</span>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
+          </button>
+
+          <button
+            onClick={() => setShowTaskModal(true)}
+            className="p-3.5 glass-panel border-slate-800/80 hover:border-purple-500/50 hover:bg-purple-500/5 transition-all flex items-center justify-between text-left group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
+                <CheckSquare className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-100 block">+ Add Household Task</span>
+                <span className="text-[10px] text-slate-400">Assign cleaning, chores, and maintenance</span>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-purple-400 transition-colors" />
+          </button>
+        </div>
       </div>
 
       {/* Modals */}
