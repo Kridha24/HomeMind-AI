@@ -92,5 +92,6 @@ router.get('/notifications', notificationController.getNotifications);
 router.put('/notifications/:id/read', notificationController.markAsRead);
 router.get('/reports/monthly', reportController.exportMonthlyReport);
 router.get('/reports/monthly/pdf', reportController.exportMonthlyReport);
+router.get('/analytics/summary', reportController.getAnalyticsSummary);
 
 export default router;
