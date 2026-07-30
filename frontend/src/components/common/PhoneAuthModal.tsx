@@ -6,7 +6,7 @@ import { useAuthStore } from '../../stores/useAuthStore';
 interface PhoneAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (isNewRegistration?: boolean, userName?: string) => void;
 }
 
 export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose, onSuccess }) => {
@@ -76,7 +76,7 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
     try {
       const res = await apiClient.post('/auth/phone/verify-otp', { phoneNumber, otp, name });
       setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
-      onSuccess();
+      onSuccess(res.data.isNewRegistration, res.data.user?.name);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Invalid OTP code');
     } finally {

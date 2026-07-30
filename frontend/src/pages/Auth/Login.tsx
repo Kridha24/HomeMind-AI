@@ -57,7 +57,7 @@ export const Login: React.FC = () => {
       const res = await apiClient.post('/auth/google', { idToken });
       setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
 
-      if (authTab === 'NEW_USER' || res.data.isNewRegistration) {
+      if (authTab === 'NEW_USER' && res.data.isNewRegistration) {
         setNewUserName(res.data.user.name || '');
         setShowOnboardingModal(true);
       } else {
@@ -94,7 +94,7 @@ export const Login: React.FC = () => {
       });
       setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
 
-      if (authTab === 'NEW_USER' || res.data.isNewRegistration) {
+      if (authTab === 'NEW_USER' && res.data.isNewRegistration) {
         setNewUserName(res.data.user.name || '');
         setShowOnboardingModal(true);
       } else {
@@ -109,7 +109,7 @@ export const Login: React.FC = () => {
 
   const handlePhoneSuccess = (isNewReg?: boolean, userName?: string) => {
     setShowPhoneModal(false);
-    if (authTab === 'NEW_USER' || isNewReg) {
+    if (authTab === 'NEW_USER' && isNewReg) {
       setNewUserName(userName || '');
       setShowOnboardingModal(true);
     } else {
