@@ -54,7 +54,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
         ...prev,
         {
           sender: 'ai',
-          text: 'You spent $1,420.30 this month. Groceries is your highest category ($520). Your next bill is Electricity ($142.50) due Aug 5.'
+          text: 'Unable to reach real-time database context. Please verify your connection or try asking again.'
         }
       ]);
     } finally {

@@ -80,17 +80,69 @@ export const chatWithAI = async (req: AuthenticatedRequest, res: Response) => {
 
     const { query } = req.body;
 
-    const [totalExp, nextBill, groceryLow] = await Promise.all([
-      prisma.expense.aggregate({ where: { householdId }, _sum: { amount: true } }),
-      prisma.bill.findFirst({ where: { householdId, status: 'UNPAID' }, orderBy: { dueDate: 'asc' } }),
-      prisma.groceryItem.count({ where: { householdId, quantity: { lte: 2 } } })
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [
+      expenses,
+      incomes,
+      unpaidBills,
+      lowStockGroceries,
+      pendingTasks,
+      appliances,
+      settings
+    ] = await Promise.all([
+      prisma.expense.findMany({ where: { householdId, softDelete: false } }),
+      prisma.income.findMany({ where: { householdId, softDelete: false } }),
+      prisma.bill.findMany({ where: { householdId, status: 'UNPAID', softDelete: false }, orderBy: { dueDate: 'asc' } }),
+      prisma.groceryItem.findMany({ where: { householdId, quantity: { lte: 2 }, softDelete: false } }),
+      prisma.task.findMany({ where: { householdId, status: 'PENDING', softDelete: false } }),
+      prisma.appliance.findMany({ where: { householdId, softDelete: false } }),
+      prisma.setting.findFirst({ where: { householdId } })
     ]);
 
+    // Live Metrics Calculations
+    const monthlyExpenses = expenses
+      .filter(e => new Date(e.date) >= startOfMonth)
+      .reduce((acc, curr) => acc + curr.amount, 0);
+
+    const monthlyIncome = incomes
+      .filter(i => new Date(i.date) >= startOfMonth)
+      .reduce((acc, curr) => acc + curr.amount, 0);
+
+    const overallExpenses = expenses.reduce((acc, curr) => acc + curr.amount, 0);
+    const overallIncome = incomes.reduce((acc, curr) => acc + curr.amount, 0);
+
+    // Expense Category Summary
+    const categoryMap: Record<string, number> = {};
+    expenses.forEach(e => {
+      categoryMap[e.category] = (categoryMap[e.category] || 0) + e.amount;
+    });
+
+    const currencySymbol = settings?.currency === 'INR' ? '₹' : (settings?.currency === 'EUR' ? '€' : (settings?.currency === 'GBP' ? '£' : '$'));
+
     const context = {
-      totalExpenseMonth: totalExp._sum.amount || 1420,
-      nextBillAmount: nextBill?.amount || 120,
-      nextBillDueDate: nextBill?.dueDate ? nextBill.dueDate.toISOString().split('T')[0] : 'Aug 5, 2026',
-      lowStockCount: groceryLow
+      currencySymbol,
+      currency: settings?.currency || 'USD',
+      monthlyIncome,
+      monthlyExpenses,
+      monthlySavings: monthlyIncome - monthlyExpenses,
+      overallIncome,
+      overallExpenses,
+      overallSavings: overallIncome - overallExpenses,
+      categoryBreakdown: categoryMap,
+      unpaidBills: unpaidBills.map(b => ({
+        title: b.title,
+        amount: b.amount,
+        category: b.category,
+        dueDate: new Date(b.dueDate).toLocaleDateString()
+      })),
+      unpaidBillsTotal: unpaidBills.reduce((acc, curr) => acc + curr.amount, 0),
+      lowStockItems: lowStockGroceries.map(g => `${g.name} (${g.quantity} ${g.unit})`),
+      pendingTasks: pendingTasks.map(t => t.title),
+      appliancesCount: appliances.length,
+      expensesCount: expenses.length,
+      incomesCount: incomes.length
     };
 
     const response = await aiClient.processChatQuery(query, context);

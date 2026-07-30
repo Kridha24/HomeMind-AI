@@ -107,29 +107,63 @@ export class AIClientService {
       });
       if (response.ok) return await response.json();
     } catch (e) {
-      console.warn('AI Service chat API unavailable, processing query with fallback intelligence engine');
+      console.warn('AI Service chat API unavailable, processing query with real-time live database engine');
     }
 
     const q = query.toLowerCase();
-    let answer = `Based on your household records: `;
+    const sym = householdContext.currencySymbol || '$';
+    const mInc = householdContext.monthlyIncome || 0;
+    const mExp = householdContext.monthlyExpenses || 0;
+    const oInc = householdContext.overallIncome || 0;
+    const oExp = householdContext.overallExpenses || 0;
+    const mSav = householdContext.monthlySavings || (mInc - mExp);
+    const oSav = householdContext.overallSavings || (oInc - oExp);
 
-    if (q.includes('spend') || q.includes('expense')) {
-      answer += `You spent $${householdContext.totalExpenseMonth || 1420} this month. Your largest category was Groceries ($${householdContext.groceryExpense || 520}). You are currently within 82% of your monthly budget.`;
-    } else if (q.includes('bill') || q.includes('due')) {
-      answer += `Your next upcoming bill is the Electricity Bill ($${householdContext.nextBillAmount || 120}) due on ${householdContext.nextBillDueDate || 'Aug 5, 2026'}.`;
-    } else if (q.includes('grocery') || q.includes('buy') || q.includes('shopping')) {
-      answer += `You need to buy 3 low stock items: Milk, Whole Wheat Bread, and Olive Oil. Also, 2 items (Greek Yogurt, Tomato Paste) are expiring within 3 days.`;
-    } else if (q.includes('dinner') || q.includes('recipe') || q.includes('cook')) {
-      answer += `I recommend cooking Creamy Spinach & Garlic Pasta tonight! It takes 20 mins and uses your spinach expiring in 2 days.`;
-    } else if (q.includes('appliance') || q.includes('service') || q.includes('maintenance')) {
-      answer += `Your Living Room AC filter cleaning is due in 6 days. The Washing Machine was last serviced on May 15.`;
-    } else if (q.includes('save') || q.includes('recommendation')) {
-      answer += `AI Recommendation: Shift heavy washer/dryer cycles to after 8 PM to lower off-peak electricity charges by ~$24/mo.`;
+    let answer = '';
+
+    if (q.includes('expense') || q.includes('spend') || q.includes('kharch') || q.includes('kharcha') || q.includes('paisa gaya')) {
+      answer = `Aapka is mahine ka total kharcha -${sym}${mExp.toLocaleString()} hai. Overall lifetime total kharcha -${sym}${oExp.toLocaleString()} hai.`;
+      if (householdContext.categoryBreakdown && Object.keys(householdContext.categoryBreakdown).length > 0) {
+        const topCat = Object.entries(householdContext.categoryBreakdown).sort((a: any, b: any) => b[1] - a[1])[0];
+        if (topCat) {
+          answer += ` Sabse jyada kharcha ${topCat[0]} category mein huva hai (-${sym}${Number(topCat[1]).toLocaleString()}).`;
+        }
+      }
+    } else if (q.includes('income') || q.includes('earn') || q.includes('kamai') || q.includes('aaya') || q.includes('salary')) {
+      answer = `Aapki is mahine ki total monthly income +${sym}${mInc.toLocaleString()} hai aur overall lifetime income +${sym}${oInc.toLocaleString()} hai.`;
+    } else if (q.includes('save') || q.includes('saving') || q.includes('balance') || q.includes('bachat') || q.includes('bacha')) {
+      answer = `Is mahine ki net savings (${sym}${mSav.toLocaleString()}) hai. Aapka overall net balance: ${oSav >= 0 ? `+${sym}${oSav.toLocaleString()}` : `-${sym}${Math.abs(oSav).toLocaleString()}`}.`;
+    } else if (q.includes('rent') || q.includes('mess') || q.includes('bill') || q.includes('due') || q.includes('baki')) {
+      if (householdContext.unpaidBills && householdContext.unpaidBills.length > 0) {
+        const billsList = householdContext.unpaidBills.map((b: any) => `${b.title} (${b.category}): ${sym}${b.amount} (Due: ${b.dueDate})`).join(', ');
+        answer = `Aapke paas ${householdContext.unpaidBills.length} unpaid bill/rent baki hain. Total amount due: -${sym}${householdContext.unpaidBillsTotal}. Details: ${billsList}.`;
+      } else {
+        answer = `Aapke paas filhaal koi unpaid room rent ya utility bill baki nahi hai. Sabhi bills paid hain!`;
+      }
+    } else if (q.includes('grocery') || q.includes('stock') || q.includes('pantry') || q.includes('samagri') || q.includes('kam')) {
+      if (householdContext.lowStockItems && householdContext.lowStockItems.length > 0) {
+        answer = `Aapke grocery pantry mein ${householdContext.lowStockItems.length} items low stock par hain: ${householdContext.lowStockItems.join(', ')}.`;
+      } else {
+        answer = `Aapke grocery pantry mein sabhi items sufficient quantity mein hain. Koi bhi item low stock nahi hai.`;
+      }
+    } else if (q.includes('task') || q.includes('kaam') || q.includes('chores')) {
+      if (householdContext.pendingTasks && householdContext.pendingTasks.length > 0) {
+        answer = `Aapke paas ${householdContext.pendingTasks.length} pending household tasks hain: ${householdContext.pendingTasks.join(', ')}.`;
+      } else {
+        answer = `Aapke saare household tasks completed hain! Koi pending task nahi hai.`;
+      }
     } else {
-      answer += `Your household operating system is running smoothly. Total monthly expenses: $${householdContext.totalExpenseMonth || 1420}, 4 active family members, and all medicine schedules are up to date!`;
+      answer = `HomeMind AI Live Database Summary: Is mahine ki income +${sym}${mInc.toLocaleString()}, total monthly expenses -${sym}${mExp.toLocaleString()}, net monthly savings ${sym}${mSav.toLocaleString()}, aur overall net balance ${oSav >= 0 ? `+${sym}${oSav.toLocaleString()}` : `-${sym}${Math.abs(oSav).toLocaleString()}`}. Unpaid bills count: ${householdContext.unpaidBills?.length || 0}.`;
     }
 
-    return { answer, suggestions: ['How to cut electricity costs?', 'List expiring groceries', 'Generate monthly PDF report'] };
+    return {
+      answer,
+      suggestions: [
+        'Mera total monthly expense kitna hai?',
+        'Mera room rent & mess bill kitna baki hai?',
+        'Pantry mein konse grocery items kam hain?'
+      ]
+    };
   }
 }
 
