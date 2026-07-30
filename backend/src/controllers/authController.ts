@@ -365,14 +365,18 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response) =>
     const householdId = req.user?.householdId;
     if (!userId || !householdId) return res.status(401).json({ error: 'Unauthenticated' });
 
-    const { name, age, country, currency } = req.body;
+    const { name, age, email, phoneNumber, avatar, country, currency } = req.body;
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
-        name: name || undefined,
-        age: age ? parseInt(age, 10) : undefined
-      }
+        name: name !== undefined ? name : undefined,
+        age: age ? parseInt(age, 10) : undefined,
+        email: email !== undefined ? email : undefined,
+        phoneNumber: phoneNumber !== undefined ? phoneNumber : undefined,
+        avatar: avatar !== undefined ? avatar : undefined
+      },
+      include: { household: true }
     });
 
     if (country || currency) {
@@ -390,7 +394,18 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response) =>
 
     res.json({
       success: true,
-      user: updatedUser
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phoneNumber: updatedUser.phoneNumber,
+        age: updatedUser.age,
+        avatar: updatedUser.avatar,
+        provider: updatedUser.provider,
+        role: updatedUser.role,
+        householdId: updatedUser.householdId,
+        lastLogin: updatedUser.lastLogin
+      }
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

@@ -7,10 +7,11 @@ interface AuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
   setAuth: (user: User, household: Household, accessToken: string, refreshToken: string) => void;
+  updateUser: (partialUser: Partial<User>) => void;
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
   household: JSON.parse(localStorage.getItem('household') || 'null'),
   accessToken: localStorage.getItem('accessToken'),
@@ -22,6 +23,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
     set({ user, household, accessToken, isAuthenticated: true });
+  },
+
+  updateUser: (partialUser) => {
+    const currentUser = get().user;
+    if (!currentUser) return;
+    const updated = { ...currentUser, ...partialUser };
+    localStorage.setItem('user', JSON.stringify(updated));
+    set({ user: updated });
   },
 
   logout: () => {
