@@ -30,7 +30,7 @@ declare global {
   }
 }
 
-const GOOGLE_CLIENT_ID = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || '154894572185-6f8oc2utef3ubc0v6k19v6c7mp0b1eoh.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || '';
 
 export const Login: React.FC = () => {
   const [authTab, setAuthTab] = useState<'NEW_USER' | 'EXISTING_USER'>('NEW_USER');
