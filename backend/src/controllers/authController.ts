@@ -198,8 +198,7 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
     res.json({
       success: true,
       message: `SMS verification code sent to ${phoneNumber}. Valid for 5 minutes.`,
-      provider: smsResult.provider,
-      devOtp: realOtp
+      provider: smsResult.provider
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

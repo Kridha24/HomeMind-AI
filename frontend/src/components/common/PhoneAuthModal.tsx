@@ -53,7 +53,6 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
       setStep('OTP');
       setTimeLeft(300);
       setResendCooldown(30); // 30s resend cooldown
-      setDevOtp(res.data.devOtp);
       setInfoMessage(res.data.message || `SMS verification code sent to ${phoneNumber}`);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to send SMS OTP');
@@ -176,11 +175,6 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
                 onChange={(e) => setOtp(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-center text-lg font-mono tracking-widest text-slate-100 focus:outline-none focus:border-emerald-500/50"
               />
-              {devOtp && (
-                <p className="text-[10px] text-slate-400 mt-1.5 text-center">
-                  Real Cryptographic Dev OTP: <strong className="font-mono text-emerald-400">{devOtp}</strong>
-                </p>
-              )}
             </div>
 
             <button
