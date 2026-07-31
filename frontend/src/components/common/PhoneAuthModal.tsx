@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Phone, ArrowRight, ShieldCheck, X, RefreshCw, Clock } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { auth, RecaptchaVerifier, signInWithPhoneNumber } from '../../config/firebase';
 
 interface PhoneAuthModalProps {
   isOpen: boolean;
@@ -17,10 +18,11 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
-  const [devOtp, setDevOtp] = useState<string | undefined>();
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes (300s)
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
 
+  const recaptchaVerifierRef = useRef<any>(null);
   const { setAuth } = useAuthStore();
 
   useEffect(() => {
@@ -49,13 +51,41 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
     setInfoMessage('');
 
     try {
-      const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber });
-      setStep('OTP');
-      setTimeLeft(300);
-      setResendCooldown(30); // 30s resend cooldown
-      setInfoMessage(res.data.message || `SMS verification code sent to ${phoneNumber}`);
+      // Check if Firebase Auth is configured in environment
+      if ((import.meta as any).env?.VITE_FIREBASE_API_KEY) {
+        if (!recaptchaVerifierRef.current) {
+          recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            size: 'invisible',
+            callback: () => {},
+          });
+        }
+
+        const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`;
+        const confirmation = await signInWithPhoneNumber(auth, formattedPhone, recaptchaVerifierRef.current);
+        setConfirmationResult(confirmation);
+        setStep('OTP');
+        setTimeLeft(300);
+        setResendCooldown(30);
+        setInfoMessage(`Firebase 100% Free Real SMS sent to ${formattedPhone}`);
+      } else {
+        // Fallback to Backend SMS Endpoint
+        const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber });
+        setStep('OTP');
+        setTimeLeft(300);
+        setResendCooldown(30);
+        setInfoMessage(res.data.message || `SMS verification code sent to ${phoneNumber}`);
+      }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to send SMS OTP');
+      // If Firebase recaptcha fails or falls back
+      try {
+        const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber });
+        setStep('OTP');
+        setTimeLeft(300);
+        setResendCooldown(30);
+        setInfoMessage(res.data.message || `SMS verification code sent to ${phoneNumber}`);
+      } catch (fallbackErr: any) {
+        setError(fallbackErr.response?.data?.error || err.message || 'Failed to send SMS OTP');
+      }
     } finally {
       setLoading(false);
     }
@@ -73,11 +103,24 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
     setError('');
 
     try {
+      if (confirmationResult) {
+        // Confirm Firebase OTP
+        await confirmationResult.confirm(otp);
+      }
+
+      // Sync user with backend
       const res = await apiClient.post('/auth/phone/verify-otp', { phoneNumber, otp, name });
       setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
       onSuccess(res.data.isNewRegistration, res.data.user?.name);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Invalid OTP code');
+      // Fallback backend verification
+      try {
+        const res = await apiClient.post('/auth/phone/verify-otp', { phoneNumber, otp, name });
+        setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
+        onSuccess(res.data.isNewRegistration, res.data.user?.name);
+      } catch (fallbackErr: any) {
+        setError(fallbackErr.response?.data?.error || err.message || 'Invalid OTP code');
+      }
     } finally {
       setLoading(false);
     }
@@ -92,6 +135,7 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-6 space-y-6 shadow-2xl relative">
+        <div id="recaptcha-container"></div>
         <button
           onClick={onClose}
           className="absolute right-4 top-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
@@ -99,18 +143,14 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
           <X className="w-5 h-5" />
         </button>
 
-        <div className="text-center space-y-1">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
             <Phone className="w-5 h-5" />
           </div>
-          <h3 className="font-bold text-lg text-slate-100">
-            {step === 'PHONE' ? 'Sign in with Mobile Number' : 'Enter Real SMS 6-Digit Code'}
-          </h3>
-          <p className="text-xs text-slate-400">
-            {step === 'PHONE'
-              ? 'Enter your mobile number to receive a cryptographic SMS OTP'
-              : `Verification SMS sent to ${phoneNumber}`}
-          </p>
+          <div>
+            <h3 className="text-base font-bold text-slate-100">Firebase Real SMS Verification</h3>
+            <p className="text-xs text-slate-400">10,000 100% Free SMS Monthly Worldwide</p>
+          </div>
         </div>
 
         {error && (
@@ -120,7 +160,7 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
         )}
 
         {infoMessage && (
-          <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs rounded-xl text-center font-medium">
+          <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs rounded-xl text-center font-medium">
             {infoMessage}
           </div>
         )}
@@ -128,14 +168,14 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
         {step === 'PHONE' ? (
           <form onSubmit={handleSendOTP} className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Mobile Phone Number</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">Mobile Phone Number (Include Country Code)</label>
               <input
                 type="tel"
                 required
-                placeholder="+1 (555) 000-0000"
+                placeholder="+91 9876543210"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500/50"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500/50 font-mono"
               />
             </div>
             <div>
@@ -154,7 +194,7 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
               className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition-all"
             >
               {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
-              Send Real SMS Code
+              Send Firebase Free Real SMS Code
             </button>
           </form>
         ) : (
@@ -183,24 +223,24 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
               className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition-all"
             >
               {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-              Verify OTP & Sign In
+              Verify SMS OTP & Continue
             </button>
 
-            <div className="flex items-center justify-between text-xs pt-1">
+            <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-800">
               <button
                 type="button"
                 onClick={() => setStep('PHONE')}
-                className="text-slate-400 hover:text-slate-200 text-[11px]"
+                className="text-slate-400 hover:text-white"
               >
-                Change Phone Number
+                Change Number
               </button>
               <button
                 type="button"
-                disabled={resendCooldown > 0}
+                disabled={resendCooldown > 0 || loading}
                 onClick={() => handleSendOTP()}
-                className="text-emerald-400 disabled:text-slate-500 hover:underline text-[11px] font-semibold"
+                className="text-emerald-400 hover:text-emerald-300 disabled:opacity-50 font-semibold"
               >
-                {resendCooldown > 0 ? `Resend SMS in ${resendCooldown}s` : 'Resend SMS'}
+                {resendCooldown > 0 ? `Resend SMS in ${resendCooldown}s` : 'Resend SMS Code'}
               </button>
             </div>
           </form>
