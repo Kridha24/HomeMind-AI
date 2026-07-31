@@ -53,12 +53,20 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({ isOpen, onClose,
     try {
       // Check if Firebase Auth is configured in environment
       if ((import.meta as any).env?.VITE_FIREBASE_API_KEY) {
-        if (!recaptchaVerifierRef.current) {
-          recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            size: 'invisible',
-            callback: () => {},
-          });
+        if (recaptchaVerifierRef.current) {
+          try {
+            recaptchaVerifierRef.current.clear();
+          } catch (e) {}
+          recaptchaVerifierRef.current = null;
         }
+
+        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible',
+          callback: () => {},
+          'expired-callback': () => {
+            setError('reCAPTCHA expired. Please try sending OTP again.');
+          }
+        });
 
         const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`;
         const confirmation = await signInWithPhoneNumber(auth, formattedPhone, recaptchaVerifierRef.current);
