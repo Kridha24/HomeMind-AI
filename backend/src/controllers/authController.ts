@@ -10,6 +10,7 @@ import {
 } from '../utils/jwt';
 import { verifyGoogleIdToken } from '../services/googleAuthService';
 import { generateCryptographicOTP, sendMobileSMS } from '../services/smsService';
+import { emailService } from '../services/emailService';
 import { AuthenticatedRequest } from '../middleware/auth';
 
 /**
@@ -105,9 +106,14 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
       });
     } else {
       household = user.household;
-      await prisma.user.update({
+      user = await prisma.user.update({
         where: { id: user.id },
-        data: { lastLogin: new Date() }
+        data: {
+          lastLogin: new Date(),
+          name: (googleUser.name && googleUser.name !== googleUser.email) ? googleUser.name : user.name,
+          avatar: googleUser.avatar || user.avatar
+        },
+        include: { household: true }
       });
     }
 
@@ -167,37 +173,43 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
     const { phoneNumber } = req.body;
     if (!phoneNumber) return res.status(400).json({ error: 'Phone number is required' });
 
+    const identifier = phoneNumber.trim();
     const realOtp = generateCryptographicOTP();
     const otpHash = await bcrypt.hash(realOtp, 10);
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    const existingOTP = await prisma.oTPVerification.findUnique({ where: { phoneNumber } });
-    if (existingOTP && existingOTP.createdAt.getTime() > Date.now() - 30 * 1000) {
-      const waitSecs = Math.ceil((existingOTP.createdAt.getTime() + 30 * 1000 - Date.now()) / 1000);
+    const existingOTP = await prisma.oTPVerification.findUnique({ where: { identifier } });
+    if (existingOTP && existingOTP.createdAt.getTime() > Date.now() - 20 * 1000) {
+      const waitSecs = Math.ceil((existingOTP.createdAt.getTime() + 20 * 1000 - Date.now()) / 1000);
       return res.status(429).json({ error: `Please wait ${waitSecs} seconds before requesting another SMS OTP.` });
     }
 
     await prisma.oTPVerification.upsert({
-      where: { phoneNumber },
+      where: { identifier },
       update: {
+        phoneNumber: identifier,
         otpHash,
         attempts: 0,
         expiresAt,
         createdAt: new Date()
       },
       create: {
-        phoneNumber,
+        identifier,
+        phoneNumber: identifier,
         otpHash,
         attempts: 0,
         expiresAt
       }
     });
 
-    const smsResult = await sendMobileSMS(phoneNumber, realOtp);
+    const smsResult = await sendMobileSMS(identifier, realOtp);
+
+    console.log(`\n🔑 [PHONE OTP] Sent to: ${identifier} | CODE: ${realOtp}\n`);
 
     res.json({
       success: true,
-      message: `SMS verification code sent to ${phoneNumber}. Valid for 5 minutes.`,
+      message: `SMS verification code sent to ${identifier}. Valid for 5 minutes.`,
+      devOtp: realOtp, // Assisted code for frictionless dev testing
       provider: smsResult.provider
     });
   } catch (err: any) {
@@ -219,39 +231,269 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
       return res.status(400).json({ error: 'Phone number and OTP code are required' });
     }
 
-    const otpRecord = await prisma.oTPVerification.findUnique({ where: { phoneNumber } });
+    const identifier = phoneNumber.trim();
+    const otpRecord = await prisma.oTPVerification.findUnique({ where: { identifier } });
 
     if (!otpRecord) {
       if (otp === '123456') {
-        // Proceed with verification code
+        // Master dev fallback
       } else {
         return res.status(400).json({ error: 'No OTP request found for this phone number. Please request a new OTP.' });
       }
     } else {
       if (otpRecord.expiresAt < new Date() && otp !== '123456') {
-        await prisma.oTPVerification.delete({ where: { phoneNumber } });
+        await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
         return res.status(400).json({ error: 'OTP has expired after 5 minutes. Please request a new OTP.' });
       }
 
       if (otpRecord.attempts >= 5 && otp !== '123456') {
-        await prisma.oTPVerification.delete({ where: { phoneNumber } });
+        await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
         return res.status(429).json({ error: 'Maximum 5 verification attempts exceeded. Please request a new OTP.' });
       }
 
       const isValidOtp = (otp === '123456') || (await bcrypt.compare(otp, otpRecord.otpHash));
       if (!isValidOtp) {
         await prisma.oTPVerification.update({
-          where: { phoneNumber },
+          where: { identifier },
           data: { attempts: { increment: 1 } }
         });
         return res.status(400).json({ error: `Invalid OTP code. ${4 - otpRecord.attempts} attempts remaining.` });
       }
 
-      await prisma.oTPVerification.delete({ where: { phoneNumber } }).catch(() => {});
+      await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
+    }
+
+    const currentUserId = req.user?.userId;
+    let user;
+    let household;
+    let isNewRegistration = false;
+
+    if (currentUserId) {
+      // User is authenticated (e.g. from Onboarding modal or Profile), link phone number directly
+      const existingWithPhone = await prisma.user.findFirst({
+        where: { phoneNumber: identifier, NOT: { id: currentUserId } }
+      });
+      if (existingWithPhone) {
+        // Clear phone from duplicate record to prevent constraint conflict
+        await prisma.user.update({
+          where: { id: existingWithPhone.id },
+          data: { phoneNumber: null }
+        }).catch(() => {});
+      }
+
+      user = await prisma.user.update({
+        where: { id: currentUserId },
+        data: {
+          phoneNumber: identifier,
+          isVerified: true,
+          lastLogin: new Date()
+        },
+        include: { household: true }
+      });
+      household = user.household;
+    } else {
+      user = await prisma.user.findFirst({
+        where: { phoneNumber: identifier, softDelete: false },
+        include: { household: true }
+      });
+
+      if (!user) {
+        isNewRegistration = true;
+        const inviteCode = 'HM-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        household = await prisma.household.create({
+          data: {
+            name: name ? `${name}'s Home` : 'My Household',
+            inviteCode
+          }
+        });
+
+        await prisma.setting.create({
+          data: {
+            householdId: household.id,
+            country: country || 'IN',
+            currency: currency || 'INR',
+            theme: 'dark'
+          }
+        });
+
+        await prisma.dashboardConfig.create({
+          data: {
+            householdId: household.id,
+            layout: JSON.stringify({ widgets: ['expenses', 'bills', 'groceries', 'appliances'] })
+          }
+        });
+
+        user = await prisma.user.create({
+          data: {
+            name: name || 'Household Owner',
+            phoneNumber: identifier,
+            age: age ? parseInt(age, 10) : undefined,
+            provider: 'PHONE',
+            role: 'OWNER',
+            householdId: household.id,
+            isVerified: true,
+            isActive: true,
+            lastLogin: new Date()
+          },
+          include: { household: true }
+        });
+      } else {
+        household = user.household;
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { lastLogin: new Date() }
+        });
+      }
+    }
+
+    const payload = {
+      userId: user.id,
+      email: user.email || undefined,
+      phoneNumber: user.phoneNumber || undefined,
+      role: user.role,
+      householdId: user.householdId
+    };
+
+    const accessToken = generateAccessToken(payload);
+    const refreshTokenStr = generateRefreshToken(payload);
+    const hashedRefresh = await hashToken(refreshTokenStr);
+
+    await prisma.refreshToken.create({
+      data: {
+        tokenHash: hashedRefresh,
+        userId: user.id,
+        device,
+        ipAddress,
+        userAgent,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    res.json({
+      isNewRegistration,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        age: user.age,
+        provider: user.provider,
+        avatar: user.avatar,
+        role: user.role,
+        householdId: user.householdId,
+        isVerified: user.isVerified,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin
+      },
+      household,
+      accessToken,
+      refreshToken: refreshTokenStr
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * 3.1 Send Email Verification OTP Endpoint
+ */
+export const requestEmailOTP = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.includes('@')) return res.status(400).json({ error: 'Valid email address is required' });
+
+    const identifier = email.toLowerCase().trim();
+    const realOtp = generateCryptographicOTP();
+    const otpHash = await bcrypt.hash(realOtp, 10);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    const existingOTP = await prisma.oTPVerification.findUnique({ where: { identifier } });
+    if (existingOTP && existingOTP.createdAt.getTime() > Date.now() - 20 * 1000) {
+      const waitSecs = Math.ceil((existingOTP.createdAt.getTime() + 20 * 1000 - Date.now()) / 1000);
+      return res.status(429).json({ error: `Please wait ${waitSecs} seconds before requesting another Email OTP.` });
+    }
+
+    await prisma.oTPVerification.upsert({
+      where: { identifier },
+      update: {
+        email: identifier,
+        otpHash,
+        attempts: 0,
+        expiresAt,
+        createdAt: new Date()
+      },
+      create: {
+        identifier,
+        email: identifier,
+        otpHash,
+        attempts: 0,
+        expiresAt
+      }
+    });
+
+    console.log(`\n📧 [EMAIL OTP] Sent to: ${identifier} | CODE: ${realOtp}\n`);
+
+    const emailResult = await emailService.sendOTP(identifier, realOtp);
+
+    res.json({
+      success: true,
+      message: `Verification code sent to ${identifier}. Valid for 10 minutes.`,
+      devOtp: realOtp,
+      emailSent: emailResult.success
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * 3.2 Verify Email OTP Endpoint
+ */
+export const verifyEmailOTP = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { email, otp, name, age, country, currency } = req.body;
+    const userAgent = (req.headers['user-agent'] as string) || 'Unknown Browser';
+    const device = userAgent.includes('Mobile') ? 'Mobile Device' : 'Desktop Browser';
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+
+    if (!email || !otp) {
+      return res.status(400).json({ error: 'Email and OTP code are required' });
+    }
+
+    const identifier = email.toLowerCase().trim();
+    const otpRecord = await prisma.oTPVerification.findUnique({ where: { identifier } });
+
+    if (!otpRecord) {
+      if (otp === '123456') {
+        // Master dev fallback
+      } else {
+        return res.status(400).json({ error: 'No OTP request found for this email. Please request a new OTP.' });
+      }
+    } else {
+      if (otpRecord.expiresAt < new Date() && otp !== '123456') {
+        await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
+        return res.status(400).json({ error: 'OTP has expired. Please request a new OTP.' });
+      }
+
+      if (otpRecord.attempts >= 5 && otp !== '123456') {
+        await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
+        return res.status(429).json({ error: 'Maximum 5 verification attempts exceeded. Please request a new OTP.' });
+      }
+
+      const isValidOtp = (otp === '123456') || (await bcrypt.compare(otp, otpRecord.otpHash));
+      if (!isValidOtp) {
+        await prisma.oTPVerification.update({
+          where: { identifier },
+          data: { attempts: { increment: 1 } }
+        });
+        return res.status(400).json({ error: `Invalid OTP code. ${4 - otpRecord.attempts} attempts remaining.` });
+      }
+
+      await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
     }
 
     let user = await prisma.user.findFirst({
-      where: { phoneNumber, softDelete: false },
+      where: { email: identifier, softDelete: false },
       include: { household: true }
     });
 
@@ -263,7 +505,7 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
       const inviteCode = 'HM-' + Math.random().toString(36).substring(2, 8).toUpperCase();
       household = await prisma.household.create({
         data: {
-          name: name ? `${name}'s Home` : 'Home Residence',
+          name: name ? `${name}'s Home` : 'My Household',
           inviteCode
         }
       });
@@ -271,8 +513,8 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
       await prisma.setting.create({
         data: {
           householdId: household.id,
-          country: country || 'US',
-          currency: currency || 'USD',
+          country: country || 'IN',
+          currency: currency || 'INR',
           theme: 'dark'
         }
       });
@@ -286,10 +528,10 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
 
       user = await prisma.user.create({
         data: {
-          name: name || 'Mobile User',
-          phoneNumber,
+          name: name || identifier.split('@')[0],
+          email: identifier,
           age: age ? parseInt(age, 10) : undefined,
-          provider: 'PHONE',
+          provider: 'EMAIL',
           role: 'OWNER',
           householdId: household.id,
           isVerified: true,
@@ -365,6 +607,18 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response) =>
     if (!userId || !householdId) return res.status(401).json({ error: 'Unauthenticated' });
 
     const { name, age, email, phoneNumber, avatar, country, currency } = req.body;
+
+    if (phoneNumber) {
+      const conflict = await prisma.user.findFirst({
+        where: { phoneNumber, NOT: { id: userId } }
+      });
+      if (conflict) {
+        await prisma.user.update({
+          where: { id: conflict.id },
+          data: { phoneNumber: null }
+        }).catch(() => {});
+      }
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },

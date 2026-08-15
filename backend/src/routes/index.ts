@@ -23,6 +23,8 @@ const router = Router();
 router.post('/auth/google', authController.googleLogin);
 router.post('/auth/phone/request-otp', authController.requestPhoneOTP);
 router.post('/auth/phone/verify-otp', authController.verifyPhoneOTP);
+router.post('/auth/email/request-otp', authController.requestEmailOTP);
+router.post('/auth/email/verify-otp', authController.verifyEmailOTP);
 router.post('/auth/refresh', authController.refresh);
 router.post('/auth/logout', authController.logout);
 

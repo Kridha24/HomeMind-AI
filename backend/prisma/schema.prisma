@@ -51,7 +51,9 @@ model RefreshToken {
 
 model OTPVerification {
   id          String   @id @default(uuid())
-  phoneNumber String   @unique
+  identifier  String   @unique
+  phoneNumber String?
+  email       String?
   otpHash     String
   attempts    Int      @default(0)
   expiresAt   DateTime

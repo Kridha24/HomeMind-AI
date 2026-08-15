@@ -15,12 +15,18 @@ import {
   Trash2,
   Download,
   Sparkles,
+  Phone,
+  CheckCircle2,
+  User,
 } from 'lucide-react';
 import { useSettingStore } from '../stores/useSettingStore';
+import { useAuthStore } from '../stores/useAuthStore';
+import { VerifyPhoneModal } from '../components/common/VerifyPhoneModal';
 import { SUPPORTED_CURRENCIES, COUNTRY_DEFAULTS } from '../utils/currency';
 import apiClient from '../services/apiClient';
 
 export const Settings: React.FC = () => {
+  const { user } = useAuthStore();
   const {
     country,
     currency,
@@ -44,6 +50,7 @@ export const Settings: React.FC = () => {
 
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -109,6 +116,50 @@ export const Settings: React.FC = () => {
           <Check className="w-4 h-4 text-emerald-400" /> {successMsg}
         </div>
       )}
+
+      {/* Account & Verified Mobile Profile Card */}
+      <div className="glass-panel p-6 border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900/60">
+        <div className="flex items-center gap-4">
+          <img
+            src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=3b82f6&color=fff`}
+            alt="Avatar"
+            className="w-14 h-14 rounded-2xl border border-blue-500/30 object-cover"
+          />
+          <div>
+            <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+              {user?.name || 'Homeowner'}
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase">
+                {user?.role || 'OWNER'}
+              </span>
+            </h3>
+            <p className="text-xs text-slate-400 font-mono">{user?.email || 'Email Identity'}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          {user?.phoneNumber ? (
+            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-xl text-xs text-emerald-300 font-mono font-bold">
+              <Phone className="w-4 h-4 text-emerald-400" />
+              <span>{user.phoneNumber}</span>
+              <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-sans uppercase flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Verified
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl text-xs w-full md:w-auto justify-between">
+              <span className="text-amber-300 font-medium flex items-center gap-1.5">
+                <Phone className="w-4 h-4 text-amber-400" /> Mobile Not Verified
+              </span>
+              <button
+                onClick={() => setShowVerifyModal(true)}
+                className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs shadow-md transition-all active:scale-95"
+              >
+                Verify It
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Grid Settings Sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -319,6 +370,12 @@ export const Settings: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Verify Phone Modal */}
+      <VerifyPhoneModal
+        isOpen={showVerifyModal}
+        onClose={() => setShowVerifyModal(false)}
+      />
     </div>
   );
 };

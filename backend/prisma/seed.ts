@@ -35,17 +35,36 @@ async function main() {
     }
   });
 
-  const passwordHash = await bcrypt.hash('password123', 10);
+  // Settings
+  await prisma.setting.create({
+    data: {
+      householdId: household.id,
+      country: 'IN',
+      currency: 'INR',
+      theme: 'dark'
+    }
+  });
+
+  // Dashboard Config
+  await prisma.dashboardConfig.create({
+    data: {
+      householdId: household.id,
+      layout: JSON.stringify({ widgets: ['expenses', 'bills', 'groceries', 'appliances'] })
+    }
+  });
 
   // Users
   const alex = await prisma.user.create({
     data: {
-      email: 'demo@homemind.ai',
-      name: 'Alex Rivera',
-      passwordHash,
-      role: 'ADMIN',
+      email: 'user.gmail@gmail.com',
+      name: 'Mihir Shekhar',
+      provider: 'GOOGLE',
+      googleId: 'google-user-primary',
+      role: 'OWNER',
       householdId: household.id,
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      isVerified: true,
+      isActive: true
     }
   });
 
@@ -53,10 +72,13 @@ async function main() {
     data: {
       email: 'sarah@homemind.ai',
       name: 'Sarah Rivera',
-      passwordHash,
-      role: 'MEMBER',
+      provider: 'GOOGLE',
+      googleId: 'google-sarah-demo',
+      role: 'ADMIN',
       householdId: household.id,
-      avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+      isVerified: true,
+      isActive: true
     }
   });
 
@@ -64,9 +86,12 @@ async function main() {
     data: {
       email: 'leo@homemind.ai',
       name: 'Leo Rivera',
-      passwordHash,
-      role: 'CHILD',
-      householdId: household.id
+      provider: 'GOOGLE',
+      googleId: 'google-leo-demo',
+      role: 'MEMBER',
+      householdId: household.id,
+      isVerified: true,
+      isActive: true
     }
   });
 

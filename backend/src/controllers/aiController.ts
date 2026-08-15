@@ -76,29 +76,37 @@ export const getRecipeRecommendations = async (req: AuthenticatedRequest, res: R
 export const chatWithAI = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const householdId = req.user?.householdId;
+    const userId = req.user?.userId;
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
 
     const { query } = req.body;
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const [
+      user,
+      household,
       expenses,
       incomes,
-      unpaidBills,
-      lowStockGroceries,
-      pendingTasks,
+      allBills,
+      allGroceries,
+      allTasks,
       appliances,
+      medicines,
       settings
     ] = await Promise.all([
-      prisma.expense.findMany({ where: { householdId, softDelete: false } }),
-      prisma.income.findMany({ where: { householdId, softDelete: false } }),
-      prisma.bill.findMany({ where: { householdId, status: 'UNPAID', softDelete: false }, orderBy: { dueDate: 'asc' } }),
-      prisma.groceryItem.findMany({ where: { householdId, quantity: { lte: 2 }, softDelete: false } }),
-      prisma.task.findMany({ where: { householdId, status: 'PENDING', softDelete: false } }),
+      prisma.user.findUnique({ where: { id: userId } }),
+      prisma.household.findUnique({ where: { id: householdId } }),
+      prisma.expense.findMany({ where: { householdId, softDelete: false }, orderBy: { date: 'desc' } }),
+      prisma.income.findMany({ where: { householdId, softDelete: false }, orderBy: { date: 'desc' } }),
+      prisma.bill.findMany({ where: { householdId, softDelete: false }, orderBy: { dueDate: 'asc' } }),
+      prisma.groceryItem.findMany({ where: { householdId, softDelete: false } }),
+      prisma.task.findMany({ where: { householdId, softDelete: false } }),
       prisma.appliance.findMany({ where: { householdId, softDelete: false } }),
-      prisma.setting.findFirst({ where: { householdId } })
+      prisma.medicine.findMany({ where: { householdId, softDelete: false } }),
+      prisma.setting.findFirst({ where: { householdId, softDelete: false } })
     ]);
 
     // Live Metrics Calculations
@@ -119,17 +127,50 @@ export const chatWithAI = async (req: AuthenticatedRequest, res: Response) => {
       categoryMap[e.category] = (categoryMap[e.category] || 0) + e.amount;
     });
 
-    const currencySymbol = settings?.currency === 'INR' ? '₹' : (settings?.currency === 'EUR' ? '€' : (settings?.currency === 'GBP' ? '£' : '$'));
+    const unpaidBills = allBills.filter(b => b.status === 'UNPAID');
+    const paidBills = allBills.filter(b => b.status === 'PAID');
+    const lowStockGroceries = allGroceries.filter(g => g.quantity <= (g.minThreshold || 1));
+    const expiringGroceries = allGroceries.filter(g => g.expiryDate && new Date(g.expiryDate) <= in7Days && new Date(g.expiryDate) >= now);
+    const pendingTasks = allTasks.filter(t => t.status === 'PENDING');
+    const completedTasks = allTasks.filter(t => t.status === 'COMPLETED');
+
+    const CURRENCY_SYMBOLS: Record<string, string> = {
+      INR: '₹',
+      USD: '$',
+      EUR: '€',
+      GBP: '£',
+      JPY: '¥',
+      CAD: 'C$',
+      AUD: 'A$',
+      SGD: 'S$',
+      AED: 'د.إ',
+      SAR: '﷼',
+      CHF: 'CHF',
+      CNY: '¥',
+    };
+
+    const currencyCode = settings?.currency || 'INR';
+    const currencySymbol = CURRENCY_SYMBOLS[currencyCode] || '₹';
 
     const context = {
+      userName: user?.name || 'User',
+      householdName: household?.name || 'My Household',
       currencySymbol,
-      currency: settings?.currency || 'USD',
+      currency: currencyCode,
       monthlyIncome,
       monthlyExpenses,
       monthlySavings: monthlyIncome - monthlyExpenses,
       overallIncome,
       overallExpenses,
       overallSavings: overallIncome - overallExpenses,
+      expensesCount: expenses.length,
+      incomesCount: incomes.length,
+      recentExpenses: expenses.slice(0, 5).map(e => ({
+        title: e.title,
+        amount: e.amount,
+        category: e.category,
+        date: new Date(e.date).toLocaleDateString()
+      })),
       categoryBreakdown: categoryMap,
       unpaidBills: unpaidBills.map(b => ({
         title: b.title,
@@ -138,11 +179,15 @@ export const chatWithAI = async (req: AuthenticatedRequest, res: Response) => {
         dueDate: new Date(b.dueDate).toLocaleDateString()
       })),
       unpaidBillsTotal: unpaidBills.reduce((acc, curr) => acc + curr.amount, 0),
+      paidBillsCount: paidBills.length,
+      groceriesCount: allGroceries.length,
+      allGroceries: allGroceries.map(g => g.name),
       lowStockItems: lowStockGroceries.map(g => `${g.name} (${g.quantity} ${g.unit})`),
+      expiringItems: expiringGroceries.map(g => `${g.name} (exp: ${new Date(g.expiryDate!).toLocaleDateString()})`),
+      appliances: appliances.map(a => ({ name: a.name, brand: a.brand })),
       pendingTasks: pendingTasks.map(t => t.title),
-      appliancesCount: appliances.length,
-      expensesCount: expenses.length,
-      incomesCount: incomes.length
+      completedTasksCount: completedTasks.length,
+      medicines: medicines.map(m => ({ name: m.name, dosage: m.dosage }))
     };
 
     const response = await aiClient.processChatQuery(query, context);

@@ -15,20 +15,16 @@ export const FamilyWorkspace: React.FC = () => {
       const res = await apiClient.get('/family/members');
       if (res.data?.household?.members) {
         setMembers(res.data.household.members);
+      } else if (Array.isArray(res.data?.members)) {
+        setMembers(res.data.members);
       } else {
-        setMembers([
-          { id: '1', name: 'Alex Rivera', email: 'demo@homemind.ai', role: 'ADMIN', createdAt: '2026-07-01' },
-          { id: '2', name: 'Sarah Rivera', email: 'sarah@homemind.ai', role: 'MEMBER', createdAt: '2026-07-02' },
-          { id: '3', name: 'Leo Rivera', email: 'leo@homemind.ai', role: 'CHILD', createdAt: '2026-07-05' }
-        ]);
+        setMembers([]);
       }
-      if (res.data?.household?.inviteCode) setInviteCode(res.data.household.inviteCode);
+      if (res.data?.household?.inviteCode) {
+        setInviteCode(res.data.household.inviteCode);
+      }
     } catch (e) {
-      setMembers([
-        { id: '1', name: 'Alex Rivera', email: 'demo@homemind.ai', role: 'ADMIN', createdAt: '2026-07-01' },
-        { id: '2', name: 'Sarah Rivera', email: 'sarah@homemind.ai', role: 'MEMBER', createdAt: '2026-07-02' },
-        { id: '3', name: 'Leo Rivera', email: 'leo@homemind.ai', role: 'CHILD', createdAt: '2026-07-05' }
-      ]);
+      setMembers([]);
     }
   };
 

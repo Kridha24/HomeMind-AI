@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Sparkles,
   Phone,
+  Mail,
   ShieldCheck,
   RefreshCw,
   UserPlus,
@@ -21,7 +22,10 @@ import {
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { useSettingStore } from '../../stores/useSettingStore';
 import { PhoneAuthModal } from '../../components/common/PhoneAuthModal';
+import { EmailAuthModal } from '../../components/common/EmailAuthModal';
+import { GoogleAuthModal } from '../../components/common/GoogleAuthModal';
 import { NewUserOnboardingModal } from '../../components/common/NewUserOnboardingModal';
 
 declare global {
@@ -30,11 +34,13 @@ declare global {
   }
 }
 
-const GOOGLE_CLIENT_ID = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_ID = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || '154894572185-6f8oc2utef3ubc0v6k19v6c7mp0b1eoh.apps.googleusercontent.com';
 
 export const Login: React.FC = () => {
   const [authTab, setAuthTab] = useState<'NEW_USER' | 'EXISTING_USER'>('NEW_USER');
+  const [showEmailModal, setShowEmailModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [newUserName, setNewUserName] = useState('');
   const [loadingGoogle, setLoadingGoogle] = useState(false);
@@ -49,6 +55,7 @@ export const Login: React.FC = () => {
 
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
+  const { fetchSettings } = useSettingStore();
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -56,13 +63,17 @@ export const Login: React.FC = () => {
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      if (window.google?.accounts?.id) {
-        window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: handleGoogleCallback,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
+      if (window.google?.accounts?.id && GOOGLE_CLIENT_ID) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleGoogleCallback,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+        } catch (e) {
+          console.warn('Google GSI init failed:', e);
+        }
       }
     };
     document.body.appendChild(script);
@@ -107,6 +118,7 @@ export const Login: React.FC = () => {
       const idToken = response.credential;
       const res = await apiClient.post('/auth/google', { idToken });
       setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
+      await fetchSettings();
 
       if (authTab === 'NEW_USER' && res.data.isNewRegistration) {
         setNewUserName(res.data.user.name || '');
@@ -115,51 +127,84 @@ export const Login: React.FC = () => {
         navigate('/');
       }
     } catch (err: any) {
-      handleDirectGoogleAuth();
+      setShowGoogleModal(true);
     } finally {
       setLoadingGoogle(false);
     }
   };
 
   const triggerGoogleAccountChooser = () => {
-    setLoadingGoogle(true);
     setError('');
 
-    if (window.google?.accounts?.id) {
-      window.google.accounts.id.prompt((notification: any) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          handleDirectGoogleAuth();
-        }
-      });
-    } else {
-      handleDirectGoogleAuth();
-    }
-  };
+    // Try Google OAuth2 Native Popup Window with prompt: 'select_account'
+    if (window.google?.accounts?.oauth2 && GOOGLE_CLIENT_ID) {
+      try {
+        setLoadingGoogle(true);
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'email profile openid',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse && tokenResponse.access_token) {
+              try {
+                // Fetch verified profile from Google OAuth2 API
+                const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                });
+                const userInfo = await userInfoRes.json();
+                
+                const res = await apiClient.post('/auth/google', {
+                  email: userInfo.email,
+                  name: userInfo.name || userInfo.email.split('@')[0],
+                  avatar: userInfo.picture,
+                  googleId: 'google-' + userInfo.sub,
+                });
 
-  const handleDirectGoogleAuth = async () => {
-    try {
-      const res = await apiClient.post('/auth/google', {
-        email: 'user.gmail@gmail.com',
-        name: 'Gmail Account User',
-        googleId: 'google-user-' + Math.floor(Math.random() * 10000),
-      });
-      setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
+                setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
+                await fetchSettings();
 
-      if (authTab === 'NEW_USER' && res.data.isNewRegistration) {
-        setNewUserName(res.data.user.name || '');
-        setShowOnboardingModal(true);
-      } else {
-        navigate('/');
+                if (authTab === 'NEW_USER' && res.data.isNewRegistration) {
+                  setNewUserName(res.data.user.name || '');
+                  setShowOnboardingModal(true);
+                } else {
+                  navigate('/');
+                }
+              } catch (err: any) {
+                console.error('Google Auth backend error:', err);
+                setShowGoogleModal(true);
+              } finally {
+                setLoadingGoogle(false);
+              }
+            } else {
+              setLoadingGoogle(false);
+              if (tokenResponse?.error !== 'popup_closed_by_user') {
+                setShowGoogleModal(true);
+              }
+            }
+          },
+          error_callback: () => {
+            setLoadingGoogle(false);
+            setShowGoogleModal(true);
+          }
+        });
+
+        tokenClient.requestAccessToken({ prompt: 'select_account' });
+        return;
+      } catch (e) {
+        console.warn('OAuth2 popup client error, falling back to modal:', e);
+        setLoadingGoogle(false);
+        setShowGoogleModal(true);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Google Authentication failed.');
-    } finally {
-      setLoadingGoogle(false);
+    } else {
+      setShowGoogleModal(true);
     }
   };
 
-  const handlePhoneSuccess = (isNewReg?: boolean, userName?: string) => {
+  const handleAuthSuccess = async (isNewReg?: boolean, userName?: string) => {
+    setShowEmailModal(false);
     setShowPhoneModal(false);
+    setShowGoogleModal(false);
+    await fetchSettings();
+
     if (authTab === 'NEW_USER' && isNewReg) {
       setNewUserName(userName || '');
       setShowOnboardingModal(true);
@@ -202,20 +247,18 @@ export const Login: React.FC = () => {
       {/* CURSOR-RESPONSIVE PEOPLE / FAMILY CHARACTERS (PEOPLE MOVE WITH CURSOR) */}
       {/* ========================================================================= */}
 
-      {/* Person 1: Homeowner / Dad Avatar (Left Side - Follows Cursor) */}
+      {/* Person 1: Homeowner Avatar (Left Side - Follows Cursor) */}
       <div
         className="absolute top-28 left-20 hidden xl:flex flex-col items-center gap-2 pointer-events-none transition-transform duration-200 ease-out z-0"
         style={{
           transform: `translate3d(${normPos.x * 35}px, ${normPos.y * 25}px, 0) rotate(${normPos.x * 8}deg)`,
         }}
       >
-        {/* Interactive Speech Bubble */}
         <div className="glass-panel px-3 py-1.5 border-emerald-500/30 bg-slate-900/80 rounded-2xl text-[10px] text-emerald-300 font-bold shadow-xl flex items-center gap-1.5 animate-bounce-slow">
           <Zap className="w-3 h-3 text-amber-400" />
-          <span>"Checking Room Rent & Electricity..."</span>
+          <span>"Zero Demo Data • Full Isolation 🔒"</span>
         </div>
 
-        {/* Realistic Avatar Card */}
         <div className="relative group">
           <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 p-1 shadow-2xl shadow-blue-500/40 border border-blue-400/40 overflow-hidden flex items-center justify-center">
             <img
@@ -224,7 +267,6 @@ export const Login: React.FC = () => {
               className="w-full h-full object-cover rounded-full"
             />
           </div>
-          {/* Eye Gaze Pupil Tracking Light */}
           <div
             className="absolute top-4 left-6 w-2.5 h-2.5 bg-blue-400 rounded-full blur-[1px] transition-transform duration-100"
             style={{
@@ -233,24 +275,22 @@ export const Login: React.FC = () => {
           ></div>
         </div>
         <span className="text-[11px] font-bold text-slate-300 bg-slate-900/80 px-2.5 py-0.5 rounded-full border border-slate-800">
-          Alex • Homeowner
+          HomeMind Member
         </span>
       </div>
 
-      {/* Person 2: Partner / Mom Avatar (Right Side - Follows Cursor) */}
+      {/* Person 2: Partner Avatar (Right Side - Follows Cursor) */}
       <div
         className="absolute top-28 right-20 hidden xl:flex flex-col items-center gap-2 pointer-events-none transition-transform duration-200 ease-out z-0"
         style={{
           transform: `translate3d(${normPos.x * 40}px, ${normPos.y * 30}px, 0) rotate(${-normPos.x * 8}deg)`,
         }}
       >
-        {/* Interactive Speech Bubble */}
         <div className="glass-panel px-3 py-1.5 border-blue-500/30 bg-slate-900/80 rounded-2xl text-[10px] text-blue-300 font-bold shadow-xl flex items-center gap-1.5 animate-bounce-slow">
           <ShoppingBag className="w-3 h-3 text-emerald-400" />
-          <span>"Pantry Stock is Healthy! 🟢"</span>
+          <span>"Multi-Currency (₹, $, €, £) 🌐"</span>
         </div>
 
-        {/* Realistic Avatar Card */}
         <div className="relative group">
           <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-purple-600 to-pink-600 p-1 shadow-2xl shadow-purple-500/40 border border-purple-400/40 overflow-hidden flex items-center justify-center">
             <img
@@ -259,7 +299,6 @@ export const Login: React.FC = () => {
               className="w-full h-full object-cover rounded-full"
             />
           </div>
-          {/* Eye Gaze Pupil Tracking Light */}
           <div
             className="absolute top-4 left-6 w-2.5 h-2.5 bg-purple-400 rounded-full blur-[1px] transition-transform duration-100"
             style={{
@@ -268,110 +307,8 @@ export const Login: React.FC = () => {
           ></div>
         </div>
         <span className="text-[11px] font-bold text-slate-300 bg-slate-900/80 px-2.5 py-0.5 rounded-full border border-slate-800">
-          Sarah • Partner
+          Smart Household
         </span>
-      </div>
-
-      {/* Person 3: Child Avatar (Lower Left - Follows Cursor) */}
-      <div
-        className="absolute bottom-20 left-28 hidden xl:flex flex-col items-center gap-2 pointer-events-none transition-transform duration-200 ease-out z-0"
-        style={{
-          transform: `translate3d(${normPos.x * 25}px, ${normPos.y * 20}px, 0) scale(0.95)`,
-        }}
-      >
-        <div className="glass-panel px-2.5 py-1 border-teal-500/30 bg-slate-900/80 rounded-2xl text-[9px] text-teal-300 font-bold shadow-xl flex items-center gap-1">
-          <Smile className="w-3 h-3 text-amber-400" />
-          <span>"Tasks 88% Done!"</span>
-        </div>
-
-        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-teal-600 to-emerald-600 p-1 shadow-xl border border-teal-400/40 overflow-hidden flex items-center justify-center">
-          <img
-            src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80"
-            alt="Youth"
-            className="w-full h-full object-cover rounded-full"
-          />
-        </div>
-        <span className="text-[10px] font-bold text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded-full border border-slate-800">
-          Leo • Member
-        </span>
-      </div>
-
-      {/* Family Pet: Golden Retriever Avatar (Lower Right - Follows Cursor) */}
-      <div
-        className="absolute bottom-20 right-28 hidden xl:flex flex-col items-center gap-2 pointer-events-none transition-transform duration-200 ease-out z-0"
-        style={{
-          transform: `translate3d(${normPos.x * 45}px, ${normPos.y * 32}px, 0) scale(0.95)`,
-        }}
-      >
-        <div className="glass-panel px-2.5 py-1 border-amber-500/30 bg-slate-900/80 rounded-2xl text-[9px] text-amber-300 font-bold shadow-xl flex items-center gap-1">
-          <Heart className="w-3 h-3 text-red-400 fill-red-400" />
-          <span>"HomeMind AI Active 🐕"</span>
-        </div>
-
-        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-600 to-orange-600 p-1 shadow-xl border border-amber-400/40 overflow-hidden flex items-center justify-center">
-          <img
-            src="https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=300&q=80"
-            alt="Family Pet"
-            className="w-full h-full object-cover rounded-full"
-          />
-        </div>
-        <span className="text-[10px] font-bold text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded-full border border-slate-800">
-          Buddy • Family Pet
-        </span>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* ANIMATED TELEMETRY CARDS LAYER */}
-      {/* ========================================================================= */}
-
-      {/* Top-Left Animated Card: Expense Tracker Widget */}
-      <div
-        className="absolute top-12 left-12 w-72 glass-panel p-4 border border-slate-800/80 bg-slate-900/60 backdrop-blur-xl shadow-2xl rounded-2xl hidden lg:flex flex-col gap-2.5 pointer-events-none transition-transform duration-300 ease-out"
-        style={{
-          transform: `translate3d(${normPos.x * 15}px, ${normPos.y * 10}px, 0) rotate(-2deg)`,
-        }}
-      >
-        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center">
-              <CreditCard className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-xs font-bold text-slate-200">Expense Telemetry</span>
-          </div>
-          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-500/10 border border-red-500/20 text-red-400 uppercase tracking-wider">
-            Live
-          </span>
-        </div>
-
-        <div>
-          <span className="text-[10px] text-slate-400 block font-medium">Monthly Expenses</span>
-          <span className="text-lg font-extrabold text-red-400 font-mono block">-$1,450.00</span>
-        </div>
-      </div>
-
-      {/* Top-Right Animated Card: Cash Flow & Savings Telemetry */}
-      <div
-        className="absolute top-12 right-12 w-72 glass-panel p-4 border border-slate-800/80 bg-slate-900/60 backdrop-blur-xl shadow-2xl rounded-2xl hidden lg:flex flex-col gap-2.5 pointer-events-none transition-transform duration-300 ease-out"
-        style={{
-          transform: `translate3d(${normPos.x * 18}px, ${normPos.y * 12}px, 0) rotate(2deg)`,
-        }}
-      >
-        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center">
-              <TrendingUp className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-xs font-bold text-slate-200">Net Savings Flow</span>
-          </div>
-          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-teal-500/10 border border-teal-500/20 text-teal-400 uppercase tracking-wider">
-            +18%
-          </span>
-        </div>
-
-        <div>
-          <span className="text-[10px] text-slate-400 block font-medium">Monthly Savings</span>
-          <span className="text-lg font-extrabold text-teal-400 font-mono block">+$2,100.00</span>
-        </div>
       </div>
 
       {/* ========================================================================= */}
@@ -407,24 +344,30 @@ export const Login: React.FC = () => {
           style={{ transform: 'translateZ(20px)' }}
         >
           <button
-            onClick={() => setAuthTab('NEW_USER')}
+            onClick={() => {
+              setAuthTab('NEW_USER');
+              setError('');
+            }}
             className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-300 relative z-10 ${
               authTab === 'NEW_USER'
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 scale-[1.02]'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <UserPlus className="w-4 h-4" /> 🆕 New User
+            <UserPlus className="w-4 h-4" /> 🆕 New User (Sign Up)
           </button>
           <button
-            onClick={() => setAuthTab('EXISTING_USER')}
+            onClick={() => {
+              setAuthTab('EXISTING_USER');
+              setError('');
+            }}
             className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-300 relative z-10 ${
               authTab === 'EXISTING_USER'
                 ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30 scale-[1.02]'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <LogIn className="w-4 h-4" /> 🔑 Existing User
+            <LogIn className="w-4 h-4" /> 🔑 Existing User (Sign In)
           </button>
         </div>
 
@@ -435,12 +378,45 @@ export const Login: React.FC = () => {
         )}
 
         {/* 3D Interactive Action Buttons */}
-        <div className="space-y-3.5 pt-1" style={{ transform: 'translateZ(25px)' }}>
+        <div className="space-y-3 pt-1" style={{ transform: 'translateZ(25px)' }}>
+          {/* Email Address OTP Button */}
+          <button
+            onClick={() => setShowEmailModal(true)}
+            className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 active:scale-95 text-white font-bold py-3.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2.5 shadow-xl shadow-blue-600/25 border border-blue-400/30 transition-all group"
+          >
+            <Mail className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            <span>
+              {authTab === 'NEW_USER'
+                ? 'Continue with Email ID (OTP)'
+                : 'Sign In with Email ID (OTP)'}
+            </span>
+          </button>
+
+          {/* Mobile Phone SMS OTP Button */}
+          <button
+            onClick={() => setShowPhoneModal(true)}
+            className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 active:scale-95 text-white font-bold py-3.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-600/25 border border-emerald-400/30 transition-all group"
+          >
+            <Phone className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+            <span>
+              {authTab === 'NEW_USER'
+                ? 'Continue with Mobile Phone (SMS OTP)'
+                : 'Sign In with Mobile Phone (SMS OTP)'}
+            </span>
+          </button>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 py-1">
+            <div className="flex-1 h-px bg-slate-800"></div>
+            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Or</span>
+            <div className="flex-1 h-px bg-slate-800"></div>
+          </div>
+
           {/* Google Sign In Button */}
           <button
             onClick={triggerGoogleAccountChooser}
             disabled={loadingGoogle}
-            className="w-full bg-white hover:bg-slate-100 active:scale-95 text-slate-900 font-bold py-3.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-3 shadow-xl transition-all border border-white/50 group"
+            className="w-full bg-white hover:bg-slate-100 active:scale-95 text-slate-900 font-bold py-3 px-4 rounded-2xl text-xs flex items-center justify-center gap-3 shadow-xl transition-all border border-white/50 group"
           >
             {loadingGoogle ? (
               <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
@@ -466,18 +442,9 @@ export const Login: React.FC = () => {
             )}
             <span>
               {authTab === 'NEW_USER'
-                ? 'Sign Up with Google Account'
+                ? 'Continue with Google Account'
                 : 'Sign In with Google Account'}
             </span>
-          </button>
-
-          {/* Real Mobile Phone OTP Button */}
-          <button
-            onClick={() => setShowPhoneModal(true)}
-            className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 active:scale-95 text-white font-bold py-3.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-600/25 border border-emerald-400/30 transition-all group"
-          >
-            <Phone className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-            <span>{authTab === 'NEW_USER' ? 'Sign Up with Mobile OTP' : 'Sign In with Mobile OTP'}</span>
           </button>
         </div>
 
@@ -487,21 +454,36 @@ export const Login: React.FC = () => {
           style={{ transform: 'translateZ(15px)' }}
         >
           <p className="flex items-center justify-center gap-1.5 font-semibold text-slate-300">
-            <Lock className="w-3.5 h-3.5 text-emerald-400" /> Enterprise 256-bit Encrypted Session
+            <Lock className="w-3.5 h-3.5 text-emerald-400" /> Enterprise Multi-Tenant Data Isolation
           </p>
           <p className="text-[10px] text-slate-500 leading-tight">
             {authTab === 'NEW_USER'
-              ? 'New User Registration includes Onboarding Setup (Name, Country, Age, Currency)'
-              : 'Existing User Login loads saved household historical data'}
+              ? '✨ New User starts with 100% Clean Slate (0 Expenses, 0 Bills, 0 Groceries)'
+              : '💾 Existing User automatically loads your permanently saved household data'}
           </p>
         </div>
       </div>
 
       {/* Modals */}
+      <GoogleAuthModal
+        isOpen={showGoogleModal}
+        mode={authTab}
+        onClose={() => setShowGoogleModal(false)}
+        onSuccess={(isNew, name) => handleAuthSuccess(isNew, name)}
+      />
+
+      <EmailAuthModal
+        isOpen={showEmailModal}
+        mode={authTab}
+        onClose={() => setShowEmailModal(false)}
+        onSuccess={(isNew, name) => handleAuthSuccess(isNew, name)}
+      />
+
       <PhoneAuthModal
         isOpen={showPhoneModal}
+        mode={authTab}
         onClose={() => setShowPhoneModal(false)}
-        onSuccess={() => handlePhoneSuccess()}
+        onSuccess={(isNew, name) => handleAuthSuccess(isNew, name)}
       />
 
       <NewUserOnboardingModal
