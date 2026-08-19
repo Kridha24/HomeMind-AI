@@ -8,8 +8,11 @@ import {
   LogIn,
   Lock,
   Zap,
-  ShoppingBag,
+  TrendingUp,
+  Cpu,
+  Layers,
   CheckCircle2,
+  ArrowRight,
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -32,13 +35,6 @@ export const Login: React.FC = () => {
   const [newUserName, setNewUserName] = useState('');
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState('');
-
-  // 3D Perspective & Cursor Tracking Coordinates (-1 to +1 normalized)
-  const [rotateX, setRotateX] = useState(0);
-  const [rotateY, setRotateY] = useState(0);
-  const [normPos, setNormPos] = useState({ x: 0, y: 0 });
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
@@ -71,32 +67,6 @@ export const Login: React.FC = () => {
     };
   }, []);
 
-  // 3D Mouse Movement & Cursor-Responsive People Tracking
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const winW = window.innerWidth;
-    const winH = window.innerHeight;
-    
-    // Normalized coordinates from -1 (left/top) to +1 (right/bottom)
-    const nx = (e.clientX - winW / 2) / (winW / 2);
-    const ny = (e.clientY - winH / 2) / (winH / 2);
-    setNormPos({ x: nx, y: ny });
-    setMousePos({ x: e.clientX, y: e.clientY });
-
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left - rect.width / 2;
-      const y = e.clientY - rect.top - rect.height / 2;
-      setRotateX(-y / 25);
-      setRotateY(x / 25);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setRotateX(0);
-    setRotateY(0);
-    setNormPos({ x: 0, y: 0 });
-  };
-
   const handleGoogleCallback = async (response: any) => {
     setLoadingGoogle(true);
     setError('');
@@ -123,7 +93,6 @@ export const Login: React.FC = () => {
   const triggerGoogleAccountChooser = () => {
     setError('');
 
-    // Try Google OAuth2 Native Popup Window with prompt: 'select_account'
     if (window.google?.accounts?.oauth2 && GOOGLE_CLIENT_ID) {
       try {
         setLoadingGoogle(true);
@@ -133,7 +102,6 @@ export const Login: React.FC = () => {
           callback: async (tokenResponse: any) => {
             if (tokenResponse && tokenResponse.access_token) {
               try {
-                // Fetch verified profile from Google OAuth2 API
                 const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
                   headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
                 });
@@ -199,122 +167,93 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className="min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden select-none perspective-1000"
-      style={{ perspective: '1000px' }}
-    >
-      {/* Dynamic Cursor Light Glow Halo */}
-      <div
-        className="fixed pointer-events-none rounded-full w-[500px] h-[500px] bg-blue-500/15 blur-3xl transition-opacity duration-300 z-0"
+    <div className="min-h-screen bg-[#030712] text-slate-100 flex items-center justify-center p-4 sm:p-6 relative overflow-hidden select-none">
+      {/* ========================================================================= */}
+      {/* SOPHISTICATED MODERN SAAS BACKGROUND WITH GRID & AURORA GLOWS */}
+      {/* ========================================================================= */}
+      
+      {/* 1. Subtle Elegant Tech Grid */}
+      <div 
+        className="absolute inset-0 opacity-[0.18] pointer-events-none"
         style={{
-          left: `${mousePos.x - 250}px`,
-          top: `${mousePos.y - 250}px`,
+          backgroundImage: `linear-gradient(to right, #3b82f6 1px, transparent 1px), linear-gradient(to bottom, #3b82f6 1px, transparent 1px)`,
+          backgroundSize: '48px 48px',
+          maskImage: 'radial-gradient(ellipse 60% 60% at 50% 50%, black 30%, transparent 85%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 60% 60% at 50% 50%, black 30%, transparent 85%)',
         }}
-      ></div>
+      />
+
+      {/* 2. Layered Ambient Lighting Orbs */}
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/25 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-cyan-600/20 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[160px] pointer-events-none" />
 
       {/* ========================================================================= */}
-      {/* REALISTIC ANIMATED SMART HOME ENVIRONMENT BACKGROUND LAYER */}
+      {/* MINIMALIST ARCHITECTURAL SIDE BADGES (DESKTOP) */}
       {/* ========================================================================= */}
-      <div
-        className="absolute inset-0 transition-transform duration-300 ease-out pointer-events-none opacity-40"
-        style={{
-          transform: `translate3d(${-normPos.x * 12}px, ${-normPos.y * 12}px, 0)`,
-        }}
-      >
-        {/* Smart Living Room & Kitchen Illumination Gradients */}
-        <div className="absolute top-10 left-1/4 w-96 h-96 rounded-full bg-amber-500/10 blur-3xl"></div>
-        <div className="absolute bottom-10 right-1/4 w-96 h-96 rounded-full bg-blue-500/10 blur-3xl"></div>
+      
+      {/* Left Feature Pill */}
+      <div className="hidden lg:flex flex-col gap-3 absolute left-12 top-1/2 -translate-y-1/2 max-w-xs pointer-events-none">
+        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-blue-500/30">
+          <div className="flex items-center gap-2 text-blue-400">
+            <Cpu className="w-4 h-4" />
+            <span className="text-xs font-bold tracking-wide uppercase">AI Intelligence</span>
+          </div>
+          <p className="text-xs text-slate-300 font-medium leading-relaxed">
+            Automated grocery expiration predictions & smart appliance maintenance logs.
+          </p>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-emerald-500/30">
+          <div className="flex items-center gap-2 text-emerald-400">
+            <TrendingUp className="w-4 h-4" />
+            <span className="text-xs font-bold tracking-wide uppercase">Multi-Currency</span>
+          </div>
+          <p className="text-xs text-slate-300 font-medium leading-relaxed">
+            Real-time household income, recurring bill telemetry & expense management.
+          </p>
+        </div>
+      </div>
+
+      {/* Right Feature Pill */}
+      <div className="hidden lg:flex flex-col gap-3 absolute right-12 top-1/2 -translate-y-1/2 max-w-xs pointer-events-none">
+        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-purple-500/30">
+          <div className="flex items-center gap-2 text-purple-400">
+            <Layers className="w-4 h-4" />
+            <span className="text-xs font-bold tracking-wide uppercase">Family Workspace</span>
+          </div>
+          <p className="text-xs text-slate-300 font-medium leading-relaxed">
+            Role-based multi-member workspace with isolated household encryption.
+          </p>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-cyan-500/30">
+          <div className="flex items-center gap-2 text-cyan-400">
+            <ShieldCheck className="w-4 h-4" />
+            <span className="text-xs font-bold tracking-wide uppercase">Zero Setup Friction</span>
+          </div>
+          <p className="text-xs text-slate-300 font-medium leading-relaxed">
+            1-Click instant Google login with automatic household cloud workspace creation.
+          </p>
+        </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* CURSOR-RESPONSIVE PEOPLE / FAMILY CHARACTERS (PEOPLE MOVE WITH CURSOR) */}
+      {/* PREMIUM CENTRAL GLASSMORPHISM LOGIN CARD */}
       {/* ========================================================================= */}
-
-      {/* Person 1: Homeowner Avatar (Left Side - Follows Cursor) */}
-      <div
-        className="absolute top-28 left-20 hidden xl:flex flex-col items-center gap-2 pointer-events-none transition-transform duration-200 ease-out z-0"
-        style={{
-          transform: `translate3d(${normPos.x * 35}px, ${normPos.y * 25}px, 0) rotate(${normPos.x * 8}deg)`,
-        }}
-      >
-        <div className="glass-panel px-3 py-1.5 border-emerald-500/30 bg-slate-900/80 rounded-2xl text-[10px] text-emerald-300 font-bold shadow-xl flex items-center gap-1.5 animate-bounce-slow">
-          <Zap className="w-3 h-3 text-amber-400" />
-          <span>"Zero Demo Data • Full Isolation 🔒"</span>
-        </div>
-
-        <div className="relative group">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 p-1 shadow-2xl shadow-blue-500/40 border border-blue-400/40 overflow-hidden flex items-center justify-center">
-            <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"
-              alt="Homeowner"
-              className="w-full h-full object-cover rounded-full"
-            />
+      <div className="w-full max-w-[440px] bg-slate-900/80 backdrop-blur-2xl p-7 sm:p-9 space-y-6 relative z-10 border border-white/[0.12] rounded-3xl shadow-[0_25px_80px_-15px_rgba(0,0,0,0.85)] border-t border-t-white/20">
+        
+        {/* Brand Header */}
+        <div className="text-center space-y-3">
+          <div className="relative inline-flex items-center justify-center">
+            <div className="absolute inset-0 bg-blue-500/30 rounded-2xl blur-xl animate-pulse" />
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-2xl border border-white/20 relative z-10">
+              <Sparkles className="w-7 h-7 text-white" />
+            </div>
           </div>
-          <div
-            className="absolute top-4 left-6 w-2.5 h-2.5 bg-blue-400 rounded-full blur-[1px] transition-transform duration-100"
-            style={{
-              transform: `translate(${normPos.x * 4}px, ${normPos.y * 4}px)`,
-            }}
-          ></div>
-        </div>
-        <span className="text-[11px] font-bold text-slate-300 bg-slate-900/80 px-2.5 py-0.5 rounded-full border border-slate-800">
-          HomeMind Member
-        </span>
-      </div>
 
-      {/* Person 2: Partner Avatar (Right Side - Follows Cursor) */}
-      <div
-        className="absolute top-28 right-20 hidden xl:flex flex-col items-center gap-2 pointer-events-none transition-transform duration-200 ease-out z-0"
-        style={{
-          transform: `translate3d(${normPos.x * 40}px, ${normPos.y * 30}px, 0) rotate(${-normPos.x * 8}deg)`,
-        }}
-      >
-        <div className="glass-panel px-3 py-1.5 border-blue-500/30 bg-slate-900/80 rounded-2xl text-[10px] text-blue-300 font-bold shadow-xl flex items-center gap-1.5 animate-bounce-slow">
-          <ShoppingBag className="w-3 h-3 text-emerald-400" />
-          <span>"Multi-Currency (₹, $, €, £) 🌐"</span>
-        </div>
-
-        <div className="relative group">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-purple-600 to-pink-600 p-1 shadow-2xl shadow-purple-500/40 border border-purple-400/40 overflow-hidden flex items-center justify-center">
-            <img
-              src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80"
-              alt="Partner"
-              className="w-full h-full object-cover rounded-full"
-            />
-          </div>
-          <div
-            className="absolute top-4 left-6 w-2.5 h-2.5 bg-purple-400 rounded-full blur-[1px] transition-transform duration-100"
-            style={{
-              transform: `translate(${normPos.x * 4}px, ${normPos.y * 4}px)`,
-            }}
-          ></div>
-        </div>
-        <span className="text-[11px] font-bold text-slate-300 bg-slate-900/80 px-2.5 py-0.5 rounded-full border border-slate-800">
-          Smart Household
-        </span>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* MAIN 3D PERSPECTIVE GLASSMORPHISM LOGIN CARD */}
-      {/* ========================================================================= */}
-      <div
-        ref={containerRef}
-        style={{
-          transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
-          transformStyle: 'preserve-3d',
-          transition: 'transform 0.15s ease-out',
-        }}
-        className="w-full max-w-md bg-slate-900/85 backdrop-blur-2xl p-8 space-y-6 relative z-10 border border-slate-800/80 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] border-t border-slate-700/60"
-      >
-        {/* 3D Glowing Header Badge */}
-        <div className="text-center space-y-3" style={{ transform: 'translateZ(30px)' }}>
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-500 flex items-center justify-center mx-auto shadow-2xl shadow-blue-500/40 border border-blue-400/30 hover:scale-110 transition-transform">
-            <Sparkles className="w-7 h-7 text-white animate-pulse" />
-          </div>
           <div>
-            <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-400">
               HomeMind AI
             </h1>
             <p className="text-xs text-slate-400 font-medium mt-1">
@@ -323,36 +262,33 @@ export const Login: React.FC = () => {
           </div>
         </div>
 
-        {/* 3D Animated Tab Switcher: New User vs Existing User */}
-        <div
-          className="flex bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800/90 shadow-inner relative"
-          style={{ transform: 'translateZ(20px)' }}
-        >
+        {/* Tab Switcher: Sign Up vs Sign In */}
+        <div className="flex bg-slate-950/90 p-1.5 rounded-2xl border border-white/[0.08] shadow-inner">
           <button
             onClick={() => {
               setAuthTab('NEW_USER');
               setError('');
             }}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-300 relative z-10 ${
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-300 ${
               authTab === 'NEW_USER'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 scale-[1.02]'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <UserPlus className="w-4 h-4" /> 🆕 New User (Sign Up)
+            <UserPlus className="w-3.5 h-3.5" /> 🆕 Sign Up
           </button>
           <button
             onClick={() => {
               setAuthTab('EXISTING_USER');
               setError('');
             }}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-300 relative z-10 ${
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-300 ${
               authTab === 'EXISTING_USER'
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30 scale-[1.02]'
+                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <LogIn className="w-4 h-4" /> 🔑 Existing User (Sign In)
+            <LogIn className="w-3.5 h-3.5" /> 🔑 Sign In
           </button>
         </div>
 
@@ -362,12 +298,12 @@ export const Login: React.FC = () => {
           </div>
         )}
 
-        {/* 3D Interactive Google Action Button */}
-        <div className="space-y-4 pt-2" style={{ transform: 'translateZ(25px)' }}>
+        {/* Action Button: 1-Click Google Authentication */}
+        <div className="space-y-4 pt-1">
           <button
             onClick={triggerGoogleAccountChooser}
             disabled={loadingGoogle}
-            className="w-full bg-white hover:bg-slate-100 active:scale-95 text-slate-900 font-extrabold py-4 px-5 rounded-2xl text-sm flex items-center justify-center gap-3 shadow-2xl transition-all border border-white/80 group hover:shadow-blue-500/20"
+            className="w-full bg-white hover:bg-slate-100 active:scale-[0.98] text-slate-900 font-extrabold py-4 px-5 rounded-2xl text-sm flex items-center justify-center gap-3 shadow-xl transition-all border border-white/80 group hover:shadow-blue-500/25"
           >
             {loadingGoogle ? (
               <RefreshCw className="w-5 h-5 animate-spin text-blue-600" />
@@ -396,32 +332,30 @@ export const Login: React.FC = () => {
                 ? 'Continue with Google Account'
                 : 'Sign In with Google Account'}
             </span>
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-slate-900 group-hover:translate-x-0.5 transition-all" />
           </button>
 
-          {/* Clean Features Highlight */}
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-center">
+          {/* Value Highlights */}
+          <div className="grid grid-cols-2 gap-2.5 pt-1">
+            <div className="p-3 rounded-2xl bg-slate-950/70 border border-white/[0.06] text-center space-y-0.5">
               <span className="text-[10px] text-slate-400 block font-medium">⚡ Instant 1-Click</span>
-              <span className="text-[11px] text-slate-200 font-bold block">No Password Needed</span>
+              <span className="text-xs text-slate-200 font-bold block">No Password Needed</span>
             </div>
-            <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-center">
+            <div className="p-3 rounded-2xl bg-slate-950/70 border border-white/[0.06] text-center space-y-0.5">
               <span className="text-[10px] text-slate-400 block font-medium">🔒 Bank-Grade</span>
-              <span className="text-[11px] text-slate-200 font-bold block">Isolated Household</span>
+              <span className="text-xs text-slate-200 font-bold block">Isolated Household</span>
             </div>
           </div>
         </div>
 
         {/* Security Footer */}
-        <div
-          className="pt-4 text-center text-[11px] text-slate-500 space-y-1.5 border-t border-slate-800/80"
-          style={{ transform: 'translateZ(15px)' }}
-        >
+        <div className="pt-4 text-center text-[11px] text-slate-500 space-y-1.5 border-t border-white/[0.08]">
           <p className="flex items-center justify-center gap-1.5 font-semibold text-slate-300">
             <Lock className="w-3.5 h-3.5 text-emerald-400" /> Enterprise Multi-Tenant Data Isolation
           </p>
           <p className="text-[10px] text-slate-500 leading-tight">
             {authTab === 'NEW_USER'
-              ? '✨ New User starts with 100% Clean Slate (0 Expenses, 0 Bills, 0 Groceries)'
+              ? '✨ New User automatically initializes a clean, personal household workspace'
               : '💾 Existing User automatically loads your permanently saved household data'}
           </p>
         </div>
