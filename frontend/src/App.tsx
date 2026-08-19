@@ -35,6 +35,7 @@ export function App() {
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isFABVisible, setIsFABVisible] = useState(true);
   const { fetchSettings, theme } = useSettingStore();
 
   useEffect(() => {
@@ -93,7 +94,12 @@ export function App() {
                 </div>
 
                 {/* Draggable AI Assistant Button */}
-                <DraggableFAB onClick={() => setIsAIChatOpen(true)} />
+                {isFABVisible && (
+                  <DraggableFAB 
+                    onClick={() => setIsAIChatOpen(true)} 
+                    onDismiss={() => setIsFABVisible(false)} 
+                  />
+                )}
 
                 <AIChatDrawer isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />
                 <NotificationDrawer
