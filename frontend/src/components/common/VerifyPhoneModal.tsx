@@ -22,7 +22,6 @@ export const VerifyPhoneModal: React.FC<VerifyPhoneModalProps> = ({
   const [step, setStep] = useState<'PHONE' | 'OTP'>('PHONE');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [devOtp, setDevOtp] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
 
@@ -40,7 +39,6 @@ export const VerifyPhoneModal: React.FC<VerifyPhoneModalProps> = ({
     setLoading(true);
     setError('');
     setSuccessMsg('');
-    setDevOtp('');
 
     const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${dialCode}${phoneNumber.replace(/^0+/, '')}`;
 
@@ -69,18 +67,12 @@ export const VerifyPhoneModal: React.FC<VerifyPhoneModalProps> = ({
         const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber: fullPhone });
         setStep('OTP');
         setSuccessMsg(`SMS verification code sent to ${fullPhone}`);
-        if (res.data.devOtp) {
-          setDevOtp(res.data.devOtp);
-        }
       }
     } catch (err: any) {
       try {
         const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber: fullPhone });
         setStep('OTP');
         setSuccessMsg(`SMS verification code sent to ${fullPhone}`);
-        if (res.data.devOtp) {
-          setDevOtp(res.data.devOtp);
-        }
       } catch (fallbackErr: any) {
         setError(fallbackErr.response?.data?.error || err.message || 'Failed to send SMS OTP.');
       }
@@ -181,18 +173,6 @@ export const VerifyPhoneModal: React.FC<VerifyPhoneModalProps> = ({
         {successMsg && (
           <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs rounded-xl text-center font-medium animate-in fade-in">
             {successMsg}
-          </div>
-        )}
-
-        {devOtp && step === 'OTP' && (
-          <div
-            onClick={() => setOtp(devOtp)}
-            className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center cursor-pointer hover:bg-emerald-500/20 transition-all flex items-center justify-center gap-2"
-          >
-            <KeyRound className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-xs text-emerald-300 font-semibold">
-              SMS OTP: <strong className="font-mono text-emerald-200 tracking-wider underline">{devOtp}</strong> (Click to autofill)
-            </span>
           </div>
         )}
 

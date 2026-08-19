@@ -209,7 +209,6 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
     res.json({
       success: true,
       message: `SMS verification code sent to ${identifier}. Valid for 5 minutes.`,
-      devOtp: realOtp, // Assisted code for frictionless dev testing
       provider: smsResult.provider
     });
   } catch (err: any) {
@@ -438,7 +437,6 @@ export const requestEmailOTP = async (req: AuthenticatedRequest, res: Response) 
     res.json({
       success: true,
       message: `Verification code sent to ${identifier}. Valid for 10 minutes.`,
-      devOtp: realOtp,
       emailSent: emailResult.success
     });
   } catch (err: any) {

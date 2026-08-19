@@ -58,7 +58,6 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
   const [phoneOtp, setPhoneOtp] = useState('');
   const [isPhoneOtpSent, setIsPhoneOtpSent] = useState(false);
   const [isPhoneVerified, setIsPhoneVerified] = useState(!!user?.phoneNumber);
-  const [devPhoneOtp, setDevPhoneOtp] = useState('');
   const [sendingPhoneOtp, setSendingPhoneOtp] = useState(false);
   const [verifyingPhoneOtp, setVerifyingPhoneOtp] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
@@ -100,7 +99,6 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
     setSendingPhoneOtp(true);
     setError('');
     setPhoneSuccessMsg('');
-    setDevPhoneOtp('');
 
     const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${currentCountry.dialCode}${phoneNumber.replace(/^0+/, '')}`;
 
@@ -129,18 +127,12 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
         const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber: fullPhone });
         setIsPhoneOtpSent(true);
         setPhoneSuccessMsg(`SMS verification code sent to ${fullPhone}`);
-        if (res.data.devOtp) {
-          setDevPhoneOtp(res.data.devOtp);
-        }
       }
     } catch (err: any) {
       try {
         const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber: fullPhone });
         setIsPhoneOtpSent(true);
         setPhoneSuccessMsg(`SMS verification code sent to ${fullPhone}`);
-        if (res.data.devOtp) {
-          setDevPhoneOtp(res.data.devOtp);
-        }
       } catch (fallbackErr: any) {
         setError(fallbackErr.response?.data?.error || err.message || 'Failed to send mobile verification SMS.');
       }
@@ -390,18 +382,6 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
 
                 {isPhoneOtpSent && (
                   <div className="space-y-2 animate-in fade-in">
-                    {devPhoneOtp && (
-                      <div
-                        onClick={() => setPhoneOtp(devPhoneOtp)}
-                        className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center cursor-pointer hover:bg-emerald-500/20 transition-all flex items-center justify-center gap-2"
-                      >
-                        <KeyRound className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="text-xs text-emerald-300 font-semibold">
-                          Dev SMS OTP: <strong className="font-mono text-emerald-200 tracking-wider underline">{devPhoneOtp}</strong> (Click to autofill)
-                        </span>
-                      </div>
-                    )}
-
                     <div className="flex gap-2">
                       <input
                         type="text"

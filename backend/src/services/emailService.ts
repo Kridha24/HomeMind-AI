@@ -15,21 +15,37 @@ export class EmailService {
     const secure = port === 465;
 
     if (user && pass) {
-      this.transporter = nodemailer.createTransport({
-        host,
-        port,
-        secure,
-        auth: {
-          user,
-          pass,
-        },
-        connectionTimeout: 6000,
-        greetingTimeout: 5000,
-        socketTimeout: 8000,
-      });
-      console.log(`📧 [EMAIL SERVICE] Configured SMTP Transport via ${host}:${port} for ${user}`);
+      const isGmail = host.toLowerCase().includes('gmail') || user.toLowerCase().includes('@gmail.com');
+      
+      if (isGmail) {
+        this.transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user,
+            pass,
+          },
+          connectionTimeout: 10000,
+          greetingTimeout: 8000,
+          socketTimeout: 15000,
+        });
+        console.log(`📧 [EMAIL SERVICE] Configured Gmail Direct Transport for ${user}`);
+      } else {
+        this.transporter = nodemailer.createTransport({
+          host,
+          port,
+          secure,
+          auth: {
+            user,
+            pass,
+          },
+          connectionTimeout: 10000,
+          greetingTimeout: 8000,
+          socketTimeout: 15000,
+        });
+        console.log(`📧 [EMAIL SERVICE] Configured SMTP Transport via ${host}:${port} for ${user}`);
+      }
     } else {
-      console.log(`⚠️ [EMAIL SERVICE] SMTP_USER and SMTP_PASS not set in backend/.env. Emails will be logged to console.`);
+      console.log(`⚠️ [EMAIL SERVICE] SMTP_USER and SMTP_PASS not set in environment variables. Real email dispatch disabled.`);
     }
   }
 

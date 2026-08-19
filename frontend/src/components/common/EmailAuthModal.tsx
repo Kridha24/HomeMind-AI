@@ -23,7 +23,6 @@ export const EmailAuthModal: React.FC<EmailAuthModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
-  const [devOtpHint, setDevOtpHint] = useState('');
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
   const [resendCooldown, setResendCooldown] = useState(0);
 
@@ -57,7 +56,6 @@ export const EmailAuthModal: React.FC<EmailAuthModalProps> = ({
     setLoading(true);
     setError('');
     setInfoMessage('');
-    setDevOtpHint('');
 
     try {
       const res = await apiClient.post('/auth/email/request-otp', { email });
@@ -65,9 +63,6 @@ export const EmailAuthModal: React.FC<EmailAuthModalProps> = ({
       setTimeLeft(600);
       setResendCooldown(30);
       setInfoMessage(res.data.message || `Verification code sent to ${email}`);
-      if (res.data.devOtp) {
-        setDevOtpHint(res.data.devOtp);
-      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to send email verification code.');
     } finally {
@@ -144,23 +139,6 @@ export const EmailAuthModal: React.FC<EmailAuthModalProps> = ({
         {infoMessage && (
           <div className="p-3 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs rounded-xl text-center font-medium animate-in fade-in">
             {infoMessage}
-          </div>
-        )}
-
-        {/* Dev OTP Helper Badge */}
-        {devOtpHint && (
-          <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center space-y-1">
-            <div className="flex items-center justify-center gap-1.5 text-emerald-400 text-xs font-bold">
-              <KeyRound className="w-3.5 h-3.5" /> Dev Verification Code:
-            </div>
-            <div
-              onClick={() => setOtp(devOtpHint)}
-              className="text-lg font-mono font-extrabold text-emerald-300 tracking-widest cursor-pointer hover:scale-105 transition-transform inline-block bg-slate-950/80 px-3 py-1 rounded-lg border border-emerald-500/30"
-              title="Click to autofill"
-            >
-              {devOtpHint}
-            </div>
-            <p className="text-[10px] text-slate-400">Click to autofill</p>
           </div>
         )}
 

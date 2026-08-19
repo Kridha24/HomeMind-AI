@@ -24,7 +24,6 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
-  const [devOtpHint, setDevOtpHint] = useState('');
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes (300s)
   const [resendCooldown, setResendCooldown] = useState(0);
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
@@ -59,7 +58,6 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
     setLoading(true);
     setError('');
     setInfoMessage('');
-    setDevOtpHint('');
 
     try {
       const cleanDigits = phoneNumber.replace(/[^0-9]/g, '');
@@ -98,9 +96,6 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
         setTimeLeft(300);
         setResendCooldown(30);
         setInfoMessage(res.data.message || `SMS verification code sent to ${formattedPhone}`);
-        if (res.data.devOtp) {
-          setDevOtpHint(res.data.devOtp);
-        }
       }
     } catch (err: any) {
       console.error('[Firebase Phone Auth Error]:', err.code, err.message);
@@ -117,9 +112,6 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
         setTimeLeft(300);
         setResendCooldown(30);
         setInfoMessage(res.data.message || `SMS verification code sent to ${formattedPhone}`);
-        if (res.data.devOtp) {
-          setDevOtpHint(res.data.devOtp);
-        }
       } catch (fallbackErr: any) {
         setError(fallbackErr.response?.data?.error || err.message || 'Failed to send SMS OTP');
       }
@@ -217,23 +209,6 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
         {infoMessage && (
           <div className="p-3 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs rounded-xl text-center font-medium animate-in fade-in">
             {infoMessage}
-          </div>
-        )}
-
-        {/* Dev OTP Helper Badge */}
-        {devOtpHint && (
-          <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center space-y-1">
-            <div className="flex items-center justify-center gap-1.5 text-emerald-400 text-xs font-bold">
-              <KeyRound className="w-3.5 h-3.5" /> SMS Verification Code:
-            </div>
-            <div
-              onClick={() => setOtp(devOtpHint)}
-              className="text-lg font-mono font-extrabold text-emerald-300 tracking-widest cursor-pointer hover:scale-105 transition-transform inline-block bg-slate-950/80 px-3 py-1 rounded-lg border border-emerald-500/30"
-              title="Click to autofill"
-            >
-              {devOtpHint}
-            </div>
-            <p className="text-[10px] text-slate-400">Click to autofill</p>
           </div>
         )}
 
