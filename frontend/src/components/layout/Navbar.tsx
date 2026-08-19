@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Bot, CloudSun, Search, Sparkles } from 'lucide-react';
+import { Bell, Bot, CloudSun, Search, Sparkles, Menu } from 'lucide-react';
 import { ProfileMenu } from '../common/ProfileMenu';
 import { useSettingStore } from '../../stores/useSettingStore';
 import { COUNTRY_DEFAULTS } from '../../utils/currency';
@@ -7,6 +7,7 @@ import { COUNTRY_DEFAULTS } from '../../utils/currency';
 interface NavbarProps {
   onOpenAIChat: () => void;
   onOpenNotifications: () => void;
+  onToggleMobileSidebar?: () => void;
   unreadCount?: number;
 }
 
@@ -29,6 +30,7 @@ const COUNTRY_FLAGS: Record<string, string> = {
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenAIChat,
   onOpenNotifications,
+  onToggleMobileSidebar,
   unreadCount = 0,
 }) => {
   const { country } = useSettingStore();
@@ -38,30 +40,40 @@ export const Navbar: React.FC<NavbarProps> = ({
   const tempStr = isCelsius ? '28°C Partly Sunny' : '74°F Clear Sky';
 
   return (
-    <header className="h-16 bg-slate-900/40 backdrop-blur-xl border-b border-slate-800/60 sticky top-0 z-30 ml-64 flex items-center justify-between px-6">
-      {/* Search Input */}
-      <div className="flex items-center gap-3 w-96">
+    <header className="h-16 bg-slate-900/40 backdrop-blur-xl border-b border-slate-800/60 sticky top-0 z-30 lg:ml-64 ml-0 flex items-center justify-between px-3 sm:px-6 gap-2 sm:gap-4">
+      {/* Left: Mobile Hamburger & Search Input */}
+      <div className="flex items-center gap-2 sm:gap-3 flex-1 max-w-md">
+        {/* Mobile Hamburger Toggle Button */}
+        {onToggleMobileSidebar && (
+          <button
+            onClick={onToggleMobileSidebar}
+            className="lg:hidden p-2 text-slate-300 hover:text-white bg-slate-900 border border-slate-800/80 rounded-xl hover:border-slate-700 transition-colors flex-shrink-0"
+            title="Open Menu"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Search Input */}
         <div className="relative w-full">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search household expenses, groceries, tasks..."
-            className="w-full bg-slate-950/60 border border-slate-800/80 rounded-xl pl-9 pr-4 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/50 transition-colors"
+            placeholder="Search expenses, groceries..."
+            className="w-full bg-slate-950/60 border border-slate-800/80 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/50 transition-colors"
           />
         </div>
       </div>
 
       {/* Right Header Actions */}
-      <div className="flex items-center gap-4">
-        {/* Live Location Weather Widget (No San Francisco hardcoded text) */}
-        <div className="hidden md:flex items-center gap-2 bg-slate-950/40 border border-slate-800/60 px-3 py-1.5 rounded-xl text-xs text-slate-300">
+      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+        {/* Live Location Weather Widget (Desktop/Tablet) */}
+        <div className="hidden sm:flex items-center gap-2 bg-slate-950/40 border border-slate-800/60 px-3 py-1.5 rounded-xl text-xs text-slate-300">
           <CloudSun className="w-4 h-4 text-amber-400" />
           <span>
             {tempStr} • {flag} {defaults.countryName}
           </span>
         </div>
-
-
 
         {/* Notification Bell */}
         <button

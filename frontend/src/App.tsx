@@ -32,6 +32,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 export function App() {
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { fetchSettings, theme } = useSettingStore();
 
   useEffect(() => {
@@ -56,13 +57,17 @@ export function App() {
           element={
             <ProtectedRoute>
               <div className={getThemeClass()}>
-                <Sidebar />
+                <Sidebar
+                  isOpen={isMobileSidebarOpen}
+                  onClose={() => setIsMobileSidebarOpen(false)}
+                />
                 <div className="flex-1 flex flex-col min-w-0">
                   <Navbar
                     onOpenAIChat={() => setIsAIChatOpen(true)}
                     onOpenNotifications={() => setIsNotificationsOpen(true)}
+                    onToggleMobileSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
                   />
-                  <main className="flex-1 p-6 overflow-y-auto ml-64">
+                  <main className="flex-1 p-3 sm:p-5 md:p-6 overflow-y-auto lg:ml-64 ml-0">
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/income" element={<Income />} />

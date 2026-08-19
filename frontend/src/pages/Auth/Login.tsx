@@ -207,57 +207,57 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-100 flex items-center justify-center p-4 sm:p-6 relative overflow-hidden select-none">
+    <div className="min-h-[100dvh] w-full bg-[#030712] text-slate-100 flex items-center justify-center p-3 sm:p-6 md:p-8 relative overflow-x-hidden overflow-y-auto select-none">
       {/* ========================================================================= */}
       {/* SOPHISTICATED MODERN SAAS BACKGROUND WITH GRID & AURORA GLOWS */}
       {/* ========================================================================= */}
       
       {/* 1. Subtle Elegant Tech Grid */}
       <div 
-        className="absolute inset-0 opacity-[0.18] pointer-events-none"
+        className="fixed inset-0 opacity-[0.15] sm:opacity-[0.18] pointer-events-none"
         style={{
           backgroundImage: `linear-gradient(to right, #3b82f6 1px, transparent 1px), linear-gradient(to bottom, #3b82f6 1px, transparent 1px)`,
-          backgroundSize: '48px 48px',
+          backgroundSize: '40px 40px',
           maskImage: 'radial-gradient(ellipse 60% 60% at 50% 50%, black 30%, transparent 85%)',
           WebkitMaskImage: 'radial-gradient(ellipse 60% 60% at 50% 50%, black 30%, transparent 85%)',
         }}
       />
 
       {/* 2. Layered Ambient Lighting Orbs */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/25 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-cyan-600/20 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[160px] pointer-events-none" />
+      <div className="fixed -top-40 -left-40 w-72 sm:w-96 h-72 sm:h-96 bg-indigo-600/20 sm:bg-indigo-600/25 rounded-full blur-[100px] sm:blur-[140px] pointer-events-none" />
+      <div className="fixed -bottom-40 -right-40 w-72 sm:w-96 h-72 sm:h-96 bg-cyan-600/15 sm:bg-cyan-600/20 rounded-full blur-[100px] sm:blur-[140px] pointer-events-none" />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[600px] h-[350px] sm:h-[600px] bg-blue-600/10 rounded-full blur-[120px] sm:blur-[160px] pointer-events-none" />
 
       {/* ========================================================================= */}
-      {/* MINIMALIST ARCHITECTURAL SIDE BADGES (DESKTOP) */}
+      {/* MINIMALIST ARCHITECTURAL SIDE BADGES (DESKTOP & LARGE SCREENS ONLY) */}
       {/* ========================================================================= */}
       
-      {/* Left Feature Pill */}
-      <div className="hidden lg:flex flex-col gap-3 absolute left-12 top-1/2 -translate-y-1/2 max-w-xs pointer-events-none">
-        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-blue-500/30">
+      {/* Left Feature Pill (Desktop) */}
+      <div className="hidden xl:flex flex-col gap-3 absolute left-8 2xl:left-16 top-1/2 -translate-y-1/2 max-w-[260px] 2xl:max-w-xs pointer-events-none z-0">
+        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all">
           <div className="flex items-center gap-2 text-blue-400">
             <Cpu className="w-4 h-4" />
             <span className="text-xs font-bold tracking-wide uppercase">AI Intelligence</span>
           </div>
           <p className="text-xs text-slate-300 font-medium leading-relaxed">
-            Automated grocery expiration predictions & smart appliance maintenance logs.
+            Automated grocery expiration predictions & smart appliance logs.
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-emerald-500/30">
+        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all">
           <div className="flex items-center gap-2 text-emerald-400">
             <TrendingUp className="w-4 h-4" />
             <span className="text-xs font-bold tracking-wide uppercase">Multi-Currency</span>
           </div>
           <p className="text-xs text-slate-300 font-medium leading-relaxed">
-            Real-time household income, recurring bill telemetry & expense management.
+            Real-time household income, bill telemetry & expense management.
           </p>
         </div>
       </div>
 
-      {/* Right Feature Pill */}
-      <div className="hidden lg:flex flex-col gap-3 absolute right-12 top-1/2 -translate-y-1/2 max-w-xs pointer-events-none">
-        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-purple-500/30">
+      {/* Right Feature Pill (Desktop) */}
+      <div className="hidden xl:flex flex-col gap-3 absolute right-8 2xl:right-16 top-1/2 -translate-y-1/2 max-w-[260px] 2xl:max-w-xs pointer-events-none z-0">
+        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all">
           <div className="flex items-center gap-2 text-purple-400">
             <Layers className="w-4 h-4" />
             <span className="text-xs font-bold tracking-wide uppercase">Family Workspace</span>
@@ -267,21 +267,21 @@ export const Login: React.FC = () => {
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-cyan-500/30">
+        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all">
           <div className="flex items-center gap-2 text-cyan-400">
             <ShieldCheck className="w-4 h-4" />
             <span className="text-xs font-bold tracking-wide uppercase">Zero Setup Friction</span>
           </div>
           <p className="text-xs text-slate-300 font-medium leading-relaxed">
-            1-Click instant Google login with automatic household cloud workspace creation.
+            1-Click instant Google login with automatic cloud database workspace.
           </p>
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* PREMIUM CENTRAL GLASSMORPHISM LOGIN CARD */}
+      {/* RESPONSIVE CENTRAL GLASSMORPHISM LOGIN CARD */}
       {/* ========================================================================= */}
-      <div className="w-full max-w-[440px] bg-slate-900/80 backdrop-blur-2xl p-7 sm:p-9 space-y-6 relative z-10 border border-white/[0.12] rounded-3xl shadow-[0_25px_80px_-15px_rgba(0,0,0,0.85)] border-t border-t-white/20">
+      <div className="w-full max-w-[430px] my-auto bg-slate-900/85 backdrop-blur-2xl p-5 sm:p-7 md:p-8 space-y-5 sm:space-y-6 relative z-10 border border-white/[0.12] rounded-2xl sm:rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.85)] border-t border-t-white/20">
         
         {/* Brand Header */}
         <div className="text-center space-y-3">
