@@ -20,7 +20,6 @@ import { Analytics } from './pages/Analytics';
 import { Reports } from './pages/Reports';
 import { Profile } from './pages/Profile';
 import { Settings } from './pages/Settings';
-import { Assistant } from './pages/Assistant';
 import { Login } from './pages/Auth/Login';
 import { useAuthStore } from './stores/useAuthStore';
 import { useSettingStore } from './stores/useSettingStore';
@@ -70,9 +69,7 @@ export function App() {
                   />
                   <main className="flex-1 p-3 sm:p-5 md:p-6 overflow-y-auto lg:ml-64 ml-0">
                     <Routes>
-                      <Route path="/" element={<Assistant />} />
-                      <Route path="/assistant" element={<Assistant />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/" element={<Dashboard />} />
                       <Route path="/income" element={<Income />} />
                       <Route path="/expenses" element={<Expenses />} />
                       <Route path="/bills" element={<Bills />} />

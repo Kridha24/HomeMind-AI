@@ -32,8 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
   const { household } = useAuthStore();
 
   const navItems = [
-    { name: 'HomeMind AI', path: '/', icon: Bot },
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Income & Earnings', path: '/income', icon: Wallet },
     { name: 'Expenses', path: '/expenses', icon: CreditCard },
     { name: 'Bills', path: '/bills', icon: FileText },
