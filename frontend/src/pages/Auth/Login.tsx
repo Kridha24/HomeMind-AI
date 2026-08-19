@@ -1,30 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Sparkles,
-  ShieldCheck,
-  RefreshCw,
-  UserPlus,
-  LogIn,
-  Lock,
-  Zap,
-  TrendingUp,
-  Cpu,
-  Layers,
-  ArrowRight,
-  Shield,
-  CheckCircle2,
-  Mail,
-  Eye,
-  EyeOff,
-  KeyRound,
-  User,
-} from 'lucide-react';
+import { Sparkles, AlertCircle } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSettingStore } from '../../stores/useSettingStore';
 import { GoogleAuthModal } from '../../components/common/GoogleAuthModal';
 import { NewUserOnboardingModal } from '../../components/common/NewUserOnboardingModal';
+import { AuthBackground } from '../../components/auth/AuthBackground';
+import { EcosystemVisual } from '../../components/auth/EcosystemVisual';
+import { FeatureCards } from '../../components/auth/FeatureCards';
+import { GoogleLoginButton } from '../../components/auth/GoogleLoginButton';
+import { SecurityBadge } from '../../components/auth/SecurityBadge';
 
 declare global {
   interface Window {
@@ -35,18 +21,9 @@ declare global {
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 export const Login: React.FC = () => {
-  const [authTab, setAuthTab] = useState<'NEW_USER' | 'EXISTING_USER'>('NEW_USER');
   const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [newUserName, setNewUserName] = useState('');
-
-  // Email & Password States
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-
-  const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState('');
 
@@ -81,59 +58,6 @@ export const Login: React.FC = () => {
     };
   }, []);
 
-  // Manual Email & Password Handler
-  const handleEmailPasswordAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !email.includes('@')) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    if (!password || password.length < 6) {
-      setError('Password must be at least 6 characters.');
-      return;
-    }
-    if (authTab === 'NEW_USER' && !name.trim()) {
-      setError('Please enter your full name.');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      if (authTab === 'NEW_USER') {
-        const res = await apiClient.post('/auth/register', {
-          name: name.trim(),
-          email: email.toLowerCase().trim(),
-          password,
-        });
-
-        setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
-        await fetchSettings();
-
-        if (res.data.isNewRegistration) {
-          setNewUserName(res.data.user?.name || name);
-          setShowOnboardingModal(true);
-        } else {
-          navigate('/');
-        }
-      } else {
-        const res = await apiClient.post('/auth/login', {
-          email: email.toLowerCase().trim(),
-          password,
-        });
-
-        setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
-        await fetchSettings();
-        navigate('/');
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Authentication failed. Please check your credentials.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Google OAuth GSI Callback Handler
   const handleGoogleCallback = async (response: any) => {
     setLoadingGoogle(true);
@@ -145,8 +69,8 @@ export const Login: React.FC = () => {
       setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
       await fetchSettings();
 
-      if (authTab === 'NEW_USER' && res.data.isNewRegistration) {
-        setNewUserName(res.data.user.name || '');
+      if (res.data.isNewRegistration) {
+        setNewUserName(res.data.user?.name || '');
         setShowOnboardingModal(true);
       } else {
         navigate('/');
@@ -186,8 +110,8 @@ export const Login: React.FC = () => {
                 setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
                 await fetchSettings();
 
-                if (authTab === 'NEW_USER' && res.data.isNewRegistration) {
-                  setNewUserName(res.data.user.name || '');
+                if (res.data.isNewRegistration) {
+                  setNewUserName(res.data.user?.name || '');
                   setShowOnboardingModal(true);
                 } else {
                   navigate('/');
@@ -227,7 +151,7 @@ export const Login: React.FC = () => {
     setShowGoogleModal(false);
     await fetchSettings();
 
-    if (authTab === 'NEW_USER' && isNewReg) {
+    if (isNewReg) {
       setNewUserName(userName || '');
       setShowOnboardingModal(true);
     } else {
@@ -236,330 +160,114 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-[#030712] text-slate-100 flex items-center justify-center p-3 sm:p-6 md:p-8 relative overflow-x-hidden overflow-y-auto select-none">
-      {/* ========================================================================= */}
-      {/* VIBRANT MODERN AMBIENT AURORA & TECH GRID BACKGROUND */}
-      {/* ========================================================================= */}
-      
-      {/* 1. Subtle High-Tech Blueprint Mesh Grid */}
-      <div 
-        className="fixed inset-0 opacity-[0.14] sm:opacity-[0.18] pointer-events-none"
-        style={{
-          backgroundImage: `linear-gradient(to right, #3b82f6 1px, transparent 1px), linear-gradient(to bottom, #3b82f6 1px, transparent 1px)`,
-          backgroundSize: '40px 40px',
-          maskImage: 'radial-gradient(ellipse 60% 60% at 50% 50%, black 25%, transparent 85%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 60% 60% at 50% 50%, black 25%, transparent 85%)',
-        }}
-      />
+    <div className="min-h-[100dvh] w-full bg-[#030712] text-slate-100 flex items-center justify-center p-4 sm:p-8 lg:p-12 relative overflow-x-hidden overflow-y-auto select-none font-sans">
+      <AuthBackground />
 
-      {/* 2. Layered Ambient Lighting Orbs */}
-      <div className="fixed -top-32 -left-32 w-80 sm:w-[480px] h-80 sm:h-[480px] bg-gradient-to-tr from-blue-600/30 via-indigo-600/20 to-purple-600/10 rounded-full blur-[110px] sm:blur-[150px] pointer-events-none animate-pulse" />
-      <div className="fixed -bottom-32 -right-32 w-80 sm:w-[480px] h-80 sm:h-[480px] bg-gradient-to-tr from-cyan-600/25 via-teal-600/20 to-emerald-600/10 rounded-full blur-[110px] sm:blur-[150px] pointer-events-none" />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[650px] h-[300px] sm:h-[650px] bg-indigo-500/10 rounded-full blur-[130px] sm:blur-[180px] pointer-events-none" />
-
-      {/* ========================================================================= */}
-      {/* MINIMALIST ARCHITECTURAL SIDE BADGES (DESKTOP) */}
-      {/* ========================================================================= */}
-      
-      {/* Left Feature Pill (Desktop) */}
-      <div className="hidden xl:flex flex-col gap-3.5 absolute left-8 2xl:left-20 top-1/2 -translate-y-1/2 max-w-[270px] 2xl:max-w-xs pointer-events-none z-0">
-        <div className="p-4 rounded-3xl bg-slate-900/50 backdrop-blur-2xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-blue-500/30 hover:scale-[1.02]">
-          <div className="flex items-center gap-2 text-blue-400">
-            <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center">
-              <Cpu className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-xs font-bold tracking-wide uppercase">AI Intelligence</span>
-          </div>
-          <p className="text-xs text-slate-300 font-medium leading-relaxed">
-            Automated grocery expiration predictions & smart appliance maintenance logs.
-          </p>
-        </div>
-
-        <div className="p-4 rounded-3xl bg-slate-900/50 backdrop-blur-2xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-emerald-500/30 hover:scale-[1.02]">
-          <div className="flex items-center gap-2 text-emerald-400">
-            <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-              <TrendingUp className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-xs font-bold tracking-wide uppercase">Multi-Currency</span>
-          </div>
-          <p className="text-xs text-slate-300 font-medium leading-relaxed">
-            Real-time household income, bill telemetry & expense budget control.
-          </p>
-        </div>
-      </div>
-
-      {/* Right Feature Pill (Desktop) */}
-      <div className="hidden xl:flex flex-col gap-3.5 absolute right-8 2xl:right-20 top-1/2 -translate-y-1/2 max-w-[270px] 2xl:max-w-xs pointer-events-none z-0">
-        <div className="p-4 rounded-3xl bg-slate-900/50 backdrop-blur-2xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-purple-500/30 hover:scale-[1.02]">
-          <div className="flex items-center gap-2 text-purple-400">
-            <div className="w-6 h-6 rounded-lg bg-purple-500/10 flex items-center justify-center">
-              <Layers className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-xs font-bold tracking-wide uppercase">Family Workspace</span>
-          </div>
-          <p className="text-xs text-slate-300 font-medium leading-relaxed">
-            Role-based multi-member workspace with isolated household encryption.
-          </p>
-        </div>
-
-        <div className="p-4 rounded-3xl bg-slate-900/50 backdrop-blur-2xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-cyan-500/30 hover:scale-[1.02]">
-          <div className="flex items-center gap-2 text-cyan-400">
-            <div className="w-6 h-6 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-              <ShieldCheck className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-xs font-bold tracking-wide uppercase">Zero Setup Friction</span>
-          </div>
-          <p className="text-xs text-slate-300 font-medium leading-relaxed">
-            1-Click instant Google login or direct email & password authentication.
-          </p>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* RESPONSIVE CENTRAL GLASSMORPHISM CARD */}
-      {/* ========================================================================= */}
-      <div className="w-full max-w-[430px] my-auto bg-slate-900/85 backdrop-blur-3xl p-6 sm:p-8 space-y-5 sm:space-y-6 relative z-10 border border-white/[0.12] rounded-3xl shadow-[0_25px_70px_-15px_rgba(0,0,0,0.9)] border-t border-t-white/20">
+      <main className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10 my-auto">
         
-        {/* Brand Header */}
-        <div className="text-center space-y-2.5">
-          <div className="relative inline-flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500 to-indigo-500 rounded-2xl blur-xl opacity-60 animate-pulse" />
-            <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-2xl border border-white/20 relative z-10">
-              <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+        {/* ========================================================================= */}
+        {/* LEFT COLUMN: HOMEMIND INTRODUCTION & AI ECOSYSTEM (DESKTOP) */}
+        {/* ========================================================================= */}
+        <section className="lg:col-span-7 flex flex-col justify-center space-y-6 text-left">
+          {/* Logo & Brand Identity */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 border border-white/20">
+                <Sparkles className="w-5 h-5" />
+              </div>
+            </div>
+            <div>
+              <span className="font-extrabold text-base tracking-tight text-white block">
+                HomeMind AI
+              </span>
+              <span className="text-[11px] text-blue-400 font-semibold tracking-wider uppercase block leading-none">
+                Intelligent Operating System
+              </span>
             </div>
           </div>
 
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-400">
-              HomeMind AI
+          {/* Main Headline */}
+          <div className="space-y-2">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] text-white">
+              Your Home.<br />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-slate-200">
+                Smarter.
+              </span>
             </h1>
-            <p className="text-xs text-slate-400 font-medium mt-0.5">
-              Intelligent Household Management Operating System
+            <p className="text-sm sm:text-base text-slate-300 font-normal max-w-lg leading-relaxed pt-1">
+              One intelligent system for everything that matters at home.
             </p>
           </div>
-        </div>
 
-        {/* Tab Switcher: Explicit New User vs Existing User */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center px-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Select User Type:
-            </span>
-            <span className="text-[11px] font-semibold text-blue-400">
-              {authTab === 'NEW_USER' ? '🆕 New User Mode' : '🔑 Existing User Mode'}
-            </span>
+          {/* Connected AI Ecosystem Visual (Desktop/Tablet) */}
+          <div className="hidden sm:block">
+            <EcosystemVisual />
           </div>
 
-          <div className="grid grid-cols-2 gap-2 bg-slate-950/90 p-1.5 rounded-2xl border border-white/[0.08] shadow-inner">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthTab('NEW_USER');
-                setError('');
-              }}
-              className={`py-3 px-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 transition-all duration-300 ${
-                authTab === 'NEW_USER'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/35 ring-1 ring-white/25 scale-[1.02]'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                <UserPlus className="w-4 h-4" /> <strong>New User</strong>
-              </span>
-              <span className="text-[10px] font-normal opacity-80">(Naya Account / Sign Up)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setAuthTab('EXISTING_USER');
-                setError('');
-              }}
-              className={`py-3 px-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 transition-all duration-300 ${
-                authTab === 'EXISTING_USER'
-                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/35 ring-1 ring-white/25 scale-[1.02]'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                <LogIn className="w-4 h-4" /> <strong>Existing User</strong>
-              </span>
-              <span className="text-[10px] font-normal opacity-80">(Pehle se Account / Sign In)</span>
-            </button>
+          {/* 3 Product Benefits Cards */}
+          <div className="hidden sm:block">
+            <FeatureCards />
           </div>
-        </div>
+        </section>
 
-        {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-xs rounded-xl text-center font-medium animate-in fade-in">
-            {error}
-          </div>
-        )}
+        {/* ========================================================================= */}
+        {/* RIGHT COLUMN: AUTHENTICATION CARD (GOOGLE-ONLY) */}
+        {/* ========================================================================= */}
+        <section className="lg:col-span-5 w-full flex justify-center">
+          <div className="w-full max-w-[430px] bg-slate-900/85 backdrop-blur-3xl p-7 sm:p-9 space-y-6 border border-white/[0.12] rounded-3xl shadow-[0_25px_80px_-15px_rgba(0,0,0,0.9)] border-t border-t-white/20">
+            
+            {/* Card Header */}
+            <div className="space-y-1.5 text-center sm:text-left">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                Welcome to HomeMind 👋
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-400">
+                Your intelligent home starts here.
+              </p>
+            </div>
 
-        <div className="space-y-4 pt-1">
-          {/* 1. Direct 1-Click Google Popup Authentication */}
-          <button
-            type="button"
-            onClick={triggerGoogleAccountChooser}
-            disabled={loadingGoogle}
-            className={`w-full bg-white hover:bg-slate-100 active:scale-[0.98] text-slate-900 font-extrabold py-3.5 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-3 shadow-xl transition-all border border-white/80 group ${
-              authTab === 'NEW_USER' ? 'hover:shadow-blue-500/30' : 'hover:shadow-purple-500/30'
-            }`}
-          >
-            {loadingGoogle ? (
-              <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
-            ) : (
-              <svg className="w-4 h-4 group-hover:scale-110 transition-transform flex-shrink-0" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                />
-              </svg>
-            )}
-            <span>
-              {authTab === 'NEW_USER'
-                ? 'Sign Up with Google (1-Click)'
-                : 'Sign In with Google (1-Click)'}
-            </span>
-          </button>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 py-0.5">
-            <div className="flex-1 h-px bg-slate-800"></div>
-            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold flex items-center gap-1.5">
-              <Mail className="w-3 h-3 text-slate-400" /> Or Manual Email & Password
-            </span>
-            <div className="flex-1 h-px bg-slate-800"></div>
-          </div>
-
-          {/* 2. Manual Email & Password Form */}
-          <form onSubmit={handleEmailPasswordAuth} className="space-y-3">
-            {authTab === 'NEW_USER' && (
-              <div>
-                <label className="text-[11px] font-semibold text-slate-300 block mb-1">
-                  Full Name <span className="text-blue-400">*</span>
-                </label>
-                <div className="relative">
-                  <User className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Alex Johnson"
-                    className="w-full bg-slate-950/90 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
-                  />
+            {/* Error Message (Friendly, No raw error dumps) */}
+            {error && (
+              <div className="p-3.5 bg-red-500/10 border border-red-500/25 rounded-2xl flex items-start gap-2.5 text-xs text-red-300 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <strong className="font-semibold block text-red-200">Unable to sign you in</strong>
+                  <span>Something went wrong. Please try again.</span>
                 </div>
               </div>
             )}
 
-            <div>
-              <label className="text-[11px] font-semibold text-slate-300 block mb-1">
-                Email Address <span className="text-blue-400">*</span>
-              </label>
-              <div className="relative">
-                <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full bg-slate-950/90 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors font-mono"
-                />
+            {/* Primary Action CTA: Google Authentication ONLY */}
+            <div className="space-y-4 pt-1">
+              <GoogleLoginButton
+                onClick={triggerGoogleAccountChooser}
+                loading={loadingGoogle}
+              />
+
+              {/* Value Highlights */}
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
+                <div className="p-3 rounded-2xl bg-slate-950/70 border border-white/[0.06] text-center space-y-0.5">
+                  <span className="text-[10px] text-slate-400 block font-medium">⚡ 1-Click Access</span>
+                  <span className="text-xs text-slate-200 font-bold block">No Password Needed</span>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-950/70 border border-white/[0.06] text-center space-y-0.5">
+                  <span className="text-[10px] text-slate-400 block font-medium">🔒 Bank-Grade</span>
+                  <span className="text-xs text-slate-200 font-bold block">Isolated Household</span>
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="text-[11px] font-semibold text-slate-300 block mb-1">
-                Password <span className="text-blue-400">*</span>
-              </label>
-              <div className="relative">
-                <KeyRound className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Min. 6 characters"
-                  className="w-full bg-slate-950/90 border border-slate-800 rounded-xl pl-9 pr-10 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors font-mono"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1"
-                >
-                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full py-3.5 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 ${
-                authTab === 'NEW_USER'
-                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-blue-500/25 border border-blue-400/30'
-                  : 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 shadow-purple-500/25 border border-purple-400/30'
-              }`}
-            >
-              {loading ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  <span>
-                    {authTab === 'NEW_USER'
-                      ? 'Create Free Account (Sign Up)'
-                      : 'Sign In with Email & Password'}
-                  </span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
-
-          {/* Value Highlights */}
-          <div className="grid grid-cols-2 gap-2.5 pt-1">
-            <div className="p-2.5 rounded-xl bg-slate-950/70 border border-white/[0.06] text-center space-y-0.5">
-              <span className="text-[10px] text-slate-400 block font-medium">⚡ Instant Access</span>
-              <span className="text-[11px] text-slate-200 font-bold block">1-Click / Password</span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-slate-950/70 border border-white/[0.06] text-center space-y-0.5">
-              <span className="text-[10px] text-slate-400 block font-medium">🔒 Bank-Grade</span>
-              <span className="text-[11px] text-slate-200 font-bold block">Isolated Household</span>
-            </div>
+            {/* Security Message */}
+            <SecurityBadge />
           </div>
-        </div>
+        </section>
 
-        {/* Security Footer */}
-        <div className="pt-4 text-center text-[11px] text-slate-500 space-y-1.5 border-t border-white/[0.08]">
-          <p className="flex items-center justify-center gap-1.5 font-semibold text-slate-300">
-            <Lock className="w-3.5 h-3.5 text-emerald-400" /> Enterprise Multi-Tenant Data Isolation
-          </p>
-          <p className="text-[10px] text-slate-500 leading-tight">
-            {authTab === 'NEW_USER'
-              ? '✨ New User automatically creates a clean, personal household workspace'
-              : '💾 Existing User automatically loads your permanently saved household data'}
-          </p>
-        </div>
-      </div>
+      </main>
 
       {/* Google Modal Fallback (If popup is blocked) */}
       <GoogleAuthModal
         isOpen={showGoogleModal}
-        mode={authTab}
+        mode="EXISTING_USER"
         onClose={() => setShowGoogleModal(false)}
         onSuccess={(isNew, name) => handleAuthSuccess(isNew, name)}
       />
@@ -576,3 +284,4 @@ export const Login: React.FC = () => {
   );
 };
 
+export default Login;
