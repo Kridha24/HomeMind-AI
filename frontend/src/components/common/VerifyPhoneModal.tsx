@@ -200,7 +200,7 @@ export const VerifyPhoneModal: React.FC<VerifyPhoneModalProps> = ({
                 <input
                   type="tel"
                   required
-                  placeholder="e.g. 8340496912"
+                  placeholder="e.g. 9876543210"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-100 font-mono placeholder-slate-500 focus:outline-none focus:border-cyan-500"
