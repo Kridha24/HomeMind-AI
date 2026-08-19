@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
+  Bot,
   Wallet,
   CreditCard,
   FileText,
@@ -32,6 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'AI Assistant', path: '/assistant', icon: Bot },
     { name: 'Income & Earnings', path: '/income', icon: Wallet },
     { name: 'Expenses', path: '/expenses', icon: CreditCard },
     { name: 'Bills', path: '/bills', icon: FileText },

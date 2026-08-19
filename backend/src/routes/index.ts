@@ -14,6 +14,7 @@ import * as notificationController from '../controllers/notificationController';
 import * as reportController from '../controllers/reportController';
 import * as settingController from '../controllers/settingController';
 import * as incomeController from '../controllers/incomeController';
+import * as assistantController from '../controllers/assistantController';
 
 const router = Router();
 
@@ -87,7 +88,21 @@ router.put('/tasks/:id/status', authorize(['OWNER', 'ADMIN', 'MEMBER']), taskCon
 router.get('/family/members', familyController.getHouseholdMembers);
 router.put('/family/members/:userId/role', authorize(['OWNER', 'ADMIN']), familyController.updateMemberRole);
 
-// AI Assistance & Telemetry
+// ==========================================
+// NEXT-GEN AI HOUSEHOLD AGENT ENDPOINTS
+// ==========================================
+router.post('/assistant/chat', assistantController.chat);
+router.post('/assistant/stream', assistantController.streamChat);
+router.get('/assistant/summary', assistantController.getDailySummary);
+router.get('/assistant/threads', assistantController.getThreads);
+router.get('/assistant/threads/:threadId', assistantController.getThreadMessages);
+router.delete('/assistant/threads/:threadId', assistantController.deleteThread);
+router.get('/assistant/memories', assistantController.getMemories);
+router.post('/assistant/memories', assistantController.createMemory);
+router.delete('/assistant/memories/:id', assistantController.deleteMemory);
+router.post('/assistant/actions/execute', assistantController.executeConfirmedAction);
+
+// Legacy AI Assistance & Telemetry (Preserved)
 router.get('/ai/forecasts', aiController.getAIForecasts);
 router.post('/ai/scan', aiController.scanReceiptOrPantry);
 router.post('/ai/chat', aiController.chatWithAI);

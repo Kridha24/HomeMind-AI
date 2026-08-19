@@ -24,6 +24,8 @@ model User {
   assignedTasks  Task[]         @relation("AssignedTasks")
   createdTasks   Task[]         @relation("CreatedTasks")
   expenses       Expense[]
+  aiMemories     AIMemory[]
+  aiThreads      AIThread[]
   isVerified     Boolean        @default(true)
   isActive       Boolean        @default(true)
   lastLogin      DateTime?
@@ -95,6 +97,8 @@ model Household {
   auditLogs             AuditLog[]
   reports               Report[]
   dashboardConfig       DashboardConfig?
+  aiMemories            AIMemory[]
+  aiThreads             AIThread[]
   createdBy             String?
   updatedBy             String?
   softDelete            Boolean                @default(false)
@@ -450,6 +454,8 @@ model Setting {
   theme             String    @default("dark")
   pushNotifications Boolean   @default(true)
   emailAlerts       Boolean   @default(true)
+  aiMemoryEnabled   Boolean   @default(true)
+  proactiveAI       Boolean   @default(true)
   createdBy         String?
   updatedBy         String?
   softDelete        Boolean   @default(false)
@@ -468,6 +474,51 @@ model AIConversation {
   softDelete  Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+model AIMemory {
+  id          String    @id @default(uuid())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String    // PREFERENCE, ROUTINE, HOUSEHOLD_RULE, NOTE
+  content     String
+  importance  String    @default("MEDIUM") // LOW, MEDIUM, HIGH
+  source      String?   @default("CHAT")
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([householdId, type])
+}
+
+model AIThread {
+  id          String      @id @default(uuid())
+  householdId String
+  household   Household   @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String      @default("Household Conversation")
+  messages    AIMessage[]
+  isPinned    Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([householdId, userId])
+}
+
+model AIMessage {
+  id          String    @id @default(uuid())
+  threadId    String
+  thread      AIThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  role        String    // "user" | "assistant" | "system" | "tool"
+  content     String
+  toolCalls   String?   // JSON string of executed tool calls
+  tokens      Int?
+  createdAt   DateTime  @default(now())
+
+  @@index([threadId])
 }
 
 model AuditLog {
