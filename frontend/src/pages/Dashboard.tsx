@@ -120,7 +120,7 @@ export const Dashboard: React.FC = () => {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold text-primary tracking-tight">
-              Welcome back, {user?.name || 'Homeowner'}!
+              Welcome to {household?.name || user?.name || 'Homeowner'}!
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase tracking-wider">
               {user?.role || 'OWNER'}

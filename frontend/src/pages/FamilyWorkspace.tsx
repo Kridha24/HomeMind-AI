@@ -13,6 +13,8 @@ export const FamilyWorkspace: React.FC = () => {
   const [joinCode, setJoinCode] = useState('');
   const [joinLoading, setJoinLoading] = useState(false);
   const [joinError, setJoinError] = useState('');
+  const [householdName, setHouseholdName] = useState('');
+  const [updateLoading, setUpdateLoading] = useState(false);
   
   const [aggregateData, setAggregateData] = useState({
     totalIncome: 0,
@@ -36,8 +38,26 @@ export const FamilyWorkspace: React.FC = () => {
       if (res.data?.household?.inviteCode) {
         setInviteCode(res.data.household.inviteCode);
       }
+      if (res.data?.household?.name) {
+        setHouseholdName(res.data.household.name);
+      }
     } catch (e) {
       setMembers([]);
+    }
+  };
+
+  const handleUpdateHouseholdName = async () => {
+    if (!householdName.trim()) return;
+    setUpdateLoading(true);
+    try {
+      await apiClient.put('/family/name', { name: householdName });
+      alert('Household name updated successfully!');
+      // Update local store to reflect across the app
+      useAuthStore.getState().updateHousehold({ name: householdName });
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to update household name');
+    } finally {
+      setUpdateLoading(false);
     }
   };
 
@@ -131,6 +151,32 @@ export const FamilyWorkspace: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {isOwner && (
+        <div className="glass-panel p-6 border-blue-500/20 mb-6 bg-panel/40">
+          <h3 className="text-sm font-bold text-primary mb-2 flex items-center gap-2">
+            <Users className="w-4 h-4 text-blue-400" />
+            Household Settings
+          </h3>
+          <p className="text-xs text-muted mb-4">Set a custom name for your household (e.g. "The Gupta Family"). This will be shown on the dashboard.</p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input 
+              type="text" 
+              value={householdName}
+              onChange={(e) => setHouseholdName(e.target.value)}
+              placeholder="Enter Household Name"
+              className="bg-panel border border-secondary focus:border-blue-500 text-primary px-4 py-2.5 rounded-xl w-full text-sm outline-none"
+            />
+            <button 
+              onClick={handleUpdateHouseholdName}
+              disabled={updateLoading || !householdName.trim()}
+              className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-lg transition-all flex items-center gap-2 whitespace-nowrap"
+            >
+              {updateLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Save Name'}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Share Invite Code Box */}

@@ -113,3 +113,22 @@ export const getAggregateData = async (req: AuthenticatedRequest, res: Response)
     res.status(500).json({ error: err.message });
   }
 };
+
+export const updateHouseholdName = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const householdId = req.user?.householdId;
+    const { name } = req.body;
+    
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+    if (!name || name.trim().length === 0) return res.status(400).json({ error: 'Name is required' });
+
+    const updated = await prisma.household.update({
+      where: { id: householdId },
+      data: { name: name.trim() }
+    });
+
+    res.json({ household: updated });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

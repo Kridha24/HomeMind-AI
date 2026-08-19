@@ -89,6 +89,7 @@ router.put('/tasks/:id/status', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER
 // Family Members Workspace
 router.get('/family/members', familyController.getHouseholdMembers);
 router.get('/family/aggregate', familyController.getAggregateData);
+router.put('/family/name', authorize(['OWNER']), familyController.updateHouseholdName);
 router.put('/family/members/:userId/role', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), familyController.updateMemberRole);
 router.post('/family/join', familyController.joinHouseholdWithCode);
 
