@@ -15,15 +15,17 @@ import * as reportController from '../controllers/reportController';
 import * as settingController from '../controllers/settingController';
 import * as incomeController from '../controllers/incomeController';
 import * as assistantController from '../controllers/assistantController';
+import { validate } from '../middleware/validator';
+import { registerSchema, loginSchema, googleAuthSchema } from '../utils/validators';
 
 const router = Router();
 
 // ==========================================
 // PUBLIC AUTHENTICATION ENDPOINTS
 // ==========================================
-router.post('/auth/register', authController.register);
-router.post('/auth/login', authController.login);
-router.post('/auth/google', authController.googleLogin);
+router.post('/auth/register', validate(registerSchema), authController.register);
+router.post('/auth/login', validate(loginSchema), authController.login);
+router.post('/auth/google', validate(googleAuthSchema), authController.googleLogin);
 router.post('/auth/phone/request-otp', authController.requestPhoneOTP);
 router.post('/auth/phone/verify-otp', authController.verifyPhoneOTP);
 router.post('/auth/email/request-otp', authController.requestEmailOTP);
