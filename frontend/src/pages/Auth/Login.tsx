@@ -12,6 +12,8 @@ import { FeatureCards } from '../../components/auth/FeatureCards';
 import { GoogleLoginButton } from '../../components/auth/GoogleLoginButton';
 import { SecurityBadge } from '../../components/auth/SecurityBadge';
 
+import { auth, googleProvider, signInWithPopup } from '../../config/firebase';
+
 declare global {
   interface Window {
     google?: any;
@@ -82,13 +84,48 @@ export const Login: React.FC = () => {
     }
   };
 
-  // Google OAuth Popup Trigger
-  const triggerGoogleAccountChooser = () => {
+  // Google OAuth Popup Trigger (Real Google Account Chooser)
+  const triggerGoogleAccountChooser = async () => {
     setError('');
+    setLoadingGoogle(true);
 
+    // 1. Primary: Official Firebase Google Popup (opens real Google Account Chooser)
+    if (auth && googleProvider) {
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        if (result && result.user) {
+          const idToken = await result.user.getIdToken();
+          const res = await apiClient.post('/auth/google', {
+            idToken,
+            email: result.user.email,
+            name: result.user.displayName || result.user.email?.split('@')[0],
+            avatar: result.user.photoURL,
+            googleId: 'google-' + result.user.uid,
+          });
+
+          setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
+          await fetchSettings();
+
+          if (res.data.isNewRegistration) {
+            setNewUserName(res.data.user?.name || '');
+            setShowOnboardingModal(true);
+          } else {
+            navigate('/');
+          }
+          return;
+        }
+      } catch (fbErr: any) {
+        console.warn('Firebase Google Auth popup:', fbErr);
+        if (fbErr.code === 'auth/popup-closed-by-user' || fbErr.code === 'auth/cancelled-popup-request') {
+          setLoadingGoogle(false);
+          return;
+        }
+      }
+    }
+
+    // 2. Secondary: Google Identity Services (GSI) Token Client
     if (window.google?.accounts?.oauth2 && GOOGLE_CLIENT_ID) {
       try {
-        setLoadingGoogle(true);
         const tokenClient = window.google.accounts.oauth2.initTokenClient({
           client_id: GOOGLE_CLIENT_ID,
           scope: 'email profile openid',
@@ -139,12 +176,12 @@ export const Login: React.FC = () => {
         return;
       } catch (e) {
         console.warn('OAuth2 popup client error, falling back to modal:', e);
-        setLoadingGoogle(false);
-        setShowGoogleModal(true);
       }
-    } else {
-      setShowGoogleModal(true);
     }
+
+    // 3. Fallback: Google Account Modal
+    setLoadingGoogle(false);
+    setShowGoogleModal(true);
   };
 
   const handleAuthSuccess = async (isNewReg?: boolean, userName?: string) => {
