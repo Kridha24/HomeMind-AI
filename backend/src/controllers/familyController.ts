@@ -43,17 +43,39 @@ export const joinHouseholdWithCode = async (req: AuthenticatedRequest, res: Resp
   try {
     const { inviteCode } = req.body;
     const userId = req.user?.userId;
-    if (!userId) return res.status(400).json({ error: 'User ID missing' });
+    const oldHouseholdId = req.user?.householdId;
+    if (!userId || !oldHouseholdId) return res.status(400).json({ error: 'User context missing' });
 
-    const household = await prisma.household.findFirst({ where: { inviteCode, softDelete: false } });
-    if (!household) return res.status(404).json({ error: 'Invalid invitation code' });
+    const newHousehold = await prisma.household.findFirst({ where: { inviteCode, softDelete: false } });
+    if (!newHousehold) return res.status(404).json({ error: 'Invalid invitation code' });
 
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: { householdId: household.id, role: 'MEMBER' }
-    });
+    // Migrate User's existing records to the new household
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: userId },
+        data: { householdId: newHousehold.id, role: 'MEMBER' }
+      }),
+      prisma.expense.updateMany({
+        where: { userId },
+        data: { householdId: newHousehold.id }
+      }),
+      prisma.income.updateMany({
+        where: { createdBy: userId },
+        data: { householdId: newHousehold.id }
+      }),
+      prisma.bill.updateMany({
+        where: { createdBy: userId },
+        data: { householdId: newHousehold.id }
+      }),
+      prisma.task.updateMany({
+        where: { creatorId: userId },
+        data: { householdId: newHousehold.id }
+      })
+    ]);
 
-    res.json({ user: updatedUser, household });
+    const updatedUser = await prisma.user.findUnique({ where: { id: userId } });
+
+    res.json({ user: updatedUser, household: newHousehold });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
