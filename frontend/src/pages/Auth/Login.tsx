@@ -262,34 +262,68 @@ export const Login: React.FC = () => {
           </div>
         </div>
 
-        {/* Tab Switcher: Sign Up vs Sign In */}
-        <div className="flex bg-slate-950/90 p-1.5 rounded-2xl border border-white/[0.08] shadow-inner">
-          <button
-            onClick={() => {
-              setAuthTab('NEW_USER');
-              setError('');
-            }}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-300 ${
-              authTab === 'NEW_USER'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <UserPlus className="w-3.5 h-3.5" /> 🆕 Sign Up
-          </button>
-          <button
-            onClick={() => {
-              setAuthTab('EXISTING_USER');
-              setError('');
-            }}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-300 ${
-              authTab === 'EXISTING_USER'
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <LogIn className="w-3.5 h-3.5" /> 🔑 Sign In
-          </button>
+        {/* Tab Switcher: Explicit New User vs Existing User */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center px-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Select User Type:
+            </span>
+            <span className="text-[11px] font-semibold text-blue-400">
+              {authTab === 'NEW_USER' ? '🆕 New User Mode' : '🔑 Existing User Mode'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 bg-slate-950/90 p-1.5 rounded-2xl border border-white/[0.08] shadow-inner">
+            <button
+              onClick={() => {
+                setAuthTab('NEW_USER');
+                setError('');
+              }}
+              className={`py-3 px-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
+                authTab === 'NEW_USER'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 ring-1 ring-white/20'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <UserPlus className="w-4 h-4" /> <strong>New User</strong>
+              </span>
+              <span className="text-[10px] font-normal opacity-80">(Naya Account / Sign Up)</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setAuthTab('EXISTING_USER');
+                setError('');
+              }}
+              className={`py-3 px-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
+                authTab === 'EXISTING_USER'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30 ring-1 ring-white/20'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <LogIn className="w-4 h-4" /> <strong>Existing User</strong>
+              </span>
+              <span className="text-[10px] font-normal opacity-80">(Pehle se Account / Sign In)</span>
+            </button>
+          </div>
+
+          {/* Contextual Explanatory Banner */}
+          <div className={`p-3 rounded-2xl text-xs border transition-all ${
+            authTab === 'NEW_USER' 
+              ? 'bg-blue-500/10 border-blue-500/25 text-blue-300' 
+              : 'bg-purple-500/10 border-purple-500/25 text-purple-300'
+          }`}>
+            <p className="font-semibold flex items-center gap-1.5">
+              {authTab === 'NEW_USER' ? '🆕 New User Sign Up:' : '🔑 Existing User Sign In:'}
+            </p>
+            <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+              {authTab === 'NEW_USER'
+                ? 'Creates a fresh, personal household database with your Google profile.'
+                : 'Instantly logs into your existing household and loads your saved data.'}
+            </p>
+          </div>
         </div>
 
         {error && (
@@ -303,7 +337,9 @@ export const Login: React.FC = () => {
           <button
             onClick={triggerGoogleAccountChooser}
             disabled={loadingGoogle}
-            className="w-full bg-white hover:bg-slate-100 active:scale-[0.98] text-slate-900 font-extrabold py-4 px-5 rounded-2xl text-sm flex items-center justify-center gap-3 shadow-xl transition-all border border-white/80 group hover:shadow-blue-500/25"
+            className={`w-full bg-white hover:bg-slate-100 active:scale-[0.98] text-slate-900 font-extrabold py-4 px-5 rounded-2xl text-sm flex items-center justify-center gap-3 shadow-xl transition-all border border-white/80 group ${
+              authTab === 'NEW_USER' ? 'hover:shadow-blue-500/30' : 'hover:shadow-purple-500/30'
+            }`}
           >
             {loadingGoogle ? (
               <RefreshCw className="w-5 h-5 animate-spin text-blue-600" />
@@ -329,8 +365,8 @@ export const Login: React.FC = () => {
             )}
             <span>
               {authTab === 'NEW_USER'
-                ? 'Continue with Google Account'
-                : 'Sign In with Google Account'}
+                ? 'Sign Up with Google (New User)'
+                : 'Sign In with Google (Existing User)'}
             </span>
             <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-slate-900 group-hover:translate-x-0.5 transition-all" />
           </button>
