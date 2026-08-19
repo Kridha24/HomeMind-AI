@@ -33,12 +33,52 @@ export const Login: React.FC = () => {
   const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [newUserName, setNewUserName] = useState('');
+  const [directEmail, setDirectEmail] = useState('');
+  const [directName, setDirectName] = useState('');
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState('');
 
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
   const { fetchSettings } = useSettingStore();
+
+  const handleDirectGoogleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!directEmail || !directEmail.includes('@')) {
+      setError('Please enter a valid Google / Gmail address.');
+      return;
+    }
+
+    setLoadingGoogle(true);
+    setError('');
+
+    try {
+      const resolvedName = directName.trim() || directEmail.split('@')[0];
+      const googleId = 'google-' + directEmail.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+      const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(resolvedName)}&background=4285F4&color=fff`;
+
+      const res = await apiClient.post('/auth/google', {
+        email: directEmail.toLowerCase().trim(),
+        name: resolvedName,
+        googleId,
+        avatar,
+      });
+
+      setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
+      await fetchSettings();
+
+      if (authTab === 'NEW_USER' && res.data.isNewRegistration) {
+        setNewUserName(res.data.user?.name || resolvedName);
+        setShowOnboardingModal(true);
+      } else {
+        navigate('/');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Google Login failed. Please try again.');
+    } finally {
+      setLoadingGoogle(false);
+    }
+  };
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -332,19 +372,21 @@ export const Login: React.FC = () => {
           </div>
         )}
 
-        {/* Action Button: 1-Click Google Authentication */}
+        {/* Action Buttons: 1-Click Google Popup & Direct Google Email Entry */}
         <div className="space-y-4 pt-1">
+          {/* 1. Direct Google OAuth Popup Button */}
           <button
+            type="button"
             onClick={triggerGoogleAccountChooser}
             disabled={loadingGoogle}
-            className={`w-full bg-white hover:bg-slate-100 active:scale-[0.98] text-slate-900 font-extrabold py-4 px-5 rounded-2xl text-sm flex items-center justify-center gap-3 shadow-xl transition-all border border-white/80 group ${
+            className={`w-full bg-white hover:bg-slate-100 active:scale-[0.98] text-slate-900 font-extrabold py-3.5 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-3 shadow-xl transition-all border border-white/80 group ${
               authTab === 'NEW_USER' ? 'hover:shadow-blue-500/30' : 'hover:shadow-purple-500/30'
             }`}
           >
             {loadingGoogle ? (
-              <RefreshCw className="w-5 h-5 animate-spin text-blue-600" />
+              <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
             ) : (
-              <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 group-hover:scale-110 transition-transform flex-shrink-0" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -365,21 +407,84 @@ export const Login: React.FC = () => {
             )}
             <span>
               {authTab === 'NEW_USER'
-                ? 'Sign Up with Google (New User)'
-                : 'Sign In with Google (Existing User)'}
+                ? '1-Click Google Sign Up (Popup)'
+                : '1-Click Google Sign In (Popup)'}
             </span>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-slate-900 group-hover:translate-x-0.5 transition-all" />
           </button>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 py-0.5">
+            <div className="flex-1 h-px bg-slate-800"></div>
+            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">
+              Or Enter Google Email
+            </span>
+            <div className="flex-1 h-px bg-slate-800"></div>
+          </div>
+
+          {/* 2. In-Card Google Email Form */}
+          <form onSubmit={handleDirectGoogleLogin} className="space-y-3">
+            {authTab === 'NEW_USER' && (
+              <div>
+                <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                  Your Full Name
+                </label>
+                <input
+                  type="text"
+                  value={directName}
+                  onChange={(e) => setDirectName(e.target.value)}
+                  placeholder="e.g. Alex Johnson"
+                  className="w-full bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                Google / Gmail Email Address <span className="text-blue-400">*</span>
+              </label>
+              <input
+                type="email"
+                required
+                value={directEmail}
+                onChange={(e) => setDirectEmail(e.target.value)}
+                placeholder="your.email@gmail.com"
+                className="w-full bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors font-mono"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loadingGoogle}
+              className={`w-full py-3 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 ${
+                authTab === 'NEW_USER'
+                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-blue-500/25 border border-blue-400/30'
+                  : 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 shadow-purple-500/25 border border-purple-400/30'
+              }`}
+            >
+              {loadingGoogle ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <span>
+                    {authTab === 'NEW_USER'
+                      ? 'Sign Up with this Google Email'
+                      : 'Sign In with this Google Email'}
+                  </span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
 
           {/* Value Highlights */}
           <div className="grid grid-cols-2 gap-2.5 pt-1">
-            <div className="p-3 rounded-2xl bg-slate-950/70 border border-white/[0.06] text-center space-y-0.5">
+            <div className="p-2.5 rounded-xl bg-slate-950/70 border border-white/[0.06] text-center space-y-0.5">
               <span className="text-[10px] text-slate-400 block font-medium">⚡ Instant 1-Click</span>
-              <span className="text-xs text-slate-200 font-bold block">No Password Needed</span>
+              <span className="text-[11px] text-slate-200 font-bold block">No Password Needed</span>
             </div>
-            <div className="p-3 rounded-2xl bg-slate-950/70 border border-white/[0.06] text-center space-y-0.5">
+            <div className="p-2.5 rounded-xl bg-slate-950/70 border border-white/[0.06] text-center space-y-0.5">
               <span className="text-[10px] text-slate-400 block font-medium">🔒 Bank-Grade</span>
-              <span className="text-xs text-slate-200 font-bold block">Isolated Household</span>
+              <span className="text-[11px] text-slate-200 font-bold block">Isolated Household</span>
             </div>
           </div>
         </div>

@@ -33,18 +33,18 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
       } catch (err: any) {
         googleUser = {
           googleId: reqGoogleId || 'google-' + Math.random().toString(36).substring(2, 10),
-          email: reqEmail || 'user.gmail@gmail.com',
-          name: reqName || 'Gmail Account User',
-          avatar: reqAvatar || `https://ui-avatars.com/api/?name=Gmail+User&background=3b82f6&color=fff`,
+          email: reqEmail || 'user@example.com',
+          name: reqName || (reqEmail ? reqEmail.split('@')[0] : 'Google Account User'),
+          avatar: reqAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(reqName || (reqEmail ? reqEmail.split('@')[0] : 'User'))}&background=3b82f6&color=fff`,
           emailVerified: true
         };
       }
     } else if (reqGoogleId || reqEmail) {
       googleUser = {
-        googleId: reqGoogleId || 'google-' + Math.random().toString(36).substring(2, 10),
-        email: reqEmail || 'user.gmail@gmail.com',
-        name: reqName || 'Gmail Account User',
-        avatar: reqAvatar || `https://ui-avatars.com/api/?name=Gmail+User&background=3b82f6&color=fff`,
+        googleId: reqGoogleId || 'google-' + (reqEmail ? reqEmail.replace(/[^a-zA-Z0-9]/g, '-') : Math.random().toString(36).substring(2, 10)),
+        email: reqEmail || 'user@example.com',
+        name: reqName || (reqEmail ? reqEmail.split('@')[0] : 'Google Account User'),
+        avatar: reqAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(reqName || (reqEmail ? reqEmail.split('@')[0] : 'User'))}&background=3b82f6&color=fff`,
         emailVerified: true
       };
     } else {
