@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Sparkles,
@@ -11,8 +11,10 @@ import {
   TrendingUp,
   Cpu,
   Layers,
-  CheckCircle2,
   ArrowRight,
+  Shield,
+  CheckCircle2,
+  Mail,
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -209,57 +211,63 @@ export const Login: React.FC = () => {
   return (
     <div className="min-h-[100dvh] w-full bg-[#030712] text-slate-100 flex items-center justify-center p-3 sm:p-6 md:p-8 relative overflow-x-hidden overflow-y-auto select-none">
       {/* ========================================================================= */}
-      {/* SOPHISTICATED MODERN SAAS BACKGROUND WITH GRID & AURORA GLOWS */}
+      {/* VIBRANT MODERN AMBIENT AURORA & TECH GRID BACKGROUND */}
       {/* ========================================================================= */}
       
-      {/* 1. Subtle Elegant Tech Grid */}
+      {/* 1. Subtle High-Tech Blueprint Mesh Grid */}
       <div 
-        className="fixed inset-0 opacity-[0.15] sm:opacity-[0.18] pointer-events-none"
+        className="fixed inset-0 opacity-[0.14] sm:opacity-[0.18] pointer-events-none"
         style={{
           backgroundImage: `linear-gradient(to right, #3b82f6 1px, transparent 1px), linear-gradient(to bottom, #3b82f6 1px, transparent 1px)`,
           backgroundSize: '40px 40px',
-          maskImage: 'radial-gradient(ellipse 60% 60% at 50% 50%, black 30%, transparent 85%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 60% 60% at 50% 50%, black 30%, transparent 85%)',
+          maskImage: 'radial-gradient(ellipse 60% 60% at 50% 50%, black 25%, transparent 85%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 60% 60% at 50% 50%, black 25%, transparent 85%)',
         }}
       />
 
       {/* 2. Layered Ambient Lighting Orbs */}
-      <div className="fixed -top-40 -left-40 w-72 sm:w-96 h-72 sm:h-96 bg-indigo-600/20 sm:bg-indigo-600/25 rounded-full blur-[100px] sm:blur-[140px] pointer-events-none" />
-      <div className="fixed -bottom-40 -right-40 w-72 sm:w-96 h-72 sm:h-96 bg-cyan-600/15 sm:bg-cyan-600/20 rounded-full blur-[100px] sm:blur-[140px] pointer-events-none" />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[600px] h-[350px] sm:h-[600px] bg-blue-600/10 rounded-full blur-[120px] sm:blur-[160px] pointer-events-none" />
+      <div className="fixed -top-32 -left-32 w-80 sm:w-[480px] h-80 sm:h-[480px] bg-gradient-to-tr from-blue-600/30 via-indigo-600/20 to-purple-600/10 rounded-full blur-[110px] sm:blur-[150px] pointer-events-none animate-pulse" />
+      <div className="fixed -bottom-32 -right-32 w-80 sm:w-[480px] h-80 sm:h-[480px] bg-gradient-to-tr from-cyan-600/25 via-teal-600/20 to-emerald-600/10 rounded-full blur-[110px] sm:blur-[150px] pointer-events-none" />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[650px] h-[300px] sm:h-[650px] bg-indigo-500/10 rounded-full blur-[130px] sm:blur-[180px] pointer-events-none" />
 
       {/* ========================================================================= */}
-      {/* MINIMALIST ARCHITECTURAL SIDE BADGES (DESKTOP & LARGE SCREENS ONLY) */}
+      {/* MINIMALIST ARCHITECTURAL SIDE BADGES (DESKTOP) */}
       {/* ========================================================================= */}
       
       {/* Left Feature Pill (Desktop) */}
-      <div className="hidden xl:flex flex-col gap-3 absolute left-8 2xl:left-16 top-1/2 -translate-y-1/2 max-w-[260px] 2xl:max-w-xs pointer-events-none z-0">
-        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all">
+      <div className="hidden xl:flex flex-col gap-3.5 absolute left-8 2xl:left-20 top-1/2 -translate-y-1/2 max-w-[270px] 2xl:max-w-xs pointer-events-none z-0">
+        <div className="p-4 rounded-3xl bg-slate-900/50 backdrop-blur-2xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-blue-500/30 hover:scale-[1.02]">
           <div className="flex items-center gap-2 text-blue-400">
-            <Cpu className="w-4 h-4" />
+            <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <Cpu className="w-3.5 h-3.5" />
+            </div>
             <span className="text-xs font-bold tracking-wide uppercase">AI Intelligence</span>
           </div>
           <p className="text-xs text-slate-300 font-medium leading-relaxed">
-            Automated grocery expiration predictions & smart appliance logs.
+            Automated grocery expiration predictions & smart appliance maintenance logs.
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all">
+        <div className="p-4 rounded-3xl bg-slate-900/50 backdrop-blur-2xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-emerald-500/30 hover:scale-[1.02]">
           <div className="flex items-center gap-2 text-emerald-400">
-            <TrendingUp className="w-4 h-4" />
+            <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+              <TrendingUp className="w-3.5 h-3.5" />
+            </div>
             <span className="text-xs font-bold tracking-wide uppercase">Multi-Currency</span>
           </div>
           <p className="text-xs text-slate-300 font-medium leading-relaxed">
-            Real-time household income, bill telemetry & expense management.
+            Real-time household income, bill telemetry & expense budget control.
           </p>
         </div>
       </div>
 
       {/* Right Feature Pill (Desktop) */}
-      <div className="hidden xl:flex flex-col gap-3 absolute right-8 2xl:right-16 top-1/2 -translate-y-1/2 max-w-[260px] 2xl:max-w-xs pointer-events-none z-0">
-        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all">
+      <div className="hidden xl:flex flex-col gap-3.5 absolute right-8 2xl:right-20 top-1/2 -translate-y-1/2 max-w-[270px] 2xl:max-w-xs pointer-events-none z-0">
+        <div className="p-4 rounded-3xl bg-slate-900/50 backdrop-blur-2xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-purple-500/30 hover:scale-[1.02]">
           <div className="flex items-center gap-2 text-purple-400">
-            <Layers className="w-4 h-4" />
+            <div className="w-6 h-6 rounded-lg bg-purple-500/10 flex items-center justify-center">
+              <Layers className="w-3.5 h-3.5" />
+            </div>
             <span className="text-xs font-bold tracking-wide uppercase">Family Workspace</span>
           </div>
           <p className="text-xs text-slate-300 font-medium leading-relaxed">
@@ -267,9 +275,11 @@ export const Login: React.FC = () => {
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all">
+        <div className="p-4 rounded-3xl bg-slate-900/50 backdrop-blur-2xl border border-white/[0.08] shadow-2xl space-y-1.5 transition-all hover:border-cyan-500/30 hover:scale-[1.02]">
           <div className="flex items-center gap-2 text-cyan-400">
-            <ShieldCheck className="w-4 h-4" />
+            <div className="w-6 h-6 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+              <ShieldCheck className="w-3.5 h-3.5" />
+            </div>
             <span className="text-xs font-bold tracking-wide uppercase">Zero Setup Friction</span>
           </div>
           <p className="text-xs text-slate-300 font-medium leading-relaxed">
@@ -281,14 +291,14 @@ export const Login: React.FC = () => {
       {/* ========================================================================= */}
       {/* RESPONSIVE CENTRAL GLASSMORPHISM LOGIN CARD */}
       {/* ========================================================================= */}
-      <div className="w-full max-w-[430px] my-auto bg-slate-900/85 backdrop-blur-2xl p-5 sm:p-7 md:p-8 space-y-5 sm:space-y-6 relative z-10 border border-white/[0.12] rounded-2xl sm:rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.85)] border-t border-t-white/20">
+      <div className="w-full max-w-[430px] my-auto bg-slate-900/85 backdrop-blur-3xl p-6 sm:p-8 space-y-5 sm:space-y-6 relative z-10 border border-white/[0.12] rounded-3xl shadow-[0_25px_70px_-15px_rgba(0,0,0,0.9)] border-t border-t-white/20">
         
         {/* Brand Header */}
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-2.5">
           <div className="relative inline-flex items-center justify-center">
-            <div className="absolute inset-0 bg-blue-500/30 rounded-2xl blur-xl animate-pulse" />
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-2xl border border-white/20 relative z-10">
-              <Sparkles className="w-7 h-7 text-white" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500 to-indigo-500 rounded-2xl blur-xl opacity-60 animate-pulse" />
+            <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-2xl border border-white/20 relative z-10">
+              <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             </div>
           </div>
 
@@ -296,7 +306,7 @@ export const Login: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-400">
               HomeMind AI
             </h1>
-            <p className="text-xs text-slate-400 font-medium mt-1">
+            <p className="text-xs text-slate-400 font-medium mt-0.5">
               Intelligent Household Management Operating System
             </p>
           </div>
@@ -319,9 +329,9 @@ export const Login: React.FC = () => {
                 setAuthTab('NEW_USER');
                 setError('');
               }}
-              className={`py-3 px-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
+              className={`py-3 px-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 transition-all duration-300 ${
                 authTab === 'NEW_USER'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 ring-1 ring-white/20'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/35 ring-1 ring-white/25 scale-[1.02]'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
               }`}
             >
@@ -336,9 +346,9 @@ export const Login: React.FC = () => {
                 setAuthTab('EXISTING_USER');
                 setError('');
               }}
-              className={`py-3 px-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
+              className={`py-3 px-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-0.5 transition-all duration-300 ${
                 authTab === 'EXISTING_USER'
-                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30 ring-1 ring-white/20'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/35 ring-1 ring-white/25 scale-[1.02]'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
               }`}
             >
@@ -415,8 +425,8 @@ export const Login: React.FC = () => {
           {/* Divider */}
           <div className="flex items-center gap-3 py-0.5">
             <div className="flex-1 h-px bg-slate-800"></div>
-            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">
-              Or Enter Google Email
+            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+              <Mail className="w-3 h-3 text-slate-400" /> Or Enter Google Email
             </span>
             <div className="flex-1 h-px bg-slate-800"></div>
           </div>
@@ -521,3 +531,4 @@ export const Login: React.FC = () => {
     </div>
   );
 };
+

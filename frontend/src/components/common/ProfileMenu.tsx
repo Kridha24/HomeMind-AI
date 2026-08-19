@@ -60,30 +60,15 @@ export const ProfileMenu: React.FC = () => {
               <p className="text-[11px] text-slate-400 truncate">{user?.email || 'Authenticated User'}</p>
             </div>
 
-            {/* Mobile Verification Status Badge */}
-            {user?.phoneNumber ? (
-              <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                <span className="text-[11px] text-emerald-300 font-mono font-medium flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-emerald-400" /> {user.phoneNumber}
+            {/* Optional Phone Info (if provided) */}
+            {user?.phoneNumber && (
+              <div className="flex items-center justify-between p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                <span className="text-[11px] text-slate-300 font-mono font-medium flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-blue-400" /> {user.phoneNumber}
                 </span>
-                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider bg-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <CheckCircle2 className="w-2.5 h-2.5" /> Verified
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800 px-2 py-0.5 rounded-full">
+                  Mobile
                 </span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                <span className="text-[11px] text-amber-300 font-medium flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-amber-400" /> Mobile Not Verified
-                </span>
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    setShowVerifyModal(true);
-                  }}
-                  className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[10px] transition-colors shadow"
-                >
-                  Verify It
-                </button>
               </div>
             )}
 

@@ -8,14 +8,10 @@ import {
   ArrowRight,
   RefreshCw,
   Phone,
-  ShieldCheck,
-  CheckCircle2,
-  KeyRound,
 } from 'lucide-react';
 import { COUNTRY_DEFAULTS } from '../../utils/currency';
 import { useSettingStore } from '../../stores/useSettingStore';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { auth, RecaptchaVerifier, signInWithPhoneNumber } from '../../config/firebase';
 import apiClient from '../../services/apiClient';
 
 interface NewUserOnboardingModalProps {
@@ -52,26 +48,14 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
   const [country, setCountry] = useState('IN');
   const [age, setAge] = useState<string>('28');
   const [currency, setCurrency] = useState('INR');
-
-  // Mobile Phone Verification States
   const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '');
-  const [phoneOtp, setPhoneOtp] = useState('');
-  const [isPhoneOtpSent, setIsPhoneOtpSent] = useState(false);
-  const [isPhoneVerified, setIsPhoneVerified] = useState(!!user?.phoneNumber);
-  const [sendingPhoneOtp, setSendingPhoneOtp] = useState(false);
-  const [verifyingPhoneOtp, setVerifyingPhoneOtp] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState<any>(null);
-
-  const recaptchaVerifierRef = React.useRef<any>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [phoneSuccessMsg, setPhoneSuccessMsg] = useState('');
 
   useEffect(() => {
     if (user?.phoneNumber) {
       setPhoneNumber(user.phoneNumber);
-      setIsPhoneVerified(true);
     }
     if (user?.name && !name) {
       setName(user.name);
@@ -90,114 +74,10 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
     }
   };
 
-  const handleSendPhoneOTP = async () => {
-    if (!phoneNumber || phoneNumber.trim().length < 8) {
-      setError('Please enter a valid mobile phone number.');
-      return;
-    }
-
-    setSendingPhoneOtp(true);
-    setError('');
-    setPhoneSuccessMsg('');
-
-    const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${currentCountry.dialCode}${phoneNumber.replace(/^0+/, '')}`;
-
-    try {
-      if (import.meta.env.VITE_FIREBASE_API_KEY && auth) {
-        if (recaptchaVerifierRef.current) {
-          try {
-            recaptchaVerifierRef.current.clear();
-          } catch (e) {}
-          recaptchaVerifierRef.current = null;
-        }
-
-        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'onboarding-recaptcha-container', {
-          size: 'invisible',
-          callback: () => {},
-          'expired-callback': () => {
-            setError('reCAPTCHA expired. Please try sending OTP again.');
-          },
-        });
-
-        const confirmation = await signInWithPhoneNumber(auth, fullPhone, recaptchaVerifierRef.current);
-        setConfirmationResult(confirmation);
-        setIsPhoneOtpSent(true);
-        setPhoneSuccessMsg(`SMS verification code sent to ${fullPhone}`);
-      } else {
-        const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber: fullPhone });
-        setIsPhoneOtpSent(true);
-        setPhoneSuccessMsg(`SMS verification code sent to ${fullPhone}`);
-      }
-    } catch (err: any) {
-      try {
-        const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber: fullPhone });
-        setIsPhoneOtpSent(true);
-        setPhoneSuccessMsg(`SMS verification code sent to ${fullPhone}`);
-      } catch (fallbackErr: any) {
-        setError(fallbackErr.response?.data?.error || err.message || 'Failed to send mobile verification SMS.');
-      }
-    } finally {
-      setSendingPhoneOtp(false);
-    }
-  };
-
-  const handleVerifyPhoneOTP = async () => {
-    if (!phoneOtp || phoneOtp.length < 6) {
-      setError('Please enter the 6-digit SMS OTP code.');
-      return;
-    }
-
-    setVerifyingPhoneOtp(true);
-    setError('');
-
-    const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${currentCountry.dialCode}${phoneNumber.replace(/^0+/, '')}`;
-
-    try {
-      if (confirmationResult) {
-        await confirmationResult.confirm(phoneOtp);
-      }
-
-      await apiClient.post('/auth/phone/verify-otp', {
-        phoneNumber: fullPhone,
-        otp: phoneOtp,
-        name,
-        country,
-        currency,
-      });
-
-      setIsPhoneVerified(true);
-      setIsPhoneOtpSent(false);
-      setPhoneSuccessMsg(`✅ Mobile Number ${fullPhone} verified successfully!`);
-    } catch (err: any) {
-      try {
-        await apiClient.post('/auth/phone/verify-otp', {
-          phoneNumber: fullPhone,
-          otp: phoneOtp,
-          name,
-          country,
-          currency,
-        });
-
-        setIsPhoneVerified(true);
-        setIsPhoneOtpSent(false);
-        setPhoneSuccessMsg(`✅ Mobile Number ${fullPhone} verified successfully!`);
-      } catch (fallbackErr: any) {
-        setError(fallbackErr.response?.data?.error || err.message || 'Invalid mobile OTP code.');
-      }
-    } finally {
-      setVerifyingPhoneOtp(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !country || !currency) {
-      setError('Please fill in all profile fields.');
-      return;
-    }
-
-    if (!isPhoneVerified) {
-      setError('Please verify your mobile phone number before continuing.');
+      setError('Please fill in your name and country preferences.');
       return;
     }
 
@@ -205,7 +85,7 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
     setError('');
 
     try {
-      const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${currentCountry.dialCode}${phoneNumber.replace(/^0+/, '')}`;
+      const fullPhone = phoneNumber ? (phoneNumber.startsWith('+') ? phoneNumber : `${currentCountry.dialCode}${phoneNumber.replace(/^0+/, '')}`) : undefined;
 
       await apiClient.put('/auth/profile', {
         name,
@@ -247,12 +127,6 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
         {error && (
           <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-xs rounded-xl text-center font-medium animate-in fade-in">
             {error}
-          </div>
-        )}
-
-        {phoneSuccessMsg && (
-          <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs rounded-xl text-center font-medium animate-in fade-in">
-            {phoneSuccessMsg}
           </div>
         )}
 
@@ -334,109 +208,28 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
             </select>
           </div>
 
-          {/* ========================================================================= */}
-          {/* MANDATORY MOBILE NUMBER VERIFICATION SECTION */}
-          {/* ========================================================================= */}
-          <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-cyan-400" /> Mobile Number Verification <span className="text-cyan-400">*</span>
-              </label>
-              {isPhoneVerified ? (
-                <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                  <CheckCircle2 className="w-3 h-3" /> Phone Verified
-                </span>
-              ) : (
-                <span className="text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
-                  Verification Required
-                </span>
-              )}
+          {/* Optional Phone Field */}
+          <div>
+            <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5 mb-1">
+              <Phone className="w-3.5 h-3.5 text-cyan-400" /> Mobile Number <span className="text-slate-500">(Optional)</span>
+            </label>
+            <div className="flex gap-2">
+              <div className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 font-mono flex items-center">
+                {currentCountry.dialCode}
+              </div>
+              <input
+                type="tel"
+                placeholder="e.g. 9876543210"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-cyan-500"
+              />
             </div>
-
-            {!isPhoneVerified ? (
-              <div className="space-y-2.5">
-                <div className="flex gap-2">
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 font-mono flex items-center">
-                    {currentCountry.dialCode}
-                  </div>
-                  <input
-                    type="tel"
-                    placeholder="e.g. 8340496912"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    disabled={isPhoneOtpSent}
-                    className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-cyan-500 disabled:opacity-60"
-                  />
-                  {!isPhoneOtpSent && (
-                    <button
-                      type="button"
-                      onClick={handleSendPhoneOTP}
-                      disabled={sendingPhoneOtp || !phoneNumber}
-                      className="px-3.5 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 shadow-md"
-                    >
-                      {sendingPhoneOtp ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Phone className="w-3.5 h-3.5" />}
-                      <span>Send SMS OTP</span>
-                    </button>
-                  )}
-                </div>
-
-                {isPhoneOtpSent && (
-                  <div className="space-y-2 animate-in fade-in">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        maxLength={6}
-                        placeholder="Enter 6-digit SMS OTP"
-                        value={phoneOtp}
-                        onChange={(e) => setPhoneOtp(e.target.value.replace(/[^0-9]/g, ''))}
-                        className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 font-mono tracking-widest text-center focus:outline-none focus:border-emerald-500"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleVerifyPhoneOTP}
-                        disabled={verifyingPhoneOtp || phoneOtp.length < 6}
-                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 shadow-md"
-                      >
-                        {verifyingPhoneOtp ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-                        <span>Verify SMS</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsPhoneOtpSent(false);
-                          setPhoneOtp('');
-                        }}
-                        className="px-2.5 py-2 text-slate-400 hover:text-slate-200 text-xs transition-colors"
-                      >
-                        Change
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-between text-xs">
-                <span className="text-emerald-300 font-mono font-semibold flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5 text-emerald-400" /> {phoneNumber}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsPhoneVerified(false);
-                    setIsPhoneOtpSent(false);
-                    setPhoneOtp('');
-                  }}
-                  className="text-[11px] text-slate-400 hover:text-slate-200 underline"
-                >
-                  Edit Number
-                </button>
-              </div>
-            )}
           </div>
 
           <button
             type="submit"
-            disabled={loading || !isPhoneVerified}
+            disabled={loading}
             className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all mt-3 disabled:opacity-50"
           >
             {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
