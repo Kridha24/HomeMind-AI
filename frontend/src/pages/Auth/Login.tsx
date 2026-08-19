@@ -2,29 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Sparkles,
-  Phone,
-  Mail,
   ShieldCheck,
   RefreshCw,
   UserPlus,
   LogIn,
-  CreditCard,
-  Home,
-  TrendingUp,
+  Lock,
+  Zap,
   ShoppingBag,
   CheckCircle2,
-  Lock,
-  Activity,
-  User,
-  Heart,
-  Smile,
-  Zap,
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSettingStore } from '../../stores/useSettingStore';
-import { PhoneAuthModal } from '../../components/common/PhoneAuthModal';
-import { EmailAuthModal } from '../../components/common/EmailAuthModal';
 import { GoogleAuthModal } from '../../components/common/GoogleAuthModal';
 import { NewUserOnboardingModal } from '../../components/common/NewUserOnboardingModal';
 
@@ -38,8 +27,6 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 export const Login: React.FC = () => {
   const [authTab, setAuthTab] = useState<'NEW_USER' | 'EXISTING_USER'>('NEW_USER');
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [newUserName, setNewUserName] = useState('');
@@ -200,8 +187,6 @@ export const Login: React.FC = () => {
   };
 
   const handleAuthSuccess = async (isNewReg?: boolean, userName?: string) => {
-    setShowEmailModal(false);
-    setShowPhoneModal(false);
     setShowGoogleModal(false);
     await fetchSettings();
 
@@ -377,51 +362,17 @@ export const Login: React.FC = () => {
           </div>
         )}
 
-        {/* 3D Interactive Action Buttons */}
-        <div className="space-y-3 pt-1" style={{ transform: 'translateZ(25px)' }}>
-          {/* Email Address OTP Button */}
-          <button
-            onClick={() => setShowEmailModal(true)}
-            className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 active:scale-95 text-white font-bold py-3.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2.5 shadow-xl shadow-blue-600/25 border border-blue-400/30 transition-all group"
-          >
-            <Mail className="w-4 h-4 group-hover:scale-110 transition-transform" />
-            <span>
-              {authTab === 'NEW_USER'
-                ? 'Continue with Email ID (OTP)'
-                : 'Sign In with Email ID (OTP)'}
-            </span>
-          </button>
-
-          {/* Mobile Phone SMS OTP Button */}
-          <button
-            onClick={() => setShowPhoneModal(true)}
-            className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 active:scale-95 text-white font-bold py-3.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-600/25 border border-emerald-400/30 transition-all group"
-          >
-            <Phone className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-            <span>
-              {authTab === 'NEW_USER'
-                ? 'Continue with Mobile Phone (SMS OTP)'
-                : 'Sign In with Mobile Phone (SMS OTP)'}
-            </span>
-          </button>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 py-1">
-            <div className="flex-1 h-px bg-slate-800"></div>
-            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Or</span>
-            <div className="flex-1 h-px bg-slate-800"></div>
-          </div>
-
-          {/* Google Sign In Button */}
+        {/* 3D Interactive Google Action Button */}
+        <div className="space-y-4 pt-2" style={{ transform: 'translateZ(25px)' }}>
           <button
             onClick={triggerGoogleAccountChooser}
             disabled={loadingGoogle}
-            className="w-full bg-white hover:bg-slate-100 active:scale-95 text-slate-900 font-bold py-3 px-4 rounded-2xl text-xs flex items-center justify-center gap-3 shadow-xl transition-all border border-white/50 group"
+            className="w-full bg-white hover:bg-slate-100 active:scale-95 text-slate-900 font-extrabold py-4 px-5 rounded-2xl text-sm flex items-center justify-center gap-3 shadow-2xl transition-all border border-white/80 group hover:shadow-blue-500/20"
           >
             {loadingGoogle ? (
-              <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
+              <RefreshCw className="w-5 h-5 animate-spin text-blue-600" />
             ) : (
-              <svg className="w-4 h-4 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -446,6 +397,18 @@ export const Login: React.FC = () => {
                 : 'Sign In with Google Account'}
             </span>
           </button>
+
+          {/* Clean Features Highlight */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-center">
+              <span className="text-[10px] text-slate-400 block font-medium">⚡ Instant 1-Click</span>
+              <span className="text-[11px] text-slate-200 font-bold block">No Password Needed</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-center">
+              <span className="text-[10px] text-slate-400 block font-medium">🔒 Bank-Grade</span>
+              <span className="text-[11px] text-slate-200 font-bold block">Isolated Household</span>
+            </div>
+          </div>
         </div>
 
         {/* Security Footer */}
@@ -464,25 +427,11 @@ export const Login: React.FC = () => {
         </div>
       </div>
 
-      {/* Modals */}
+      {/* Google Modal Fallback (If popup is blocked) */}
       <GoogleAuthModal
         isOpen={showGoogleModal}
         mode={authTab}
         onClose={() => setShowGoogleModal(false)}
-        onSuccess={(isNew, name) => handleAuthSuccess(isNew, name)}
-      />
-
-      <EmailAuthModal
-        isOpen={showEmailModal}
-        mode={authTab}
-        onClose={() => setShowEmailModal(false)}
-        onSuccess={(isNew, name) => handleAuthSuccess(isNew, name)}
-      />
-
-      <PhoneAuthModal
-        isOpen={showPhoneModal}
-        mode={authTab}
-        onClose={() => setShowPhoneModal(false)}
         onSuccess={(isNew, name) => handleAuthSuccess(isNew, name)}
       />
 
