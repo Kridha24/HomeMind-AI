@@ -84,12 +84,12 @@ export const Income: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-primary">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2">
+          <h1 className="text-2xl font-extrabold text-primary flex items-center gap-2">
             <Wallet className="w-6 h-6 text-emerald-400" /> Income & Earnings Ledger
           </h1>
-          <p className="text-xs text-slate-400">Track and manage every household income source and monthly revenue stream in {currencySymbol}</p>
+          <p className="text-xs text-muted">Track and manage every household income source and monthly revenue stream in {currencySymbol}</p>
         </div>
 
         <button
@@ -108,26 +108,26 @@ export const Income: React.FC = () => {
             <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Total Monthly Income</span>
             <TrendingUp className="w-4 h-4 text-emerald-400" />
           </div>
-          <p className="text-3xl font-extrabold text-slate-100 font-mono">{format(totalMonthlyIncome)}</p>
-          <p className="text-[11px] text-slate-400">Recorded across {incomes.length} earnings streams</p>
+          <p className="text-3xl font-extrabold text-primary font-mono">{format(totalMonthlyIncome)}</p>
+          <p className="text-[11px] text-muted">Recorded across {incomes.length} earnings streams</p>
         </div>
 
-        <div className="glass-panel p-6 border-slate-800 space-y-2">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Primary Income Source</span>
-          <p className="text-2xl font-extrabold text-slate-100">{incomes.length > 0 ? incomes[0].source : 'Salary'}</p>
+        <div className="glass-panel p-6 border-primary space-y-2">
+          <span className="text-xs font-bold text-muted uppercase tracking-wider">Primary Income Source</span>
+          <p className="text-2xl font-extrabold text-primary">{incomes.length > 0 ? incomes[0].source : 'Salary'}</p>
           <p className="text-[11px] text-emerald-400">Direct deposit / verified revenue</p>
         </div>
 
-        <div className="glass-panel p-6 border-slate-800 space-y-2">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Income Entries</span>
+        <div className="glass-panel p-6 border-primary space-y-2">
+          <span className="text-xs font-bold text-muted uppercase tracking-wider">Total Income Entries</span>
           <p className="text-2xl font-extrabold text-indigo-400 font-mono">{incomes.length} Records</p>
-          <p className="text-[11px] text-slate-400">Historical database ledger</p>
+          <p className="text-[11px] text-muted">Historical database ledger</p>
         </div>
       </div>
 
       {/* Income History Table */}
       {loading ? (
-        <div className="text-center py-12 text-xs text-slate-400">Loading income ledger...</div>
+        <div className="text-center py-12 text-xs text-muted">Loading income ledger...</div>
       ) : incomes.length === 0 ? (
         <EmptyState
           icon={Wallet}
@@ -137,15 +137,15 @@ export const Income: React.FC = () => {
           onAction={() => setShowModal(true)}
         />
       ) : (
-        <div className="glass-panel border-slate-800 overflow-hidden">
-          <div className="p-4 border-b border-slate-800 font-bold text-sm text-slate-100 flex items-center justify-between">
+        <div className="glass-panel border-primary overflow-hidden">
+          <div className="p-4 border-b border-primary font-bold text-sm text-primary flex items-center justify-between">
             <span>Historical Income Transactions</span>
             <span className="text-xs text-emerald-400 font-mono">{incomes.length} Entries</span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+              <thead className="bg-background/60 text-muted uppercase tracking-wider font-semibold border-b border-primary">
                 <tr>
                   <th className="p-4">Transaction Title</th>
                   <th className="p-4">Source Category</th>
@@ -154,10 +154,10 @@ export const Income: React.FC = () => {
                   <th className="p-4 text-center">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-slate-300">
+              <tbody className="divide-y divide-slate-800/60 text-secondary">
                 {incomes.map((inc) => (
-                  <tr key={inc.id} className="hover:bg-slate-900/40 transition-colors">
-                    <td className="p-4 font-semibold text-slate-100 flex items-center gap-2.5">
+                  <tr key={inc.id} className="hover:bg-panel/40 transition-colors">
+                    <td className="p-4 font-semibold text-primary flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
                         {currencySymbol}
                       </div>
@@ -168,7 +168,7 @@ export const Income: React.FC = () => {
                         {inc.source}
                       </span>
                     </td>
-                    <td className="p-4 text-slate-400 font-mono text-[11px]">
+                    <td className="p-4 text-muted font-mono text-[11px]">
                       {new Date(inc.date).toLocaleDateString()}
                     </td>
                     <td className="p-4 text-right font-bold text-emerald-400 font-mono text-sm">
@@ -177,7 +177,7 @@ export const Income: React.FC = () => {
                     <td className="p-4 text-center">
                       <button
                         onClick={() => handleDelete(inc.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                        className="p-1.5 text-muted hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                         title="Delete Income Record"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -193,11 +193,11 @@ export const Income: React.FC = () => {
 
       {/* Add Income Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-6 space-y-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-panel border border-primary rounded-3xl w-full max-w-md p-6 space-y-6 shadow-2xl relative">
             <button
               onClick={() => setShowModal(false)}
-              className="absolute right-4 top-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+              className="absolute right-4 top-4 text-muted hover:text-white p-1 rounded-lg hover:bg-secondary"
             >
               <X className="w-5 h-5" />
             </button>
@@ -206,8 +206,8 @@ export const Income: React.FC = () => {
               <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
                 <Wallet className="w-5 h-5" />
               </div>
-              <h3 className="font-bold text-lg text-slate-100">Add Income Entry</h3>
-              <p className="text-xs text-slate-400">Log monthly earnings or side hustle revenue in {currencySymbol}</p>
+              <h3 className="font-bold text-lg text-primary">Add Income Entry</h3>
+              <p className="text-xs text-muted">Log monthly earnings or side hustle revenue in {currencySymbol}</p>
             </div>
 
             {error && (
@@ -218,19 +218,19 @@ export const Income: React.FC = () => {
 
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">Income Title</label>
+                <label className="text-xs font-semibold text-secondary block mb-1">Income Title</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Monthly Tech Salary"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500/50"
+                  className="w-full bg-background border border-primary rounded-xl px-3.5 py-2.5 text-xs text-primary focus:outline-none focus:border-emerald-500/50"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">Amount ({currencySymbol})</label>
+                <label className="text-xs font-semibold text-secondary block mb-1">Amount ({currencySymbol})</label>
                 <input
                   type="number"
                   step="0.01"
@@ -238,17 +238,17 @@ export const Income: React.FC = () => {
                   placeholder="5000"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500/50"
+                  className="w-full bg-background border border-primary rounded-xl px-3.5 py-2.5 text-xs text-primary focus:outline-none focus:border-emerald-500/50"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Source Category</label>
+                  <label className="text-xs font-semibold text-secondary block mb-1">Source Category</label>
                   <select
                     value={source}
                     onChange={(e) => setSource(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500/50"
+                    className="w-full bg-background border border-primary rounded-xl px-3.5 py-2.5 text-xs text-primary focus:outline-none focus:border-emerald-500/50"
                   >
                     <option value="Salary">Salary</option>
                     <option value="Freelance">Freelance</option>
@@ -260,13 +260,13 @@ export const Income: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Date</label>
+                  <label className="text-xs font-semibold text-secondary block mb-1">Date</label>
                   <input
                     type="date"
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500/50"
+                    className="w-full bg-background border border-primary rounded-xl px-3.5 py-2.5 text-xs text-primary focus:outline-none focus:border-emerald-500/50"
                   />
                 </div>
               </div>

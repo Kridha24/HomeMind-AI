@@ -195,7 +195,7 @@ export const Assistant: React.FC = () => {
       if (line.trim().startsWith('• ') || line.trim().startsWith('- ')) {
         const itemText = line.trim().replace(/^[•\-]\s*/, '');
         return (
-          <li key={idx} className="ml-4 list-disc text-slate-200 my-0.5 leading-relaxed">
+          <li key={idx} className="ml-4 list-disc text-primary my-0.5 leading-relaxed">
             {parseInline(itemText)}
           </li>
         );
@@ -237,7 +237,7 @@ export const Assistant: React.FC = () => {
       {/* ========================================================================= */}
       {/* 1. MINIMAL TOP HEADER */}
       {/* ========================================================================= */}
-      <header className="py-3 px-4 border-b border-slate-800/80 bg-slate-950/60 backdrop-blur-xl flex items-center justify-between rounded-t-3xl">
+      <header className="py-3 px-4 border-b border-primary/80 bg-background/60 backdrop-blur-xl flex items-center justify-between rounded-t-3xl">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
             <Sparkles className="w-4 h-4" />
@@ -252,7 +252,7 @@ export const Assistant: React.FC = () => {
                 Online
               </span>
             </div>
-            <span className="text-[10px] text-slate-400 block mt-0.5">
+            <span className="text-[10px] text-muted block mt-0.5">
               Household Operating Agent
             </span>
           </div>
@@ -262,7 +262,7 @@ export const Assistant: React.FC = () => {
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setIsMemoryOpen(true)}
-            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-blue-400 hover:border-blue-500/30 transition-colors"
+            className="p-2 rounded-xl bg-panel border border-primary text-muted hover:text-blue-400 hover:border-blue-500/30 transition-colors"
             title="AI Household Memories"
           >
             <Brain className="w-4 h-4" />
@@ -271,7 +271,7 @@ export const Assistant: React.FC = () => {
           {messages.length > 0 && (
             <button
               onClick={handleClearThread}
-              className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-500/30 transition-colors"
+              className="p-2 rounded-xl bg-panel border border-primary text-muted hover:text-rose-400 hover:border-rose-500/30 transition-colors"
               title="Clear Conversation"
             >
               <Trash2 className="w-4 h-4" />
@@ -296,7 +296,7 @@ export const Assistant: React.FC = () => {
               <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                 {getGreeting()}
               </h2>
-              <p className="text-xs sm:text-sm text-slate-400">
+              <p className="text-xs sm:text-sm text-muted">
                 I am connected to your live household database. What would you like to manage or inspect today?
               </p>
             </div>
@@ -308,7 +308,7 @@ export const Assistant: React.FC = () => {
                   key={qa.label}
                   onClick={() => handleSendMessage(qa.prompt)}
                   disabled={loading}
-                  className="p-3 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-white/[0.08] hover:border-blue-500/40 text-left flex items-center gap-3 text-xs font-semibold text-slate-200 hover:text-white transition-all shadow-md active:scale-95 disabled:opacity-50 group"
+                  className="p-3 rounded-2xl bg-panel/80 hover:bg-secondary/90 border border-white/[0.08] hover:border-blue-500/40 text-left flex items-center gap-3 text-xs font-semibold text-primary hover:text-white transition-all shadow-md active:scale-95 disabled:opacity-50 group"
                 >
                   <div className="w-7 h-7 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-105 transition-transform flex-shrink-0">
                     <qa.icon className="w-3.5 h-3.5" />
@@ -357,7 +357,7 @@ export const Assistant: React.FC = () => {
                     className={`rounded-3xl p-4 text-xs leading-relaxed ${
                       m.sender === 'user'
                         ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-tr-none shadow-lg shadow-blue-600/20'
-                        : 'bg-slate-900/85 border border-white/[0.08] text-slate-200 rounded-tl-none shadow-md backdrop-blur-xl'
+                        : 'bg-panel/85 border border-white/[0.08] text-primary rounded-tl-none shadow-md backdrop-blur-xl'
                     }`}
                   >
                     <div className="space-y-1">{renderMarkdown(m.text)}</div>
@@ -391,7 +391,7 @@ export const Assistant: React.FC = () => {
                                 { sender: 'assistant', text: 'Action cancelled.' },
                               ]);
                             }}
-                            className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded-xl text-[11px] transition-all"
+                            className="bg-secondary hover:bg-slate-700 text-secondary px-3 py-1 rounded-xl text-[11px] transition-all"
                           >
                             Cancel
                           </button>
@@ -401,7 +401,7 @@ export const Assistant: React.FC = () => {
 
                     {/* Copy Response Footer */}
                     {m.sender === 'assistant' && (
-                      <div className="flex items-center justify-end pt-2 mt-2 border-t border-white/[0.06] text-[10px] text-slate-400">
+                      <div className="flex items-center justify-end pt-2 mt-2 border-t border-white/[0.06] text-[10px] text-muted">
                         <button
                           onClick={() => handleCopy(m.text, idx)}
                           className="hover:text-white flex items-center gap-1 transition-colors p-0.5 rounded"
@@ -425,7 +425,7 @@ export const Assistant: React.FC = () => {
                         <button
                           key={sIdx}
                           onClick={() => handleSendMessage(sug)}
-                          className="text-[11px] bg-slate-900/80 hover:bg-blue-600/15 border border-slate-800 hover:border-blue-500/40 text-blue-300 px-2.5 py-1 rounded-xl text-left transition-all"
+                          className="text-[11px] bg-panel/80 hover:bg-blue-600/15 border border-primary hover:border-blue-500/40 text-blue-300 px-2.5 py-1 rounded-xl text-left transition-all"
                         >
                           {sug}
                         </button>
@@ -436,7 +436,7 @@ export const Assistant: React.FC = () => {
 
                 {/* User Avatar */}
                 {m.sender === 'user' && (
-                  <div className="w-7 h-7 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 text-slate-300 mt-1">
+                  <div className="w-7 h-7 rounded-xl bg-secondary border border-secondary flex items-center justify-center shrink-0 text-secondary mt-1">
                     <User className="w-4 h-4" />
                   </div>
                 )}
@@ -459,8 +459,8 @@ export const Assistant: React.FC = () => {
       {/* ========================================================================= */}
       {/* 3. SINGLE FIXED COMPOSER (BOTTOM) */}
       {/* ========================================================================= */}
-      <footer className="p-3 sm:p-4 border-t border-slate-800/80 bg-slate-950/70 backdrop-blur-xl rounded-b-3xl">
-        <div className="relative flex items-end gap-2 bg-slate-900/90 border border-white/[0.08] focus-within:border-blue-500/50 rounded-2xl p-2 transition-colors shadow-lg">
+      <footer className="p-3 sm:p-4 border-t border-primary/80 bg-background/70 backdrop-blur-xl rounded-b-3xl">
+        <div className="relative flex items-end gap-2 bg-panel/90 border border-white/[0.08] focus-within:border-blue-500/50 rounded-2xl p-2 transition-colors shadow-lg">
           <textarea
             ref={textareaRef}
             rows={1}
@@ -469,14 +469,14 @@ export const Assistant: React.FC = () => {
             onKeyDown={handleKeyDown}
             disabled={loading}
             placeholder="Ask HomeMind anything..."
-            className="flex-1 bg-transparent border-0 resize-none text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none px-2 py-1 max-h-[120px] scrollbar-thin"
+            className="flex-1 bg-transparent border-0 resize-none text-xs sm:text-sm text-primary placeholder-slate-500 focus:outline-none px-2 py-1 max-h-[120px] scrollbar-thin"
           />
 
           {loading ? (
             <button
               type="button"
               onClick={handleStop}
-              className="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl transition-all shadow shrink-0"
+              className="bg-secondary hover:bg-slate-700 text-primary p-2 rounded-xl transition-all shadow shrink-0"
               title="Stop generation"
             >
               <Square className="w-4 h-4 text-rose-400 fill-rose-400" />
@@ -494,7 +494,7 @@ export const Assistant: React.FC = () => {
           )}
         </div>
 
-        <div className="flex items-center justify-between px-2 pt-1.5 text-[10px] text-slate-500">
+        <div className="flex items-center justify-between px-2 pt-1.5 text-[10px] text-muted">
           <span>Enter to send · Shift+Enter for new line</span>
           <span className="flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-blue-500" /> Real-time Live Household Data

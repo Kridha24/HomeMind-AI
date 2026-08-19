@@ -69,12 +69,12 @@ export const Expenses: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-primary">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2">
+          <h1 className="text-2xl font-extrabold text-primary flex items-center gap-2">
             <CreditCard className="w-6 h-6 text-blue-400" /> Household Expense Ledger
           </h1>
-          <p className="text-xs text-slate-400">Track and manage every household transaction in database</p>
+          <p className="text-xs text-muted">Track and manage every household transaction in database</p>
         </div>
 
         <button
@@ -88,22 +88,22 @@ export const Expenses: React.FC = () => {
 
       {/* Form Card */}
       {showForm && (
-        <form onSubmit={handleCreate} className="glass-panel p-6 border-slate-800 space-y-4 animate-in zoom-in-95 duration-150">
-          <h3 className="text-sm font-bold text-slate-200 border-b border-slate-800 pb-2">Record New Household Outlay</h3>
+        <form onSubmit={handleCreate} className="glass-panel p-6 border-primary space-y-4 animate-in zoom-in-95 duration-150">
+          <h3 className="text-sm font-bold text-primary border-b border-primary pb-2">Record New Household Outlay</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Title</label>
+              <label className="text-xs font-semibold text-secondary block mb-1">Title</label>
               <input
                 type="text"
                 required
                 placeholder="e.g. Whole Foods Supermarket"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500/50"
+                className="w-full bg-background border border-primary rounded-xl px-3 py-2 text-xs text-primary focus:outline-none focus:border-blue-500/50"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Amount ({currencySymbol})</label>
+              <label className="text-xs font-semibold text-secondary block mb-1">Amount ({currencySymbol})</label>
               <input
                 type="number"
                 step="0.01"
@@ -111,15 +111,15 @@ export const Expenses: React.FC = () => {
                 placeholder="84.50"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500/50"
+                className="w-full bg-background border border-primary rounded-xl px-3 py-2 text-xs text-primary focus:outline-none focus:border-blue-500/50"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Category</label>
+              <label className="text-xs font-semibold text-secondary block mb-1">Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500/50"
+                className="w-full bg-background border border-primary rounded-xl px-3 py-2 text-xs text-primary focus:outline-none focus:border-blue-500/50"
               >
                 <option value="Groceries">Groceries</option>
                 <option value="Utilities">Utilities</option>
@@ -130,13 +130,13 @@ export const Expenses: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Date</label>
+              <label className="text-xs font-semibold text-secondary block mb-1">Date</label>
               <input
                 type="date"
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500/50"
+                className="w-full bg-background border border-primary rounded-xl px-3 py-2 text-xs text-primary focus:outline-none focus:border-blue-500/50"
               />
             </div>
           </div>
@@ -144,7 +144,7 @@ export const Expenses: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="text-xs text-slate-400 hover:text-slate-200 px-4 py-2"
+              className="text-xs text-muted hover:text-primary px-4 py-2"
             >
               Cancel
             </button>
@@ -160,10 +160,10 @@ export const Expenses: React.FC = () => {
 
       {/* Summary Widget */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass-panel p-5 border-slate-800 flex items-center justify-between">
+        <div className="glass-panel p-5 border-primary flex items-center justify-between">
           <div>
-            <span className="text-xs text-slate-400 font-semibold block">Total Logged Spend</span>
-            <span className="text-2xl font-extrabold text-slate-100 font-mono mt-1 block">{format(totalSpent)}</span>
+            <span className="text-xs text-muted font-semibold block">Total Logged Spend</span>
+            <span className="text-2xl font-extrabold text-primary font-mono mt-1 block">{format(totalSpent)}</span>
           </div>
           <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
             <TrendingUp className="w-5 h-5" />
@@ -173,7 +173,7 @@ export const Expenses: React.FC = () => {
 
       {/* Expense List Table / Empty State */}
       {loading ? (
-        <div className="text-center py-12 text-xs text-slate-400">Loading household expenses from database...</div>
+        <div className="text-center py-12 text-xs text-muted">Loading household expenses from database...</div>
       ) : expenses.length === 0 ? (
         <EmptyState
           icon={CreditCard}
@@ -183,9 +183,9 @@ export const Expenses: React.FC = () => {
           onAction={() => setShowForm(true)}
         />
       ) : (
-        <div className="glass-panel border-slate-800 overflow-hidden">
+        <div className="glass-panel border-primary overflow-hidden">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-950/60 border-b border-slate-800 text-slate-400 uppercase font-semibold">
+            <thead className="bg-background/60 border-b border-primary text-muted uppercase font-semibold">
               <tr>
                 <th className="px-6 py-3.5">Title</th>
                 <th className="px-6 py-3.5">Category</th>
@@ -194,26 +194,26 @@ export const Expenses: React.FC = () => {
                 <th className="px-6 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-200">
+            <tbody className="divide-y divide-slate-800/60 text-primary">
               {expenses.map((expense) => (
-                <tr key={expense.id} className="hover:bg-slate-900/40 transition-colors">
-                  <td className="px-6 py-4 font-semibold text-slate-100 flex items-center gap-2">
+                <tr key={expense.id} className="hover:bg-panel/40 transition-colors">
+                  <td className="px-6 py-4 font-semibold text-primary flex items-center gap-2">
                     <Tag className="w-3.5 h-3.5 text-blue-400" />
                     {expense.title}
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                    <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-secondary text-secondary border border-secondary">
                       {expense.category}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-slate-400">{new Date(expense.date).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 text-muted">{new Date(expense.date).toLocaleDateString()}</td>
                   <td className="px-6 py-4 font-mono font-bold text-right text-emerald-400">
                     {format(expense.amount)}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button
                       onClick={() => handleDelete(expense.id)}
-                      className="text-slate-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
+                      className="text-muted hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
                       title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />

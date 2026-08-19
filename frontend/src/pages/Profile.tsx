@@ -127,7 +127,7 @@ export const Profile: React.FC = () => {
       )}
 
       {/* Header Banner */}
-      <div className="glass-panel p-8 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 border-slate-800">
+      <div className="glass-panel p-8 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 border-primary">
         <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10">
           <div className="relative group">
             <img
@@ -140,9 +140,9 @@ export const Profile: React.FC = () => {
               className="w-24 h-24 rounded-full border-4 border-blue-500/30 object-cover shadow-2xl"
             />
             {editing && (
-              <label className="absolute inset-0 bg-slate-950/70 rounded-full flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+              <label className="absolute inset-0 bg-background/70 rounded-full flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
                 <Camera className="w-6 h-6 text-white mb-1" />
-                <span className="text-[9px] font-bold text-slate-200 uppercase">Change</span>
+                <span className="text-[9px] font-bold text-primary uppercase">Change</span>
                 <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
               </label>
             )}
@@ -153,13 +153,13 @@ export const Profile: React.FC = () => {
 
           <div className="space-y-1 text-center sm:text-left">
             <div className="flex items-center gap-3 justify-center sm:justify-start">
-              <h1 className="text-2xl font-bold text-slate-100">{user?.name || name || 'User'}</h1>
+              <h1 className="text-2xl font-bold text-primary">{user?.name || name || 'User'}</h1>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase tracking-wider">
                 {user?.role || 'OWNER'}
               </span>
             </div>
-            <p className="text-xs text-slate-400 flex items-center justify-center sm:justify-start gap-2">
-              <Building className="w-3.5 h-3.5 text-slate-500" />
+            <p className="text-xs text-muted flex items-center justify-center sm:justify-start gap-2">
+              <Building className="w-3.5 h-3.5 text-muted" />
               <span>{household?.name || 'Home Residence'}</span>
               <span className="text-slate-600">•</span>
               <span className="font-mono text-[11px] text-blue-400">{household?.inviteCode}</span>
@@ -180,7 +180,7 @@ export const Profile: React.FC = () => {
               </button>
               <button
                 onClick={() => setEditing(false)}
-                className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs"
+                className="px-4 py-2.5 bg-secondary hover:bg-slate-700 text-secondary font-semibold rounded-xl text-xs"
               >
                 Cancel
               </button>
@@ -207,15 +207,15 @@ export const Profile: React.FC = () => {
 
       {/* Avatar Presets & Upload Picker */}
       {editing && (
-        <div className="glass-panel p-6 border-slate-800 space-y-4">
-          <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+        <div className="glass-panel p-6 border-primary space-y-4">
+          <h3 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
             <Camera className="w-4 h-4 text-blue-400" /> Choose Profile Photo or Avatar
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Presets */}
             <div className="space-y-2">
-              <span className="text-[11px] text-slate-400 font-semibold block">Select Preset Avatar</span>
+              <span className="text-[11px] text-muted font-semibold block">Select Preset Avatar</span>
               <div className="grid grid-cols-4 gap-3">
                 {AVATAR_PRESETS.map((preset, idx) => (
                   <button
@@ -223,7 +223,7 @@ export const Profile: React.FC = () => {
                     type="button"
                     onClick={() => setAvatar(preset)}
                     className={`relative rounded-xl overflow-hidden border-2 transition-all ${
-                      avatar === preset ? 'border-emerald-400 scale-105 shadow-lg shadow-emerald-500/20' : 'border-slate-800 opacity-70 hover:opacity-100'
+                      avatar === preset ? 'border-emerald-400 scale-105 shadow-lg shadow-emerald-500/20' : 'border-primary opacity-70 hover:opacity-100'
                     }`}
                   >
                     <img src={preset} alt={`Avatar ${idx}`} className="w-full h-14 object-cover" />
@@ -235,8 +235,8 @@ export const Profile: React.FC = () => {
             {/* Custom URL or Direct Upload */}
             <div className="space-y-3">
               <div>
-                <span className="text-[11px] text-slate-400 font-semibold block mb-1">Direct Computer Photo Upload</span>
-                <label className="flex items-center justify-center gap-2 bg-slate-950 border border-slate-800 border-dashed rounded-xl p-3 text-xs text-slate-300 cursor-pointer hover:border-blue-500/50 transition-colors">
+                <span className="text-[11px] text-muted font-semibold block mb-1">Direct Computer Photo Upload</span>
+                <label className="flex items-center justify-center gap-2 bg-background border border-primary border-dashed rounded-xl p-3 text-xs text-secondary cursor-pointer hover:border-blue-500/50 transition-colors">
                   <Upload className="w-4 h-4 text-blue-400" />
                   <span>Upload Image File from Device</span>
                   <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
@@ -244,13 +244,13 @@ export const Profile: React.FC = () => {
               </div>
 
               <div>
-                <span className="text-[11px] text-slate-400 font-semibold block mb-1">Or Paste Image URL</span>
+                <span className="text-[11px] text-muted font-semibold block mb-1">Or Paste Image URL</span>
                 <input
                   type="text"
                   placeholder="https://example.com/my-photo.jpg"
                   value={avatar}
                   onChange={(e) => setAvatar(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500/50"
+                  className="w-full bg-background border border-primary rounded-xl px-3 py-2 text-xs text-primary focus:outline-none focus:border-blue-500/50"
                 />
               </div>
             </div>
@@ -262,14 +262,14 @@ export const Profile: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* User Account Details */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="glass-panel p-6 space-y-6 border-slate-800">
-            <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+          <div className="glass-panel p-6 space-y-6 border-primary">
+            <h2 className="text-sm font-bold text-primary uppercase tracking-wider flex items-center gap-2">
               <UserIcon className="w-4 h-4 text-blue-400" /> Personal Account Profile
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-                <span className="text-[11px] text-slate-400 flex items-center gap-1.5 font-medium">
+              <div className="p-3.5 rounded-xl bg-panel/60 border border-primary/80 space-y-1">
+                <span className="text-[11px] text-muted flex items-center gap-1.5 font-medium">
                   <UserIcon className="w-3.5 h-3.5 text-blue-400" /> Full Name
                 </span>
                 {editing ? (
@@ -277,15 +277,15 @@ export const Profile: React.FC = () => {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-100 font-semibold focus:outline-none focus:border-blue-500"
+                    className="w-full bg-background border border-primary rounded-lg px-2.5 py-1.5 text-primary font-semibold focus:outline-none focus:border-blue-500"
                   />
                 ) : (
-                  <p className="font-semibold text-slate-200">{user?.name || 'Not provided'}</p>
+                  <p className="font-semibold text-primary">{user?.name || 'Not provided'}</p>
                 )}
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-                <span className="text-[11px] text-slate-400 flex items-center gap-1.5 font-medium">
+              <div className="p-3.5 rounded-xl bg-panel/60 border border-primary/80 space-y-1">
+                <span className="text-[11px] text-muted flex items-center gap-1.5 font-medium">
                   <Calendar className="w-3.5 h-3.5 text-purple-400" /> Age
                 </span>
                 {editing ? (
@@ -293,15 +293,15 @@ export const Profile: React.FC = () => {
                     type="number"
                     value={age}
                     onChange={(e) => setAge(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-100 font-semibold focus:outline-none focus:border-blue-500"
+                    className="w-full bg-background border border-primary rounded-lg px-2.5 py-1.5 text-primary font-semibold focus:outline-none focus:border-blue-500"
                   />
                 ) : (
-                  <p className="font-semibold text-slate-200">{user?.age ? `${user.age} Years Old` : 'Not specified'}</p>
+                  <p className="font-semibold text-primary">{user?.age ? `${user.age} Years Old` : 'Not specified'}</p>
                 )}
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-                <span className="text-[11px] text-slate-400 flex items-center gap-1.5 font-medium">
+              <div className="p-3.5 rounded-xl bg-panel/60 border border-primary/80 space-y-1">
+                <span className="text-[11px] text-muted flex items-center gap-1.5 font-medium">
                   <Mail className="w-3.5 h-3.5 text-indigo-400" /> Email Address
                 </span>
                 {editing ? (
@@ -309,15 +309,15 @@ export const Profile: React.FC = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-100 font-semibold focus:outline-none focus:border-blue-500"
+                    className="w-full bg-background border border-primary rounded-lg px-2.5 py-1.5 text-primary font-semibold focus:outline-none focus:border-blue-500"
                   />
                 ) : (
-                  <p className="font-semibold text-slate-200">{user?.email || 'N/A'}</p>
+                  <p className="font-semibold text-primary">{user?.email || 'N/A'}</p>
                 )}
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-                <span className="text-[11px] text-slate-400 flex items-center gap-1.5 font-medium">
+              <div className="p-3.5 rounded-xl bg-panel/60 border border-primary/80 space-y-1">
+                <span className="text-[11px] text-muted flex items-center gap-1.5 font-medium">
                   <Phone className="w-3.5 h-3.5 text-emerald-400" /> Phone Number
                 </span>
                 {editing ? (
@@ -325,25 +325,25 @@ export const Profile: React.FC = () => {
                     type="text"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-100 font-semibold focus:outline-none focus:border-blue-500"
+                    className="w-full bg-background border border-primary rounded-lg px-2.5 py-1.5 text-primary font-semibold focus:outline-none focus:border-blue-500"
                   />
                 ) : (
-                  <p className="font-semibold text-slate-200">{user?.phoneNumber || 'N/A'}</p>
+                  <p className="font-semibold text-primary">{user?.phoneNumber || 'N/A'}</p>
                 )}
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-                <span className="text-[11px] text-slate-400 flex items-center gap-1.5 font-medium">
+              <div className="p-3.5 rounded-xl bg-panel/60 border border-primary/80 space-y-1">
+                <span className="text-[11px] text-muted flex items-center gap-1.5 font-medium">
                   <Shield className="w-3.5 h-3.5 text-amber-400" /> Auth Provider
                 </span>
-                <p className="font-semibold text-slate-200">{user?.provider || 'GOOGLE'}</p>
+                <p className="font-semibold text-primary">{user?.provider || 'GOOGLE'}</p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-                <span className="text-[11px] text-slate-400 flex items-center gap-1.5 font-medium">
+              <div className="p-3.5 rounded-xl bg-panel/60 border border-primary/80 space-y-1">
+                <span className="text-[11px] text-muted flex items-center gap-1.5 font-medium">
                   <Clock className="w-3.5 h-3.5 text-teal-400" /> Last Login
                 </span>
-                <p className="font-semibold text-slate-200">
+                <p className="font-semibold text-primary">
                   {user?.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Active Now'}
                 </p>
               </div>
@@ -353,14 +353,14 @@ export const Profile: React.FC = () => {
 
         {/* Household Settings Summary Sidebar */}
         <div className="space-y-6">
-          <div className="glass-panel p-6 space-y-4 border-slate-800">
-            <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+          <div className="glass-panel p-6 space-y-4 border-primary">
+            <h2 className="text-sm font-bold text-primary uppercase tracking-wider flex items-center gap-2">
               <Globe className="w-4 h-4 text-emerald-400" /> Household Region Settings
             </h2>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-                <span className="text-slate-400 flex items-center gap-1.5">
+              <div className="p-3 rounded-xl bg-panel/60 border border-primary/80 space-y-1">
+                <span className="text-muted flex items-center gap-1.5">
                   <Globe className="w-3.5 h-3.5 text-emerald-400" /> Country Region
                 </span>
                 {editing ? (
@@ -371,7 +371,7 @@ export const Profile: React.FC = () => {
                       const defs = COUNTRY_DEFAULTS[e.target.value];
                       if (defs) setSelectedCurrency(defs.currency);
                     }}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-slate-100 font-semibold"
+                    className="w-full bg-background border border-primary rounded-lg px-2.5 py-1 text-primary font-semibold"
                   >
                     {Object.entries(COUNTRY_DEFAULTS).map(([code, defs]) => (
                       <option key={code} value={code}>
@@ -380,19 +380,19 @@ export const Profile: React.FC = () => {
                     ))}
                   </select>
                 ) : (
-                  <p className="font-bold text-slate-200">{country}</p>
+                  <p className="font-bold text-primary">{country}</p>
                 )}
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-                <span className="text-slate-400 flex items-center gap-1.5">
+              <div className="p-3 rounded-xl bg-panel/60 border border-primary/80 space-y-1">
+                <span className="text-muted flex items-center gap-1.5">
                   <DollarSign className="w-3.5 h-3.5 text-amber-400" /> Active Currency
                 </span>
                 {editing ? (
                   <select
                     value={selectedCurrency}
                     onChange={(e) => setSelectedCurrency(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-slate-100 font-semibold"
+                    className="w-full bg-background border border-primary rounded-lg px-2.5 py-1 text-primary font-semibold"
                   >
                     {Object.entries(SUPPORTED_CURRENCIES).map(([code, info]) => (
                       <option key={code} value={code}>
@@ -407,21 +407,21 @@ export const Profile: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-                <span className="text-slate-400 flex items-center gap-1.5">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-panel/60 border border-primary/80">
+                <span className="text-muted flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-blue-400" /> Time Zone
                 </span>
-                <span className="font-bold text-slate-200 truncate max-w-[140px]">{timeZone}</span>
+                <span className="font-bold text-primary truncate max-w-[140px]">{timeZone}</span>
               </div>
             </div>
           </div>
 
           {/* Appearance Theme Switcher Card */}
-          <div className="glass-panel p-6 space-y-4 border-slate-800">
-            <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+          <div className="glass-panel p-6 space-y-4 border-primary">
+            <h2 className="text-sm font-bold text-primary uppercase tracking-wider flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-indigo-400" /> Appearance & UI Theme
             </h2>
-            <p className="text-[11px] text-slate-400">Select your preferred application display aesthetic</p>
+            <p className="text-[11px] text-muted">Select your preferred application display aesthetic</p>
 
             <div className="grid grid-cols-3 gap-2">
               <button
@@ -430,7 +430,7 @@ export const Profile: React.FC = () => {
                 className={`p-3 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
                   useSettingStore.getState().theme === 'dark'
                     ? 'border-blue-500 bg-blue-500/10 text-blue-400 shadow-md'
-                    : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-slate-200'
+                    : 'border-primary bg-panel/60 text-muted hover:text-primary'
                 }`}
               >
                 <span className="text-base">🌙</span>
@@ -443,7 +443,7 @@ export const Profile: React.FC = () => {
                 className={`p-3 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
                   useSettingStore.getState().theme === 'light'
                     ? 'border-blue-500 bg-blue-500/10 text-blue-400 shadow-md'
-                    : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-slate-200'
+                    : 'border-primary bg-panel/60 text-muted hover:text-primary'
                 }`}
               >
                 <span className="text-base">☀️</span>
@@ -456,7 +456,7 @@ export const Profile: React.FC = () => {
                 className={`p-3 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
                   useSettingStore.getState().theme === 'glass'
                     ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400 shadow-md'
-                    : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-slate-200'
+                    : 'border-primary bg-panel/60 text-muted hover:text-primary'
                 }`}
               >
                 <span className="text-base">🪐</span>

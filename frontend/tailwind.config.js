@@ -8,6 +8,10 @@ export default {
   theme: {
     extend: {
       colors: {
+        background: 'rgb(var(--bg-background) / <alpha-value>)',
+        panel: 'rgb(var(--bg-panel) / <alpha-value>)',
+        secondary: 'rgb(var(--bg-secondary) / <alpha-value>)',
+        primary: 'rgb(var(--border-primary) / <alpha-value>)', // using this for border
         brand: {
           50: '#f0f7ff',
           100: '#e0effe',
@@ -21,6 +25,15 @@ export default {
           900: '#0f172a',
           950: '#020617',
         }
+      },
+      textColor: {
+        primary: 'rgb(var(--text-primary) / <alpha-value>)',
+        secondary: 'rgb(var(--text-secondary) / <alpha-value>)',
+        muted: 'rgb(var(--text-muted) / <alpha-value>)',
+      },
+      borderColor: {
+        primary: 'rgb(var(--border-primary) / <alpha-value>)',
+        secondary: 'rgb(var(--border-secondary) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['Inter', 'SF Pro Display', '-apple-system', 'sans-serif'],

@@ -33,12 +33,12 @@ export const Appliances: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-primary">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2">
+          <h1 className="text-2xl font-extrabold text-primary flex items-center gap-2">
             <Tv className="w-6 h-6 text-cyan-400" /> Home Appliance Telemetry & Warranty Tracker
           </h1>
-          <p className="text-xs text-slate-400">Track equipment purchase dates, warranty countdowns & technician service logs</p>
+          <p className="text-xs text-muted">Track equipment purchase dates, warranty countdowns & technician service logs</p>
         </div>
 
         <button
@@ -52,7 +52,7 @@ export const Appliances: React.FC = () => {
 
       {/* List / Empty State */}
       {loading ? (
-        <div className="text-center py-12 text-xs text-slate-400">Loading household appliances from database...</div>
+        <div className="text-center py-12 text-xs text-muted">Loading household appliances from database...</div>
       ) : appliances.length === 0 ? (
         <EmptyState
           icon={Tv}
@@ -66,16 +66,16 @@ export const Appliances: React.FC = () => {
           {appliances.map((appliance) => (
             <div
               key={appliance.id}
-              className="glass-panel p-5 border-slate-800 space-y-4 hover:border-slate-700 transition-all"
+              className="glass-panel p-5 border-primary space-y-4 hover:border-secondary transition-all"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
                     {appliance.brand}
                   </span>
-                  <h3 className="font-bold text-base text-slate-100 mt-0.5">{appliance.name}</h3>
+                  <h3 className="font-bold text-base text-primary mt-0.5">{appliance.name}</h3>
                   {appliance.modelNumber && (
-                    <p className="text-xs font-mono text-slate-400 mt-0.5">Model: {appliance.modelNumber}</p>
+                    <p className="text-xs font-mono text-muted mt-0.5">Model: {appliance.modelNumber}</p>
                   )}
                 </div>
                 <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
@@ -83,12 +83,12 @@ export const Appliances: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-2 border-t border-b border-slate-800/80 py-3 text-xs">
-                <div className="flex items-center justify-between text-slate-400">
+              <div className="space-y-2 border-t border-b border-primary/80 py-3 text-xs">
+                <div className="flex items-center justify-between text-muted">
                   <span>Purchased</span>
-                  <span className="font-semibold text-slate-200">{new Date(appliance.purchaseDate).toLocaleDateString()}</span>
+                  <span className="font-semibold text-primary">{new Date(appliance.purchaseDate).toLocaleDateString()}</span>
                 </div>
-                <div className="flex items-center justify-between text-slate-400">
+                <div className="flex items-center justify-between text-muted">
                   <span>Warranty Coverage</span>
                   <span className="font-semibold text-cyan-400">{appliance.warrantyYears} Year Warranty</span>
                 </div>

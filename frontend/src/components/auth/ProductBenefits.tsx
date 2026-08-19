@@ -34,7 +34,7 @@ export const ProductBenefits: React.FC = () => {
       {benefits.map((b) => (
         <div
           key={b.title}
-          className="p-3.5 rounded-2xl bg-slate-900/50 backdrop-blur-xl border border-white/[0.08] hover:border-white/20 transition-all space-y-1.5 shadow-lg group"
+          className="p-3.5 rounded-2xl bg-panel/50 backdrop-blur-xl border border-white/[0.08] hover:border-white/20 transition-all space-y-1.5 shadow-lg group"
         >
           <div className="flex items-center gap-2">
             <div
@@ -42,11 +42,11 @@ export const ProductBenefits: React.FC = () => {
             >
               <b.icon className="w-3.5 h-3.5" />
             </div>
-            <h3 className="text-xs font-bold text-slate-200 tracking-tight">
+            <h3 className="text-xs font-bold text-primary tracking-tight">
               {b.title}
             </h3>
           </div>
-          <p className="text-[11px] text-slate-400 leading-relaxed">
+          <p className="text-[11px] text-muted leading-relaxed">
             {b.desc}
           </p>
         </div>

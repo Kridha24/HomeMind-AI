@@ -36,21 +36,21 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
-          <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center space-y-6">
+        <div className="min-h-screen bg-background text-primary flex items-center justify-center p-6">
+          <div className="max-w-md w-full bg-panel border border-primary rounded-3xl p-8 shadow-2xl text-center space-y-6">
             <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-8 h-8" />
             </div>
 
             <div className="space-y-2">
-              <h1 className="text-xl font-bold text-slate-100">Something went wrong</h1>
-              <p className="text-xs text-slate-400">
+              <h1 className="text-xl font-bold text-primary">Something went wrong</h1>
+              <p className="text-xs text-muted">
                 An unexpected rendering error occurred. You can reload or reset your local session.
               </p>
             </div>
 
             {this.state.error && (
-              <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-left overflow-auto max-h-32 text-xs font-mono text-red-300">
+              <div className="p-3 bg-background border border-primary rounded-xl text-left overflow-auto max-h-32 text-xs font-mono text-red-300">
                 {this.state.error.message}
               </div>
             )}
@@ -64,7 +64,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </button>
               <button
                 onClick={this.handleReset}
-                className="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all"
+                className="py-3 px-4 rounded-xl bg-secondary hover:bg-slate-700 text-secondary font-bold text-xs transition-all"
               >
                 Reset Session
               </button>

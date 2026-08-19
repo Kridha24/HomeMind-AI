@@ -34,7 +34,7 @@ export const ProfileMenu: React.FC = () => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800/80 hover:border-slate-700 transition-colors"
+        className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-panel border border-primary/80 hover:border-secondary transition-colors"
       >
         <img
           src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=3b82f6&color=fff`}
@@ -42,31 +42,31 @@ export const ProfileMenu: React.FC = () => {
           className="w-7 h-7 rounded-full border border-blue-500/30 object-cover"
         />
         <div className="text-left hidden sm:block">
-          <span className="text-xs font-semibold text-slate-200 block leading-none">{user?.name || 'Homeowner'}</span>
+          <span className="text-xs font-semibold text-primary block leading-none">{user?.name || 'Homeowner'}</span>
           <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider block mt-0.5">{user?.role || 'OWNER'}</span>
         </div>
-        <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+        <ChevronDown className="w-3.5 h-3.5 text-muted" />
       </button>
 
       {isOpen && (
         <div
-          className="absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-3 z-50 space-y-3 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 mt-2 w-72 bg-panel border border-primary rounded-2xl shadow-2xl p-3 z-50 space-y-3 animate-in fade-in zoom-in-95 duration-150"
           onMouseLeave={() => setIsOpen(false)}
         >
           {/* User Details */}
-          <div className="p-2 border-b border-slate-800/80 space-y-2">
+          <div className="p-2 border-b border-primary/80 space-y-2">
             <div>
-              <h4 className="text-xs font-bold text-slate-100">{user?.name || 'Homeowner'}</h4>
-              <p className="text-[11px] text-slate-400 truncate">{user?.email || 'Authenticated User'}</p>
+              <h4 className="text-xs font-bold text-primary">{user?.name || 'Homeowner'}</h4>
+              <p className="text-[11px] text-muted truncate">{user?.email || 'Authenticated User'}</p>
             </div>
 
             {/* Optional Phone Info (if provided) */}
             {user?.phoneNumber && (
-              <div className="flex items-center justify-between p-2 rounded-xl bg-slate-950/60 border border-slate-800">
-                <span className="text-[11px] text-slate-300 font-mono font-medium flex items-center gap-1.5">
+              <div className="flex items-center justify-between p-2 rounded-xl bg-background/60 border border-primary">
+                <span className="text-[11px] text-secondary font-mono font-medium flex items-center gap-1.5">
                   <Phone className="w-3.5 h-3.5 text-blue-400" /> {user.phoneNumber}
                 </span>
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800 px-2 py-0.5 rounded-full">
+                <span className="text-[9px] font-bold text-muted uppercase tracking-wider bg-secondary px-2 py-0.5 rounded-full">
                   Mobile
                 </span>
               </div>
@@ -86,9 +86,9 @@ export const ProfileMenu: React.FC = () => {
           <div className="space-y-1">
             <button
               onClick={handleLogout}
-              className="w-full text-left px-3 py-2 text-xs font-medium text-slate-300 hover:text-slate-100 hover:bg-slate-800 rounded-xl flex items-center gap-2 transition-colors"
+              className="w-full text-left px-3 py-2 text-xs font-medium text-secondary hover:text-primary hover:bg-secondary rounded-xl flex items-center gap-2 transition-colors"
             >
-              <LogOut className="w-3.5 h-3.5 text-slate-400" /> Log Out Current Device
+              <LogOut className="w-3.5 h-3.5 text-muted" /> Log Out Current Device
             </button>
             <button
               onClick={handleLogoutAllDevices}

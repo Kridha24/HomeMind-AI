@@ -131,12 +131,12 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-6 space-y-6 shadow-2xl relative animate-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
+      <div className="bg-panel border border-primary rounded-3xl w-full max-w-md p-6 space-y-6 shadow-2xl relative animate-in zoom-in-95 duration-150">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-200 p-2 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition-colors"
+          className="absolute top-4 right-4 text-muted hover:text-primary p-2 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -163,14 +163,14 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
               />
             </svg>
           </div>
-          <h2 className="text-xl font-extrabold text-slate-100 tracking-tight">
+          <h2 className="text-xl font-extrabold text-primary tracking-tight">
             {savedAccounts.length > 0 && !isCustomMode
               ? 'Choose a Google Account'
               : mode === 'NEW_USER'
               ? 'Sign Up with Google Account'
               : 'Sign In with Google Account'}
           </h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted">
             {savedAccounts.length > 0 && !isCustomMode
               ? 'to continue to HomeMind AI Household System'
               : 'Enter your Google email to authenticate your account'}
@@ -187,13 +187,13 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
         {/* Saved Google Accounts List (Account Chooser) */}
         {!isCustomMode && savedAccounts.length > 0 ? (
           <div className="space-y-2.5">
-            <div className="divide-y divide-slate-800 border border-slate-800 rounded-2xl overflow-hidden bg-slate-950/60">
+            <div className="divide-y divide-slate-800 border border-primary rounded-2xl overflow-hidden bg-background/60">
               {savedAccounts.map((acc) => (
                 <button
                   key={acc.email}
                   onClick={() => handleSelectAccount(acc)}
                   disabled={loading}
-                  className="w-full p-3.5 flex items-center justify-between hover:bg-slate-800/60 transition-colors text-left group"
+                  className="w-full p-3.5 flex items-center justify-between hover:bg-secondary/60 transition-colors text-left group"
                 >
                   <div className="flex items-center gap-3">
                     <img
@@ -202,22 +202,22 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
                       className="w-10 h-10 rounded-full border border-blue-500/30 object-cover"
                     />
                     <div>
-                      <span className="text-xs font-bold text-slate-100 block group-hover:text-blue-400 transition-colors">
+                      <span className="text-xs font-bold text-primary block group-hover:text-blue-400 transition-colors">
                         {acc.name}
                       </span>
-                      <span className="text-[11px] text-slate-400 font-mono block">
+                      <span className="text-[11px] text-muted font-mono block">
                         {acc.email}
                       </span>
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
+                  <ArrowRight className="w-4 h-4 text-muted group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
                 </button>
               ))}
             </div>
 
             <button
               onClick={() => setIsCustomMode(true)}
-              className="w-full py-3 px-4 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900/50 hover:bg-slate-800 text-xs font-semibold text-slate-300 flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-3 px-4 rounded-xl border border-primary hover:border-secondary bg-panel/50 hover:bg-secondary text-xs font-semibold text-secondary flex items-center justify-center gap-2 transition-colors"
             >
               <UserPlus className="w-4 h-4 text-blue-400" /> Use another Google Account
             </button>
@@ -226,7 +226,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
           /* Custom Google Account Entry Form */
           <form onSubmit={handleCustomSubmit} className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+              <label className="text-xs font-semibold text-secondary block mb-1.5">
                 Google Account Email <span className="text-blue-400">*</span>
               </label>
               <input
@@ -235,21 +235,21 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your.name@gmail.com"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-background border border-primary rounded-xl px-4 py-3 text-xs text-primary placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
                 autoFocus
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                Your Full Name <span className="text-slate-500">(Google Profile Name)</span>
+              <label className="text-xs font-semibold text-secondary block mb-1.5">
+                Your Full Name <span className="text-muted">(Google Profile Name)</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Alex Johnson"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-background border border-primary rounded-xl px-4 py-3 text-xs text-primary placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
@@ -297,7 +297,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
           </form>
         )}
 
-        <div className="pt-2 text-center text-[10px] text-slate-500 border-t border-slate-800/80">
+        <div className="pt-2 text-center text-[10px] text-muted border-t border-primary/80">
           <p className="flex items-center justify-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Authenticates directly with your chosen Google Identity
           </p>

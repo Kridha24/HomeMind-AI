@@ -46,7 +46,7 @@ export const FloatingFeatureCards: React.FC = () => {
       {cards.map((c) => (
         <div
           key={c.category}
-          className={`p-3 rounded-2xl bg-slate-900/50 backdrop-blur-xl border border-white/[0.08] hover:border-white/20 transition-all space-y-1 shadow-md group ${c.animation}`}
+          className={`p-3 rounded-2xl bg-panel/50 backdrop-blur-xl border border-white/[0.08] hover:border-white/20 transition-all space-y-1 shadow-md group ${c.animation}`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -55,13 +55,13 @@ export const FloatingFeatureCards: React.FC = () => {
               >
                 <c.icon className="w-3 h-3" />
               </div>
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-[10px] font-semibold text-muted uppercase tracking-wider">
                 {c.category}
               </span>
             </div>
-            <ArrowUpRight className="w-3 h-3 text-slate-500 group-hover:text-slate-300 transition-colors" />
+            <ArrowUpRight className="w-3 h-3 text-muted group-hover:text-secondary transition-colors" />
           </div>
-          <p className="text-xs font-medium text-slate-200 leading-snug">
+          <p className="text-xs font-medium text-primary leading-snug">
             "{c.title}"
           </p>
         </div>

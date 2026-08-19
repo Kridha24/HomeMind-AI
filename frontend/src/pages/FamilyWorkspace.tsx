@@ -87,17 +87,17 @@ export const FamilyWorkspace: React.FC = () => {
     <div className="p-6 space-y-8 max-w-5xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
             Family Workspace & Permissions
             <Users className="w-5 h-5 text-indigo-400" />
           </h1>
-          <p className="text-xs text-slate-400">Invite family members, manage workspace access levels and shared views</p>
+          <p className="text-xs text-muted">Invite family members, manage workspace access levels and shared views</p>
         </div>
       </div>
 
       {/* Aggregate Family Data View */}
       <div className="glass-panel p-6 border-indigo-500/20 bg-gradient-to-br from-indigo-950/20 to-slate-900/50">
-        <h3 className="text-sm font-bold text-slate-100 mb-4 flex items-center gap-2">
+        <h3 className="text-sm font-bold text-primary mb-4 flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-emerald-400" />
           Total Family Financial Overview
         </h3>
@@ -135,13 +135,13 @@ export const FamilyWorkspace: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Share Invite Code Box */}
         <div className="glass-panel p-6 space-y-4 border-indigo-500/30">
-          <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-primary flex items-center gap-2">
              <Key className="w-4 h-4 text-indigo-400" />
              Your Household Invite Code
           </h3>
-          <p className="text-xs text-slate-400">Share this code with your family members so they can join your workspace.</p>
+          <p className="text-xs text-muted">Share this code with your family members so they can join your workspace.</p>
           <div className="flex items-center gap-3 mt-2">
-            <div className="bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl font-mono text-lg font-bold text-indigo-300 tracking-wider w-full text-center">
+            <div className="bg-panel border border-secondary px-4 py-2.5 rounded-xl font-mono text-lg font-bold text-indigo-300 tracking-wider w-full text-center">
               {inviteCode}
             </div>
             <button 
@@ -156,11 +156,11 @@ export const FamilyWorkspace: React.FC = () => {
 
         {/* Join Household Box */}
         <div className="glass-panel p-6 space-y-4 border-emerald-500/30">
-           <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+           <h3 className="text-sm font-bold text-primary flex items-center gap-2">
              <LogIn className="w-4 h-4 text-emerald-400" />
              Join Another Household
            </h3>
-           <p className="text-xs text-slate-400">Received an invite code? Enter it below to join another family's workspace.</p>
+           <p className="text-xs text-muted">Received an invite code? Enter it below to join another family's workspace.</p>
            <div className="flex flex-col gap-2 mt-2">
               <div className="flex items-center gap-2">
                 <input 
@@ -168,7 +168,7 @@ export const FamilyWorkspace: React.FC = () => {
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                   placeholder="e.g. HM-XXXXXX"
-                  className="bg-slate-900 border border-slate-700 focus:border-emerald-500 text-slate-100 px-4 py-2.5 rounded-xl w-full text-sm font-mono uppercase outline-none"
+                  className="bg-panel border border-secondary focus:border-emerald-500 text-primary px-4 py-2.5 rounded-xl w-full text-sm font-mono uppercase outline-none"
                 />
                 <button 
                   onClick={handleJoinHousehold}
@@ -186,7 +186,7 @@ export const FamilyWorkspace: React.FC = () => {
       {/* Members List */}
       <div className="glass-panel overflow-hidden mt-6">
         <table className="w-full text-left text-xs">
-          <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+          <thead className="bg-background/60 text-muted uppercase tracking-wider font-semibold border-b border-primary">
             <tr>
               <th className="p-4">Member Name</th>
               <th className="p-4">Email / Phone</th>
@@ -194,20 +194,20 @@ export const FamilyWorkspace: React.FC = () => {
               <th className="p-4">Joined Date</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60 text-slate-300">
+          <tbody className="divide-y divide-slate-800/60 text-secondary">
             {(members || []).map((m) => (
-              <tr key={m.id} className="hover:bg-slate-800/40 transition-colors">
-                <td className="p-4 font-semibold text-slate-100 flex items-center gap-3">
+              <tr key={m.id} className="hover:bg-secondary/40 transition-colors">
+                <td className="p-4 font-semibold text-primary flex items-center gap-3">
                   <div className="w-7 h-7 rounded-full bg-indigo-500/20 text-indigo-300 font-bold flex items-center justify-center text-xs">
                     {m.name ? m.name.charAt(0) : 'U'}
                   </div>
                   {m.name || 'Household Member'}
                 </td>
-                <td className="p-4 text-slate-400 font-mono text-[11px]">{m.email || m.phoneNumber || 'Member'}</td>
+                <td className="p-4 text-muted font-mono text-[11px]">{m.email || m.phoneNumber || 'Member'}</td>
                 <td className="p-4">
                   {isOwner && m.id !== user?.id ? (
                     <select 
-                      className="bg-slate-900 border border-slate-700 text-xs text-slate-200 px-2 py-1 rounded outline-none focus:border-indigo-500"
+                      className="bg-panel border border-secondary text-xs text-primary px-2 py-1 rounded outline-none focus:border-indigo-500"
                       value={m.role}
                       onChange={(e) => handleRoleChange(m.id, e.target.value)}
                     >
@@ -220,7 +220,7 @@ export const FamilyWorkspace: React.FC = () => {
                     </span>
                   )}
                 </td>
-                <td className="p-4 text-slate-400">{m.createdAt ? new Date(m.createdAt).toLocaleDateString() : 'Active'}</td>
+                <td className="p-4 text-muted">{m.createdAt ? new Date(m.createdAt).toLocaleDateString() : 'Active'}</td>
               </tr>
             ))}
           </tbody>

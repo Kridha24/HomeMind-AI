@@ -73,8 +73,8 @@ const SVGDonutChart: React.FC<{
       </svg>
       {/* Center Telemetry Label */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-        <span className="text-xl font-extrabold text-slate-100 font-mono leading-none">{centerText}</span>
-        <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-1">{centerSubtext}</span>
+        <span className="text-xl font-extrabold text-primary font-mono leading-none">{centerText}</span>
+        <span className="text-[10px] text-muted font-medium uppercase tracking-wider mt-1">{centerSubtext}</span>
       </div>
     </div>
   );
@@ -160,12 +160,12 @@ export const Analytics: React.FC = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-200 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-primary">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2">
+          <h1 className="text-2xl font-extrabold text-primary flex items-center gap-2">
             <BarChart3 className="w-6 h-6 text-indigo-400" /> Household Analytics & Visual Insights
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted">
             Comprehensive telemetry graphs, circle charts, and financial breakdown in {currencySymbol}
           </p>
         </div>
@@ -178,7 +178,7 @@ export const Analytics: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="text-center py-16 text-xs text-slate-400">Loading household visual analytics...</div>
+        <div className="text-center py-16 text-xs text-muted">Loading household visual analytics...</div>
       ) : isDataEmpty ? (
         <EmptyState
           icon={BarChart3}
@@ -196,7 +196,7 @@ export const Analytics: React.FC = () => {
                 <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Monthly Income</span>
                 <Wallet className="w-4 h-4 text-emerald-400" />
               </div>
-              <p className="text-2xl font-extrabold text-slate-100 font-mono">+{format(totalMonthlyIncome)}</p>
+              <p className="text-2xl font-extrabold text-primary font-mono">+{format(totalMonthlyIncome)}</p>
               <p className="text-[11px] text-emerald-400 font-medium">Verified Earnings Stream</p>
             </div>
 
@@ -206,7 +206,7 @@ export const Analytics: React.FC = () => {
                 <CreditCard className="w-4 h-4 text-red-400" />
               </div>
               <p className="text-2xl font-extrabold text-red-400 font-mono">-{format(totalMonthlyExpenses)}</p>
-              <p className="text-[11px] text-slate-400">Total Monthly Spend</p>
+              <p className="text-[11px] text-muted">Total Monthly Spend</p>
             </div>
 
             <div className="glass-panel p-6 border-purple-500/30 bg-gradient-to-tr from-slate-900 via-purple-950/20 to-slate-900 space-y-2">
@@ -215,7 +215,7 @@ export const Analytics: React.FC = () => {
                 <PieIcon className="w-4 h-4 text-purple-400" />
               </div>
               <p className="text-2xl font-extrabold text-rose-400 font-mono">-{format(overallExpenses)}</p>
-              <p className="text-[11px] text-slate-400">Total Historical Expenses</p>
+              <p className="text-[11px] text-muted">Total Historical Expenses</p>
             </div>
 
             <div className="glass-panel p-6 border-blue-500/30 bg-gradient-to-tr from-slate-900 via-blue-950/20 to-slate-900 space-y-2">
@@ -224,23 +224,23 @@ export const Analytics: React.FC = () => {
                 <ShieldCheck className="w-4 h-4 text-blue-400" />
               </div>
               <p className="text-2xl font-extrabold text-blue-400 font-mono">{summary.billSettlementRate}%</p>
-              <p className="text-[11px] text-slate-400">{billsAnalytics.paidCount} of {billsAnalytics.totalBillsCount} Bills Settled</p>
+              <p className="text-[11px] text-muted">{billsAnalytics.paidCount} of {billsAnalytics.totalBillsCount} Bills Settled</p>
             </div>
           </div>
 
           {/* CIRCLE & DONUT CHARTS SECTION */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 1. Expense Category Breakdown Circle Chart */}
-            <div className="glass-panel p-6 border-slate-800 space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2 uppercase tracking-wider">
+            <div className="glass-panel p-6 border-primary space-y-6">
+              <div className="flex items-center justify-between border-b border-primary pb-3">
+                <h3 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-wider">
                   <PieIcon className="w-4 h-4 text-emerald-400" /> Expense Category Distribution (Circle Chart)
                 </h3>
-                <span className="text-xs text-slate-400 font-mono">-{format(overallExpenses)}</span>
+                <span className="text-xs text-muted font-mono">-{format(overallExpenses)}</span>
               </div>
 
               {expenseCategories.length === 0 ? (
-                <p className="text-xs text-slate-500 text-center py-8">No expenses logged to display category chart.</p>
+                <p className="text-xs text-muted text-center py-8">No expenses logged to display category chart.</p>
               ) : (
                 <div className="flex flex-col sm:flex-row items-center justify-around gap-6">
                   <SVGDonutChart
@@ -259,9 +259,9 @@ export const Analytics: React.FC = () => {
                             className="w-3 h-3 rounded-full flex-shrink-0"
                             style={{ backgroundColor: CATEGORY_COLORS[idx % CATEGORY_COLORS.length] }}
                           ></span>
-                          <span className="text-slate-300 font-semibold truncate">{c.category}</span>
+                          <span className="text-secondary font-semibold truncate">{c.category}</span>
                         </div>
-                        <span className="font-mono text-slate-100 font-bold ml-2">{c.percentage}%</span>
+                        <span className="font-mono text-primary font-bold ml-2">{c.percentage}%</span>
                       </div>
                     ))}
                   </div>
@@ -270,16 +270,16 @@ export const Analytics: React.FC = () => {
             </div>
 
             {/* 2. Income Sources Circle Chart */}
-            <div className="glass-panel p-6 border-slate-800 space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2 uppercase tracking-wider">
+            <div className="glass-panel p-6 border-primary space-y-6">
+              <div className="flex items-center justify-between border-b border-primary pb-3">
+                <h3 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-wider">
                   <Wallet className="w-4 h-4 text-blue-400" /> Income Sources Revenue (Circle Chart)
                 </h3>
                 <span className="text-xs text-emerald-400 font-mono">+{format(overallIncome)}</span>
               </div>
 
               {incomeSources.length === 0 ? (
-                <p className="text-xs text-slate-500 text-center py-8">No income streams logged to display source chart.</p>
+                <p className="text-xs text-muted text-center py-8">No income streams logged to display source chart.</p>
               ) : (
                 <div className="flex flex-col sm:flex-row items-center justify-around gap-6">
                   <SVGDonutChart
@@ -298,7 +298,7 @@ export const Analytics: React.FC = () => {
                             className="w-3 h-3 rounded-full flex-shrink-0"
                             style={{ backgroundColor: CATEGORY_COLORS[(idx + 2) % CATEGORY_COLORS.length] }}
                           ></span>
-                          <span className="text-slate-300 font-semibold truncate">{s.source}</span>
+                          <span className="text-secondary font-semibold truncate">{s.source}</span>
                         </div>
                         <span className="font-mono text-emerald-400 font-bold ml-2">{s.percentage}%</span>
                       </div>
@@ -312,8 +312,8 @@ export const Analytics: React.FC = () => {
           {/* SECONDARY CIRCLE PROGRESS CHARTS & BAR GRAPHS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Bills Settlement Circle Progress */}
-            <div className="glass-panel p-6 border-slate-800 space-y-4 text-center">
-              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-center gap-2">
+            <div className="glass-panel p-6 border-primary space-y-4 text-center">
+              <h4 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center justify-center gap-2">
                 <FileText className="w-4 h-4 text-amber-400" /> Bills Settlement Progress
               </h4>
               <SVGDonutChart
@@ -322,21 +322,21 @@ export const Analytics: React.FC = () => {
                 centerText={`${summary.billSettlementRate}%`}
                 centerSubtext="Bills Settled"
               />
-              <div className="flex justify-around text-xs pt-2 border-t border-slate-800">
+              <div className="flex justify-around text-xs pt-2 border-t border-primary">
                 <div>
                   <span className="text-emerald-400 font-bold font-mono block">{billsAnalytics.paidCount}</span>
-                  <span className="text-[10px] text-slate-400">Paid Bills</span>
+                  <span className="text-[10px] text-muted">Paid Bills</span>
                 </div>
                 <div>
                   <span className="text-amber-400 font-bold font-mono block">{billsAnalytics.unpaidCount}</span>
-                  <span className="text-[10px] text-slate-400">Unpaid Bills</span>
+                  <span className="text-[10px] text-muted">Unpaid Bills</span>
                 </div>
               </div>
             </div>
 
             {/* Tasks Completion Gauge Circle */}
-            <div className="glass-panel p-6 border-slate-800 space-y-4 text-center">
-              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-center gap-2">
+            <div className="glass-panel p-6 border-primary space-y-4 text-center">
+              <h4 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center justify-center gap-2">
                 <CheckSquare className="w-4 h-4 text-indigo-400" /> Household Tasks Completion
               </h4>
               <SVGDonutChart
@@ -345,46 +345,46 @@ export const Analytics: React.FC = () => {
                 centerText={`${summary.taskCompletionRate}%`}
                 centerSubtext="Completed"
               />
-              <div className="flex justify-around text-xs pt-2 border-t border-slate-800">
+              <div className="flex justify-around text-xs pt-2 border-t border-primary">
                 <div>
                   <span className="text-emerald-400 font-bold font-mono block">{tasksAnalytics.completedTasks}</span>
-                  <span className="text-[10px] text-slate-400">Done</span>
+                  <span className="text-[10px] text-muted">Done</span>
                 </div>
                 <div>
                   <span className="text-amber-400 font-bold font-mono block">{tasksAnalytics.pendingTasks}</span>
-                  <span className="text-[10px] text-slate-400">Pending</span>
+                  <span className="text-[10px] text-muted">Pending</span>
                 </div>
                 <div>
                   <span className="text-blue-400 font-bold font-mono block">{tasksAnalytics.inProgressTasks}</span>
-                  <span className="text-[10px] text-slate-400">In Progress</span>
+                  <span className="text-[10px] text-muted">In Progress</span>
                 </div>
               </div>
             </div>
 
             {/* Grocery Inventory Telemetry */}
-            <div className="glass-panel p-6 border-slate-800 space-y-4 flex flex-col justify-between">
+            <div className="glass-panel p-6 border-primary space-y-4 flex flex-col justify-between">
               <div>
-                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2 mb-3">
+                <h4 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-2 mb-3">
                   <ShoppingBag className="w-4 h-4 text-emerald-400" /> Inventory Stock Telemetry
                 </h4>
 
                 <div className="space-y-3 text-xs">
                   <div className="space-y-1">
-                    <div className="flex justify-between text-slate-300 font-semibold">
+                    <div className="flex justify-between text-secondary font-semibold">
                       <span>Total Grocery Items</span>
                       <span className="font-mono text-emerald-400">{inventoryAnalytics.totalItems} Items</span>
                     </div>
-                    <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-background h-2 rounded-full overflow-hidden">
                       <div className="bg-emerald-500 h-full w-full"></div>
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <div className="flex justify-between text-slate-300 font-semibold">
+                    <div className="flex justify-between text-secondary font-semibold">
                       <span>Healthy Stock</span>
                       <span className="font-mono text-blue-400">{inventoryAnalytics.healthyStockCount} Items</span>
                     </div>
-                    <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-background h-2 rounded-full overflow-hidden">
                       <div
                         className="bg-blue-500 h-full"
                         style={{
@@ -399,11 +399,11 @@ export const Analytics: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <div className="flex justify-between text-slate-300 font-semibold">
+                    <div className="flex justify-between text-secondary font-semibold">
                       <span>Low Stock Warning</span>
                       <span className="font-mono text-amber-400">{inventoryAnalytics.lowStockCount} Items</span>
                     </div>
-                    <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-background h-2 rounded-full overflow-hidden">
                       <div
                         className="bg-amber-500 h-full"
                         style={{
@@ -419,7 +419,7 @@ export const Analytics: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+              <div className="pt-3 border-t border-primary text-[11px] text-muted flex items-center justify-between">
                 <span>Appliances: {counts.appliancesCount} Logged</span>
                 <span>Medicines: {counts.medicinesCount} Active</span>
               </div>
@@ -427,8 +427,8 @@ export const Analytics: React.FC = () => {
           </div>
 
           {/* DETAILED CATEGORY SPENDING PROGRESS BARS */}
-          <div className="glass-panel p-6 border-slate-800 space-y-4">
-            <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2 uppercase tracking-wider">
+          <div className="glass-panel p-6 border-primary space-y-4">
+            <h3 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-wider">
               <BarChart3 className="w-4 h-4 text-emerald-400" /> Category Spend Breakdown Bar Graphs
             </h3>
 
@@ -436,13 +436,13 @@ export const Analytics: React.FC = () => {
               {expenseCategories.map((cat: any, idx: number) => (
                 <div key={cat.category} className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-200">{cat.category}</span>
+                    <span className="font-semibold text-primary">{cat.category}</span>
                     <div className="flex items-center gap-3">
-                      <span className="text-slate-400 font-mono">{cat.percentage}% of total</span>
+                      <span className="text-muted font-mono">{cat.percentage}% of total</span>
                       <span className="font-bold font-mono text-red-400">-{format(cat.amount)}</span>
                     </div>
                   </div>
-                  <div className="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-background h-2.5 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-500"
                       style={{

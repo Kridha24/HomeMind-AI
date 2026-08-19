@@ -57,13 +57,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 lg:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden animate-in fade-in duration-200"
         />
       )}
 
       {/* Responsive Sidebar Drawer */}
       <aside
-        className={`w-64 bg-slate-950 border-r border-slate-800/80 h-screen fixed left-0 top-0 z-50 flex flex-col justify-between p-4 transition-transform duration-300 ease-in-out ${
+        className={`w-64 bg-background border-r border-primary/80 h-screen fixed left-0 top-0 z-50 flex flex-col justify-between p-4 transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -75,7 +75,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="font-extrabold text-sm text-slate-100 tracking-tight leading-none">HomeMind AI</h2>
+                <h2 className="font-extrabold text-sm text-primary tracking-tight leading-none">HomeMind AI</h2>
                 <span className="text-[10px] text-blue-400 font-semibold tracking-wider uppercase">Web Application</span>
               </div>
             </div>
@@ -84,7 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
             {onClose && (
               <button
                 onClick={onClose}
-                className="lg:hidden p-1.5 rounded-xl text-slate-400 hover:text-white bg-slate-900 border border-slate-800"
+                className="lg:hidden p-1.5 rounded-xl text-muted hover:text-white bg-panel border border-primary"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -102,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                   `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                     isActive
                       ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                      : 'text-muted hover:text-primary hover:bg-panel/60'
                   }`
                 }
               >
@@ -114,10 +114,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
         </div>
 
         {/* Active Household Info Footer */}
-        <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between">
+        <div className="bg-panel/80 border border-primary/80 rounded-2xl p-3 flex items-center justify-between">
           <div className="truncate">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Household</span>
-            <span className="text-xs font-bold text-slate-200 truncate block">{household?.name || 'Home Residence'}</span>
+            <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">Household</span>
+            <span className="text-xs font-bold text-primary truncate block">{household?.name || 'Home Residence'}</span>
           </div>
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
         </div>

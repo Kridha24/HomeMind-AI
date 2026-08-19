@@ -43,22 +43,22 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onS
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-6 space-y-5 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 bg-background/70 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-panel border border-primary rounded-3xl w-full max-w-md p-6 space-y-5 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+          className="absolute right-4 top-4 text-muted hover:text-white p-1 rounded-lg hover:bg-secondary"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+        <div className="flex items-center gap-3 border-b border-primary pb-3">
           <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
             <CheckSquare className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-base text-slate-100">Add Household Task</h3>
-            <p className="text-xs text-slate-400">Assign chore or task to family workspace</p>
+            <h3 className="font-bold text-base text-primary">Add Household Task</h3>
+            <p className="text-xs text-muted">Assign chore or task to family workspace</p>
           </div>
         </div>
 
@@ -70,35 +70,35 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onS
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Task Title</label>
+            <label className="text-xs font-semibold text-secondary block mb-1">Task Title</label>
             <input
               type="text"
               required
               placeholder="e.g. Clean AC Air Filters / Restock Rice"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500/50"
+              className="w-full bg-background border border-primary rounded-xl px-3.5 py-2 text-xs text-primary focus:outline-none focus:border-indigo-500/50"
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Description (Optional)</label>
+            <label className="text-xs font-semibold text-secondary block mb-1">Description (Optional)</label>
             <textarea
               rows={2}
               placeholder="Add instructions or details..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500/50 resize-none"
+              className="w-full bg-background border border-primary rounded-xl px-3.5 py-2 text-xs text-primary focus:outline-none focus:border-indigo-500/50 resize-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Priority</label>
+              <label className="text-xs font-semibold text-secondary block mb-1">Priority</label>
               <select
                 value={priority}
                 onChange={(e: any) => setPriority(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500/50"
+                className="w-full bg-background border border-primary rounded-xl px-3 py-2 text-xs text-primary focus:outline-none focus:border-indigo-500/50"
               >
                 <option value="LOW">Low</option>
                 <option value="MEDIUM">Medium</option>
@@ -107,13 +107,13 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onS
               </select>
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Due Date</label>
+              <label className="text-xs font-semibold text-secondary block mb-1">Due Date</label>
               <input
                 type="date"
                 required
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500/50"
+                className="w-full bg-background border border-primary rounded-xl px-3.5 py-2 text-xs text-primary focus:outline-none focus:border-indigo-500/50"
               />
             </div>
           </div>
@@ -124,9 +124,9 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onS
               id="isRecurringTask"
               checked={isRecurring}
               onChange={(e) => setIsRecurring(e.target.checked)}
-              className="w-4 h-4 rounded bg-slate-950 border-slate-800 text-indigo-600 focus:ring-indigo-500"
+              className="w-4 h-4 rounded bg-background border-primary text-indigo-600 focus:ring-indigo-500"
             />
-            <label htmlFor="isRecurringTask" className="text-xs text-slate-300 font-medium cursor-pointer">
+            <label htmlFor="isRecurringTask" className="text-xs text-secondary font-medium cursor-pointer">
               Recurring Weekly Task
             </label>
           </div>

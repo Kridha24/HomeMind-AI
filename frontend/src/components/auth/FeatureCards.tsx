@@ -34,17 +34,17 @@ export const FeatureCards: React.FC = () => {
       {features.map((f) => (
         <div
           key={f.title}
-          className="p-3.5 rounded-2xl bg-slate-900/50 backdrop-blur-xl border border-white/[0.08] hover:border-white/20 transition-all space-y-1.5 shadow-lg group"
+          className="p-3.5 rounded-2xl bg-panel/50 backdrop-blur-xl border border-white/[0.08] hover:border-white/20 transition-all space-y-1.5 shadow-lg group"
         >
           <div className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-xl ${f.bgColor} border ${f.borderColor} flex items-center justify-center ${f.color}`}>
               <f.icon className="w-3.5 h-3.5" />
             </div>
-            <h3 className="text-xs font-bold text-slate-200 tracking-tight">
+            <h3 className="text-xs font-bold text-primary tracking-tight">
               {f.title}
             </h3>
           </div>
-          <p className="text-[11px] text-slate-400 leading-relaxed">
+          <p className="text-[11px] text-muted leading-relaxed">
             {f.desc}
           </p>
         </div>

@@ -73,11 +73,11 @@ export const PantryVision: React.FC = () => {
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
           Pantry Vision & OCR Scanner
           <Camera className="w-5 h-5 text-pink-400" />
         </h1>
-        <p className="text-xs text-slate-400">Upload shelf or receipt photos to extract items via AI Vision OCR.</p>
+        <p className="text-xs text-muted">Upload shelf or receipt photos to extract items via AI Vision OCR.</p>
       </div>
 
       {/* Hidden File Input */}
@@ -97,8 +97,8 @@ export const PantryVision: React.FC = () => {
             <Camera className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-slate-100">Scan Pantry Shelf</h3>
-            <p className="text-xs text-slate-400 mt-1">Snap a photo of your fridge or pantry shelf to auto-update stock.</p>
+            <h3 className="font-bold text-sm text-primary">Scan Pantry Shelf</h3>
+            <p className="text-xs text-muted mt-1">Snap a photo of your fridge or pantry shelf to auto-update stock.</p>
           </div>
           <button
             onClick={() => triggerFileInput('shelf')}
@@ -116,8 +116,8 @@ export const PantryVision: React.FC = () => {
             <Upload className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-slate-100">Scan Grocery Receipt</h3>
-            <p className="text-xs text-slate-400 mt-1">Upload paper store receipt to extract items, store name & total price.</p>
+            <h3 className="font-bold text-sm text-primary">Scan Grocery Receipt</h3>
+            <p className="text-xs text-muted mt-1">Upload paper store receipt to extract items, store name & total price.</p>
           </div>
           <button
             onClick={() => triggerFileInput('receipt')}
@@ -132,15 +132,15 @@ export const PantryVision: React.FC = () => {
 
       {/* Image Preview Area */}
       {imagePreview && (
-        <div className="glass-panel p-4 border-slate-700/50 flex flex-col items-center">
-           <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+        <div className="glass-panel p-4 border-secondary/50 flex flex-col items-center">
+           <h3 className="text-sm font-semibold text-secondary mb-3 flex items-center gap-2">
              <ImageIcon className="w-4 h-4 text-blue-400" />
              Uploaded Image Preview
            </h3>
            <img 
              src={imagePreview} 
              alt="Uploaded scan preview" 
-             className="max-h-64 object-contain rounded-lg border border-slate-700/50"
+             className="max-h-64 object-contain rounded-lg border border-secondary/50"
            />
            {loading && (
              <div className="mt-4 flex items-center gap-2 text-indigo-400 animate-pulse">
@@ -154,10 +154,10 @@ export const PantryVision: React.FC = () => {
       {/* Results Display */}
       {scanResult && !loading && (
         <div className="glass-panel p-5 space-y-4 border-emerald-500/40 animate-in fade-in zoom-in duration-500">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="flex items-center justify-between border-b border-primary pb-3">
             <div className="flex items-center gap-2 text-emerald-400">
               <Check className="w-5 h-5" />
-              <h3 className="font-bold text-sm text-slate-100">OCR Extraction Completed</h3>
+              <h3 className="font-bold text-sm text-primary">OCR Extraction Completed</h3>
             </div>
             <span className="text-xs bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-full font-semibold border border-emerald-500/20">
               Auto-synced to Database
@@ -165,14 +165,14 @@ export const PantryVision: React.FC = () => {
           </div>
 
           {scanResult.storeName && (
-             <div className="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+             <div className="flex justify-between items-center bg-secondary/50 p-3 rounded-lg border border-secondary/50">
                 <div>
-                   <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Store</p>
-                   <p className="text-sm font-bold text-slate-100">{scanResult.storeName}</p>
+                   <p className="text-[10px] text-muted uppercase font-bold tracking-wider">Store</p>
+                   <p className="text-sm font-bold text-primary">{scanResult.storeName}</p>
                 </div>
                 {scanResult.totalAmount && (
                    <div className="text-right">
-                     <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Amount</p>
+                     <p className="text-[10px] text-muted uppercase font-bold tracking-wider">Total Amount</p>
                      <p className="text-sm font-bold text-emerald-400">${scanResult.totalAmount.toFixed(2)}</p>
                    </div>
                 )}
@@ -181,14 +181,14 @@ export const PantryVision: React.FC = () => {
 
           <div className="space-y-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
             {(scanResult.detected_items || scanResult.items)?.map((item: any, idx: number) => (
-              <div key={idx} className="glass-card p-3 flex items-center justify-between hover:bg-slate-800/50 transition-colors">
+              <div key={idx} className="glass-card p-3 flex items-center justify-between hover:bg-secondary/50 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-indigo-400 border border-slate-700/50">
+                  <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-indigo-400 border border-secondary/50">
                     <ShoppingBag className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-100">{item.name}</h4>
-                    <p className="text-[10px] text-slate-400">Category: {item.category}</p>
+                    <h4 className="text-xs font-bold text-primary">{item.name}</h4>
+                    <p className="text-[10px] text-muted">Category: {item.category}</p>
                   </div>
                 </div>
                 <div className="text-right">

@@ -213,7 +213,7 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-[#030712] text-slate-100 flex items-center justify-center p-4 sm:p-8 lg:p-12 relative overflow-x-hidden overflow-y-auto select-none font-sans">
+    <div className="min-h-[100dvh] w-full bg-[#030712] text-primary flex items-center justify-center p-4 sm:p-8 lg:p-12 relative overflow-x-hidden overflow-y-auto select-none font-sans">
       <AuthBackground />
 
       <main className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10 my-auto">
@@ -246,7 +246,7 @@ export const Login: React.FC = () => {
                 Smarter.
               </span>
             </h1>
-            <p className="text-sm sm:text-base text-slate-300 font-normal max-w-lg leading-relaxed pt-1">
+            <p className="text-sm sm:text-base text-secondary font-normal max-w-lg leading-relaxed pt-1">
               One intelligent system for everything that matters at home.
             </p>
           </div>

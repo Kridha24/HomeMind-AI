@@ -93,7 +93,7 @@ export const DraggableFAB: React.FC<DraggableFABProps> = ({ onClick, onDismiss }
           e.stopPropagation();
           onDismiss();
         }}
-        className="dismiss-btn absolute -top-1 -right-1 bg-slate-800 text-slate-300 hover:text-white border border-slate-600 rounded-full p-1 shadow-lg cursor-pointer z-10 hover:bg-rose-500 hover:border-rose-400 transition-colors"
+        className="dismiss-btn absolute -top-1 -right-1 bg-secondary text-secondary hover:text-white border border-slate-600 rounded-full p-1 shadow-lg cursor-pointer z-10 hover:bg-rose-500 hover:border-rose-400 transition-colors"
         title="Hide AI Button"
       >
         <X className="w-3 h-3" />

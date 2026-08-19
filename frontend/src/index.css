@@ -2,12 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --bg-background: 248 250 252;       /* slate-50 */
+    --bg-panel: 255 255 255;            /* white */
+    --bg-secondary: 241 245 249;        /* slate-100 */
+    --text-primary: 15 23 42;           /* slate-900 */
+    --text-secondary: 71 85 105;        /* slate-600 */
+    --text-muted: 148 163 184;          /* slate-400 */
+    --border-primary: 226 232 240;      /* slate-200 */
+    --border-secondary: 203 213 225;    /* slate-300 */
+  }
+
+  .dark {
+    --bg-background: 2 6 23;            /* slate-950 */
+    --bg-panel: 15 23 42;               /* slate-900 */
+    --bg-secondary: 30 41 59;           /* slate-800 */
+    --text-primary: 241 245 249;        /* slate-100 */
+    --text-secondary: 148 163 184;      /* slate-400 */
+    --text-muted: 100 116 139;          /* slate-500 */
+    --border-primary: 30 41 59;         /* slate-800 */
+    --border-secondary: 51 65 85;       /* slate-700 */
+  }
+}
+
 @layer utilities {
   .glass-panel {
-    @apply bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 shadow-2xl rounded-2xl;
+    @apply bg-panel/60 backdrop-blur-xl border border-primary/80 shadow-2xl rounded-2xl;
   }
   .glass-card {
-    @apply bg-slate-900/40 backdrop-blur-md border border-slate-800/60 hover:border-blue-500/40 transition-all duration-300 rounded-xl;
+    @apply bg-panel/40 backdrop-blur-md border border-primary/60 hover:border-blue-500/40 transition-all duration-300 rounded-xl;
   }
   .glow-effect {
     box-shadow: 0 0 25px -5px rgba(59, 130, 246, 0.25);
@@ -20,14 +44,14 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--bg-background);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.8);
+  background: var(--bg-secondary);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 1);
+  background: var(--text-muted);
 }
 
 @keyframes float-slow {

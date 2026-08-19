@@ -90,7 +90,7 @@ export const HomeMindEcosystem: React.FC = () => {
       <div className="relative flex flex-col items-center justify-center z-10">
         <div className="relative flex items-center justify-center">
           <div className="absolute inset-0 bg-blue-500/20 rounded-2xl blur-xl animate-pulse-glow" />
-          <div className="relative z-10 px-4 py-2.5 rounded-2xl bg-slate-900/90 border border-blue-500/40 backdrop-blur-2xl shadow-xl flex items-center gap-3">
+          <div className="relative z-10 px-4 py-2.5 rounded-2xl bg-panel/90 border border-blue-500/40 backdrop-blur-2xl shadow-xl flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-blue-500/30">
               <Sparkles className="w-4 h-4" />
             </div>
@@ -110,7 +110,7 @@ export const HomeMindEcosystem: React.FC = () => {
           {nodes.map((node, i) => (
             <div
               key={node.id}
-              className={`p-2.5 rounded-2xl bg-slate-900/60 backdrop-blur-xl border border-white/[0.08] hover:border-white/20 transition-all shadow-lg flex items-center gap-2.5 ${
+              className={`p-2.5 rounded-2xl bg-panel/60 backdrop-blur-xl border border-white/[0.08] hover:border-white/20 transition-all shadow-lg flex items-center gap-2.5 ${
                 node.animation
               } ${i === 6 ? 'col-span-2' : ''}`}
             >
@@ -120,10 +120,10 @@ export const HomeMindEcosystem: React.FC = () => {
                 <node.icon className="w-3.5 h-3.5" />
               </div>
               <div className="truncate">
-                <span className="text-[11px] font-bold text-slate-200 block truncate">
+                <span className="text-[11px] font-bold text-primary block truncate">
                   {node.name}
                 </span>
-                <span className="text-[9px] text-slate-400 block truncate">
+                <span className="text-[9px] text-muted block truncate">
                   {node.tag}
                 </span>
               </div>

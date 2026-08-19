@@ -72,7 +72,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       if (line.trim().startsWith('• ') || line.trim().startsWith('- ')) {
         const itemText = line.trim().replace(/^[•\-]\s*/, '');
         return (
-          <li key={idx} className="ml-4 list-disc text-slate-200 my-0.5 leading-relaxed">
+          <li key={idx} className="ml-4 list-disc text-primary my-0.5 leading-relaxed">
             {renderBold(itemText)}
           </li>
         );
@@ -148,7 +148,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           className={`rounded-3xl p-4 text-xs leading-relaxed ${
             isUser
               ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-tr-none shadow-lg shadow-blue-600/20'
-              : 'bg-slate-900/85 border border-white/[0.08] text-slate-200 rounded-tl-none shadow-md backdrop-blur-xl'
+              : 'bg-panel/85 border border-white/[0.08] text-primary rounded-tl-none shadow-md backdrop-blur-xl'
           }`}
         >
           <div className="space-y-1">{formatMarkdown(message.text)}</div>
@@ -183,7 +183,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     if (onCancelAction) onCancelAction();
                     setActionDone(true);
                   }}
-                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-[11px] transition-all"
+                  className="bg-secondary hover:bg-slate-700 text-secondary px-3 py-1.5 rounded-xl text-[11px] transition-all"
                 >
                   Cancel
                 </button>
@@ -193,7 +193,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
           {/* Message Footer / Copy */}
           {!isUser && (
-            <div className="flex items-center justify-between pt-2 mt-2 border-t border-white/[0.06] text-[10px] text-slate-400">
+            <div className="flex items-center justify-between pt-2 mt-2 border-t border-white/[0.06] text-[10px] text-muted">
               <span className="flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-blue-400" /> HomeMind Intelligence
               </span>
@@ -216,7 +216,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               <button
                 key={idx}
                 onClick={() => onSelectSuggestion(sug)}
-                className="text-[11px] bg-slate-900/70 hover:bg-blue-600/15 border border-slate-800 hover:border-blue-500/40 text-blue-300 px-2.5 py-1 rounded-xl text-left transition-all flex items-center gap-1"
+                className="text-[11px] bg-panel/70 hover:bg-blue-600/15 border border-primary hover:border-blue-500/40 text-blue-300 px-2.5 py-1 rounded-xl text-left transition-all flex items-center gap-1"
               >
                 <span>{sug}</span>
                 <ArrowRight className="w-2.5 h-2.5 opacity-60" />
@@ -228,7 +228,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
       {/* User Avatar */}
       {isUser && (
-        <div className="w-8 h-8 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 text-slate-300 mt-1">
+        <div className="w-8 h-8 rounded-2xl bg-secondary border border-secondary flex items-center justify-center shrink-0 text-secondary mt-1">
           <User className="w-4 h-4" />
         </div>
       )}

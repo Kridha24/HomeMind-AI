@@ -46,7 +46,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
         </span>
       </div>
 
-      <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-slate-950 group-hover:translate-x-0.5 transition-all" />
+      <ArrowRight className="w-4 h-4 text-muted group-hover:text-slate-950 group-hover:translate-x-0.5 transition-all" />
     </button>
   );
 };

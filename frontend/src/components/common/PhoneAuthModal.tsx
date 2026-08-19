@@ -172,13 +172,13 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
+    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
       <div id="recaptcha-container"></div>
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-6 space-y-6 shadow-2xl relative">
+      <div className="bg-panel border border-primary rounded-3xl w-full max-w-md p-6 space-y-6 shadow-2xl relative">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-200 p-2 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition-colors"
+          className="absolute top-4 right-4 text-muted hover:text-primary p-2 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -188,10 +188,10 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-500 flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/30">
             <Phone className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-xl font-extrabold text-slate-100 tracking-tight">
+          <h2 className="text-xl font-extrabold text-primary tracking-tight">
             {mode === 'NEW_USER' ? 'Sign Up with Mobile OTP' : 'Sign In with Mobile OTP'}
           </h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted">
             {step === 'PHONE'
               ? 'Enter your mobile number with country code (e.g. +91 98765 43210).'
               : `Enter the 6-digit code sent via SMS to ${phoneNumber}`}
@@ -217,21 +217,21 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
           <form onSubmit={handleSendOTP} className="space-y-4">
             {mode === 'NEW_USER' && (
               <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                  Your Full Name <span className="text-slate-500">(Optional)</span>
+                <label className="text-xs font-semibold text-secondary block mb-1.5">
+                  Your Full Name <span className="text-muted">(Optional)</span>
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Alex Johnson"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full bg-background border border-primary rounded-xl px-4 py-3 text-xs text-primary placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
                 />
               </div>
             )}
 
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+              <label className="text-xs font-semibold text-secondary block mb-1.5">
                 Mobile Phone Number
               </label>
               <input
@@ -240,7 +240,7 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="+91 9876543210"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                className="w-full bg-background border border-primary rounded-xl px-4 py-3 text-xs text-primary placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
               />
             </div>
 
@@ -266,8 +266,8 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
           <form onSubmit={handleVerifyOTP} className="space-y-4">
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs font-semibold text-slate-300">6-Digit SMS Code</label>
-                <span className="text-[11px] font-mono text-slate-400">
+                <label className="text-xs font-semibold text-secondary">6-Digit SMS Code</label>
+                <span className="text-[11px] font-mono text-muted">
                   Expires in: <strong className="text-amber-400">{formatTime(timeLeft)}</strong>
                 </span>
               </div>
@@ -278,7 +278,7 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                 placeholder="• • • • • •"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-lg tracking-widest font-mono text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
+                className="w-full bg-background border border-primary rounded-xl px-4 py-3 text-center text-lg tracking-widest font-mono text-primary placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
                 autoFocus
               />
             </div>
@@ -298,11 +298,11 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
               )}
             </button>
 
-            <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800/80">
+            <div className="flex items-center justify-between text-xs text-muted pt-2 border-t border-primary/80">
               <button
                 type="button"
                 onClick={() => setStep('PHONE')}
-                className="hover:text-slate-200 transition-colors"
+                className="hover:text-primary transition-colors"
               >
                 ← Change Number
               </button>

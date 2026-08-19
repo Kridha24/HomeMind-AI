@@ -85,7 +85,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
       if (line.trim().startsWith('• ') || line.trim().startsWith('- ')) {
         const itemText = line.trim().replace(/^[•\-]\s*/, '');
         return (
-          <li key={idx} className="ml-3.5 list-disc text-slate-200 my-0.5 leading-relaxed">
+          <li key={idx} className="ml-3.5 list-disc text-primary my-0.5 leading-relaxed">
             {renderBold(itemText)}
           </li>
         );
@@ -122,11 +122,11 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200 select-none">
-      <div className="w-full max-w-md bg-slate-950 border-l border-slate-800 shadow-2xl flex flex-col h-full animate-in slide-in-from-right duration-200">
+    <div className="fixed inset-0 z-50 flex justify-end bg-background/70 backdrop-blur-sm animate-in fade-in duration-200 select-none">
+      <div className="w-full max-w-md bg-background border-l border-primary shadow-2xl flex flex-col h-full animate-in slide-in-from-right duration-200">
         
         {/* Header */}
-        <div className="p-4 border-b border-slate-800 bg-slate-900/60 backdrop-blur flex items-center justify-between">
+        <div className="p-4 border-b border-primary bg-panel/60 backdrop-blur flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
               <Sparkles className="w-4 h-4" />
@@ -136,7 +136,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
                 <h3 className="font-bold text-sm text-white">HomeMind AI Chatbot</h3>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               </div>
-              <span className="text-[10px] text-slate-400">Live Household Database Assistant</span>
+              <span className="text-[10px] text-muted">Live Household Database Assistant</span>
             </div>
           </div>
 
@@ -144,7 +144,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
             {messages.length > 0 && (
               <button
                 onClick={handleClear}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-lg text-muted hover:text-rose-400 hover:bg-secondary transition-colors"
                 title="Clear Chat"
               >
                 <Trash2 className="w-4 h-4" />
@@ -152,7 +152,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
             )}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-muted hover:text-white hover:bg-secondary transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -164,18 +164,18 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
           {/* Welcome Screen & Quick Starters */}
           {messages.length === 0 && (
             <div className="space-y-4 py-4 animate-in fade-in duration-150">
-              <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 text-center space-y-2">
+              <div className="p-4 rounded-2xl bg-panel/70 border border-primary text-center space-y-2">
                 <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto text-blue-400">
                   <Bot className="w-5 h-5" />
                 </div>
                 <h4 className="font-bold text-xs text-white">Namaste! Main aapka HomeMind AI assistant hoon.</h4>
-                <p className="text-[11px] text-slate-400 leading-relaxed">
+                <p className="text-[11px] text-muted leading-relaxed">
                   Aapke household expenses, bills, tasks, aur pantry ka live data dekh kar main turant answer kar sakta hoon.
                 </p>
               </div>
 
               <div className="space-y-1.5">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block px-1">
+                <span className="text-[10px] font-bold text-muted uppercase tracking-wider block px-1">
                   Suggested Queries
                 </span>
                 <div className="space-y-1.5">
@@ -184,10 +184,10 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
                       key={idx}
                       onClick={() => handleSend(q)}
                       disabled={loading}
-                      className="w-full p-2.5 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-slate-800 text-left text-xs font-medium text-slate-300 hover:text-white transition-all flex items-center justify-between group disabled:opacity-50"
+                      className="w-full p-2.5 rounded-xl bg-panel/60 hover:bg-secondary border border-primary text-left text-xs font-medium text-secondary hover:text-white transition-all flex items-center justify-between group disabled:opacity-50"
                     >
                       <span className="truncate">{q}</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-400 transition-colors shrink-0 ml-2" />
+                      <ArrowRight className="w-3.5 h-3.5 text-muted group-hover:text-blue-400 transition-colors shrink-0 ml-2" />
                     </button>
                   ))}
                 </div>
@@ -212,7 +212,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
                   className={`p-3 rounded-2xl text-xs leading-relaxed ${
                     m.sender === 'user'
                       ? 'bg-blue-600 text-white rounded-tr-none shadow-md'
-                      : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none shadow-sm'
+                      : 'bg-panel border border-primary text-primary rounded-tl-none shadow-sm'
                   }`}
                 >
                   <div>{formatMarkdown(m.text)}</div>
@@ -228,7 +228,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
                       <button
                         key={sIdx}
                         onClick={() => handleSend(sug)}
-                        className="text-[10px] bg-slate-900/80 hover:bg-blue-600/15 border border-slate-800 hover:border-blue-500/30 text-blue-300 px-2 py-1 rounded-lg text-left transition-all"
+                        className="text-[10px] bg-panel/80 hover:bg-blue-600/15 border border-primary hover:border-blue-500/30 text-blue-300 px-2 py-1 rounded-lg text-left transition-all"
                       >
                         {sug}
                       </button>
@@ -238,7 +238,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
               </div>
 
               {m.sender === 'user' && (
-                <div className="w-7 h-7 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 text-slate-300 mt-0.5">
+                <div className="w-7 h-7 rounded-xl bg-secondary border border-secondary flex items-center justify-center shrink-0 text-secondary mt-0.5">
                   <User className="w-3.5 h-3.5" />
                 </div>
               )}
@@ -261,9 +261,9 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
             e.preventDefault();
             handleSend();
           }}
-          className="p-3 border-t border-slate-800 bg-slate-900/60"
+          className="p-3 border-t border-primary bg-panel/60"
         >
-          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 focus-within:border-blue-500/50 rounded-xl p-1.5 transition-colors">
+          <div className="flex items-center gap-2 bg-panel border border-primary focus-within:border-blue-500/50 rounded-xl p-1.5 transition-colors">
             <input
               type="text"
               value={input}

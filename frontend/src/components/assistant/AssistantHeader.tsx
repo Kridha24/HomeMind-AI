@@ -28,7 +28,7 @@ export const AssistantHeader: React.FC<AssistantHeaderProps> = ({
   ];
 
   return (
-    <div className="p-4 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 select-none">
+    <div className="p-4 border-b border-primary/80 bg-background/70 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 select-none">
       {/* Brand Identity & Status */}
       <div className="flex items-center gap-3">
         <div className="relative">
@@ -47,7 +47,7 @@ export const AssistantHeader: React.FC<AssistantHeaderProps> = ({
               {isStreaming ? 'Thinking...' : 'Ready'}
             </span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-0.5">
+          <p className="text-[10px] text-muted mt-0.5">
             Context-Aware Household Operating Agent
           </p>
         </div>
@@ -56,7 +56,7 @@ export const AssistantHeader: React.FC<AssistantHeaderProps> = ({
       {/* Mode Switcher & Actions */}
       <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end">
         {/* Mode Pills */}
-        <div className="flex items-center bg-slate-900/80 border border-slate-800 p-0.5 rounded-xl">
+        <div className="flex items-center bg-panel/80 border border-primary p-0.5 rounded-xl">
           {modes.map((m) => {
             const Icon = m.icon;
             const active = mode === m.id;
@@ -67,7 +67,7 @@ export const AssistantHeader: React.FC<AssistantHeaderProps> = ({
                 className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
                   active
                     ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
+                    : 'text-muted hover:text-primary'
                 }`}
               >
                 <Icon className="w-3 h-3" />
@@ -80,7 +80,7 @@ export const AssistantHeader: React.FC<AssistantHeaderProps> = ({
         {/* Memory Manager Button */}
         <button
           onClick={onOpenMemories}
-          className="p-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-blue-400 hover:border-blue-500/30 transition-colors"
+          className="p-1.5 rounded-xl bg-panel border border-primary text-muted hover:text-blue-400 hover:border-blue-500/30 transition-colors"
           title="AI Household Memories & Rules"
         >
           <Brain className="w-4 h-4" />
@@ -89,7 +89,7 @@ export const AssistantHeader: React.FC<AssistantHeaderProps> = ({
         {/* Clear Thread Button */}
         <button
           onClick={onClearThread}
-          className="p-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-500/30 transition-colors"
+          className="p-1.5 rounded-xl bg-panel border border-primary text-muted hover:text-rose-400 hover:border-rose-500/30 transition-colors"
           title="Clear Conversation"
         >
           <Trash2 className="w-4 h-4" />
@@ -99,7 +99,7 @@ export const AssistantHeader: React.FC<AssistantHeaderProps> = ({
         {onClose && (
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-xl bg-panel border border-primary text-muted hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

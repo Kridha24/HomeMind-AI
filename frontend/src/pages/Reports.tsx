@@ -22,12 +22,12 @@ export const Reports: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-primary">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2">
+          <h1 className="text-2xl font-extrabold text-primary flex items-center gap-2">
             <FileSpreadsheet className="w-6 h-6 text-emerald-400" /> Executive PDF Reports Exporter
           </h1>
-          <p className="text-xs text-slate-400">Generate compiled monthly audit reports with PDFKit</p>
+          <p className="text-xs text-muted">Generate compiled monthly audit reports with PDFKit</p>
         </div>
 
         <button
@@ -48,21 +48,21 @@ export const Reports: React.FC = () => {
           onAction={handleGeneratePDF}
         />
       ) : (
-        <div className="glass-panel border-slate-800 overflow-hidden">
-          <div className="p-4 border-b border-slate-800 font-bold text-sm text-slate-100 flex items-center justify-between">
+        <div className="glass-panel border-primary overflow-hidden">
+          <div className="p-4 border-b border-primary font-bold text-sm text-primary flex items-center justify-between">
             <span>Exported Household Reports</span>
             <span className="text-xs text-emerald-400 font-mono">{reports.length} Reports</span>
           </div>
           <div className="divide-y divide-slate-800/60">
             {reports.map((report) => (
-              <div key={report.id} className="p-4 flex items-center justify-between hover:bg-slate-900/40 transition-colors">
+              <div key={report.id} className="p-4 flex items-center justify-between hover:bg-panel/40 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
                     <FileText className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-xs text-slate-200">{report.title}</h4>
-                    <span className="text-[10px] text-slate-500">Generated on {report.createdAt}</span>
+                    <h4 className="font-bold text-xs text-primary">{report.title}</h4>
+                    <span className="text-[10px] text-muted">Generated on {report.createdAt}</span>
                   </div>
                 </div>
                 <button

@@ -15,13 +15,13 @@ export const LoginCard: React.FC<LoginCardProps> = ({
   error,
 }) => {
   return (
-    <div className="w-full max-w-[430px] bg-slate-900/85 backdrop-blur-3xl p-7 sm:p-9 space-y-6 border border-white/[0.12] rounded-3xl shadow-[0_25px_80px_-15px_rgba(0,0,0,0.9)] border-t border-t-white/20 relative z-10">
+    <div className="w-full max-w-[430px] bg-panel/85 backdrop-blur-3xl p-7 sm:p-9 space-y-6 border border-white/[0.12] rounded-3xl shadow-[0_25px_80px_-15px_rgba(0,0,0,0.9)] border-t border-t-white/20 relative z-10">
       {/* Card Header */}
       <div className="space-y-1.5 text-center sm:text-left">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
           Welcome to HomeMind 👋
         </h2>
-        <p className="text-xs sm:text-sm text-slate-400">
+        <p className="text-xs sm:text-sm text-muted">
           Your intelligent home starts here.
         </p>
       </div>
@@ -46,13 +46,13 @@ export const LoginCard: React.FC<LoginCardProps> = ({
 
         {/* Feature Value Badges */}
         <div className="grid grid-cols-2 gap-2.5 pt-1">
-          <div className="p-3 rounded-2xl bg-slate-950/70 border border-white/[0.06] text-center space-y-0.5">
-            <span className="text-[10px] text-slate-400 block font-medium">⚡ Instant Access</span>
-            <span className="text-xs text-slate-200 font-bold block">No Password Needed</span>
+          <div className="p-3 rounded-2xl bg-background/70 border border-white/[0.06] text-center space-y-0.5">
+            <span className="text-[10px] text-muted block font-medium">⚡ Instant Access</span>
+            <span className="text-xs text-primary font-bold block">No Password Needed</span>
           </div>
-          <div className="p-3 rounded-2xl bg-slate-950/70 border border-white/[0.06] text-center space-y-0.5">
-            <span className="text-[10px] text-slate-400 block font-medium">🔒 Bank-Grade</span>
-            <span className="text-xs text-slate-200 font-bold block">Private Household</span>
+          <div className="p-3 rounded-2xl bg-background/70 border border-white/[0.06] text-center space-y-0.5">
+            <span className="text-[10px] text-muted block font-medium">🔒 Bank-Grade</span>
+            <span className="text-xs text-primary font-bold block">Private Household</span>
           </div>
         </div>
       </div>

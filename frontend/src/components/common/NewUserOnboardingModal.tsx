@@ -113,15 +113,15 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 select-none overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-background/85 backdrop-blur-md flex items-center justify-center p-4 select-none overflow-y-auto">
       <div id="onboarding-recaptcha-container"></div>
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg p-6 space-y-5 shadow-2xl relative animate-in zoom-in-95 duration-150 my-auto">
+      <div className="bg-panel border border-primary rounded-3xl w-full max-w-lg p-6 space-y-5 shadow-2xl relative animate-in zoom-in-95 duration-150 my-auto">
         <div className="text-center space-y-1.5">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-500 flex items-center justify-center mx-auto shadow-xl shadow-blue-500/30">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-xl font-extrabold text-slate-100 tracking-tight">Complete Household Setup</h2>
-          <p className="text-xs text-slate-400">Verify your profile & mobile number to activate HomeMind AI.</p>
+          <h2 className="text-xl font-extrabold text-primary tracking-tight">Complete Household Setup</h2>
+          <p className="text-xs text-muted">Verify your profile & mobile number to activate HomeMind AI.</p>
         </div>
 
         {error && (
@@ -133,7 +133,7 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-3.5">
           {/* Name Field */}
           <div>
-            <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5 mb-1">
+            <label className="text-xs font-semibold text-secondary flex items-center gap-1.5 mb-1">
               <User className="w-3.5 h-3.5 text-blue-400" /> Full Name <span className="text-blue-400">*</span>
             </label>
             <input
@@ -142,14 +142,14 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
               placeholder="e.g. Alex Johnson"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
+              className="w-full bg-background border border-primary rounded-xl px-3.5 py-2.5 text-xs text-primary focus:outline-none focus:border-blue-500"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             {/* Age Field */}
             <div>
-              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5 mb-1">
+              <label className="text-xs font-semibold text-secondary flex items-center gap-1.5 mb-1">
                 <Calendar className="w-3.5 h-3.5 text-purple-400" /> Age
               </label>
               <input
@@ -160,19 +160,19 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
                 placeholder="28"
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-purple-500"
+                className="w-full bg-background border border-primary rounded-xl px-3.5 py-2.5 text-xs text-primary focus:outline-none focus:border-purple-500"
               />
             </div>
 
             {/* Country Field */}
             <div>
-              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5 mb-1">
+              <label className="text-xs font-semibold text-secondary flex items-center gap-1.5 mb-1">
                 <Globe className="w-3.5 h-3.5 text-emerald-400" /> Country
               </label>
               <select
                 value={country}
                 onChange={(e) => handleCountryChange(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-background border border-primary rounded-xl px-3.5 py-2.5 text-xs text-primary focus:outline-none focus:border-emerald-500"
               >
                 {COUNTRY_OPTIONS.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -185,13 +185,13 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
 
           {/* Preferred Currency Field */}
           <div>
-            <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5 mb-1">
+            <label className="text-xs font-semibold text-secondary flex items-center gap-1.5 mb-1">
               <DollarSign className="w-3.5 h-3.5 text-amber-400" /> Preferred Household Currency
             </label>
             <select
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
+              className="w-full bg-background border border-primary rounded-xl px-3.5 py-2.5 text-xs text-primary focus:outline-none focus:border-amber-500"
             >
               <option value="INR">₹ INR - Indian Rupee</option>
               <option value="USD">$ USD - US Dollar</option>
@@ -210,11 +210,11 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
 
           {/* Optional Phone Field */}
           <div>
-            <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5 mb-1">
-              <Phone className="w-3.5 h-3.5 text-cyan-400" /> Mobile Number <span className="text-slate-500">(Optional)</span>
+            <label className="text-xs font-semibold text-secondary flex items-center gap-1.5 mb-1">
+              <Phone className="w-3.5 h-3.5 text-cyan-400" /> Mobile Number <span className="text-muted">(Optional)</span>
             </label>
             <div className="flex gap-2">
-              <div className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 font-mono flex items-center">
+              <div className="bg-background border border-primary rounded-xl px-3 py-2 text-xs text-muted font-mono flex items-center">
                 {currentCountry.dialCode}
               </div>
               <input
@@ -222,7 +222,7 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
                 placeholder="e.g. 9876543210"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-cyan-500"
+                className="flex-1 bg-background border border-primary rounded-xl px-3.5 py-2 text-xs text-primary font-mono focus:outline-none focus:border-cyan-500"
               />
             </div>
           </div>

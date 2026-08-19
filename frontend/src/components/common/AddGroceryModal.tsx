@@ -45,22 +45,22 @@ export const AddGroceryModal: React.FC<AddGroceryModalProps> = ({ isOpen, onClos
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-6 space-y-5 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 bg-background/70 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-panel border border-primary rounded-3xl w-full max-w-md p-6 space-y-5 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+          className="absolute right-4 top-4 text-muted hover:text-white p-1 rounded-lg hover:bg-secondary"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+        <div className="flex items-center gap-3 border-b border-primary pb-3">
           <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
             <ShoppingBag className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-base text-slate-100">Add Pantry Grocery</h3>
-            <p className="text-xs text-slate-400">Add fresh inventory item to household pantry</p>
+            <h3 className="font-bold text-base text-primary">Add Pantry Grocery</h3>
+            <p className="text-xs text-muted">Add fresh inventory item to household pantry</p>
           </div>
         </div>
 
@@ -72,24 +72,24 @@ export const AddGroceryModal: React.FC<AddGroceryModalProps> = ({ isOpen, onClos
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Item Name</label>
+            <label className="text-xs font-semibold text-secondary block mb-1">Item Name</label>
             <input
               type="text"
               required
               placeholder="e.g. Organic Whole Milk"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500/50"
+              className="w-full bg-background border border-primary rounded-xl px-3.5 py-2 text-xs text-primary focus:outline-none focus:border-emerald-500/50"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Category</label>
+              <label className="text-xs font-semibold text-secondary block mb-1">Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500/50"
+                className="w-full bg-background border border-primary rounded-xl px-3 py-2 text-xs text-primary focus:outline-none focus:border-emerald-500/50"
               >
                 <option value="Vegetables">Vegetables</option>
                 <option value="Fruits">Fruits</option>
@@ -102,11 +102,11 @@ export const AddGroceryModal: React.FC<AddGroceryModalProps> = ({ isOpen, onClos
               </select>
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Unit</label>
+              <label className="text-xs font-semibold text-secondary block mb-1">Unit</label>
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500/50"
+                className="w-full bg-background border border-primary rounded-xl px-3 py-2 text-xs text-primary focus:outline-none focus:border-emerald-500/50"
               >
                 <option value="pcs">pcs</option>
                 <option value="kg">kg</option>
@@ -120,36 +120,36 @@ export const AddGroceryModal: React.FC<AddGroceryModalProps> = ({ isOpen, onClos
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Quantity</label>
+              <label className="text-xs font-semibold text-secondary block mb-1">Quantity</label>
               <input
                 type="number"
                 step="0.1"
                 required
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500/50"
+                className="w-full bg-background border border-primary rounded-xl px-3.5 py-2 text-xs text-primary focus:outline-none focus:border-emerald-500/50"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Min Low Threshold</label>
+              <label className="text-xs font-semibold text-secondary block mb-1">Min Low Threshold</label>
               <input
                 type="number"
                 step="0.1"
                 required
                 value={minThreshold}
                 onChange={(e) => setMinThreshold(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500/50"
+                className="w-full bg-background border border-primary rounded-xl px-3.5 py-2 text-xs text-primary focus:outline-none focus:border-emerald-500/50"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Expiration Date (Optional)</label>
+            <label className="text-xs font-semibold text-secondary block mb-1">Expiration Date (Optional)</label>
             <input
               type="date"
               value={expiryDate}
               onChange={(e) => setExpiryDate(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500/50"
+              className="w-full bg-background border border-primary rounded-xl px-3.5 py-2 text-xs text-primary focus:outline-none focus:border-emerald-500/50"
             />
           </div>
 

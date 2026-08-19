@@ -45,10 +45,19 @@ export function App() {
     }
   }, []);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark' || theme === 'glass') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
+
   const getThemeClass = () => {
-    if (theme === 'light') return 'min-h-screen bg-slate-100 text-slate-900 flex';
-    if (theme === 'glass') return 'min-h-screen bg-slate-950 text-slate-100 flex bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950';
-    return 'min-h-screen bg-slate-950 text-slate-100 flex';
+    if (theme === 'light') return 'min-h-screen bg-background text-primary flex';
+    if (theme === 'glass') return 'min-h-screen bg-background text-primary flex bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950';
+    return 'min-h-screen bg-background text-primary flex';
   };
 
   return (

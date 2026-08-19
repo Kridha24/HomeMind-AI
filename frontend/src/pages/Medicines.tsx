@@ -39,12 +39,12 @@ export const Medicines: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-primary">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2">
+          <h1 className="text-2xl font-extrabold text-primary flex items-center gap-2">
             <Pill className="w-6 h-6 text-purple-400" /> Family Medicine & Prescription Intake Tracker
           </h1>
-          <p className="text-xs text-slate-400">Prescription dosages, pill counts, doctor details & daily intake schedules</p>
+          <p className="text-xs text-muted">Prescription dosages, pill counts, doctor details & daily intake schedules</p>
         </div>
 
         <button
@@ -58,7 +58,7 @@ export const Medicines: React.FC = () => {
 
       {/* List / Empty State */}
       {loading ? (
-        <div className="text-center py-12 text-xs text-slate-400">Loading prescription schedules from database...</div>
+        <div className="text-center py-12 text-xs text-muted">Loading prescription schedules from database...</div>
       ) : medicines.length === 0 ? (
         <EmptyState
           icon={Pill}
@@ -72,14 +72,14 @@ export const Medicines: React.FC = () => {
           {medicines.map((medicine) => (
             <div
               key={medicine.id}
-              className="glass-panel p-5 border-slate-800 space-y-4 hover:border-slate-700 transition-all"
+              className="glass-panel p-5 border-primary space-y-4 hover:border-secondary transition-all"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
                     Dosage: {medicine.dosage}
                   </span>
-                  <h3 className="font-bold text-base text-slate-100 mt-0.5">{medicine.name}</h3>
+                  <h3 className="font-bold text-base text-primary mt-0.5">{medicine.name}</h3>
                   {medicine.doctorName && (
                     <p className="text-xs text-purple-400 font-medium mt-0.5">Prescribed by {medicine.doctorName}</p>
                   )}
@@ -89,14 +89,14 @@ export const Medicines: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between border-t border-b border-slate-800/80 py-3 text-xs">
-                <span className="text-slate-400">Pills Remaining</span>
+              <div className="flex items-center justify-between border-t border-b border-primary/80 py-3 text-xs">
+                <span className="text-muted">Pills Remaining</span>
                 <span className="font-bold font-mono text-purple-300">{medicine.stockCount} Pills</span>
               </div>
 
               {medicine.schedules && medicine.schedules.length > 0 && (
                 <div className="space-y-2 pt-1">
-                  <span className="text-[11px] font-semibold text-slate-400 block">Daily Intake Schedule</span>
+                  <span className="text-[11px] font-semibold text-muted block">Daily Intake Schedule</span>
                   {medicine.schedules.map((sch) => (
                     <div
                       key={sch.id || sch.timeOfDay}
@@ -104,7 +104,7 @@ export const Medicines: React.FC = () => {
                       className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
                         sch.taken
                           ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                          : 'bg-slate-950/60 border-slate-800/80 text-slate-300 hover:border-slate-700'
+                          : 'bg-background/60 border-primary/80 text-secondary hover:border-secondary'
                       }`}
                     >
                       <span className="flex items-center gap-1.5 font-mono">

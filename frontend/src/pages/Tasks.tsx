@@ -40,12 +40,12 @@ export const Tasks: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-primary">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2">
+          <h1 className="text-2xl font-extrabold text-primary flex items-center gap-2">
             <CheckSquare className="w-6 h-6 text-indigo-400" /> Household Tasks & Chores Workspace
           </h1>
-          <p className="text-xs text-slate-400">Assign recurring chores, maintenance tasks & family task workspace</p>
+          <p className="text-xs text-muted">Assign recurring chores, maintenance tasks & family task workspace</p>
         </div>
 
         <button
@@ -59,7 +59,7 @@ export const Tasks: React.FC = () => {
 
       {/* List / Empty State */}
       {loading ? (
-        <div className="text-center py-12 text-xs text-slate-400">Loading household tasks from database...</div>
+        <div className="text-center py-12 text-xs text-muted">Loading household tasks from database...</div>
       ) : tasks.length === 0 ? (
         <EmptyState
           icon={CheckSquare}
@@ -73,7 +73,7 @@ export const Tasks: React.FC = () => {
           {tasks.map((task) => (
             <div
               key={task.id}
-              className={`glass-panel p-5 border-slate-800 space-y-4 hover:border-slate-700 transition-all ${
+              className={`glass-panel p-5 border-primary space-y-4 hover:border-secondary transition-all ${
                 task.status === 'COMPLETED' ? 'opacity-60' : ''
               }`}
             >
@@ -91,18 +91,18 @@ export const Tasks: React.FC = () => {
                     {task.priority} Priority
                   </span>
                   <h3
-                    className={`font-bold text-base text-slate-100 ${
-                      task.status === 'COMPLETED' ? 'line-through text-slate-400' : ''
+                    className={`font-bold text-base text-primary ${
+                      task.status === 'COMPLETED' ? 'line-through text-muted' : ''
                     }`}
                   >
                     {task.title}
                   </h3>
-                  {task.description && <p className="text-xs text-slate-400">{task.description}</p>}
+                  {task.description && <p className="text-xs text-muted">{task.description}</p>}
                 </div>
               </div>
 
-              <div className="flex items-center justify-between border-t border-slate-800/80 pt-3 text-xs">
-                <span className="text-slate-400 flex items-center gap-1">
+              <div className="flex items-center justify-between border-t border-primary/80 pt-3 text-xs">
+                <span className="text-muted flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5 text-indigo-400" />
                   Due: {new Date(task.dueDate).toLocaleDateString()}
                 </span>
@@ -111,7 +111,7 @@ export const Tasks: React.FC = () => {
                   className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all ${
                     task.status === 'COMPLETED'
                       ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                      : 'bg-panel border-primary text-secondary hover:text-white'
                   }`}
                 >
                   {task.status === 'COMPLETED' ? 'Completed ✓' : 'Mark Done'}

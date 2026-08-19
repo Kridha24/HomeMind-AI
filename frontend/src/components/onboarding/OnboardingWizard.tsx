@@ -110,16 +110,16 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-[#030712]/90 backdrop-blur-2xl flex items-center justify-center p-4 select-none">
-      <div className="bg-slate-900/90 border border-white/[0.12] rounded-3xl w-full max-w-lg p-6 sm:p-8 space-y-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+      <div className="bg-panel/90 border border-white/[0.12] rounded-3xl w-full max-w-lg p-6 sm:p-8 space-y-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
         
         {/* Progress Bar (When inside steps 1-4) */}
         {step > 0 && step < 5 && (
           <div className="space-y-1.5">
-            <div className="flex justify-between text-[11px] font-semibold text-slate-400">
+            <div className="flex justify-between text-[11px] font-semibold text-muted">
               <span>Step {step} of 4</span>
               <span>{Math.round((step / 4) * 100)}% Completed</span>
             </div>
-            <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-300"
                 style={{ width: `${(step / 4) * 100}%` }}
@@ -141,7 +141,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                 Welcome to HomeMind 👋
               </h2>
-              <p className="text-sm text-slate-300 max-w-sm mx-auto">
+              <p className="text-sm text-secondary max-w-sm mx-auto">
                 Let's build your intelligent home. We'll set up your personalized household in less than 30 seconds.
               </p>
             </div>
@@ -164,17 +164,17 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="space-y-1">
               <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Step 1 — Profile</span>
               <h3 className="text-xl font-bold text-white tracking-tight">What should we call you?</h3>
-              <p className="text-xs text-slate-400">Your name across HomeMind AI and family updates.</p>
+              <p className="text-xs text-muted">Your name across HomeMind AI and family updates.</p>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-2">Full Name</label>
+              <label className="text-xs font-semibold text-secondary block mb-2">Full Name</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Alex Johnson"
-                className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-background border border-primary rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
                 autoFocus
               />
             </div>
@@ -182,7 +182,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="flex items-center justify-between pt-2">
               <button
                 onClick={() => setStep(0)}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white flex items-center gap-1.5"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-muted hover:text-white flex items-center gap-1.5"
               >
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
@@ -205,17 +205,17 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="space-y-1">
               <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Step 2 — Household</span>
               <h3 className="text-xl font-bold text-white tracking-tight">What should we call your home?</h3>
-              <p className="text-xs text-slate-400">Give your private smart household a name.</p>
+              <p className="text-xs text-muted">Give your private smart household a name.</p>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-2">Household Name</label>
+              <label className="text-xs font-semibold text-secondary block mb-2">Household Name</label>
               <input
                 type="text"
                 value={householdName}
                 onChange={(e) => setHouseholdName(e.target.value)}
                 placeholder="e.g. The Rivera Home / The Sharma Residence"
-                className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-background border border-primary rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
                 autoFocus
               />
             </div>
@@ -223,7 +223,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="flex items-center justify-between pt-2">
               <button
                 onClick={() => setStep(1)}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white flex items-center gap-1.5"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-muted hover:text-white flex items-center gap-1.5"
               >
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
@@ -246,7 +246,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="space-y-1">
               <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Step 3 — Family</span>
               <h3 className="text-xl font-bold text-white tracking-tight">Who lives in your household?</h3>
-              <p className="text-xs text-slate-400">Select all who will be part of this home workspace.</p>
+              <p className="text-xs text-muted">Select all who will be part of this home workspace.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -260,7 +260,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all ${
                       isSelected
                         ? 'bg-blue-500/15 border-blue-500/50 text-white'
-                        : 'bg-slate-950/60 border-slate-800/80 text-slate-400 hover:border-slate-700'
+                        : 'bg-background/60 border-primary/80 text-muted hover:border-secondary'
                     }`}
                   >
                     <span className="text-xs font-bold">{m.label}</span>
@@ -268,7 +268,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                       className={`w-5 h-5 rounded-full border flex items-center justify-center ${
                         isSelected
                           ? 'bg-blue-500 border-blue-400 text-white'
-                          : 'border-slate-700 bg-slate-900 text-transparent'
+                          : 'border-secondary bg-panel text-transparent'
                       }`}
                     >
                       <Check className="w-3 h-3" />
@@ -281,7 +281,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="flex items-center justify-between pt-2">
               <button
                 onClick={() => setStep(2)}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white flex items-center gap-1.5"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-muted hover:text-white flex items-center gap-1.5"
               >
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
@@ -303,7 +303,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="space-y-1">
               <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Step 4 — Intelligence</span>
               <h3 className="text-xl font-bold text-white tracking-tight">What should HomeMind help with?</h3>
-              <p className="text-xs text-slate-400">Select modules to activate in your workspace.</p>
+              <p className="text-xs text-muted">Select modules to activate in your workspace.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
@@ -317,13 +317,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     className={`p-3 rounded-2xl border text-left flex items-start gap-2.5 transition-all ${
                       isSelected
                         ? 'bg-blue-500/15 border-blue-500/50 text-white'
-                        : 'bg-slate-950/60 border-slate-800/80 text-slate-400 hover:border-slate-700'
+                        : 'bg-background/60 border-primary/80 text-muted hover:border-secondary'
                     }`}
                   >
-                    <mod.icon className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isSelected ? 'text-blue-400' : 'text-slate-500'}`} />
+                    <mod.icon className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isSelected ? 'text-blue-400' : 'text-muted'}`} />
                     <div className="truncate">
                       <span className="text-xs font-bold block truncate">{mod.name}</span>
-                      <span className="text-[10px] text-slate-400 block truncate">{mod.desc}</span>
+                      <span className="text-[10px] text-muted block truncate">{mod.desc}</span>
                     </div>
                   </button>
                 );
@@ -333,7 +333,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="flex items-center justify-between pt-2">
               <button
                 onClick={() => setStep(3)}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white flex items-center gap-1.5"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-muted hover:text-white flex items-center gap-1.5"
               >
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
@@ -360,7 +360,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                 Your HomeMind is ready.
               </h2>
-              <p className="text-sm text-slate-300 max-w-sm mx-auto">
+              <p className="text-sm text-secondary max-w-sm mx-auto">
                 Everything is connected. Your intelligent operating system is ready for <strong className="text-white">{householdName}</strong>.
               </p>
             </div>
