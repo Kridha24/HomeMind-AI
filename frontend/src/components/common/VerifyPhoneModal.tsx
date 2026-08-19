@@ -45,7 +45,7 @@ export const VerifyPhoneModal: React.FC<VerifyPhoneModalProps> = ({
     const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${dialCode}${phoneNumber.replace(/^0+/, '')}`;
 
     try {
-      if ((import.meta as any).env?.VITE_FIREBASE_API_KEY && auth) {
+      if (import.meta.env.VITE_FIREBASE_API_KEY && auth) {
         if (recaptchaVerifierRef.current) {
           try {
             recaptchaVerifierRef.current.clear();

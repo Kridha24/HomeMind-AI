@@ -4,8 +4,8 @@
   "description": "HomeMind AI Backend REST API Server",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "build": "prisma generate && prisma db push --accept-data-loss && tsc",
+    "start": "prisma db push --accept-data-loss && node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
@@ -13,6 +13,14 @@
   },
   "dependencies": {
     "@prisma/client": "^5.10.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.11.24",
+    "@types/nodemailer": "^8.0.1",
+    "@types/pdfkit": "^0.13.4",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -23,22 +31,13 @@
     "morgan": "^1.10.0",
     "nodemailer": "^9.0.5",
     "pdfkit": "^0.15.0",
-    "socket.io": "^4.7.5",
-    "twilio": "^6.0.2",
-    "zod": "^3.22.4"
-  },
-  "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/jsonwebtoken": "^9.0.6",
-    "@types/morgan": "^1.9.9",
-    "@types/node": "^20.11.24",
-    "@types/nodemailer": "^8.0.1",
-    "@types/pdfkit": "^0.13.4",
     "prisma": "^5.10.2",
+    "socket.io": "^4.7.5",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.3.3"
-  }
+    "twilio": "^6.0.2",
+    "typescript": "^5.3.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {}
 }

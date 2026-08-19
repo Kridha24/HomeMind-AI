@@ -23,6 +23,9 @@ export class EmailService {
           user,
           pass,
         },
+        connectionTimeout: 6000,
+        greetingTimeout: 5000,
+        socketTimeout: 8000,
       });
       console.log(`📧 [EMAIL SERVICE] Configured SMTP Transport via ${host}:${port} for ${user}`);
     } else {

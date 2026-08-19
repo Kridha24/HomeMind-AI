@@ -69,7 +69,7 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
         ? `+${cleanDigits}`
         : `+91${cleanDigits.replace(/^0+/, '')}`;
 
-      if ((import.meta as any).env?.VITE_FIREBASE_API_KEY && auth) {
+      if (import.meta.env.VITE_FIREBASE_API_KEY && auth) {
         if (recaptchaVerifierRef.current) {
           try {
             recaptchaVerifierRef.current.clear();
@@ -249,7 +249,7 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Mihir Shekhar"
+                  placeholder="e.g. Alex Johnson"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
                 />
               </div>

@@ -105,7 +105,7 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
     const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${currentCountry.dialCode}${phoneNumber.replace(/^0+/, '')}`;
 
     try {
-      if ((import.meta as any).env?.VITE_FIREBASE_API_KEY && auth) {
+      if (import.meta.env.VITE_FIREBASE_API_KEY && auth) {
         if (recaptchaVerifierRef.current) {
           try {
             recaptchaVerifierRef.current.clear();
@@ -273,7 +273,7 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
             <input
               type="text"
               required
-              placeholder="e.g. Mihir Shekhar"
+              placeholder="e.g. Alex Johnson"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500"

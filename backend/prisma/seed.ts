@@ -57,7 +57,7 @@ async function main() {
   const alex = await prisma.user.create({
     data: {
       email: 'user.gmail@gmail.com',
-      name: 'Mihir Shekhar',
+      name: 'Alex Rivera',
       provider: 'GOOGLE',
       googleId: 'google-user-primary',
       role: 'OWNER',

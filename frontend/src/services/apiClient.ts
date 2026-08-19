@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://homemind-ai-backend-yjk3.onrender.com/api/v1';
+
 const apiClient = axios.create({
-  baseURL: (import.meta as any).env?.VITE_API_URL || '/api/v1',
+  baseURL: API_BASE,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -57,7 +59,8 @@ apiClient.interceptors.response.use(
         }
 
         // Rotate 30-day refresh token via backend /auth/refresh endpoint
-        const res = await axios.post('/api/v1/auth/refresh', { refreshToken });
+        const refreshEndpoint = API_BASE.endsWith('/api/v1') ? `${API_BASE}/auth/refresh` : `${API_BASE}/api/v1/auth/refresh`;
+        const res = await axios.post(refreshEndpoint, { refreshToken });
         const { accessToken: newAccess, refreshToken: newRefresh } = res.data;
 
         localStorage.setItem('accessToken', newAccess);

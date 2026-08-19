@@ -14,9 +14,9 @@ export async function generateMonthlyPDFReport(data: {
     const doc = new PDFDocument({ margin: 40 });
     const chunks: Buffer[] = [];
 
-    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('data', (chunk: any) => chunks.push(chunk));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
-    doc.on('error', (err) => reject(err));
+    doc.on('error', (err: any) => reject(err));
 
     // Header
     doc.fillColor('#0f172a').fontSize(22).text('HomeMind AI - Household Performance Report', { align: 'center' });
