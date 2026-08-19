@@ -58,3 +58,36 @@ export const joinHouseholdWithCode = async (req: AuthenticatedRequest, res: Resp
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getAggregateData = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const householdId = req.user?.householdId;
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    // Aggregate Total Income
+    const incomeAgg = await prisma.income.aggregate({
+      where: { householdId, softDelete: false },
+      _sum: { amount: true }
+    });
+
+    // Aggregate Total Expense
+    const expenseAgg = await prisma.expense.aggregate({
+      where: { householdId, softDelete: false },
+      _sum: { amount: true }
+    });
+
+    // Aggregate Total Pending Bills
+    const billAgg = await prisma.bill.aggregate({
+      where: { householdId, softDelete: false, status: 'UNPAID' },
+      _sum: { amount: true }
+    });
+
+    res.json({
+      totalIncome: incomeAgg._sum.amount || 0,
+      totalExpenses: expenseAgg._sum.amount || 0,
+      totalPendingBills: billAgg._sum.amount || 0
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

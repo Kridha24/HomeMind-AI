@@ -7,8 +7,14 @@ export const getBills = async (req: AuthenticatedRequest, res: Response) => {
     const householdId = req.user?.householdId;
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
 
+    const isMember = req.user?.role === 'MEMBER';
+    
+    const whereClause = isMember 
+      ? { householdId, createdBy: req.user?.userId } 
+      : { householdId };
+
     const bills = await prisma.bill.findMany({
-      where: { householdId },
+      where: whereClause,
       orderBy: { dueDate: 'asc' }
     });
 
@@ -33,7 +39,8 @@ export const createBill = async (req: AuthenticatedRequest, res: Response) => {
         amount: parseFloat(amount),
         dueDate: new Date(dueDate),
         provider,
-        notes
+        notes,
+        createdBy: req.user?.userId
       }
     });
 

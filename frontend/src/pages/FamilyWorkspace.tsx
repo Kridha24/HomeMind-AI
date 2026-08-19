@@ -1,17 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Key, Copy, Check, LogIn, RefreshCw } from 'lucide-react';
+import { Users, Key, Copy, Check, LogIn, RefreshCw, TrendingUp, CreditCard, DollarSign } from 'lucide-react';
 import apiClient from '../services/apiClient';
+import { useAuthStore } from '../stores/useAuthStore';
 
 export const FamilyWorkspace: React.FC = () => {
+  const { user } = useAuthStore();
   const [members, setMembers] = useState<any[]>([]);
   const [inviteCode, setInviteCode] = useState('HM-ALPHA88');
   const [copied, setCopied] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [joinLoading, setJoinLoading] = useState(false);
   const [joinError, setJoinError] = useState('');
+  
+  const [aggregateData, setAggregateData] = useState({
+    totalIncome: 0,
+    totalExpenses: 0,
+    totalPendingBills: 0
+  });
 
   useEffect(() => {
     fetchMembers();
+    fetchAggregateData();
   }, []);
 
   const fetchMembers = async () => {
@@ -21,14 +30,21 @@ export const FamilyWorkspace: React.FC = () => {
         setMembers(res.data.household.members);
       } else if (Array.isArray(res.data?.members)) {
         setMembers(res.data.members);
-      } else {
-        setMembers([]);
       }
       if (res.data?.household?.inviteCode) {
         setInviteCode(res.data.household.inviteCode);
       }
     } catch (e) {
       setMembers([]);
+    }
+  };
+
+  const fetchAggregateData = async () => {
+    try {
+      const res = await apiClient.get('/family/aggregate');
+      setAggregateData(res.data);
+    } catch (e) {
+      console.error('Failed to fetch aggregate data', e);
     }
   };
 
@@ -44,8 +60,8 @@ export const FamilyWorkspace: React.FC = () => {
     setJoinError('');
     try {
       await apiClient.post('/family/join', { inviteCode: joinCode.trim() });
-      // Fetch members again to reflect new household
       await fetchMembers();
+      await fetchAggregateData();
       setJoinCode('');
     } catch (err: any) {
       setJoinError(err.response?.data?.error || 'Failed to join household. Invalid code.');
@@ -53,6 +69,17 @@ export const FamilyWorkspace: React.FC = () => {
       setJoinLoading(false);
     }
   };
+
+  const handleRoleChange = async (memberId: string, newRole: string) => {
+    try {
+      await apiClient.put(`/family/members/${memberId}/role`, { role: newRole });
+      await fetchMembers();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to update role');
+    }
+  };
+
+  const isOwner = user?.role === 'OWNER';
 
   return (
     <div className="p-6 space-y-8 max-w-5xl mx-auto">
@@ -63,6 +90,43 @@ export const FamilyWorkspace: React.FC = () => {
             <Users className="w-5 h-5 text-indigo-400" />
           </h1>
           <p className="text-xs text-slate-400">Invite family members, manage workspace access levels and shared views</p>
+        </div>
+      </div>
+
+      {/* Aggregate Family Data View */}
+      <div className="glass-panel p-6 border-indigo-500/20 bg-gradient-to-br from-indigo-950/20 to-slate-900/50">
+        <h3 className="text-sm font-bold text-slate-100 mb-4 flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-emerald-400" />
+          Total Family Financial Overview
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <DollarSign className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-emerald-400/80">Total Income</p>
+              <p className="text-xl font-bold text-emerald-400">${aggregateData.totalIncome.toFixed(2)}</p>
+            </div>
+          </div>
+          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-400">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-rose-400/80">Total Expenses</p>
+              <p className="text-xl font-bold text-rose-400">${aggregateData.totalExpenses.toFixed(2)}</p>
+            </div>
+          </div>
+          <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400">
+              <CreditCard className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-orange-400/80">Pending Bills</p>
+              <p className="text-xl font-bold text-orange-400">${aggregateData.totalPendingBills.toFixed(2)}</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -139,9 +203,20 @@ export const FamilyWorkspace: React.FC = () => {
                 </td>
                 <td className="p-4 text-slate-400 font-mono text-[11px]">{m.email || m.phoneNumber || 'Member'}</td>
                 <td className="p-4">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-                    {m.role || 'MEMBER'}
-                  </span>
+                  {isOwner && m.id !== user?.id ? (
+                    <select 
+                      className="bg-slate-900 border border-slate-700 text-xs text-slate-200 px-2 py-1 rounded outline-none focus:border-indigo-500"
+                      value={m.role}
+                      onChange={(e) => handleRoleChange(m.id, e.target.value)}
+                    >
+                      <option value="MEMBER">MEMBER</option>
+                      <option value="CO-OWNER">CO-OWNER</option>
+                    </select>
+                  ) : (
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${m.role === 'OWNER' || m.role === 'CO-OWNER' ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'}`}>
+                      {m.role || 'MEMBER'}
+                    </span>
+                  )}
                 </td>
                 <td className="p-4 text-slate-400">{m.createdAt ? new Date(m.createdAt).toLocaleDateString() : 'Active'}</td>
               </tr>

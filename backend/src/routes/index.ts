@@ -45,48 +45,49 @@ router.post('/auth/logout-all', authController.logoutAllDevices);
 
 // Household Settings & Currency Engine
 router.get('/settings', settingController.getSettings);
-router.put('/settings', authorize(['OWNER', 'ADMIN']), settingController.updateSettings);
+router.put('/settings', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), settingController.updateSettings);
 
 // Dashboard Overview Telemetry
 router.get('/dashboard/summary', dashboardController.getDashboardSummary);
 
 // Income Management
 router.get('/income', incomeController.getIncomes);
-router.post('/income', authorize(['OWNER', 'ADMIN', 'MEMBER']), incomeController.createIncome);
-router.delete('/income/:id', authorize(['OWNER', 'ADMIN']), incomeController.deleteIncome);
+router.post('/income', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), incomeController.createIncome);
+router.delete('/income/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), incomeController.deleteIncome);
 
 // Expense Management
 router.get('/expenses', expenseController.getExpenses);
-router.post('/expenses', authorize(['OWNER', 'ADMIN', 'MEMBER']), expenseController.createExpense);
-router.delete('/expenses/:id', authorize(['OWNER', 'ADMIN']), expenseController.deleteExpense);
+router.post('/expenses', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), expenseController.createExpense);
+router.delete('/expenses/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), expenseController.deleteExpense);
 
 // Bills Management
 router.get('/bills', billController.getBills);
-router.post('/bills', authorize(['OWNER', 'ADMIN', 'MEMBER']), billController.createBill);
-router.put('/bills/:id/pay', authorize(['OWNER', 'ADMIN', 'MEMBER']), billController.markBillPaid);
+router.post('/bills', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), billController.createBill);
+router.put('/bills/:id/pay', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), billController.markBillPaid);
 
 // Grocery Inventory
 router.get('/inventory', inventoryController.getInventory);
-router.post('/inventory', authorize(['OWNER', 'ADMIN', 'MEMBER']), inventoryController.createGroceryItem);
-router.put('/inventory/:id/quantity', authorize(['OWNER', 'ADMIN', 'MEMBER']), inventoryController.updateQuantity);
-router.delete('/inventory/:id', authorize(['OWNER', 'ADMIN']), inventoryController.deleteGroceryItem);
+router.post('/inventory', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), inventoryController.createGroceryItem);
+router.put('/inventory/:id/quantity', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), inventoryController.updateQuantity);
+router.delete('/inventory/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), inventoryController.deleteGroceryItem);
 
 // Appliances Management
 router.get('/appliances', applianceController.getAppliances);
-router.post('/appliances', authorize(['OWNER', 'ADMIN', 'MEMBER']), applianceController.createAppliance);
+router.post('/appliances', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), applianceController.createAppliance);
 
 // Medicines Tracker
 router.get('/medicines', medicineController.getMedicines);
-router.post('/medicines', authorize(['OWNER', 'ADMIN', 'MEMBER']), medicineController.createMedicine);
+router.post('/medicines', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), medicineController.createMedicine);
 
 // Tasks & Family Workspace
 router.get('/tasks', taskController.getTasks);
-router.post('/tasks', authorize(['OWNER', 'ADMIN', 'MEMBER']), taskController.createTask);
-router.put('/tasks/:id/status', authorize(['OWNER', 'ADMIN', 'MEMBER']), taskController.updateTaskStatus);
+router.post('/tasks', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), taskController.createTask);
+router.put('/tasks/:id/status', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), taskController.updateTaskStatus);
 
 // Family Members Workspace
 router.get('/family/members', familyController.getHouseholdMembers);
-router.put('/family/members/:userId/role', authorize(['OWNER', 'ADMIN']), familyController.updateMemberRole);
+router.get('/family/aggregate', familyController.getAggregateData);
+router.put('/family/members/:userId/role', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), familyController.updateMemberRole);
 router.post('/family/join', familyController.joinHouseholdWithCode);
 
 // ==========================================

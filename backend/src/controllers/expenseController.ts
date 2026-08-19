@@ -7,14 +7,25 @@ export const getExpenses = async (req: AuthenticatedRequest, res: Response) => {
     const householdId = req.user?.householdId;
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
 
+    const isMember = req.user?.role === 'MEMBER';
+    
+    // Privacy Filtering: MEMBER sees only their own financial data
+    const expenseWhereClause = isMember 
+      ? { householdId, userId: req.user?.userId } 
+      : { householdId };
+      
+    const incomeWhereClause = isMember
+      ? { householdId, createdBy: req.user?.userId } // Assuming createdBy tracks who made the income
+      : { householdId };
+
     const expenses = await prisma.expense.findMany({
-      where: { householdId },
+      where: expenseWhereClause,
       orderBy: { date: 'desc' },
       include: { user: { select: { name: true, email: true } } }
     });
 
     const incomes = await prisma.income.findMany({
-      where: { householdId },
+      where: incomeWhereClause,
       orderBy: { date: 'desc' }
     });
 
