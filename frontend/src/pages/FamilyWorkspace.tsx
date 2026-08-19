@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Users, Key, Copy, Check, LogIn, RefreshCw, TrendingUp, CreditCard, DollarSign } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import { useAuthStore } from '../stores/useAuthStore';
+import { useSettingStore } from '../stores/useSettingStore';
 
 export const FamilyWorkspace: React.FC = () => {
   const { user } = useAuthStore();
+  const { format } = useSettingStore();
   const [members, setMembers] = useState<any[]>([]);
   const [inviteCode, setInviteCode] = useState('HM-ALPHA88');
   const [copied, setCopied] = useState(false);
@@ -106,7 +108,7 @@ export const FamilyWorkspace: React.FC = () => {
             </div>
             <div>
               <p className="text-[10px] uppercase font-bold tracking-wider text-emerald-400/80">Total Income</p>
-              <p className="text-xl font-bold text-emerald-400">${aggregateData.totalIncome.toFixed(2)}</p>
+              <p className="text-xl font-bold text-emerald-400">{format(aggregateData.totalIncome)}</p>
             </div>
           </div>
           <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-4">
@@ -115,7 +117,7 @@ export const FamilyWorkspace: React.FC = () => {
             </div>
             <div>
               <p className="text-[10px] uppercase font-bold tracking-wider text-rose-400/80">Total Expenses</p>
-              <p className="text-xl font-bold text-rose-400">${aggregateData.totalExpenses.toFixed(2)}</p>
+              <p className="text-xl font-bold text-rose-400">{format(aggregateData.totalExpenses)}</p>
             </div>
           </div>
           <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center gap-4">
@@ -124,7 +126,7 @@ export const FamilyWorkspace: React.FC = () => {
             </div>
             <div>
               <p className="text-[10px] uppercase font-bold tracking-wider text-orange-400/80">Pending Bills</p>
-              <p className="text-xl font-bold text-orange-400">${aggregateData.totalPendingBills.toFixed(2)}</p>
+              <p className="text-xl font-bold text-orange-400">{format(aggregateData.totalPendingBills)}</p>
             </div>
           </div>
         </div>
