@@ -180,7 +180,64 @@ export const Login: React.FC = () => {
     setError('');
     setLoadingGoogle(true);
 
-    // Method 1: Try Firebase Google Popup (Official Google Account Chooser)
+    // Method 1: Google Identity Services (GSI) Token Client Popup (No redirect_uri_mismatch, opens real Google Account Chooser)
+    if (window.google?.accounts?.oauth2 && GOOGLE_CLIENT_ID) {
+      try {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'email profile openid',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse && tokenResponse.access_token) {
+              try {
+                const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                });
+                const userInfo = await userInfoRes.json();
+                
+                const res = await apiClient.post('/auth/google', {
+                  email: userInfo.email,
+                  name: userInfo.name || userInfo.email?.split('@')[0],
+                  avatar: userInfo.picture,
+                  googleId: 'google-' + userInfo.sub,
+                });
+
+                setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
+                await fetchSettings();
+
+                if (res.data.isNewRegistration) {
+                  setNewUserName(res.data.user?.name || userInfo.name || '');
+                  setShowOnboardingModal(true);
+                } else {
+                  navigate('/');
+                }
+              } catch (err: any) {
+                console.error('Google Auth backend error:', err);
+                setShowGoogleModal(true);
+              } finally {
+                setLoadingGoogle(false);
+              }
+            } else {
+              setLoadingGoogle(false);
+              if (tokenResponse?.error !== 'popup_closed_by_user') {
+                setShowGoogleModal(true);
+              }
+            }
+          },
+          error_callback: (err: any) => {
+            console.warn('GSI Token Client error callback:', err);
+            setLoadingGoogle(false);
+            setShowGoogleModal(true);
+          }
+        });
+
+        tokenClient.requestAccessToken({ prompt: 'select_account' });
+        return;
+      } catch (gsiErr) {
+        console.warn('GSI popup error, trying Firebase:', gsiErr);
+      }
+    }
+
+    // Method 2: Firebase Google Popup (Fallback)
     if (auth && googleProvider) {
       try {
         const result = await signInWithPopup(auth, googleProvider);
@@ -211,24 +268,6 @@ export const Login: React.FC = () => {
           setLoadingGoogle(false);
           return;
         }
-      }
-    }
-
-    // Method 2: Direct Google OAuth 2.0 Page Navigation (Redirects to Google's official Choose Account page)
-    if (GOOGLE_CLIENT_ID) {
-      try {
-        const redirectUri = window.location.origin + '/login';
-        const nonce = Math.random().toString(36).substring(2);
-        const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
-          GOOGLE_CLIENT_ID
-        )}&redirect_uri=${encodeURIComponent(
-          redirectUri
-        )}&response_type=token%20id_token&scope=openid%20email%20profile&prompt=select_account&nonce=${nonce}`;
-
-        window.location.href = googleAuthUrl;
-        return;
-      } catch (redirectErr) {
-        console.warn('Google direct redirect failed:', redirectErr);
       }
     }
 
