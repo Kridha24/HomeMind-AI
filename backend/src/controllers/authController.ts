@@ -166,7 +166,215 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 /**
- * 2. Send Mobile Phone SMS OTP Endpoint
+ * 2. Email & Password Manual Registration Endpoint
+ * Body: { name, email, password, country, currency }
+ */
+export const register = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { name, email, password, country, currency } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email, and password are required' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const existingUser = await prisma.user.findFirst({
+      where: { email: cleanEmail, softDelete: false }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'An account with this email already exists. Please sign in instead.' });
+    }
+
+    const userAgent = (req.headers['user-agent'] as string) || 'Unknown Browser';
+    const device = userAgent.includes('Mobile') ? 'Mobile Device' : 'Desktop Browser';
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+
+    const inviteCode = 'HM-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    const household = await prisma.household.create({
+      data: {
+        name: `${name}'s Home`,
+        inviteCode
+      }
+    });
+
+    await prisma.setting.create({
+      data: {
+        householdId: household.id,
+        country: country || 'IN',
+        currency: currency || 'INR',
+        theme: 'dark'
+      }
+    });
+
+    await prisma.dashboardConfig.create({
+      data: {
+        householdId: household.id,
+        layout: JSON.stringify({ widgets: ['expenses', 'bills', 'groceries', 'appliances'] })
+      }
+    });
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff`;
+
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email: cleanEmail,
+        passwordHash,
+        provider: 'PASSWORD',
+        avatar,
+        role: 'OWNER',
+        householdId: household.id,
+        isVerified: true,
+        isActive: true,
+        lastLogin: new Date()
+      },
+      include: { household: true }
+    });
+
+    const payload = {
+      userId: user.id,
+      email: user.email || undefined,
+      role: user.role,
+      householdId: user.householdId
+    };
+
+    const accessToken = generateAccessToken(payload);
+    const refreshTokenStr = generateRefreshToken(payload);
+    const hashedRefresh = await hashToken(refreshTokenStr);
+
+    await prisma.refreshToken.create({
+      data: {
+        tokenHash: hashedRefresh,
+        userId: user.id,
+        device,
+        ipAddress,
+        userAgent,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    res.status(201).json({
+      isNewRegistration: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        age: user.age,
+        provider: user.provider,
+        avatar: user.avatar,
+        role: user.role,
+        householdId: user.householdId,
+        isVerified: user.isVerified,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin
+      },
+      household,
+      accessToken,
+      refreshToken: refreshTokenStr
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Registration failed' });
+  }
+};
+
+/**
+ * 3. Email & Password Manual Login Endpoint
+ * Body: { email, password }
+ */
+export const login = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const user = await prisma.user.findFirst({
+      where: { email: cleanEmail, softDelete: false },
+      include: { household: true }
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: 'No account found with this email. Please sign up first.' });
+    }
+
+    if (user.passwordHash) {
+      const isMatch = await bcrypt.compare(password, user.passwordHash);
+      if (!isMatch) {
+        return res.status(401).json({ error: 'Invalid password. Please check and try again.' });
+      }
+    } else {
+      const passwordHash = await bcrypt.hash(password, 10);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash }
+      });
+    }
+
+    const userAgent = (req.headers['user-agent'] as string) || 'Unknown Browser';
+    const device = userAgent.includes('Mobile') ? 'Mobile Device' : 'Desktop Browser';
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLogin: new Date() },
+      include: { household: true }
+    });
+
+    const payload = {
+      userId: updatedUser.id,
+      email: updatedUser.email || undefined,
+      role: updatedUser.role,
+      householdId: updatedUser.householdId
+    };
+
+    const accessToken = generateAccessToken(payload);
+    const refreshTokenStr = generateRefreshToken(payload);
+    const hashedRefresh = await hashToken(refreshTokenStr);
+
+    await prisma.refreshToken.create({
+      data: {
+        tokenHash: hashedRefresh,
+        userId: updatedUser.id,
+        device,
+        ipAddress,
+        userAgent,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    res.json({
+      isNewRegistration: false,
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phoneNumber: updatedUser.phoneNumber,
+        age: updatedUser.age,
+        provider: updatedUser.provider,
+        avatar: updatedUser.avatar,
+        role: updatedUser.role,
+        householdId: updatedUser.householdId,
+        isVerified: updatedUser.isVerified,
+        isActive: updatedUser.isActive,
+        lastLogin: updatedUser.lastLogin
+      },
+      household: updatedUser.household,
+      accessToken,
+      refreshToken: refreshTokenStr
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Login failed' });
+  }
+};
+
+/**
+ * 4. Send Mobile Phone SMS OTP Endpoint
  */
 export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) => {
   try {

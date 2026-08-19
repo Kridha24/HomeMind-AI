@@ -15,6 +15,10 @@ import {
   Shield,
   CheckCircle2,
   Mail,
+  Eye,
+  EyeOff,
+  KeyRound,
+  User,
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -35,52 +39,20 @@ export const Login: React.FC = () => {
   const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [newUserName, setNewUserName] = useState('');
-  const [directEmail, setDirectEmail] = useState('');
-  const [directName, setDirectName] = useState('');
+
+  // Email & Password States
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState('');
 
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
   const { fetchSettings } = useSettingStore();
-
-  const handleDirectGoogleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!directEmail || !directEmail.includes('@')) {
-      setError('Please enter a valid Google / Gmail address.');
-      return;
-    }
-
-    setLoadingGoogle(true);
-    setError('');
-
-    try {
-      const resolvedName = directName.trim() || directEmail.split('@')[0];
-      const googleId = 'google-' + directEmail.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-      const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(resolvedName)}&background=4285F4&color=fff`;
-
-      const res = await apiClient.post('/auth/google', {
-        email: directEmail.toLowerCase().trim(),
-        name: resolvedName,
-        googleId,
-        avatar,
-      });
-
-      setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
-      await fetchSettings();
-
-      if (authTab === 'NEW_USER' && res.data.isNewRegistration) {
-        setNewUserName(res.data.user?.name || resolvedName);
-        setShowOnboardingModal(true);
-      } else {
-        navigate('/');
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Google Login failed. Please try again.');
-    } finally {
-      setLoadingGoogle(false);
-    }
-  };
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -109,6 +81,60 @@ export const Login: React.FC = () => {
     };
   }, []);
 
+  // Manual Email & Password Handler
+  const handleEmailPasswordAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (!password || password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    if (authTab === 'NEW_USER' && !name.trim()) {
+      setError('Please enter your full name.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      if (authTab === 'NEW_USER') {
+        const res = await apiClient.post('/auth/register', {
+          name: name.trim(),
+          email: email.toLowerCase().trim(),
+          password,
+        });
+
+        setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
+        await fetchSettings();
+
+        if (res.data.isNewRegistration) {
+          setNewUserName(res.data.user?.name || name);
+          setShowOnboardingModal(true);
+        } else {
+          navigate('/');
+        }
+      } else {
+        const res = await apiClient.post('/auth/login', {
+          email: email.toLowerCase().trim(),
+          password,
+        });
+
+        setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
+        await fetchSettings();
+        navigate('/');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Authentication failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Google OAuth GSI Callback Handler
   const handleGoogleCallback = async (response: any) => {
     setLoadingGoogle(true);
     setError('');
@@ -132,6 +158,7 @@ export const Login: React.FC = () => {
     }
   };
 
+  // Google OAuth Popup Trigger
   const triggerGoogleAccountChooser = () => {
     setError('');
 
@@ -283,13 +310,13 @@ export const Login: React.FC = () => {
             <span className="text-xs font-bold tracking-wide uppercase">Zero Setup Friction</span>
           </div>
           <p className="text-xs text-slate-300 font-medium leading-relaxed">
-            1-Click instant Google login with automatic cloud database workspace.
+            1-Click instant Google login or direct email & password authentication.
           </p>
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* RESPONSIVE CENTRAL GLASSMORPHISM LOGIN CARD */}
+      {/* RESPONSIVE CENTRAL GLASSMORPHISM CARD */}
       {/* ========================================================================= */}
       <div className="w-full max-w-[430px] my-auto bg-slate-900/85 backdrop-blur-3xl p-6 sm:p-8 space-y-5 sm:space-y-6 relative z-10 border border-white/[0.12] rounded-3xl shadow-[0_25px_70px_-15px_rgba(0,0,0,0.9)] border-t border-t-white/20">
         
@@ -325,6 +352,7 @@ export const Login: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-2 bg-slate-950/90 p-1.5 rounded-2xl border border-white/[0.08] shadow-inner">
             <button
+              type="button"
               onClick={() => {
                 setAuthTab('NEW_USER');
                 setError('');
@@ -342,6 +370,7 @@ export const Login: React.FC = () => {
             </button>
 
             <button
+              type="button"
               onClick={() => {
                 setAuthTab('EXISTING_USER');
                 setError('');
@@ -358,22 +387,6 @@ export const Login: React.FC = () => {
               <span className="text-[10px] font-normal opacity-80">(Pehle se Account / Sign In)</span>
             </button>
           </div>
-
-          {/* Contextual Explanatory Banner */}
-          <div className={`p-3 rounded-2xl text-xs border transition-all ${
-            authTab === 'NEW_USER' 
-              ? 'bg-blue-500/10 border-blue-500/25 text-blue-300' 
-              : 'bg-purple-500/10 border-purple-500/25 text-purple-300'
-          }`}>
-            <p className="font-semibold flex items-center gap-1.5">
-              {authTab === 'NEW_USER' ? '🆕 New User Sign Up:' : '🔑 Existing User Sign In:'}
-            </p>
-            <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
-              {authTab === 'NEW_USER'
-                ? 'Creates a fresh, personal household database with your Google profile.'
-                : 'Instantly logs into your existing household and loads your saved data.'}
-            </p>
-          </div>
         </div>
 
         {error && (
@@ -382,9 +395,8 @@ export const Login: React.FC = () => {
           </div>
         )}
 
-        {/* Action Buttons: 1-Click Google Popup & Direct Google Email Entry */}
         <div className="space-y-4 pt-1">
-          {/* 1. Direct Google OAuth Popup Button */}
+          {/* 1. Direct 1-Click Google Popup Authentication */}
           <button
             type="button"
             onClick={triggerGoogleAccountChooser}
@@ -417,8 +429,8 @@ export const Login: React.FC = () => {
             )}
             <span>
               {authTab === 'NEW_USER'
-                ? '1-Click Google Sign Up (Popup)'
-                : '1-Click Google Sign In (Popup)'}
+                ? 'Sign Up with Google (1-Click)'
+                : 'Sign In with Google (1-Click)'}
             </span>
           </button>
 
@@ -426,59 +438,91 @@ export const Login: React.FC = () => {
           <div className="flex items-center gap-3 py-0.5">
             <div className="flex-1 h-px bg-slate-800"></div>
             <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold flex items-center gap-1.5">
-              <Mail className="w-3 h-3 text-slate-400" /> Or Enter Google Email
+              <Mail className="w-3 h-3 text-slate-400" /> Or Manual Email & Password
             </span>
             <div className="flex-1 h-px bg-slate-800"></div>
           </div>
 
-          {/* 2. In-Card Google Email Form */}
-          <form onSubmit={handleDirectGoogleLogin} className="space-y-3">
+          {/* 2. Manual Email & Password Form */}
+          <form onSubmit={handleEmailPasswordAuth} className="space-y-3">
             {authTab === 'NEW_USER' && (
               <div>
                 <label className="text-[11px] font-semibold text-slate-300 block mb-1">
-                  Your Full Name
+                  Full Name <span className="text-blue-400">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={directName}
-                  onChange={(e) => setDirectName(e.target.value)}
-                  placeholder="e.g. Alex Johnson"
-                  className="w-full bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
-                />
+                <div className="relative">
+                  <User className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Alex Johnson"
+                    className="w-full bg-slate-950/90 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                  />
+                </div>
               </div>
             )}
 
             <div>
               <label className="text-[11px] font-semibold text-slate-300 block mb-1">
-                Google / Gmail Email Address <span className="text-blue-400">*</span>
+                Email Address <span className="text-blue-400">*</span>
               </label>
-              <input
-                type="email"
-                required
-                value={directEmail}
-                onChange={(e) => setDirectEmail(e.target.value)}
-                placeholder="your.email@gmail.com"
-                className="w-full bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors font-mono"
-              />
+              <div className="relative">
+                <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="w-full bg-slate-950/90 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                Password <span className="text-blue-400">*</span>
+              </label>
+              <div className="relative">
+                <KeyRound className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Min. 6 characters"
+                  className="w-full bg-slate-950/90 border border-slate-800 rounded-xl pl-9 pr-10 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1"
+                >
+                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
             </div>
 
             <button
               type="submit"
-              disabled={loadingGoogle}
-              className={`w-full py-3 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 ${
+              disabled={loading}
+              className={`w-full py-3.5 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 ${
                 authTab === 'NEW_USER'
                   ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-blue-500/25 border border-blue-400/30'
                   : 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 shadow-purple-500/25 border border-purple-400/30'
               }`}
             >
-              {loadingGoogle ? (
+              {loading ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />
               ) : (
                 <>
                   <span>
                     {authTab === 'NEW_USER'
-                      ? 'Sign Up with this Google Email'
-                      : 'Sign In with this Google Email'}
+                      ? 'Create Free Account (Sign Up)'
+                      : 'Sign In with Email & Password'}
                   </span>
                   <ArrowRight className="w-4 h-4" />
                 </>
@@ -489,8 +533,8 @@ export const Login: React.FC = () => {
           {/* Value Highlights */}
           <div className="grid grid-cols-2 gap-2.5 pt-1">
             <div className="p-2.5 rounded-xl bg-slate-950/70 border border-white/[0.06] text-center space-y-0.5">
-              <span className="text-[10px] text-slate-400 block font-medium">⚡ Instant 1-Click</span>
-              <span className="text-[11px] text-slate-200 font-bold block">No Password Needed</span>
+              <span className="text-[10px] text-slate-400 block font-medium">⚡ Instant Access</span>
+              <span className="text-[11px] text-slate-200 font-bold block">1-Click / Password</span>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-950/70 border border-white/[0.06] text-center space-y-0.5">
               <span className="text-[10px] text-slate-400 block font-medium">🔒 Bank-Grade</span>
@@ -506,7 +550,7 @@ export const Login: React.FC = () => {
           </p>
           <p className="text-[10px] text-slate-500 leading-tight">
             {authTab === 'NEW_USER'
-              ? '✨ New User automatically initializes a clean, personal household workspace'
+              ? '✨ New User automatically creates a clean, personal household workspace'
               : '💾 Existing User automatically loads your permanently saved household data'}
           </p>
         </div>

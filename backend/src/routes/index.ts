@@ -20,6 +20,8 @@ const router = Router();
 // ==========================================
 // PUBLIC AUTHENTICATION ENDPOINTS
 // ==========================================
+router.post('/auth/register', authController.register);
+router.post('/auth/login', authController.login);
 router.post('/auth/google', authController.googleLogin);
 router.post('/auth/phone/request-otp', authController.requestPhoneOTP);
 router.post('/auth/phone/verify-otp', authController.verifyPhoneOTP);

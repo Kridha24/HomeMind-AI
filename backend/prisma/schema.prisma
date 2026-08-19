@@ -13,8 +13,9 @@ model User {
   email          String?        @unique
   phoneNumber    String?        @unique
   age            Int?
-  provider       String         @default("GOOGLE") // GOOGLE, PHONE
+  provider       String         @default("GOOGLE") // GOOGLE, PASSWORD, PHONE
   googleId       String?        @unique
+  passwordHash   String?
   avatar         String?
   role           String         @default("OWNER")  // OWNER, ADMIN, MEMBER, GUEST
   householdId    String
