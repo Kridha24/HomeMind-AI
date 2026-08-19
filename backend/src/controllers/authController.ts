@@ -75,8 +75,9 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
       await prisma.setting.create({
         data: {
           householdId: household.id,
-          country: country || 'US',
-          currency: currency || 'USD',
+          country: country || 'IN',
+          currency: currency || 'INR',
+          timeZone: 'Asia/Kolkata',
           theme: 'dark'
         }
       });
@@ -115,6 +116,15 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
         },
         include: { household: true }
       });
+
+      // Ensure household setting has INR and IN if not yet configured
+      const existingSetting = await prisma.setting.findFirst({ where: { householdId: household.id } });
+      if (existingSetting && existingSetting.currency === 'USD') {
+        await prisma.setting.update({
+          where: { id: existingSetting.id },
+          data: { currency: 'INR', country: 'IN', timeZone: 'Asia/Kolkata' }
+        });
+      }
     }
 
     const payload = {

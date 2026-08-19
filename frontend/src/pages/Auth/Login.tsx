@@ -209,11 +209,7 @@ export const Login: React.FC = () => {
 
   const handleOverlayFinish = () => {
     setShowSuccessOverlay(false);
-    if (pendingSuccessData?.isNew) {
-      setShowOnboarding(true);
-    } else {
-      navigate('/');
-    }
+    navigate('/');
   };
 
   return (
