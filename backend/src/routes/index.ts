@@ -87,6 +87,7 @@ router.put('/tasks/:id/status', authorize(['OWNER', 'ADMIN', 'MEMBER']), taskCon
 // Family Members Workspace
 router.get('/family/members', familyController.getHouseholdMembers);
 router.put('/family/members/:userId/role', authorize(['OWNER', 'ADMIN']), familyController.updateMemberRole);
+router.post('/family/join', familyController.joinHouseholdWithCode);
 
 // ==========================================
 // NEXT-GEN AI HOUSEHOLD AGENT ENDPOINTS
