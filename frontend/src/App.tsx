@@ -20,6 +20,7 @@ import { Analytics } from './pages/Analytics';
 import { Reports } from './pages/Reports';
 import { Profile } from './pages/Profile';
 import { Settings } from './pages/Settings';
+import { UserManual } from './pages/UserManual';
 import { Login } from './pages/Auth/Login';
 import { useAuthStore } from './stores/useAuthStore';
 import { useSettingStore } from './stores/useSettingStore';
@@ -84,6 +85,7 @@ export function App() {
                       <Route path="/reports" element={<Reports />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/settings" element={<Settings />} />
+                      <Route path="/manual" element={<UserManual />} />
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </main>

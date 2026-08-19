@@ -19,6 +19,7 @@ import {
   Settings as SettingsIcon,
   User,
   Sparkles,
+  BookOpen,
   X,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -45,6 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
     { name: 'Sustainability', path: '/sustainability', icon: Leaf },
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },
     { name: 'Reports', path: '/reports', icon: FileSpreadsheet },
+    { name: 'User Manual', path: '/manual', icon: BookOpen },
     { name: 'Profile', path: '/profile', icon: User },
     { name: 'Settings', path: '/settings', icon: SettingsIcon },
   ];
