@@ -177,7 +177,35 @@ export class AIOrchestrator {
       }
     }
 
-    // 10. Complex Planning: "Plan my day" / "Plan my Saturday" / "Plan my weekend"
+    // 10. Agenda / Today's Schedule: "What do I have today?", "What do I need to finish today?"
+    else if (lower.includes('what do i have today') || lower.includes('what is on my schedule') || lower.includes('what is on my calendar') || lower.includes('what do i need to finish today') || lower.includes('what do i need to do today') || lower.includes('schedule for today')) {
+      const [tasksRes, billsRes, shoppingRes] = await Promise.all([
+        ToolExecutor.execute('get_tasks', { status: 'PENDING' }, execCtx),
+        ToolExecutor.execute('get_bills', { status: 'UNPAID' }, execCtx),
+        ToolExecutor.execute('get_shopping_list', { onlyLowStock: true }, execCtx),
+      ]);
+      toolCallsExecuted.push(tasksRes, billsRes, shoppingRes);
+
+      const pendingTasks = tasksRes.data || [];
+      const unpaidBills = billsRes.data || [];
+
+      if (pendingTasks.length === 0 && unpaidBills.length === 0) {
+        answer = `You are all caught up for today! You have no pending tasks or due bills in **${ctx.householdName}**.`;
+      } else {
+        answer = `### 📅 Your Household Agenda for Today\n\n` +
+          (pendingTasks.length > 0
+            ? `**Pending Tasks (${pendingTasks.length}):**\n` +
+              pendingTasks.slice(0, 5).map((t: any) => `• **${t.title}** *(Priority: ${t.priority}, Due: ${t.dueDate})*`).join('\n') + '\n\n'
+            : `✓ All household tasks are completed.\n\n`) +
+          (unpaidBills.length > 0
+            ? `**Upcoming Dues (${unpaidBills.length}):**\n` +
+              unpaidBills.slice(0, 3).map((b: any) => `• **${b.title}**: ${b.amount} (Due: ${b.dueDate})`).join('\n')
+            : `✓ All bills are paid.`);
+      }
+      suggestions.push('Plan my day', 'Show shopping list', 'Check my spending');
+    }
+
+    // 11. Complex Planning: "Plan my day" / "Plan my Saturday" / "Plan my weekend"
     else if (lower.includes('plan my day') || lower.includes('plan today') || lower.includes('plan my saturday') || lower.includes('plan my sunday') || lower.includes('schedule today') || lower.includes('daily plan')) {
       const [tasksRes, billsRes, shoppingRes] = await Promise.all([
         ToolExecutor.execute('get_tasks', { status: 'PENDING' }, execCtx),
@@ -193,19 +221,34 @@ export class AIOrchestrator {
         `**09:00 AM — Morning Routine & Pantry**\n` +
         (shoppingRes.data?.length > 0
           ? `🛒 Restock low pantry items (${shoppingRes.data.slice(0, 3).map((i: any) => i.name).join(', ')})\n\n`
-          : `☕ Morning coffee & kitchen prep\n\n`) +
+          : `☕ Morning routine & kitchen check\n\n`) +
         `**11:30 AM — Priority Household Tasks**\n` +
         (tasksRes.data?.length > 0
-          ? `📋 Complete priority chores: **${tasksRes.data[0]?.title}**\n\n`
+          ? `📋 Work on priority chores: **${tasksRes.data[0]?.title}**\n\n`
           : `✨ Household chores are up to date\n\n`) +
-        `**02:00 PM — Personal & Focus Time**\n` +
-        `📖 Relaxation or personal projects\n\n` +
+        `**02:00 PM — Focus & Personal Time**\n` +
+        `📖 Focus session & personal tasks\n\n` +
         `**06:00 PM — Family & Evening Review**\n` +
         (billsRes.data?.length > 0
           ? `💳 Review pending bill due dates (${billsRes.data[0]?.title}: ${billsRes.data[0]?.amount})\n`
           : `👨‍👩‍👧 Family dinner & evening sync\n`);
 
       suggestions.push('Show pending tasks', 'Show shopping list', 'Analyze spending');
+    }
+
+    // 12. Grocery Intelligence: "Should I go grocery shopping today?"
+    else if (lower.includes('should i go grocery shopping') || lower.includes('do we need groceries') || lower.includes('need to buy groceries')) {
+      const res = await ToolExecutor.execute('get_shopping_list', { onlyLowStock: true }, execCtx);
+      toolCallsExecuted.push(res);
+
+      if (res.data && res.data.length > 0) {
+        answer = `Yes, you should! You have **${res.data.length}** item(s) running low in your pantry:\n\n` +
+          res.data.map((i: any) => `• **${i.name}**: ${i.quantity} ${i.unit} remaining`).join('\n') +
+          `\n\nWould you like me to add any other items before you head out?`;
+      } else {
+        answer = `No urgent need! All items in your household pantry are currently well-stocked above minimum thresholds.`;
+      }
+      suggestions.push('Show full shopping list', 'Plan my day');
     }
 
     // 11. Memory: Save Fact / Preference

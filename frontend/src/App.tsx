@@ -70,8 +70,9 @@ export function App() {
                   />
                   <main className="flex-1 p-3 sm:p-5 md:p-6 overflow-y-auto lg:ml-64 ml-0">
                     <Routes>
-                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/" element={<Assistant />} />
                       <Route path="/assistant" element={<Assistant />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/income" element={<Income />} />
                       <Route path="/expenses" element={<Expenses />} />
                       <Route path="/bills" element={<Bills />} />
