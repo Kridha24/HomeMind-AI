@@ -15,7 +15,8 @@ export const getMedicines = async (req: AuthenticatedRequest, res: Response) => 
 
     res.json({ medicines });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[getMedicines] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch medicines.' });
   }
 };
 
@@ -46,15 +47,29 @@ export const createMedicine = async (req: AuthenticatedRequest, res: Response) =
 
     res.status(201).json({ medicine });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[createMedicine] Error:', err.message);
+    res.status(500).json({ error: 'Failed to create medicine.' });
   }
 };
 
 export const toggleScheduleTaken = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { scheduleId } = req.params;
-    const existing = await prisma.medicineSchedule.findUnique({ where: { id: scheduleId } });
+    const householdId = req.user?.householdId;
+
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    // Verify the schedule belongs to a medicine in this household (IDOR protection).
+    const existing = await prisma.medicineSchedule.findFirst({
+      where: { id: scheduleId },
+      include: { medicine: { select: { householdId: true } } }
+    });
+
     if (!existing) return res.status(404).json({ error: 'Schedule not found' });
+
+    if (existing.medicine.householdId !== householdId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
 
     const schedule = await prisma.medicineSchedule.update({
       where: { id: scheduleId },
@@ -71,6 +86,7 @@ export const toggleScheduleTaken = async (req: AuthenticatedRequest, res: Respon
 
     res.json({ schedule });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[toggleScheduleTaken] Error:', err.message);
+    res.status(500).json({ error: 'Failed to toggle schedule.' });
   }
 };

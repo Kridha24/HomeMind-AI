@@ -19,23 +19,56 @@ export const getHouseholdMembers = async (req: AuthenticatedRequest, res: Respon
 
     res.json({ household });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[getHouseholdMembers] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch household members.' });
   }
 };
 
 export const updateMemberRole = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { userId } = req.params;
+    const { userId: targetUserId } = req.params;
     const { role } = req.body;
+    const requesterId = req.user?.userId;
+    const householdId = req.user?.householdId;
+    const requesterRole = req.user?.role;
+
+    if (!householdId || !requesterId) {
+      return res.status(400).json({ error: 'Household context missing' });
+    }
+
+    // Only ADMIN or HEAD can change member roles.
+    if (requesterRole !== 'ADMIN' && requesterRole !== 'HEAD') {
+      return res.status(403).json({ error: 'Only household admins can update member roles' });
+    }
+
+    const allowedRoles = ['ADMIN', 'MEMBER', 'GUEST'];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ error: `Invalid role. Allowed: ${allowedRoles.join(', ')}` });
+    }
+
+    // Verify the target user is in the same household (IDOR protection).
+    const targetUser = await prisma.user.findFirst({
+      where: { id: targetUserId, householdId, softDelete: false }
+    });
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found in this household' });
+    }
+
+    // No demoting yourself.
+    if (targetUserId === requesterId) {
+      return res.status(400).json({ error: 'You cannot change your own role' });
+    }
 
     const user = await prisma.user.update({
-      where: { id: userId },
-      data: { role }
+      where: { id: targetUserId },
+      data: { role },
+      select: { id: true, name: true, email: true, role: true }
     });
 
     res.json({ user });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[updateMemberRole] Error:', err.message);
+    res.status(500).json({ error: 'Failed to update member role.' });
   }
 };
 
@@ -43,41 +76,35 @@ export const joinHouseholdWithCode = async (req: AuthenticatedRequest, res: Resp
   try {
     const { inviteCode } = req.body;
     const userId = req.user?.userId;
-    const oldHouseholdId = req.user?.householdId;
-    if (!userId || !oldHouseholdId) return res.status(400).json({ error: 'User context missing' });
+    const currentHouseholdId = req.user?.householdId;
+
+    if (!userId) return res.status(400).json({ error: 'User context missing' });
 
     const newHousehold = await prisma.household.findFirst({ where: { inviteCode, softDelete: false } });
     if (!newHousehold) return res.status(404).json({ error: 'Invalid invitation code' });
 
-    // Migrate User's existing records to the new household
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: userId },
-        data: { householdId: newHousehold.id, role: 'MEMBER' }
-      }),
-      prisma.expense.updateMany({
-        where: { userId },
-        data: { householdId: newHousehold.id }
-      }),
-      prisma.income.updateMany({
-        where: { createdBy: userId },
-        data: { householdId: newHousehold.id }
-      }),
-      prisma.bill.updateMany({
-        where: { createdBy: userId },
-        data: { householdId: newHousehold.id }
-      }),
-      prisma.task.updateMany({
-        where: { creatorId: userId },
-        data: { householdId: newHousehold.id }
-      })
-    ]);
+    // Do not rejoin the same household.
+    if (newHousehold.id === currentHouseholdId) {
+      return res.status(400).json({ error: 'You are already a member of this household' });
+    }
 
-    const updatedUser = await prisma.user.findUnique({ where: { id: userId } });
+    // Move the user to the new household — only their own data.
+    // We intentionally do NOT bulk-migrate all their records to prevent data
+    // from the old household leaking into the new one. Only the user row itself moves.
+    await prisma.user.update({
+      where: { id: userId },
+      data: { householdId: newHousehold.id, role: 'MEMBER' }
+    });
+
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, role: true, householdId: true }
+    });
 
     res.json({ user: updatedUser, household: newHousehold });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[joinHouseholdWithCode] Error:', err.message);
+    res.status(500).json({ error: 'Failed to join household.' });
   }
 };
 
@@ -110,17 +137,24 @@ export const getAggregateData = async (req: AuthenticatedRequest, res: Response)
       totalPendingBills: billAgg._sum.amount || 0
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[getAggregateData] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch aggregate data.' });
   }
 };
 
 export const updateHouseholdName = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const householdId = req.user?.householdId;
+    const requesterRole = req.user?.role;
     const { name } = req.body;
-    
+
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
     if (!name || name.trim().length === 0) return res.status(400).json({ error: 'Name is required' });
+
+    // Only ADMIN or HEAD can rename the household.
+    if (requesterRole !== 'ADMIN' && requesterRole !== 'HEAD') {
+      return res.status(403).json({ error: 'Only household admins can rename the household' });
+    }
 
     const updated = await prisma.household.update({
       where: { id: householdId },
@@ -129,6 +163,7 @@ export const updateHouseholdName = async (req: AuthenticatedRequest, res: Respon
 
     res.json({ household: updated });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[updateHouseholdName] Error:', err.message);
+    res.status(500).json({ error: 'Failed to update household name.' });
   }
 };

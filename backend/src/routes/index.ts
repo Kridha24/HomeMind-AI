@@ -16,20 +16,22 @@ import * as settingController from '../controllers/settingController';
 import * as incomeController from '../controllers/incomeController';
 import * as assistantController from '../controllers/assistantController';
 import { validate } from '../middleware/validator';
-import { registerSchema, loginSchema, googleAuthSchema } from '../utils/validators';
+import { googleAuthSchema } from '../utils/validators';
+import { authLimiter, otpLimiter } from '../app';
 
 const router = Router();
 
 // ==========================================
 // PUBLIC AUTHENTICATION ENDPOINTS
+// Auth endpoints are rate-limited (30 req/15 min).
+// OTP request endpoints are additionally limited (10 req/15 min).
 // ==========================================
-router.post('/auth/register', validate(registerSchema), authController.register);
-router.post('/auth/login', validate(loginSchema), authController.login);
-router.post('/auth/google', validate(googleAuthSchema), authController.googleLogin);
-router.post('/auth/phone/request-otp', authController.requestPhoneOTP);
-router.post('/auth/phone/verify-otp', authController.verifyPhoneOTP);
-router.post('/auth/email/request-otp', authController.requestEmailOTP);
-router.post('/auth/email/verify-otp', authController.verifyEmailOTP);
+
+router.post('/auth/google', authLimiter, validate(googleAuthSchema), authController.googleLogin);
+router.post('/auth/phone/request-otp', otpLimiter, authController.requestPhoneOTP);
+router.post('/auth/phone/verify-otp', authLimiter, authController.verifyPhoneOTP);
+router.post('/auth/email/request-otp', otpLimiter, authController.requestEmailOTP);
+router.post('/auth/email/verify-otp', authLimiter, authController.verifyEmailOTP);
 router.post('/auth/refresh', authController.refresh);
 router.post('/auth/logout', authController.logout);
 
@@ -46,24 +48,25 @@ router.put('/auth/profile', authController.updateProfile);
 router.post('/auth/logout-all', authController.logoutAllDevices);
 
 // Household Settings & Currency Engine
-router.get('/settings', settingController.getSettings);
+// Only ADMIN/HEAD can change settings; GUESTs cannot.
+router.get('/settings', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), settingController.getSettings);
 router.put('/settings', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), settingController.updateSettings);
 
 // Dashboard Overview Telemetry
 router.get('/dashboard/summary', dashboardController.getDashboardSummary);
 
 // Income Management
-router.get('/income', incomeController.getIncomes);
+router.get('/income', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), incomeController.getIncomes);
 router.post('/income', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), incomeController.createIncome);
 router.delete('/income/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), incomeController.deleteIncome);
 
 // Expense Management
-router.get('/expenses', expenseController.getExpenses);
+router.get('/expenses', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), expenseController.getExpenses);
 router.post('/expenses', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), expenseController.createExpense);
 router.delete('/expenses/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), expenseController.deleteExpense);
 
 // Bills Management
-router.get('/bills', billController.getBills);
+router.get('/bills', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), billController.getBills);
 router.post('/bills', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), billController.createBill);
 router.put('/bills/:id/pay', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), billController.markBillPaid);
 
@@ -76,10 +79,12 @@ router.delete('/inventory/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), inven
 // Appliances Management
 router.get('/appliances', applianceController.getAppliances);
 router.post('/appliances', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), applianceController.createAppliance);
+router.post('/appliances/:id/maintenance', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), applianceController.logMaintenance);
 
 // Medicines Tracker
 router.get('/medicines', medicineController.getMedicines);
 router.post('/medicines', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), medicineController.createMedicine);
+router.put('/medicines/schedule/:scheduleId/toggle', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), medicineController.toggleScheduleTaken);
 
 // Tasks & Family Workspace
 router.get('/tasks', taskController.getTasks);
@@ -89,23 +94,25 @@ router.put('/tasks/:id/status', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER
 // Family Members Workspace
 router.get('/family/members', familyController.getHouseholdMembers);
 router.get('/family/aggregate', familyController.getAggregateData);
-router.put('/family/name', authorize(['OWNER']), familyController.updateHouseholdName);
+router.put('/family/name', authorize(['OWNER', 'ADMIN', 'HEAD']), familyController.updateHouseholdName);
+// Role update: ADMIN/HEAD only (familyController enforces this too as defense-in-depth)
 router.put('/family/members/:userId/role', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), familyController.updateMemberRole);
 router.post('/family/join', familyController.joinHouseholdWithCode);
 
 // ==========================================
 // NEXT-GEN AI HOUSEHOLD AGENT ENDPOINTS
+// GUESTs cannot use AI agent features.
 // ==========================================
-router.post('/assistant/chat', assistantController.chat);
-router.post('/assistant/stream', assistantController.streamChat);
+router.post('/assistant/chat', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), assistantController.chat);
+router.post('/assistant/stream', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), assistantController.streamChat);
 router.get('/assistant/summary', assistantController.getDailySummary);
 router.get('/assistant/threads', assistantController.getThreads);
 router.get('/assistant/threads/:threadId', assistantController.getThreadMessages);
-router.delete('/assistant/threads/:threadId', assistantController.deleteThread);
+router.delete('/assistant/threads/:threadId', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), assistantController.deleteThread);
 router.get('/assistant/memories', assistantController.getMemories);
-router.post('/assistant/memories', assistantController.createMemory);
-router.delete('/assistant/memories/:id', assistantController.deleteMemory);
-router.post('/assistant/actions/execute', assistantController.executeConfirmedAction);
+router.post('/assistant/memories', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), assistantController.createMemory);
+router.delete('/assistant/memories/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), assistantController.deleteMemory);
+router.post('/assistant/actions/execute', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), assistantController.executeConfirmedAction);
 
 // Legacy AI Assistance & Telemetry (Preserved)
 router.get('/ai/forecasts', aiController.getAIForecasts);

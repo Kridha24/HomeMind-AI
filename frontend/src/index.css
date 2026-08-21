@@ -28,7 +28,7 @@
 
 @layer utilities {
   .glass-panel {
-    @apply bg-panel/60 backdrop-blur-xl border border-primary/80 shadow-2xl rounded-2xl;
+    @apply bg-panel/80 backdrop-blur-md border border-primary/80 shadow-lg rounded-2xl md:bg-panel/60 md:backdrop-blur-xl md:shadow-2xl;
   }
   .glass-card {
     @apply bg-panel/40 backdrop-blur-md border border-primary/60 hover:border-blue-500/40 transition-all duration-300 rounded-xl;
@@ -93,4 +93,15 @@
 
 .animate-pulse-glow {
   animation: pulse-glow 3.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow,
+  .animate-float-delayed,
+  .animate-pulse-glow,
+  .animate-pulse,
+  .animate-spin {
+    animation: none !important;
+    transform: none !important;
+  }
 }

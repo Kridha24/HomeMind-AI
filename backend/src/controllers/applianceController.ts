@@ -14,7 +14,8 @@ export const getAppliances = async (req: AuthenticatedRequest, res: Response) =>
 
     res.json({ appliances });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[getAppliances] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch appliances.' });
   }
 };
 
@@ -41,7 +42,8 @@ export const createAppliance = async (req: AuthenticatedRequest, res: Response) 
 
     res.status(201).json({ appliance });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[createAppliance] Error:', err.message);
+    res.status(500).json({ error: 'Failed to create appliance.' });
   }
 };
 
@@ -49,6 +51,13 @@ export const logMaintenance = async (req: AuthenticatedRequest, res: Response) =
   try {
     const { id } = req.params;
     const { cost, description, technician } = req.body;
+    const householdId = req.user?.householdId;
+
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    // Verify the appliance belongs to this household before logging maintenance (IDOR protection).
+    const appliance = await prisma.appliance.findFirst({ where: { id, householdId } });
+    if (!appliance) return res.status(404).json({ error: 'Appliance not found' });
 
     const log = await prisma.applianceMaintenance.create({
       data: {
@@ -71,6 +80,7 @@ export const logMaintenance = async (req: AuthenticatedRequest, res: Response) =
 
     res.status(201).json({ log });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[logMaintenance] Error:', err.message);
+    res.status(500).json({ error: 'Failed to log maintenance.' });
   }
 };

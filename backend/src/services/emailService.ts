@@ -1,5 +1,8 @@
 import nodemailer from 'nodemailer';
 
+const isProduction = process.env.NODE_ENV === 'production';
+const allowOtpConsole = process.env.ALLOW_OTP_CONSOLE === 'true';
+
 export class EmailService {
   private transporter: nodemailer.Transporter | null = null;
 
@@ -109,15 +112,26 @@ export class EmailService {
           text: `Your HomeMind AI verification code is ${otp}. Valid for 10 minutes.`,
           html: htmlContent,
         });
-        console.log(`📧 [EMAIL SENT SUCCESSFULLY] MessageId: ${info.messageId} to ${toEmail}`);
+        console.log(`[EMAIL] OTP dispatched to ${toEmail} (MessageId: ${info.messageId})`);
         return { success: true, messageId: info.messageId };
       } catch (err: any) {
-        console.error(`❌ [EMAIL SEND ERROR] Failed to send email via SMTP to ${toEmail}:`, err.message);
+        console.error(`[EMAIL] Failed to send OTP to ${toEmail}:`, err.message);
         return { success: false };
       }
     } else {
-      console.log(`📧 [DEV EMAIL SIMULATION] To: ${toEmail} | Code: ${otp}`);
-      return { success: true };
+      // No transporter configured.
+      if (!isProduction) {
+        // Dev-only: log OTP only if explicitly enabled.
+        if (allowOtpConsole) {
+          console.log(`[DEV EMAIL] To: ${toEmail} | Code: ${otp}`);
+        } else {
+          console.log(`[DEV EMAIL] OTP dispatched to ${toEmail} (set ALLOW_OTP_CONSOLE=true to see code)`);
+        }
+        return { success: true };
+      }
+      // Production: SMTP not configured — do NOT simulate success.
+      console.error(`[EMAIL] SMTP not configured. OTP not delivered to ${toEmail}.`);
+      return { success: false };
     }
   }
 }

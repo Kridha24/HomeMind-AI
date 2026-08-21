@@ -19,36 +19,25 @@ import { AuthenticatedRequest } from '../middleware/auth';
  */
 export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { idToken, token, email: reqEmail, name: reqName, googleId: reqGoogleId, avatar: reqAvatar, age, country, currency } = req.body;
+    const { idToken, token, age, country, currency } = req.body;
     const rawToken = idToken || token;
     const userAgent = (req.headers['user-agent'] as string) || 'Unknown Browser';
     const device = userAgent.includes('Mobile') ? 'Mobile Device' : 'Desktop Browser';
     const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
 
-    let googleUser;
+    // Fail closed: token is mandatory. We never trust client-supplied user data.
+    if (!rawToken) {
+      return res.status(401).json({ error: 'Google OAuth ID token is required' });
+    }
 
-    if (rawToken) {
-      try {
-        googleUser = await verifyGoogleIdToken(rawToken);
-      } catch (err: any) {
-        googleUser = {
-          googleId: reqGoogleId || 'google-' + Math.random().toString(36).substring(2, 10),
-          email: reqEmail || 'user@example.com',
-          name: reqName || (reqEmail ? reqEmail.split('@')[0] : 'Google Account User'),
-          avatar: reqAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(reqName || (reqEmail ? reqEmail.split('@')[0] : 'User'))}&background=3b82f6&color=fff`,
-          emailVerified: true
-        };
-      }
-    } else if (reqGoogleId || reqEmail) {
-      googleUser = {
-        googleId: reqGoogleId || 'google-' + (reqEmail ? reqEmail.replace(/[^a-zA-Z0-9]/g, '-') : Math.random().toString(36).substring(2, 10)),
-        email: reqEmail || 'user@example.com',
-        name: reqName || (reqEmail ? reqEmail.split('@')[0] : 'Google Account User'),
-        avatar: reqAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(reqName || (reqEmail ? reqEmail.split('@')[0] : 'User'))}&background=3b82f6&color=fff`,
-        emailVerified: true
-      };
-    } else {
-      return res.status(400).json({ error: 'Google OAuth ID Token is required' });
+    // Verify the token cryptographically against Google's servers.
+    // Any failure (expired, invalid signature, wrong audience) results in 401.
+    let googleUser;
+    try {
+      googleUser = await verifyGoogleIdToken(rawToken);
+    } catch (err: any) {
+      console.warn('[Google Auth] Token verification failed:', err.message);
+      return res.status(401).json({ error: 'Invalid Google session. Please sign in with your Google account again.' });
     }
 
     let user = await prisma.user.findFirst({
@@ -171,7 +160,8 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
       refreshToken: refreshTokenStr
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Auth] Error:', err.message);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 };
 
@@ -422,7 +412,11 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
 
     const smsResult = await sendMobileSMS(identifier, realOtp);
 
-    console.log(`\n🔑 [PHONE OTP] Sent to: ${identifier} | CODE: ${realOtp}\n`);
+    if (!smsResult.success) {
+      // Roll back the stored OTP record — do not claim success if delivery failed.
+      await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
+      return res.status(503).json({ error: 'Failed to send verification code. Please try again in a moment.' });
+    }
 
     res.json({
       success: true,
@@ -430,7 +424,8 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
       provider: smsResult.provider
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[requestPhoneOTP] Error:', err.message);
+    res.status(500).json({ error: 'Failed to send verification code. Please try again.' });
   }
 };
 
@@ -452,33 +447,29 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
     const otpRecord = await prisma.oTPVerification.findUnique({ where: { identifier } });
 
     if (!otpRecord) {
-      if (otp === '123456') {
-        // Master dev fallback
-      } else {
-        return res.status(400).json({ error: 'No OTP request found for this phone number. Please request a new OTP.' });
-      }
-    } else {
-      if (otpRecord.expiresAt < new Date() && otp !== '123456') {
-        await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
-        return res.status(400).json({ error: 'OTP has expired after 5 minutes. Please request a new OTP.' });
-      }
-
-      if (otpRecord.attempts >= 5 && otp !== '123456') {
-        await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
-        return res.status(429).json({ error: 'Maximum 5 verification attempts exceeded. Please request a new OTP.' });
-      }
-
-      const isValidOtp = (otp === '123456') || (await bcrypt.compare(otp, otpRecord.otpHash));
-      if (!isValidOtp) {
-        await prisma.oTPVerification.update({
-          where: { identifier },
-          data: { attempts: { increment: 1 } }
-        });
-        return res.status(400).json({ error: `Invalid OTP code. ${4 - otpRecord.attempts} attempts remaining.` });
-      }
-
-      await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
+      return res.status(400).json({ error: 'No OTP request found for this phone number. Please request a new OTP.' });
     }
+
+    if (otpRecord.expiresAt < new Date()) {
+      await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
+      return res.status(400).json({ error: 'OTP has expired after 5 minutes. Please request a new OTP.' });
+    }
+
+    if (otpRecord.attempts >= 5) {
+      await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
+      return res.status(429).json({ error: 'Maximum 5 verification attempts exceeded. Please request a new OTP.' });
+    }
+
+    const isValidOtp = await bcrypt.compare(otp, otpRecord.otpHash);
+    if (!isValidOtp) {
+      await prisma.oTPVerification.update({
+        where: { identifier },
+        data: { attempts: { increment: 1 } }
+      });
+      return res.status(400).json({ error: `Invalid OTP code. ${4 - otpRecord.attempts} attempts remaining.` });
+    }
+
+    await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
 
     const currentUserId = req.user?.userId;
     let user;
@@ -607,7 +598,8 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
       refreshToken: refreshTokenStr
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[verifyPhoneOTP] Error:', err.message);
+    res.status(500).json({ error: 'Verification failed. Please try again.' });
   }
 };
 
@@ -648,17 +640,22 @@ export const requestEmailOTP = async (req: AuthenticatedRequest, res: Response) 
       }
     });
 
-    console.log(`\n📧 [EMAIL OTP] Sent to: ${identifier} | CODE: ${realOtp}\n`);
-
+    // Log OTP dispatch first (so OTP code is never in logs — only destination)
     const emailResult = await emailService.sendOTP(identifier, realOtp);
+
+    if (!emailResult.success) {
+      // Roll back the stored OTP record — do not claim success if delivery failed.
+      await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
+      return res.status(503).json({ error: 'Failed to send verification code. Please check your email configuration.' });
+    }
 
     res.json({
       success: true,
       message: `Verification code sent to ${identifier}. Valid for 10 minutes.`,
-      emailSent: emailResult.success
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[requestEmailOTP] Error:', err.message);
+    res.status(500).json({ error: 'Failed to send verification code. Please try again.' });
   }
 };
 
@@ -680,33 +677,29 @@ export const verifyEmailOTP = async (req: AuthenticatedRequest, res: Response) =
     const otpRecord = await prisma.oTPVerification.findUnique({ where: { identifier } });
 
     if (!otpRecord) {
-      if (otp === '123456') {
-        // Master dev fallback
-      } else {
-        return res.status(400).json({ error: 'No OTP request found for this email. Please request a new OTP.' });
-      }
-    } else {
-      if (otpRecord.expiresAt < new Date() && otp !== '123456') {
-        await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
-        return res.status(400).json({ error: 'OTP has expired. Please request a new OTP.' });
-      }
-
-      if (otpRecord.attempts >= 5 && otp !== '123456') {
-        await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
-        return res.status(429).json({ error: 'Maximum 5 verification attempts exceeded. Please request a new OTP.' });
-      }
-
-      const isValidOtp = (otp === '123456') || (await bcrypt.compare(otp, otpRecord.otpHash));
-      if (!isValidOtp) {
-        await prisma.oTPVerification.update({
-          where: { identifier },
-          data: { attempts: { increment: 1 } }
-        });
-        return res.status(400).json({ error: `Invalid OTP code. ${4 - otpRecord.attempts} attempts remaining.` });
-      }
-
-      await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
+      return res.status(400).json({ error: 'No OTP request found for this email. Please request a new OTP.' });
     }
+
+    if (otpRecord.expiresAt < new Date()) {
+      await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
+      return res.status(400).json({ error: 'OTP has expired. Please request a new OTP.' });
+    }
+
+    if (otpRecord.attempts >= 5) {
+      await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
+      return res.status(429).json({ error: 'Maximum 5 verification attempts exceeded. Please request a new OTP.' });
+    }
+
+    const isValidOtp = await bcrypt.compare(otp, otpRecord.otpHash);
+    if (!isValidOtp) {
+      await prisma.oTPVerification.update({
+        where: { identifier },
+        data: { attempts: { increment: 1 } }
+      });
+      return res.status(400).json({ error: `Invalid OTP code. ${4 - otpRecord.attempts} attempts remaining.` });
+    }
+
+    await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
 
     let user = await prisma.user.findFirst({
       where: { email: identifier, softDelete: false },
@@ -808,7 +801,8 @@ export const verifyEmailOTP = async (req: AuthenticatedRequest, res: Response) =
       refreshToken: refreshTokenStr
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Auth] Error:', err.message);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 };
 
@@ -877,7 +871,8 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response) =>
       }
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Auth] Error:', err.message);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 };
 
@@ -968,7 +963,8 @@ export const logout = async (req: AuthenticatedRequest, res: Response) => {
 
     res.json({ success: true, message: 'Logged out successfully' });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Auth] Error:', err.message);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 };
 
@@ -994,7 +990,8 @@ export const logoutAllDevices = async (req: AuthenticatedRequest, res: Response)
 
     res.json({ success: true, message: 'Successfully logged out from all active device sessions' });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Auth] Error:', err.message);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 };
 
@@ -1045,6 +1042,7 @@ export const getMe = async (req: AuthenticatedRequest, res: Response) => {
       activeSessionsCount
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Auth] Error:', err.message);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 };

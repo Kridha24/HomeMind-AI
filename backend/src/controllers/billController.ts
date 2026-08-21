@@ -8,9 +8,9 @@ export const getBills = async (req: AuthenticatedRequest, res: Response) => {
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
 
     const isMember = req.user?.role === 'MEMBER';
-    
-    const whereClause = isMember 
-      ? { householdId, createdBy: req.user?.userId } 
+
+    const whereClause = isMember
+      ? { householdId, createdBy: req.user?.userId }
       : { householdId };
 
     const bills = await prisma.bill.findMany({
@@ -20,7 +20,8 @@ export const getBills = async (req: AuthenticatedRequest, res: Response) => {
 
     res.json({ bills });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[getBills] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch bills.' });
   }
 };
 
@@ -46,13 +47,22 @@ export const createBill = async (req: AuthenticatedRequest, res: Response) => {
 
     res.status(201).json({ bill });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[createBill] Error:', err.message);
+    res.status(500).json({ error: 'Failed to create bill.' });
   }
 };
 
 export const markBillPaid = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const householdId = req.user?.householdId;
+
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    // Verify the bill belongs to this household before marking paid (IDOR protection).
+    const existing = await prisma.bill.findFirst({ where: { id, householdId } });
+    if (!existing) return res.status(404).json({ error: 'Bill not found' });
+
     const bill = await prisma.bill.update({
       where: { id },
       data: {
@@ -77,6 +87,7 @@ export const markBillPaid = async (req: AuthenticatedRequest, res: Response) => 
 
     res.json({ bill });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[markBillPaid] Error:', err.message);
+    res.status(500).json({ error: 'Failed to mark bill as paid.' });
   }
 };

@@ -32,17 +32,20 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   const { household } = useAuthStore();
 
-  const navItems = [
+  const primaryNavItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Income & Earnings', path: '/income', icon: Wallet },
     { name: 'Expenses', path: '/expenses', icon: CreditCard },
     { name: 'Bills', path: '/bills', icon: FileText },
     { name: 'Grocery Inventory', path: '/inventory', icon: ShoppingBag },
+    { name: 'Household Tasks', path: '/tasks', icon: CheckSquare },
+    { name: 'Family Workspace', path: '/family', icon: Users },
+  ];
+
+  const moreNavItems = [
+    { name: 'Income & Earnings', path: '/income', icon: Wallet },
     { name: 'Pantry Vision OCR', path: '/pantry-vision', icon: Camera },
     { name: 'Appliances', path: '/appliances', icon: Tv },
     { name: 'Medicine Tracker', path: '/medicines', icon: Pill },
-    { name: 'Household Tasks', path: '/tasks', icon: CheckSquare },
-    { name: 'Family Workspace', path: '/family', icon: Users },
     { name: 'Sustainability', path: '/sustainability', icon: Leaf },
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },
     { name: 'Reports', path: '/reports', icon: FileSpreadsheet },
@@ -50,6 +53,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
     { name: 'Profile', path: '/profile', icon: User },
     { name: 'Settings', path: '/settings', icon: SettingsIcon },
   ];
+
+  const navItems = [...primaryNavItems, ...moreNavItems];
 
   return (
     <>
@@ -92,24 +97,73 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
           </div>
 
           {/* Navigation Links */}
-          <nav className="space-y-1 overflow-y-auto max-h-[calc(100vh-180px)] pr-1 scrollbar-thin">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={onClose}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                    isActive
-                      ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-sm'
-                      : 'text-muted hover:text-primary hover:bg-panel/60'
-                  }`
-                }
-              >
-                <item.icon className="w-4 h-4" />
-                <span>{item.name}</span>
-              </NavLink>
-            ))}
+          <nav className="space-y-1 overflow-y-auto max-h-[calc(100vh-180px)] pr-1 scrollbar-thin pb-10">
+            {/* Desktop: Show all items sequentially */}
+            <div className="hidden lg:block space-y-1">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      isActive
+                        ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-sm'
+                        : 'text-muted hover:text-primary hover:bg-panel/60'
+                    }`
+                  }
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.name}</span>
+                </NavLink>
+              ))}
+            </div>
+
+            {/* Mobile: Grouped Navigation */}
+            <div className="lg:hidden space-y-4">
+              {/* Primary Group */}
+              <div className="space-y-1">
+                {primaryNavItems.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={onClose}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                        isActive
+                          ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-sm'
+                          : 'text-muted hover:text-primary hover:bg-panel/60'
+                      }`
+                    }
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <span>{item.name}</span>
+                  </NavLink>
+                ))}
+              </div>
+
+              {/* Secondary (More) Group */}
+              <div className="pt-2 border-t border-primary/40 space-y-1">
+                <p className="px-3 text-[10px] font-bold text-muted uppercase tracking-wider mb-2">More Tools</p>
+                {moreNavItems.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={onClose}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                        isActive
+                          ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-sm'
+                          : 'text-muted hover:text-primary hover:bg-panel/60'
+                      }`
+                    }
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <span>{item.name}</span>
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           </nav>
         </div>
 

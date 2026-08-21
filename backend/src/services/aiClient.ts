@@ -3,11 +3,23 @@ import { config } from '../config';
 export class AIClientService {
   private baseUrl = config.aiServiceUrl;
 
+  /**
+   * Returns request headers for all calls to the AI microservice.
+   * The shared secret authenticates the backend as a trusted caller.
+   */
+  private getHeaders(): Record<string, string> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (config.aiServiceSecret) {
+      headers['X-AI-Service-Secret'] = config.aiServiceSecret;
+    }
+    return headers;
+  }
+
   async forecastUtilityBill(category: string, historicalData: number[]) {
     try {
       const response = await fetch(`${this.baseUrl}/api/v1/forecast/utility`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getHeaders(),
         body: JSON.stringify({ category, historical_data: historicalData }),
       });
       if (response.ok) return await response.json();
@@ -148,7 +160,7 @@ export class AIClientService {
     try {
       const response = await fetch(`${this.baseUrl}/api/v1/recipes/recommend`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getHeaders(),
         body: JSON.stringify({ ingredients: availableIngredients }),
       });
       if (response.ok) return await response.json();
@@ -184,7 +196,7 @@ export class AIClientService {
     try {
       const response = await fetch(`${this.baseUrl}/api/v1/chat/query`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getHeaders(),
         body: JSON.stringify({ query, context: ctx }),
       });
       if (response.ok) return await response.json();

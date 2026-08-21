@@ -129,7 +129,8 @@ export const getDailySummary = async (req: AuthenticatedRequest, res: Response) 
       insight,
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Assistant] Error:', err.message);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 };
 
@@ -153,7 +154,8 @@ export const getThreads = async (req: AuthenticatedRequest, res: Response) => {
 
     res.json({ threads });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Assistant] Error:', err.message);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 };
 
@@ -170,7 +172,8 @@ export const getThreadMessages = async (req: AuthenticatedRequest, res: Response
 
     res.json({ messages });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Assistant] Error:', err.message);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 };
 
@@ -186,7 +189,8 @@ export const deleteThread = async (req: AuthenticatedRequest, res: Response) => 
 
     res.json({ success: true, message: 'Thread cleared.' });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Assistant] Error:', err.message);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 };
 
@@ -202,7 +206,8 @@ export const getMemories = async (req: AuthenticatedRequest, res: Response) => {
 
     res.json({ memories });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Assistant] Error:', err.message);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 };
 
@@ -229,7 +234,8 @@ export const createMemory = async (req: AuthenticatedRequest, res: Response) => 
 
     res.json({ memory });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Assistant] Error:', err.message);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 };
 
@@ -246,7 +252,8 @@ export const deleteMemory = async (req: AuthenticatedRequest, res: Response) => 
 
     res.json({ success: true, message: 'Memory removed.' });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Assistant] Error:', err.message);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 };
 
@@ -270,6 +277,7 @@ export const executeConfirmedAction = async (req: AuthenticatedRequest, res: Res
     const result = await ToolExecutor.execute(tool, args, execCtx);
     res.json(result);
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Assistant] Error:', err.message);
+    res.status(500).json({ error: 'An error occurred. Please try again.' });
   }
 };

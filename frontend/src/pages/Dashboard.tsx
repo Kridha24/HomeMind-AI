@@ -21,6 +21,7 @@ import {
   Landmark,
   Hourglass,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import apiClient from '../services/apiClient';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useSettingStore } from '../stores/useSettingStore';
@@ -52,8 +53,13 @@ export const Dashboard: React.FC = () => {
   const { user, household } = useAuthStore();
   const { format, currencySymbol, country } = useSettingStore();
 
-  const [summary, setSummary] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: summary, isLoading: loading, error, refetch } = useQuery({
+    queryKey: ['dashboardSummary'],
+    queryFn: async () => {
+      const res = await apiClient.get('/dashboard/summary');
+      return res.data;
+    }
+  });
 
   // Live Digital Clock state
   const [timeStr, setTimeStr] = useState('');
@@ -89,20 +95,7 @@ export const Dashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      const res = await apiClient.get('/dashboard/summary');
-      setSummary(res.data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
 
   const monthlyIncome = summary?.monthlyIncome || 0;
   const monthlyExpenses = summary?.monthlyExpenses || 0;
@@ -120,7 +113,7 @@ export const Dashboard: React.FC = () => {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold text-primary tracking-tight">
-              Welcome to {household?.name || user?.name || 'Homeowner'}!
+              Welcome, {user?.name?.split(' ')[0] || 'there'} 👋
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase tracking-wider">
               {user?.role || 'OWNER'}
@@ -128,9 +121,9 @@ export const Dashboard: React.FC = () => {
           </div>
           <p className="text-xs text-muted flex items-center gap-2">
             <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Location: {flag} {countryDefaults.countryName}</span>
-            <span className="text-slate-600">•</span>
             <span>{household?.name || 'Home Residence'}</span>
+            <span className="text-slate-600">•</span>
+            <span>{flag} {countryDefaults.countryName}</span>
           </p>
         </div>
 
@@ -160,6 +153,21 @@ export const Dashboard: React.FC = () => {
 
       {/* Main Metric Cards: Income, Monthly Expenses (-), Lifetime Expenses (-), Monthly Savings, Overall Balance */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        {loading ? (
+          <>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="glass-panel p-5 animate-pulse space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-16 h-3 bg-primary/10 rounded-full"></div>
+                  <div className="w-4 h-4 bg-primary/10 rounded-full"></div>
+                </div>
+                <div className="w-24 h-6 bg-primary/10 rounded-full"></div>
+                <div className="w-20 h-2 bg-primary/10 rounded-full mt-2"></div>
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
         {/* Monthly Income Card */}
         <div className="glass-panel p-5 border-emerald-500/30 bg-gradient-to-tr from-slate-900 via-emerald-950/20 to-slate-900 space-y-2">
           <div className="flex items-center justify-between">
@@ -235,6 +243,8 @@ export const Dashboard: React.FC = () => {
             Lifetime Net Assets
           </div>
         </div>
+          </>
+        )}
       </div>
 
       {/* Upcoming Rents & Mess Expenses Planner Section */}
@@ -351,22 +361,22 @@ export const Dashboard: React.FC = () => {
       <AddBillModal
         isOpen={showBillModal}
         onClose={() => setShowBillModal(false)}
-        onSuccess={fetchDashboardData}
+        onSuccess={() => refetch()}
       />
       <AddGroceryModal
         isOpen={showGroceryModal}
         onClose={() => setShowGroceryModal(false)}
-        onSuccess={fetchDashboardData}
+        onSuccess={() => refetch()}
       />
       <AddApplianceModal
         isOpen={showApplianceModal}
         onClose={() => setShowApplianceModal(false)}
-        onSuccess={fetchDashboardData}
+        onSuccess={() => refetch()}
       />
       <AddTaskModal
         isOpen={showTaskModal}
         onClose={() => setShowTaskModal(false)}
-        onSuccess={fetchDashboardData}
+        onSuccess={() => refetch()}
       />
     </div>
   );

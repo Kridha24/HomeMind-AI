@@ -1,17 +1,35 @@
 version: '3.8'
 
+# ============================================================
+# HomeMind AI — Docker Compose
+# All secrets and credentials MUST be provided via a .env file
+# (see .env.example). Hard-coded credentials are not allowed.
+#
+# Required .env variables:
+#   POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
+#   JWT_SECRET, JWT_REFRESH_SECRET
+#   FRONTEND_URL
+#   AI_SERVICE_SECRET
+#   GOOGLE_CLIENT_ID (optional but recommended)
+# ============================================================
+
 services:
   postgres:
     image: postgres:15-alpine
     container_name: homemind_postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespassword
-      POSTGRES_DB: homemind_db
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    # Do NOT expose postgres to the host network in production.
+    # Internal services connect via the 'homemind' network.
+    expose:
+      - "5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - homemind
 
   backend:
     build: ./backend
@@ -19,25 +37,62 @@ services:
     ports:
       - "5001:5001"
     environment:
-      DATABASE_URL: postgresql://postgres:postgrespassword@postgres:5432/homemind_db?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
       PORT: 5001
+      NODE_ENV: ${NODE_ENV:-production}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL}
       AI_SERVICE_URL: http://ai-service:8000
+      AI_SERVICE_SECRET: ${AI_SERVICE_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-}
+      FAST2SMS_API_KEY: ${FAST2SMS_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
     depends_on:
       - postgres
+    restart: unless-stopped
+    networks:
+      - homemind
 
   ai-service:
     build: ./ai-service
     container_name: homemind_ai_service
-    ports:
-      - "8000:8000"
+    # Do NOT expose AI service to the host network.
+    # Only the backend communicates with it via the internal network.
+    expose:
+      - "8000"
+    environment:
+      AI_SERVICE_SECRET: ${AI_SERVICE_SECRET}
+      BACKEND_URL: http://backend:5001
+      NODE_ENV: ${NODE_ENV:-production}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+    restart: unless-stopped
+    networks:
+      - homemind
 
   frontend:
     build: ./frontend
     container_name: homemind_frontend
     ports:
       - "3000:3000"
+    environment:
+      VITE_API_URL: ${FRONTEND_URL:-http://localhost:5001}
     depends_on:
       - backend
+    restart: unless-stopped
+    networks:
+      - homemind
 
 volumes:
   pgdata:
+
+networks:
+  homemind:
+    driver: bridge

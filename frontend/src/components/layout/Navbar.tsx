@@ -1,8 +1,7 @@
 import React from 'react';
-import { Bell, Bot, CloudSun, Search, Sparkles, Menu } from 'lucide-react';
+import { Bell, Search, Sparkles, Menu } from 'lucide-react';
 import { ProfileMenu } from '../common/ProfileMenu';
-import { useSettingStore } from '../../stores/useSettingStore';
-import { COUNTRY_DEFAULTS } from '../../utils/currency';
+import { useAuthStore } from '../../stores/useAuthStore';
 
 interface NavbarProps {
   onOpenAIChat: () => void;
@@ -11,21 +10,7 @@ interface NavbarProps {
   unreadCount?: number;
 }
 
-const COUNTRY_FLAGS: Record<string, string> = {
-  IN: '🇮🇳',
-  US: '🇺🇸',
-  GB: '🇬🇧',
-  DE: '🇩🇪',
-  FR: '🇫🇷',
-  JP: '🇯🇵',
-  CA: '🇨🇦',
-  AU: '🇦🇺',
-  SG: '🇸🇬',
-  AE: '🇦🇪',
-  SA: '🇸🇦',
-  CH: '🇨🇭',
-  CN: '🇨🇳',
-};
+
 
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenAIChat,
@@ -33,11 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleMobileSidebar,
   unreadCount = 0,
 }) => {
-  const { country } = useSettingStore();
-  const defaults = COUNTRY_DEFAULTS[country] || COUNTRY_DEFAULTS['US'];
-  const flag = COUNTRY_FLAGS[country] || '🌐';
-  const isCelsius = country === 'IN' || country === 'DE' || country === 'FR' || country === 'JP' || country === 'CA' || country === 'AU';
-  const tempStr = isCelsius ? '28°C Partly Sunny' : '74°F Clear Sky';
+  const { household, user } = useAuthStore();
 
   return (
     <header className="h-16 bg-panel/40 backdrop-blur-xl border-b border-primary/60 sticky top-0 z-30 lg:ml-64 ml-0 flex items-center justify-between px-3 sm:px-6 gap-2 sm:gap-4">
@@ -67,11 +48,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Right Header Actions */}
       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-        {/* Live Location Weather Widget (Desktop/Tablet) */}
+        {/* Household & User Info (Desktop/Tablet) */}
         <div className="hidden sm:flex items-center gap-2 bg-background/40 border border-primary/60 px-3 py-1.5 rounded-xl text-xs text-secondary">
-          <CloudSun className="w-4 h-4 text-amber-400" />
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span>
-            {tempStr} • {flag} {defaults.countryName}
+            {household?.name || 'My Home'} • {user?.name?.split(' ')[0] || 'User'}
           </span>
         </div>
 

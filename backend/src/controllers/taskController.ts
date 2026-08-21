@@ -18,7 +18,8 @@ export const getTasks = async (req: AuthenticatedRequest, res: Response) => {
 
     res.json({ tasks });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[getTasks] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch tasks.' });
   }
 };
 
@@ -29,6 +30,16 @@ export const createTask = async (req: AuthenticatedRequest, res: Response) => {
     if (!householdId || !creatorId) return res.status(400).json({ error: 'Missing context' });
 
     const { title, description, priority, dueDate, assigneeId, isRecurring } = req.body;
+
+    // If an assignee is specified, ensure they are a member of the same household.
+    if (assigneeId) {
+      const assigneeMember = await prisma.user.findFirst({
+        where: { id: assigneeId, householdId }
+      });
+      if (!assigneeMember) {
+        return res.status(400).json({ error: 'Assignee is not a member of this household' });
+      }
+    }
 
     const task = await prisma.task.create({
       data: {
@@ -46,7 +57,8 @@ export const createTask = async (req: AuthenticatedRequest, res: Response) => {
 
     res.status(201).json({ task });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[createTask] Error:', err.message);
+    res.status(500).json({ error: 'Failed to create task.' });
   }
 };
 
@@ -54,6 +66,13 @@ export const updateTaskStatus = async (req: AuthenticatedRequest, res: Response)
   try {
     const { id } = req.params;
     const { status } = req.body;
+    const householdId = req.user?.householdId;
+
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    // Verify the task belongs to this household before updating (IDOR protection).
+    const existing = await prisma.task.findFirst({ where: { id, householdId } });
+    if (!existing) return res.status(404).json({ error: 'Task not found' });
 
     const task = await prisma.task.update({
       where: { id },
@@ -62,6 +81,7 @@ export const updateTaskStatus = async (req: AuthenticatedRequest, res: Response)
 
     res.json({ task });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[updateTaskStatus] Error:', err.message);
+    res.status(500).json({ error: 'Failed to update task status.' });
   }
 };

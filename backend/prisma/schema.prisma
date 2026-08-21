@@ -50,6 +50,9 @@ model RefreshToken {
   userAgent String?
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  // Efficient per-user token lookup and expired token cleanup.
+  @@index([userId, expiresAt])
 }
 
 model OTPVerification {

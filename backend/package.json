@@ -4,8 +4,8 @@
   "description": "HomeMind AI Backend REST API Server",
   "main": "dist/server.js",
   "scripts": {
-    "build": "prisma generate && prisma db push --accept-data-loss && tsc",
-    "start": "prisma db push --accept-data-loss && node dist/server.js",
+    "build": "prisma generate && tsc",
+    "start": "prisma migrate deploy && node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
