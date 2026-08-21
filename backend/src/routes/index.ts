@@ -17,7 +17,7 @@ import * as incomeController from '../controllers/incomeController';
 import * as assistantController from '../controllers/assistantController';
 import { validate } from '../middleware/validator';
 import { googleAuthSchema } from '../utils/validators';
-import { authLimiter, otpLimiter } from '../app';
+import { authLimiter, otpLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
