@@ -8,6 +8,7 @@ import { useSettingStore } from '../../stores/useSettingStore';
 import { LoginCard } from '../../components/auth/LoginCard';
 import { AuthSuccessOverlay } from '../../components/auth/AuthSuccessOverlay';
 import { OnboardingWizard } from '../../components/onboarding/OnboardingWizard';
+import { PhoneAuthModal } from '../../components/common/PhoneAuthModal';
 
 // Desktop-only decorative components — hidden on mobile via CSS
 import { DynamicAIMessage } from '../../components/auth/DynamicAIMessage';
@@ -40,6 +41,7 @@ export const Login: React.FC = () => {
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingState, setLoadingState] = useState<'idle' | 'connecting' | 'success'>('idle');
   const [error, setError] = useState('');
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
   const gsiInitialised = useRef(false);
 
   const navigate = useNavigate();
@@ -277,6 +279,7 @@ export const Login: React.FC = () => {
 
           <LoginCard
             onGoogleClick={triggerGoogleSignIn}
+            onPhoneClick={() => setShowPhoneModal(true)}
             loading={loadingGoogle}
             error={error}
             googleConfigured={!!GOOGLE_CLIENT_ID}
@@ -297,6 +300,18 @@ export const Login: React.FC = () => {
         onComplete={() => {
           setShowOnboarding(false);
           navigate('/');
+        }}
+      />
+
+      <PhoneAuthModal
+        isOpen={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onSuccess={() => {
+          setShowPhoneModal(false);
+          // Standard login logic usually calls fetchSettings then navigates
+          fetchSettings().finally(() => {
+             navigate('/');
+          });
         }}
       />
     </div>

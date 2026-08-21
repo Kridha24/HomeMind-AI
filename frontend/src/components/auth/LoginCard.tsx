@@ -7,6 +7,7 @@ interface LoginCardProps {
   onGoogleClick: () => void;
   loading: boolean;
   error: string;
+  onPhoneClick: () => void;
   /** If false, Google sign-in is not configured — show informational message */
   googleConfigured?: boolean;
 }
@@ -15,6 +16,7 @@ export const LoginCard: React.FC<LoginCardProps> = ({
   onGoogleClick,
   loading,
   error,
+  onPhoneClick,
   googleConfigured = true,
 }) => {
   return (
@@ -54,11 +56,16 @@ export const LoginCard: React.FC<LoginCardProps> = ({
           </div>
         )}
 
-        {/* Phone login hint — always shown as an option */}
-        <div className="flex items-center gap-2 justify-center text-xs text-muted pt-1">
-          <PhoneCall className="w-3.5 h-3.5" />
-          <span>Or use phone number login from the menu</span>
-        </div>
+        {/* Phone login button */}
+        <button
+          type="button"
+          onClick={onPhoneClick}
+          disabled={loading}
+          className="w-full bg-panel/50 hover:bg-panel border border-primary/40 text-primary font-semibold py-3.5 px-5 rounded-2xl text-sm flex items-center justify-center gap-2 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+        >
+          <PhoneCall className="w-4 h-4" />
+          <span>Continue with Phone Number</span>
+        </button>
       </div>
 
       {/* Trust Badges */}
