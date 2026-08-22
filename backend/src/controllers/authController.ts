@@ -12,6 +12,7 @@ import { verifyGoogleIdToken } from '../services/googleAuthService';
 import { generateCryptographicOTP, sendMobileSMS } from '../services/smsService';
 import { emailService } from '../services/emailService';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { normalizePhone, phoneLookupVariants } from '../utils/phone';
 
 /**
  * 1. Real Google OAuth Authentication Endpoint
@@ -381,7 +382,10 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
     const { phoneNumber } = req.body;
     if (!phoneNumber) return res.status(400).json({ error: 'Phone number is required' });
 
-    const identifier = phoneNumber.trim();
+    const identifier = normalizePhone(phoneNumber);
+    if (!identifier) {
+      return res.status(400).json({ error: 'Enter a valid 10-digit mobile number' });
+    }
     const realOtp = generateCryptographicOTP();
     const otpHash = await bcrypt.hash(realOtp, 10);
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
@@ -443,7 +447,10 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
       return res.status(400).json({ error: 'Phone number and OTP code are required' });
     }
 
-    const identifier = phoneNumber.trim();
+    const identifier = normalizePhone(phoneNumber);
+    if (!identifier) {
+      return res.status(400).json({ error: 'Enter a valid 10-digit mobile number' });
+    }
     const otpRecord = await prisma.oTPVerification.findUnique({ where: { identifier } });
 
     if (!otpRecord) {
@@ -479,7 +486,7 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
     if (currentUserId) {
       // User is authenticated (e.g. from Onboarding modal or Profile), link phone number directly
       const existingWithPhone = await prisma.user.findFirst({
-        where: { phoneNumber: identifier, NOT: { id: currentUserId } }
+        where: { phoneNumber: { in: phoneLookupVariants(identifier) }, NOT: { id: currentUserId } }
       });
       if (existingWithPhone) {
         // Clear phone from duplicate record to prevent constraint conflict
@@ -501,7 +508,7 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
       household = user.household;
     } else {
       user = await prisma.user.findFirst({
-        where: { phoneNumber: identifier, softDelete: false },
+        where: { phoneNumber: { in: phoneLookupVariants(identifier) }, softDelete: false },
         include: { household: true }
       });
 

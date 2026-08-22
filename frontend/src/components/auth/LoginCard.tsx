@@ -50,21 +50,25 @@ export const LoginCard: React.FC<LoginCardProps> = ({
           <div className="p-3.5 bg-amber-500/10 border border-amber-500/25 rounded-2xl flex items-start gap-2.5 text-xs text-amber-300">
             <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
             <span>
-              Google sign-in is not configured for this deployment.
-              Please use phone login below or contact support.
+              Google sign-in is not configured. Use your mobile number below.
             </span>
           </div>
         )}
 
-        {/* Phone login button */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-primary/40" />
+          <span className="text-[11px] uppercase tracking-wider text-muted font-semibold">or</span>
+          <div className="flex-1 h-px bg-primary/40" />
+        </div>
+
         <button
           type="button"
           onClick={onPhoneClick}
           disabled={loading}
-          className="w-full bg-panel/50 hover:bg-panel border border-primary/40 text-primary font-semibold py-3.5 px-5 rounded-2xl text-sm flex items-center justify-center gap-2 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          className="w-full min-h-[44px] bg-panel hover:bg-secondary border border-primary/40 text-primary font-semibold py-3.5 px-5 rounded-2xl text-sm flex items-center justify-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-60"
         >
           <PhoneCall className="w-4 h-4" />
-          <span>Continue with Phone Number</span>
+          <span>Continue with phone</span>
         </button>
       </div>
 

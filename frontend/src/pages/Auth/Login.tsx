@@ -7,7 +7,6 @@ import { useAuthStore } from '../../stores/useAuthStore';
 import { useSettingStore } from '../../stores/useSettingStore';
 import { LoginCard } from '../../components/auth/LoginCard';
 import { AuthSuccessOverlay } from '../../components/auth/AuthSuccessOverlay';
-import { OnboardingWizard } from '../../components/onboarding/OnboardingWizard';
 import { PhoneAuthModal } from '../../components/common/PhoneAuthModal';
 
 // Desktop-only decorative components — hidden on mobile via CSS
@@ -16,9 +15,6 @@ import { HomeMindEcosystem } from '../../components/auth/HomeMindEcosystem';
 import { FloatingFeatureCards } from '../../components/auth/FloatingFeatureCards';
 import { ProductBenefits } from '../../components/auth/ProductBenefits';
 import { AuthBackground } from '../../components/auth/AuthBackground';
-
-// Firebase fallback (only used if GSI is blocked)
-import { auth, googleProvider, signInWithPopup } from '../../config/firebase';
 
 declare global {
   interface Window {
@@ -34,7 +30,6 @@ declare global {
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 export const Login: React.FC = () => {
-  const [showOnboarding, setShowOnboarding] = useState(false);
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
   const [pendingSuccessData, setPendingSuccessData] = useState<{ isNew: boolean; userName: string } | null>(null);
 
@@ -42,7 +37,7 @@ export const Login: React.FC = () => {
   const [loadingState, setLoadingState] = useState<'idle' | 'connecting' | 'success'>('idle');
   const [error, setError] = useState('');
   const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const gsiInitialised = useRef(false);
+  const tokenClientRef = useRef<any>(null);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -52,55 +47,65 @@ export const Login: React.FC = () => {
   // Show "session expired" toast if redirected here from silent refresh failure
   const sessionExpired = searchParams.get('sessionExpired') === 'true';
 
-  // ─── GSI Initialisation ──────────────────────────────────────────────────
+  // Load Google Identity Services once — used for the account-picker popup
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return; // Don't load GSI script if not configured
-    if (gsiInitialised.current) return;
+    if (!GOOGLE_CLIENT_ID) return;
 
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      if (window.google?.accounts?.id) {
-        try {
-          window.google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: handleGSICredential,
-            auto_select: false,
-            cancel_on_tap_outside: true,
-          });
-          gsiInitialised.current = true;
-        } catch (e) {
-          console.warn('[GSI] Init failed:', e);
-        }
+      if (!window.google?.accounts?.oauth2) return;
+      try {
+        tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'openid email profile',
+          ux_mode: 'popup',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse?.error) {
+              if (tokenResponse.error === 'popup_closed_by_user' || tokenResponse.error === 'access_denied') {
+                setLoadingGoogle(false);
+                setLoadingState('idle');
+                return;
+              }
+              setError('Google sign-in was cancelled or failed. Please try again.');
+              setLoadingGoogle(false);
+              setLoadingState('idle');
+              return;
+            }
+            const accessToken = tokenResponse?.access_token;
+            if (!accessToken) {
+              setError('Google did not return an account token. Please try again.');
+              setLoadingGoogle(false);
+              setLoadingState('idle');
+              return;
+            }
+            await submitGoogleToken(accessToken);
+          },
+          error_callback: () => {
+            setLoadingGoogle(false);
+            setLoadingState('idle');
+          },
+        });
+      } catch (e) {
+        console.warn('[Google] OAuth client init failed:', e);
       }
     };
     document.body.appendChild(script);
     return () => {
-      try { document.body.removeChild(script); } catch (_) {}
+      try {
+        document.body.removeChild(script);
+      } catch (_) {}
     };
   }, []);
 
-  // ─── ONE path: GSI credential callback → POST idToken ────────────────────
-  const handleGSICredential = async (response: any) => {
-    const idToken = response?.credential;
-    if (!idToken) {
-      setError('Google sign-in failed: no credential received. Please try again.');
-      setLoadingState('idle');
-      setLoadingGoogle(false);
-      return;
-    }
-    await submitGoogleIdToken(idToken);
-  };
-
-  // ─── Core token submission (shared by GSI + Firebase fallback) ───────────
-  const submitGoogleIdToken = async (idToken: string) => {
+  const submitGoogleToken = async (googleToken: string) => {
     setLoadingGoogle(true);
     setLoadingState('connecting');
     setError('');
     try {
-      const res = await apiClient.post('/auth/google', { idToken });
+      const res = await apiClient.post('/auth/google', { idToken: googleToken });
       setLoadingState('success');
       setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
       await fetchSettings();
@@ -113,7 +118,7 @@ export const Login: React.FC = () => {
       const msg = err.response?.data?.error;
       setError(
         msg === 'Invalid Google session. Please sign in with your Google account again.'
-          ? 'Your Google session could not be verified. Please try again.'
+          ? 'Google could not verify this account. Try again or use phone login.'
           : msg || 'Google sign-in failed. Check your connection and try again.'
       );
       setLoadingState('idle');
@@ -122,61 +127,24 @@ export const Login: React.FC = () => {
     }
   };
 
-  // ─── Primary trigger: GSI prompt → Firebase fallback ────────────────────
-  const triggerGoogleSignIn = async () => {
+  const triggerGoogleSignIn = () => {
     setError('');
-
     if (!GOOGLE_CLIENT_ID) {
-      setError('Google sign-in is not configured. Please contact support or use phone login.');
+      setError('Google sign-in is not configured. Use phone login, or add VITE_GOOGLE_CLIENT_ID.');
       return;
     }
-
-    // Method 1: GSI prompt (uses credential/id_token — the secure path)
-    if (window.google?.accounts?.id && gsiInitialised.current) {
-      window.google.accounts.id.prompt((notification: any) => {
-        if (
-          notification.isNotDisplayed() ||
-          notification.isSkippedMoment() ||
-          notification.getDismissedReason() === 'credential_returned'
-        ) {
-          // Prompt not shown (e.g. popup blocked or user dismissed) → fall through to Firebase
-          tryFirebaseFallback();
-        }
-        // If credential_returned, handleGSICredential fires automatically
-      });
-      return;
-    }
-
-    // Method 2: Firebase popup fallback (still sends idToken, never email-only)
-    await tryFirebaseFallback();
-  };
-
-  const tryFirebaseFallback = async () => {
-    if (!auth || !googleProvider) {
-      setError('Google sign-in is unavailable. Please try phone login or check your connection.');
+    if (!tokenClientRef.current) {
+      setError('Google is still loading. Wait a second and try again.');
       return;
     }
     setLoadingGoogle(true);
     setLoadingState('connecting');
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      if (result?.user) {
-        const idToken = await result.user.getIdToken();
-        // Send ONLY the verified Firebase idToken — never email/name/googleId alone.
-        await submitGoogleIdToken(idToken);
-      }
-    } catch (err: any) {
+      tokenClientRef.current.requestAccessToken({ prompt: 'select_account' });
+    } catch {
       setLoadingGoogle(false);
       setLoadingState('idle');
-      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-        // User closed popup — silent, no error
-        return;
-      }
-      if (err.code === 'auth/popup-blocked') {
-        setError('Popup blocked by your browser. Please allow popups for this site and try again.');
-        return;
-      }
-      setError('Google sign-in failed. Please try again or use phone login.');
+      setError('Could not open Google. Allow popups for this site and try again.');
     }
   };
 
@@ -294,24 +262,14 @@ export const Login: React.FC = () => {
         />
       )}
 
-      <OnboardingWizard
-        isOpen={showOnboarding}
-        initialName={pendingSuccessData?.userName}
-        onComplete={() => {
-          setShowOnboarding(false);
-          navigate('/');
-        }}
-      />
-
       <PhoneAuthModal
         isOpen={showPhoneModal}
         onClose={() => setShowPhoneModal(false)}
-        onSuccess={() => {
+        onSuccess={async (isNew, userName) => {
           setShowPhoneModal(false);
-          // Standard login logic usually calls fetchSettings then navigates
-          fetchSettings().finally(() => {
-             navigate('/');
-          });
+          await fetchSettings();
+          setPendingSuccessData({ isNew: !!isNew, userName: userName || '' });
+          setShowSuccessOverlay(true);
         }}
       />
     </div>

@@ -1,38 +1,54 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Phone, ArrowRight, ShieldCheck, X, RefreshCw, KeyRound } from 'lucide-react';
+import { Phone, ArrowRight, ShieldCheck, X, RefreshCw } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { auth, RecaptchaVerifier, signInWithPhoneNumber } from '../../config/firebase';
 
 interface PhoneAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (isNewRegistration?: boolean, userName?: string) => void;
-  mode?: 'NEW_USER' | 'EXISTING_USER';
+}
+
+function toE164(raw: string): string | null {
+  const digits = raw.replace(/[^0-9]/g, '');
+  if (digits.length < 10) return null;
+  const ten = digits.slice(-10);
+  if (ten.length !== 10) return null;
+  return `+91${ten}`;
 }
 
 export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
-  mode = 'NEW_USER',
 }) => {
   const [step, setStep] = useState<'PHONE' | 'OTP'>('PHONE');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [localNumber, setLocalNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [name, setName] = useState('');
+  const [e164, setE164] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes (300s)
+  const [timeLeft, setTimeLeft] = useState(300);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const otpInputRef = useRef<HTMLInputElement>(null);
 
-  const recaptchaVerifierRef = useRef<any>(null);
   const { setAuth } = useAuthStore();
 
   useEffect(() => {
-    let timer: any;
+    if (!isOpen) {
+      setStep('PHONE');
+      setLocalNumber('');
+      setOtp('');
+      setName('');
+      setError('');
+      setInfoMessage('');
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval>;
     if (step === 'OTP' && timeLeft > 0) {
       timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
     }
@@ -40,81 +56,43 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
   }, [step, timeLeft]);
 
   useEffect(() => {
-    let cooldownTimer: any;
+    let cooldownTimer: ReturnType<typeof setInterval>;
     if (resendCooldown > 0) {
       cooldownTimer = setInterval(() => setResendCooldown((prev) => prev - 1), 1000);
     }
     return () => clearInterval(cooldownTimer);
   }, [resendCooldown]);
 
+  useEffect(() => {
+    if (step === 'OTP') otpInputRef.current?.focus();
+  }, [step]);
+
   if (!isOpen) return null;
+
+  const sendOtp = async (phone: string) => {
+    const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber: phone });
+    setE164(phone);
+    setStep('OTP');
+    setTimeLeft(300);
+    setResendCooldown(30);
+    setOtp('');
+    setInfoMessage(res.data.message || `Code sent to ${phone}`);
+  };
 
   const handleSendOTP = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!phoneNumber) {
-      setError('Please enter your mobile phone number.');
+    const phone = toE164(localNumber);
+    if (!phone) {
+      setError('Enter a valid 10-digit mobile number.');
       return;
     }
     setLoading(true);
     setError('');
     setInfoMessage('');
-
     try {
-      const cleanDigits = phoneNumber.replace(/[^0-9]/g, '');
-      const formattedPhone = phoneNumber.startsWith('+')
-        ? `+${cleanDigits}`
-        : cleanDigits.startsWith('91') && cleanDigits.length === 12
-        ? `+${cleanDigits}`
-        : `+91${cleanDigits.replace(/^0+/, '')}`;
-
-      if (import.meta.env.VITE_FIREBASE_API_KEY && auth) {
-        if (recaptchaVerifierRef.current) {
-          try {
-            recaptchaVerifierRef.current.clear();
-          } catch (e) {}
-          recaptchaVerifierRef.current = null;
-        }
-
-        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible',
-          callback: () => {},
-          'expired-callback': () => {
-            setError('reCAPTCHA expired. Please try sending OTP again.');
-          },
-        });
-
-        console.log(`[Firebase Phone Auth] Requesting SMS OTP for formatted number: ${formattedPhone}`);
-        const confirmation = await signInWithPhoneNumber(auth, formattedPhone, recaptchaVerifierRef.current);
-        setConfirmationResult(confirmation);
-        setStep('OTP');
-        setTimeLeft(300);
-        setResendCooldown(30);
-        setInfoMessage(`SMS verification code sent to ${formattedPhone}`);
-      } else {
-        const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber: formattedPhone });
-        setStep('OTP');
-        setTimeLeft(300);
-        setResendCooldown(30);
-        setInfoMessage(res.data.message || `SMS verification code sent to ${formattedPhone}`);
-      }
+      await sendOtp(phone);
     } catch (err: any) {
-      console.error('[Firebase Phone Auth Error]:', err.code, err.message);
-      try {
-        const cleanDigits = phoneNumber.replace(/[^0-9]/g, '');
-        const formattedPhone = phoneNumber.startsWith('+')
-          ? `+${cleanDigits}`
-          : cleanDigits.startsWith('91') && cleanDigits.length === 12
-          ? `+${cleanDigits}`
-          : `+91${cleanDigits.replace(/^0+/, '')}`;
-
-        const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber: formattedPhone });
-        setStep('OTP');
-        setTimeLeft(300);
-        setResendCooldown(30);
-        setInfoMessage(res.data.message || `SMS verification code sent to ${formattedPhone}`);
-      } catch (fallbackErr: any) {
-        setError(fallbackErr.response?.data?.error || err.message || 'Failed to send SMS OTP');
-      }
+      setError(err.response?.data?.error || 'Could not send OTP. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -122,44 +100,27 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
 
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otp) {
-      setError('Please enter the 6-digit code.');
+    if (otp.length !== 6) {
+      setError('Enter the 6-digit code from SMS.');
       return;
     }
     if (timeLeft <= 0) {
-      setError('OTP has expired after 5 minutes. Please request a new OTP.');
+      setError('Code expired. Request a new one.');
       return;
     }
 
     setLoading(true);
     setError('');
-
     try {
-      if (confirmationResult) {
-        await confirmationResult.confirm(otp);
-      }
-
       const res = await apiClient.post('/auth/phone/verify-otp', {
-        phoneNumber,
+        phoneNumber: e164,
         otp,
-        name: name || undefined,
+        name: name.trim() || undefined,
       });
-
       setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
       onSuccess(res.data.isNewRegistration, res.data.user?.name);
     } catch (err: any) {
-      try {
-        const res = await apiClient.post('/auth/phone/verify-otp', {
-          phoneNumber,
-          otp,
-          name: name || undefined,
-        });
-
-        setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
-        onSuccess(res.data.isNewRegistration, res.data.user?.name);
-      } catch (fallbackErr: any) {
-        setError(fallbackErr.response?.data?.error || err.message || 'Invalid OTP code');
-      }
+      setError(err.response?.data?.error || 'Invalid code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -172,88 +133,86 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
-      <div id="recaptcha-container"></div>
-      <div className="bg-panel border border-primary rounded-3xl w-full max-w-md p-6 space-y-6 shadow-2xl relative">
-        {/* Close Button */}
+    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-panel border border-primary rounded-3xl w-full max-w-md p-6 space-y-6 shadow-2xl relative max-h-[90dvh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-muted hover:text-primary p-2 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors"
+          className="absolute top-4 right-4 text-muted hover:text-primary p-2 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+          aria-label="Close"
         >
           <X className="w-4 h-4" />
         </button>
 
-        {/* Header */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-500 flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/30">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center mx-auto">
             <Phone className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-xl font-extrabold text-primary tracking-tight">
-            {mode === 'NEW_USER' ? 'Sign Up with Mobile OTP' : 'Sign In with Mobile OTP'}
+            {step === 'PHONE' ? 'Continue with phone' : 'Enter OTP'}
           </h2>
           <p className="text-xs text-muted">
             {step === 'PHONE'
-              ? 'Enter your mobile number with country code (e.g. +91 98765 43210).'
-              : `Enter the 6-digit code sent via SMS to ${phoneNumber}`}
+              ? 'We will send a 6-digit SMS code. Same number = same account.'
+              : `Sent to ${e164}`}
           </p>
         </div>
 
-        {/* Error Alert */}
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-xs rounded-xl text-center font-medium animate-in fade-in">
+          <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-xs rounded-xl text-center font-medium">
             {error}
           </div>
         )}
 
-        {/* Info Alert */}
-        {infoMessage && (
-          <div className="p-3 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs rounded-xl text-center font-medium animate-in fade-in">
+        {infoMessage && !error && (
+          <div className="p-3 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs rounded-xl text-center font-medium">
             {infoMessage}
           </div>
         )}
 
-        {/* Step 1: Phone Form */}
         {step === 'PHONE' && (
           <form onSubmit={handleSendOTP} className="space-y-4">
-            {mode === 'NEW_USER' && (
-              <div>
-                <label className="text-xs font-semibold text-secondary block mb-1.5">
-                  Your Full Name <span className="text-muted">(Optional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Alex Johnson"
-                  className="w-full bg-background border border-primary rounded-xl px-4 py-3 text-xs text-primary placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                />
-              </div>
-            )}
-
             <div>
               <label className="text-xs font-semibold text-secondary block mb-1.5">
-                Mobile Phone Number
+                Your name <span className="text-muted">(new accounts)</span>
               </label>
               <input
-                type="tel"
-                required
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="+91 9876543210"
-                className="w-full bg-background border border-primary rounded-xl px-4 py-3 text-xs text-primary placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Priya Sharma"
+                autoComplete="name"
+                className="w-full bg-background border border-primary rounded-xl px-4 py-3 text-sm text-primary placeholder-slate-500 focus:outline-none focus:border-emerald-500"
               />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-secondary block mb-1.5">Mobile number</label>
+              <div className="flex gap-2">
+                <div className="flex items-center px-3 rounded-xl bg-background border border-primary text-sm font-semibold text-primary">
+                  +91
+                </div>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  required
+                  maxLength={10}
+                  value={localNumber}
+                  onChange={(e) => setLocalNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  placeholder="9876543210"
+                  className="flex-1 min-w-0 bg-background border border-primary rounded-xl px-4 py-3 text-sm text-primary placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-bold py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 border border-emerald-400/30 transition-all active:scale-95 disabled:opacity-50"
+              disabled={loading || localNumber.length !== 10}
+              className="w-full min-h-[44px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-transform"
             >
-              {loading ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
+              {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : (
                 <>
-                  <span>Send SMS Code</span>
+                  <span>Send OTP</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -261,59 +220,53 @@ export const PhoneAuthModal: React.FC<PhoneAuthModalProps> = ({
           </form>
         )}
 
-        {/* Step 2: OTP Form */}
         {step === 'OTP' && (
           <form onSubmit={handleVerifyOTP} className="space-y-4">
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs font-semibold text-secondary">6-Digit SMS Code</label>
+                <label className="text-xs font-semibold text-secondary">6-digit code</label>
                 <span className="text-[11px] font-mono text-muted">
-                  Expires in: <strong className="text-amber-400">{formatTime(timeLeft)}</strong>
+                  Expires <strong className="text-amber-400">{formatTime(timeLeft)}</strong>
                 </span>
               </div>
               <input
+                ref={otpInputRef}
                 type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
                 required
                 maxLength={6}
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                placeholder="• • • • • •"
-                className="w-full bg-background border border-primary rounded-xl px-4 py-3 text-center text-lg tracking-widest font-mono text-primary placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
-                autoFocus
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="••••••"
+                className="w-full bg-background border border-primary rounded-xl px-4 py-3 text-center text-lg tracking-[0.4em] font-mono text-primary focus:outline-none focus:border-emerald-500"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading || otp.length < 6}
-              className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-bold py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 border border-emerald-400/30 transition-all active:scale-95 disabled:opacity-50"
+              className="w-full min-h-[44px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-transform"
             >
-              {loading ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
+              {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : (
                 <>
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Verify & Open HomeMind</span>
+                  <span>Verify and continue</span>
                 </>
               )}
             </button>
 
             <div className="flex items-center justify-between text-xs text-muted pt-2 border-t border-primary/80">
-              <button
-                type="button"
-                onClick={() => setStep('PHONE')}
-                className="hover:text-primary transition-colors"
-              >
-                ← Change Number
+              <button type="button" onClick={() => { setStep('PHONE'); setError(''); }} className="hover:text-primary min-h-[44px]">
+                Change number
               </button>
-
               <button
                 type="button"
                 onClick={() => handleSendOTP()}
                 disabled={resendCooldown > 0 || loading}
-                className="text-emerald-400 hover:text-emerald-300 transition-colors disabled:text-slate-600 disabled:cursor-not-allowed"
+                className="text-emerald-400 hover:text-emerald-300 disabled:text-slate-600 disabled:cursor-not-allowed min-h-[44px]"
               >
-                {resendCooldown > 0 ? `Resend SMS in ${resendCooldown}s` : 'Resend SMS'}
+                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend OTP'}
               </button>
             </div>
           </form>
