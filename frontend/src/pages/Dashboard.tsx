@@ -23,6 +23,7 @@ import {
   Command,
   ArrowUpRight,
   BadgeDollarSign,
+  Edit3,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../services/apiClient';
@@ -85,10 +86,16 @@ export const Dashboard: React.FC = () => {
   const [timeStr, setTimeStr] = useState('');
   const [dateStr, setDateStr] = useState('');
 
-  // Active Modals
+  // Active Modals & Edit States
   const [showIncomeModal, setShowIncomeModal] = useState(false);
+  const [editingIncome, setEditingIncome] = useState<any>(null);
+
   const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<any>(null);
+
   const [showBillModal, setShowBillModal] = useState(false);
+  const [editingBill, setEditingBill] = useState<any>(null);
+
   const [showGroceryModal, setShowGroceryModal] = useState(false);
   const [showApplianceModal, setShowApplianceModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -141,6 +148,16 @@ export const Dashboard: React.FC = () => {
   const handleRefreshAll = () => {
     refetch();
     refetchIncomes();
+  };
+
+  const handleEditIncome = (inc: any) => {
+    setEditingIncome(inc);
+    setShowIncomeModal(true);
+  };
+
+  const handleEditBill = (bill: any) => {
+    setEditingBill(bill);
+    setShowBillModal(true);
   };
 
   return (
@@ -197,7 +214,10 @@ export const Dashboard: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2">
           {/* + Add Income Action Button */}
           <button
-            onClick={() => setShowIncomeModal(true)}
+            onClick={() => {
+              setEditingIncome(null);
+              setShowIncomeModal(true);
+            }}
             className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-emerald-600/20 active:scale-95 transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -205,7 +225,10 @@ export const Dashboard: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setShowExpenseModal(true)}
+            onClick={() => {
+              setEditingExpense(null);
+              setShowExpenseModal(true);
+            }}
             className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-blue-600/20 active:scale-95 transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -213,7 +236,10 @@ export const Dashboard: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setShowBillModal(true)}
+            onClick={() => {
+              setEditingBill(null);
+              setShowBillModal(true);
+            }}
             className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm"
           >
             <Plus className="w-3.5 h-3.5 text-amber-500" />
@@ -385,11 +411,14 @@ export const Dashboard: React.FC = () => {
       {/* Simple Smart Suggestions */}
       <ActionableAIFeed
         upcomingBills={upcomingBills}
-        onOpenExpenseModal={() => setShowExpenseModal(true)}
+        onOpenExpenseModal={() => {
+          setEditingExpense(null);
+          setShowExpenseModal(true);
+        }}
         onOpenTaskModal={() => setShowTaskModal(true)}
       />
 
-      {/* Household Income & Earnings Overview Section */}
+      {/* Household Income & Earnings Overview Section with Edit Shortcut */}
       <div className="glass-panel p-6 border-emerald-500/30 bg-emerald-50/40 dark:bg-gradient-to-r dark:from-slate-900 dark:via-emerald-950/15 dark:to-slate-900 space-y-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
@@ -415,10 +444,19 @@ export const Dashboard: React.FC = () => {
             {incomesList.slice(0, 3).map((inc: any) => (
               <div
                 key={inc.id}
-                className="p-3.5 rounded-2xl bg-panel border border-primary/80 flex items-center justify-between shadow-sm"
+                className="p-3.5 rounded-2xl bg-panel border border-primary/80 flex items-center justify-between shadow-sm group hover:border-emerald-500/50 transition-colors"
               >
                 <div className="space-y-1">
-                  <span className="text-xs font-bold text-primary block">{inc.title}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-primary block">{inc.title}</span>
+                    <button
+                      onClick={() => handleEditIncome(inc)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-blue-500 rounded-md transition-opacity"
+                      title="Edit Income"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                    </button>
+                  </div>
                   <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 uppercase tracking-wider inline-block">
                     {inc.source || 'Salary'}
                   </span>
@@ -436,7 +474,10 @@ export const Dashboard: React.FC = () => {
           <div className="p-4 rounded-2xl bg-panel border border-primary/80 text-center text-xs text-secondary flex items-center justify-between shadow-sm">
             <span>No income entries logged yet for this month.</span>
             <button
-              onClick={() => setShowIncomeModal(true)}
+              onClick={() => {
+                setEditingIncome(null);
+                setShowIncomeModal(true);
+              }}
               className="px-3.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 rounded-xl text-xs font-bold transition-colors shadow-xs flex items-center gap-1"
             >
               <Plus className="w-3.5 h-3.5" /> Add First Income
@@ -445,7 +486,7 @@ export const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Upcoming Bills & Rent Section */}
+      {/* Upcoming Bills & Rent Section with Edit Shortcut */}
       <div className="glass-panel p-6 border-amber-500/30 bg-amber-50/40 dark:bg-gradient-to-r dark:from-slate-900 dark:via-amber-950/10 dark:to-slate-900 space-y-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
@@ -471,10 +512,19 @@ export const Dashboard: React.FC = () => {
             {upcomingBills.map((bill: any) => (
               <div
                 key={bill.id}
-                className="p-3.5 rounded-2xl bg-panel border border-primary/80 flex items-center justify-between shadow-sm"
+                className="p-3.5 rounded-2xl bg-panel border border-primary/80 flex items-center justify-between shadow-sm group hover:border-amber-500/50 transition-colors"
               >
                 <div className="space-y-1">
-                  <span className="text-xs font-bold text-primary block">{bill.title}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-primary block">{bill.title}</span>
+                    <button
+                      onClick={() => handleEditBill(bill)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-blue-500 rounded-md transition-opacity"
+                      title="Edit Bill"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                    </button>
+                  </div>
                   <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400 uppercase tracking-wider inline-block">
                     {bill.category || 'Rent/Utility'}
                   </span>
@@ -492,7 +542,10 @@ export const Dashboard: React.FC = () => {
           <div className="p-4 rounded-2xl bg-panel border border-primary/80 text-center text-xs text-secondary flex items-center justify-between shadow-sm">
             <span>No upcoming bills logged yet for this month.</span>
             <button
-              onClick={() => setShowBillModal(true)}
+              onClick={() => {
+                setEditingBill(null);
+                setShowBillModal(true);
+              }}
               className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400 rounded-xl text-xs font-bold transition-colors shadow-xs"
             >
               + Add Bill / Rent
@@ -568,20 +621,32 @@ export const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Modals */}
+      {/* Modals with Edit Support */}
       <AddIncomeModal
         isOpen={showIncomeModal}
-        onClose={() => setShowIncomeModal(false)}
+        initialData={editingIncome}
+        onClose={() => {
+          setShowIncomeModal(false);
+          setEditingIncome(null);
+        }}
         onSuccess={handleRefreshAll}
       />
       <AddExpenseModal
         isOpen={showExpenseModal}
-        onClose={() => setShowExpenseModal(false)}
+        initialData={editingExpense}
+        onClose={() => {
+          setShowExpenseModal(false);
+          setEditingExpense(null);
+        }}
         onSuccess={handleRefreshAll}
       />
       <AddBillModal
         isOpen={showBillModal}
-        onClose={() => setShowBillModal(false)}
+        initialData={editingBill}
+        onClose={() => {
+          setShowBillModal(false);
+          setEditingBill(null);
+        }}
         onSuccess={handleRefreshAll}
       />
       <AddGroceryModal

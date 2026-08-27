@@ -58,21 +58,26 @@ router.get('/dashboard/summary', dashboardController.getDashboardSummary);
 // Income Management
 router.get('/income', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), incomeController.getIncomes);
 router.post('/income', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), incomeController.createIncome);
+router.put('/income/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), incomeController.updateIncome);
 router.delete('/income/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), incomeController.deleteIncome);
 
 // Expense Management
 router.get('/expenses', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), expenseController.getExpenses);
 router.post('/expenses', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), expenseController.createExpense);
+router.put('/expenses/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), expenseController.updateExpense);
 router.delete('/expenses/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), expenseController.deleteExpense);
 
 // Bills Management
 router.get('/bills', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), billController.getBills);
 router.post('/bills', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), billController.createBill);
+router.put('/bills/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), billController.updateBill);
+router.delete('/bills/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), billController.deleteBill);
 router.put('/bills/:id/pay', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), billController.markBillPaid);
 
 // Grocery Inventory
 router.get('/inventory', inventoryController.getInventory);
 router.post('/inventory', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), inventoryController.createGroceryItem);
+router.put('/inventory/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), inventoryController.updateGroceryItem);
 router.put('/inventory/:id/quantity', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), inventoryController.updateQuantity);
 router.delete('/inventory/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), inventoryController.deleteGroceryItem);
 
@@ -89,7 +94,9 @@ router.put('/medicines/schedule/:scheduleId/toggle', authorize(['OWNER', 'CO-OWN
 // Tasks & Family Workspace
 router.get('/tasks', taskController.getTasks);
 router.post('/tasks', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), taskController.createTask);
+router.put('/tasks/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), taskController.updateTask);
 router.put('/tasks/:id/status', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), taskController.updateTaskStatus);
+router.delete('/tasks/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), taskController.deleteTask);
 
 // Family Members Workspace
 router.get('/family/members', familyController.getHouseholdMembers);

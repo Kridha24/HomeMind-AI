@@ -46,6 +46,37 @@ export const createGroceryItem = async (req: AuthenticatedRequest, res: Response
   }
 };
 
+export const updateGroceryItem = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const householdId = req.user?.householdId;
+    const { name, category, quantity, unit, minThreshold, expiryDate, dailyConsumption } = req.body;
+
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    const existing = await prisma.groceryItem.findFirst({ where: { id, householdId } });
+    if (!existing) return res.status(404).json({ error: 'Item not found' });
+
+    const updated = await prisma.groceryItem.update({
+      where: { id },
+      data: {
+        name: name !== undefined ? name : existing.name,
+        category: category !== undefined ? category : existing.category,
+        quantity: quantity !== undefined ? parseFloat(quantity) : existing.quantity,
+        unit: unit !== undefined ? unit : existing.unit,
+        minThreshold: minThreshold !== undefined ? parseFloat(minThreshold) : existing.minThreshold,
+        expiryDate: expiryDate !== undefined ? (expiryDate ? new Date(expiryDate) : null) : existing.expiryDate,
+        dailyConsumption: dailyConsumption !== undefined ? parseFloat(dailyConsumption) : existing.dailyConsumption
+      }
+    });
+
+    res.json({ success: true, item: updated });
+  } catch (err: any) {
+    console.error('[updateGroceryItem] Error:', err.message);
+    res.status(500).json({ error: 'Failed to update grocery item.' });
+  }
+};
+
 export const updateQuantity = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -54,7 +85,6 @@ export const updateQuantity = async (req: AuthenticatedRequest, res: Response) =
 
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
 
-    // Verify the item belongs to this household before updating (IDOR protection).
     const existing = await prisma.groceryItem.findFirst({ where: { id, householdId } });
     if (!existing) return res.status(404).json({ error: 'Item not found' });
 
@@ -77,7 +107,6 @@ export const deleteGroceryItem = async (req: AuthenticatedRequest, res: Response
 
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
 
-    // Verify the item belongs to this household before deleting (IDOR protection).
     const existing = await prisma.groceryItem.findFirst({ where: { id, householdId } });
     if (!existing) return res.status(404).json({ error: 'Item not found' });
 
@@ -85,6 +114,6 @@ export const deleteGroceryItem = async (req: AuthenticatedRequest, res: Response
     res.json({ success: true, id });
   } catch (err: any) {
     console.error('[deleteGroceryItem] Error:', err.message);
-    res.status(500).json({ error: 'Failed to delete item.' });
+    res.status(500).json({ error: 'Failed to delete grocery item.' });
   }
 };

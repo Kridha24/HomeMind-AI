@@ -52,6 +52,60 @@ export const createBill = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
+export const updateBill = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const householdId = req.user?.householdId;
+    const { title, category, amount, dueDate, provider, notes } = req.body;
+
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    const existing = await prisma.bill.findFirst({
+      where: { id, householdId }
+    });
+
+    if (!existing) return res.status(404).json({ error: 'Bill not found' });
+
+    const updated = await prisma.bill.update({
+      where: { id },
+      data: {
+        title: title !== undefined ? title : existing.title,
+        category: category !== undefined ? category : existing.category,
+        amount: amount !== undefined ? parseFloat(amount) : existing.amount,
+        dueDate: dueDate !== undefined ? new Date(dueDate) : existing.dueDate,
+        provider: provider !== undefined ? provider : existing.provider,
+        notes: notes !== undefined ? notes : existing.notes
+      }
+    });
+
+    res.json({ success: true, bill: updated });
+  } catch (err: any) {
+    console.error('[updateBill] Error:', err.message);
+    res.status(500).json({ error: 'Failed to update bill.' });
+  }
+};
+
+export const deleteBill = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const householdId = req.user?.householdId;
+
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    const existing = await prisma.bill.findFirst({
+      where: { id, householdId }
+    });
+
+    if (!existing) return res.status(404).json({ error: 'Bill not found' });
+
+    await prisma.bill.delete({ where: { id } });
+    res.json({ success: true, id });
+  } catch (err: any) {
+    console.error('[deleteBill] Error:', err.message);
+    res.status(500).json({ error: 'Failed to delete bill.' });
+  }
+};
+
 export const markBillPaid = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -59,7 +113,6 @@ export const markBillPaid = async (req: AuthenticatedRequest, res: Response) => 
 
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
 
-    // Verify the bill belongs to this household before marking paid (IDOR protection).
     const existing = await prisma.bill.findFirst({ where: { id, householdId } });
     if (!existing) return res.status(404).json({ error: 'Bill not found' });
 

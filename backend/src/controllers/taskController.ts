@@ -31,7 +31,6 @@ export const createTask = async (req: AuthenticatedRequest, res: Response) => {
 
     const { title, description, priority, dueDate, assigneeId, isRecurring } = req.body;
 
-    // If an assignee is specified, ensure they are a member of the same household.
     if (assigneeId) {
       const assigneeMember = await prisma.user.findFirst({
         where: { id: assigneeId, householdId }
@@ -62,6 +61,47 @@ export const createTask = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
+export const updateTask = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const householdId = req.user?.householdId;
+    const { title, description, priority, dueDate, assigneeId, status, isRecurring } = req.body;
+
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    const existing = await prisma.task.findFirst({ where: { id, householdId } });
+    if (!existing) return res.status(404).json({ error: 'Task not found' });
+
+    if (assigneeId) {
+      const assigneeMember = await prisma.user.findFirst({
+        where: { id: assigneeId, householdId }
+      });
+      if (!assigneeMember) {
+        return res.status(400).json({ error: 'Assignee is not a member of this household' });
+      }
+    }
+
+    const updated = await prisma.task.update({
+      where: { id },
+      data: {
+        title: title !== undefined ? title : existing.title,
+        description: description !== undefined ? description : existing.description,
+        priority: priority !== undefined ? priority : existing.priority,
+        dueDate: dueDate !== undefined ? new Date(dueDate) : existing.dueDate,
+        assigneeId: assigneeId !== undefined ? assigneeId : existing.assigneeId,
+        status: status !== undefined ? status : existing.status,
+        isRecurring: isRecurring !== undefined ? isRecurring : existing.isRecurring
+      },
+      include: { assignee: true }
+    });
+
+    res.json({ success: true, task: updated });
+  } catch (err: any) {
+    console.error('[updateTask] Error:', err.message);
+    res.status(500).json({ error: 'Failed to update task.' });
+  }
+};
+
 export const updateTaskStatus = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -70,7 +110,6 @@ export const updateTaskStatus = async (req: AuthenticatedRequest, res: Response)
 
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
 
-    // Verify the task belongs to this household before updating (IDOR protection).
     const existing = await prisma.task.findFirst({ where: { id, householdId } });
     if (!existing) return res.status(404).json({ error: 'Task not found' });
 
@@ -83,5 +122,23 @@ export const updateTaskStatus = async (req: AuthenticatedRequest, res: Response)
   } catch (err: any) {
     console.error('[updateTaskStatus] Error:', err.message);
     res.status(500).json({ error: 'Failed to update task status.' });
+  }
+};
+
+export const deleteTask = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const householdId = req.user?.householdId;
+
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    const existing = await prisma.task.findFirst({ where: { id, householdId } });
+    if (!existing) return res.status(404).json({ error: 'Task not found' });
+
+    await prisma.task.delete({ where: { id } });
+    res.json({ success: true, id });
+  } catch (err: any) {
+    console.error('[deleteTask] Error:', err.message);
+    res.status(500).json({ error: 'Failed to delete task.' });
   }
 };

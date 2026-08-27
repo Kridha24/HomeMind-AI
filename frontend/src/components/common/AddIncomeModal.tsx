@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Wallet, DollarSign, Calendar, Tag, FileText, Sparkles, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Wallet, DollarSign, Calendar, Tag, FileText, Sparkles, Check, Edit3 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useSettingStore } from '../../stores/useSettingStore';
 
@@ -7,6 +7,7 @@ interface AddIncomeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  initialData?: any;
 }
 
 const INCOME_SOURCES = [
@@ -20,7 +21,12 @@ const INCOME_SOURCES = [
   { label: 'Other', icon: '💵' },
 ];
 
-export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+  initialData,
+}) => {
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [source, setSource] = useState('Salary');
@@ -30,6 +36,25 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
   const [error, setError] = useState('');
 
   const { currencySymbol } = useSettingStore();
+
+  useEffect(() => {
+    if (initialData) {
+      setTitle(initialData.title || '');
+      setAmount(initialData.amount ? String(initialData.amount) : '');
+      setSource(initialData.source || 'Salary');
+      if (initialData.date) {
+        setDate(new Date(initialData.date).toISOString().split('T')[0]);
+      }
+      setDescription(initialData.description || '');
+    } else {
+      setTitle('');
+      setAmount('');
+      setSource('Salary');
+      setDate(new Date().toISOString().split('T')[0]);
+      setDescription('');
+    }
+    setError('');
+  }, [initialData, isOpen]);
 
   if (!isOpen) return null;
 
@@ -44,21 +69,30 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
     setError('');
 
     try {
-      await apiClient.post('/income', {
-        title,
-        amount: parseFloat(amount),
-        source,
-        date: new Date(date).toISOString(),
-        description,
-      });
+      if (initialData?.id) {
+        // Edit existing income record
+        await apiClient.put(`/income/${initialData.id}`, {
+          title,
+          amount: parseFloat(amount),
+          source,
+          date: new Date(date).toISOString(),
+          description,
+        });
+      } else {
+        // Create new income record
+        await apiClient.post('/income', {
+          title,
+          amount: parseFloat(amount),
+          source,
+          date: new Date(date).toISOString(),
+          description,
+        });
+      }
 
-      setTitle('');
-      setAmount('');
-      setDescription('');
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to add income');
+      setError(err.response?.data?.error || 'Failed to save income record');
     } finally {
       setLoading(false);
     }
@@ -71,11 +105,15 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
         <div className="flex items-center justify-between border-b border-primary/60 pb-3">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <Wallet className="w-5 h-5" />
+              {initialData ? <Edit3 className="w-5 h-5" /> : <Wallet className="w-5 h-5" />}
             </div>
             <div>
-              <h3 className="font-extrabold text-base text-primary">Add Income Record</h3>
-              <p className="text-[11px] text-secondary">Log salary, freelance, or earnings</p>
+              <h3 className="font-extrabold text-base text-primary">
+                {initialData ? 'Edit Income Record' : 'Add Income Record'}
+              </h3>
+              <p className="text-[11px] text-secondary">
+                {initialData ? 'Update earnings amount, date, or source' : 'Log salary, freelance, or earnings'}
+              </p>
             </div>
           </div>
           <button
@@ -193,7 +231,7 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({ isOpen, onClose,
               ) : (
                 <Check className="w-4 h-4" />
               )}
-              <span>Save Income</span>
+              <span>{initialData ? 'Update Income' : 'Save Income'}</span>
             </button>
           </div>
         </form>

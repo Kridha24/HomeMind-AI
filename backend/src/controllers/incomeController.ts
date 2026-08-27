@@ -30,14 +30,13 @@ export const getIncomes = async (req: AuthenticatedRequest, res: Response) => {
 
 /**
  * 2. Create New Income Record
- * Body: { title, amount, source, date }
  */
 export const createIncome = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const householdId = req.user?.householdId;
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
 
-    const { title, amount, source, date } = req.body;
+    const { title, amount, source, date, description } = req.body;
 
     if (!title || !amount) {
       return res.status(400).json({ error: 'Income title and amount are required' });
@@ -50,6 +49,7 @@ export const createIncome = async (req: AuthenticatedRequest, res: Response) => 
         amount: parseFloat(amount),
         source: source || 'Salary',
         date: date ? new Date(date) : new Date(),
+        description: description || null,
         createdBy: req.user?.userId
       }
     });
@@ -71,23 +71,69 @@ export const createIncome = async (req: AuthenticatedRequest, res: Response) => 
 };
 
 /**
- * 3. Delete Income Record
+ * 3. Update / Edit Existing Income Record
+ */
+export const updateIncome = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const householdId = req.user?.householdId;
+    const { id } = req.params;
+    const { title, amount, source, date, description } = req.body;
+
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    const existing = await prisma.income.findFirst({
+      where: { id, householdId, softDelete: false }
+    });
+
+    if (!existing) return res.status(404).json({ error: 'Income record not found' });
+
+    const income = await prisma.income.update({
+      where: { id },
+      data: {
+        title: title !== undefined ? title : existing.title,
+        amount: amount !== undefined ? parseFloat(amount) : existing.amount,
+        source: source !== undefined ? source : existing.source,
+        date: date !== undefined ? new Date(date) : existing.date,
+        description: description !== undefined ? description : existing.description,
+        updatedBy: req.user?.userId
+      }
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        householdId,
+        action: 'UPDATE',
+        entity: 'Income',
+        details: `Updated income entry: ${income.title} (${income.amount})`,
+        performedBy: req.user?.userId || ''
+      }
+    });
+
+    res.json({ success: true, income });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * 4. Delete Income Record (Soft Delete)
  */
 export const deleteIncome = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const householdId = req.user?.householdId;
     const { id } = req.params;
-    if (!householdId || !id) return res.status(400).json({ error: 'Invalid request' });
 
-    const income = await prisma.income.findFirst({
-      where: { id, householdId, softDelete: false }
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    const existing = await prisma.income.findFirst({
+      where: { id, householdId }
     });
 
-    if (!income) return res.status(404).json({ error: 'Income record not found' });
+    if (!existing) return res.status(404).json({ error: 'Income record not found' });
 
     await prisma.income.update({
       where: { id },
-      data: { softDelete: true }
+      data: { softDelete: true, updatedBy: req.user?.userId }
     });
 
     await prisma.auditLog.create({
@@ -95,12 +141,12 @@ export const deleteIncome = async (req: AuthenticatedRequest, res: Response) => 
         householdId,
         action: 'DELETE',
         entity: 'Income',
-        details: `Deleted income entry: ${income.title}`,
+        details: `Deleted income entry: ${existing.title} (${existing.amount})`,
         performedBy: req.user?.userId || ''
       }
     });
 
-    res.json({ success: true, message: 'Income record deleted successfully' });
+    res.json({ success: true, message: 'Income record deleted' });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
