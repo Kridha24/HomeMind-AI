@@ -21,6 +21,8 @@ import {
   Landmark,
   Hourglass,
   Command,
+  ArrowUpRight,
+  BadgeDollarSign,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../services/apiClient';
@@ -34,6 +36,7 @@ import { HouseholdVitalRings } from '../components/dashboard/HouseholdVitalRings
 import { ActionableAIFeed } from '../components/dashboard/ActionableAIFeed';
 
 // Modals
+import { AddIncomeModal } from '../components/common/AddIncomeModal';
 import { AddExpenseModal } from '../components/common/AddExpenseModal';
 import { AddBillModal } from '../components/common/AddBillModal';
 import { AddGroceryModal } from '../components/common/AddGroceryModal';
@@ -69,11 +72,21 @@ export const Dashboard: React.FC = () => {
     },
   });
 
+  // Fetch live income entries
+  const { data: incomeData, refetch: refetchIncomes } = useQuery({
+    queryKey: ['dashboardIncomes'],
+    queryFn: async () => {
+      const res = await apiClient.get('/income');
+      return Array.isArray(res.data) ? res.data : res.data?.incomes || [];
+    },
+  });
+
   // Live Digital Clock state
   const [timeStr, setTimeStr] = useState('');
   const [dateStr, setDateStr] = useState('');
 
   // Active Modals
+  const [showIncomeModal, setShowIncomeModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showBillModal, setShowBillModal] = useState(false);
   const [showGroceryModal, setShowGroceryModal] = useState(false);
@@ -123,6 +136,12 @@ export const Dashboard: React.FC = () => {
   const upcomingBillsTotal = summary?.upcomingBillsTotal || 0;
   const upcomingBills = summary?.upcomingBills || [];
   const recentHistory = summary?.recent5History || [];
+  const incomesList = Array.isArray(incomeData) ? incomeData : [];
+
+  const handleRefreshAll = () => {
+    refetch();
+    refetchIncomes();
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200 pb-12">
@@ -176,6 +195,15 @@ export const Dashboard: React.FC = () => {
       {/* Quick Action Bar + Command Palette Shortcut */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-3xl bg-panel/90 border border-primary/80 backdrop-blur-xl shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
+          {/* + Add Income Action Button */}
+          <button
+            onClick={() => setShowIncomeModal(true)}
+            className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-emerald-600/20 active:scale-95 transition-all"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>{t('dash.addIncome', 'Add Income')}</span>
+          </button>
+
           <button
             onClick={() => setShowExpenseModal(true)}
             className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-blue-600/20 active:scale-95 transition-all"
@@ -183,6 +211,7 @@ export const Dashboard: React.FC = () => {
             <Plus className="w-3.5 h-3.5" />
             <span>{t('dash.addExpense', 'Add Expense')}</span>
           </button>
+
           <button
             onClick={() => setShowBillModal(true)}
             className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm"
@@ -190,6 +219,7 @@ export const Dashboard: React.FC = () => {
             <Plus className="w-3.5 h-3.5 text-amber-500" />
             <span>{t('dash.addBill', 'Add Bill')}</span>
           </button>
+
           <button
             onClick={() => setShowGroceryModal(true)}
             className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm"
@@ -197,6 +227,7 @@ export const Dashboard: React.FC = () => {
             <Plus className="w-3.5 h-3.5 text-emerald-500" />
             <span>{t('dash.addGrocery', 'Add Grocery')}</span>
           </button>
+
           <button
             onClick={() => setShowTaskModal(true)}
             className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm"
@@ -358,6 +389,62 @@ export const Dashboard: React.FC = () => {
         onOpenTaskModal={() => setShowTaskModal(true)}
       />
 
+      {/* Household Income & Earnings Overview Section */}
+      <div className="glass-panel p-6 border-emerald-500/30 bg-emerald-50/40 dark:bg-gradient-to-r dark:from-slate-900 dark:via-emerald-950/15 dark:to-slate-900 space-y-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Household Income & Earnings
+            </span>
+            <p className="text-xs text-secondary">
+              Track salary, freelance payments, dividends, and earnings for {monthName} {year}.
+            </p>
+          </div>
+          <div className="text-right">
+            <span className="text-2xl font-extrabold text-emerald-700 dark:text-emerald-400 font-mono block">
+              +{format(monthlyIncome)}
+            </span>
+            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider">
+              Total Monthly Income
+            </span>
+          </div>
+        </div>
+
+        {incomesList.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+            {incomesList.slice(0, 3).map((inc: any) => (
+              <div
+                key={inc.id}
+                className="p-3.5 rounded-2xl bg-panel border border-primary/80 flex items-center justify-between shadow-sm"
+              >
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-primary block">{inc.title}</span>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 uppercase tracking-wider inline-block">
+                    {inc.source || 'Salary'}
+                  </span>
+                  <p className="text-[10px] text-muted font-mono">
+                    {new Date(inc.date).toLocaleDateString()}
+                  </p>
+                </div>
+                <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
+                  +{format(inc.amount)}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-4 rounded-2xl bg-panel border border-primary/80 text-center text-xs text-secondary flex items-center justify-between shadow-sm">
+            <span>No income entries logged yet for this month.</span>
+            <button
+              onClick={() => setShowIncomeModal(true)}
+              className="px-3.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 rounded-xl text-xs font-bold transition-colors shadow-xs flex items-center gap-1"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add First Income
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Upcoming Bills & Rent Section */}
       <div className="glass-panel p-6 border-amber-500/30 bg-amber-50/40 dark:bg-gradient-to-r dark:from-slate-900 dark:via-amber-950/10 dark:to-slate-900 space-y-4 shadow-sm">
         <div className="flex items-center justify-between">
@@ -482,30 +569,35 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Modals */}
+      <AddIncomeModal
+        isOpen={showIncomeModal}
+        onClose={() => setShowIncomeModal(false)}
+        onSuccess={handleRefreshAll}
+      />
       <AddExpenseModal
         isOpen={showExpenseModal}
         onClose={() => setShowExpenseModal(false)}
-        onSuccess={() => refetch()}
+        onSuccess={handleRefreshAll}
       />
       <AddBillModal
         isOpen={showBillModal}
         onClose={() => setShowBillModal(false)}
-        onSuccess={() => refetch()}
+        onSuccess={handleRefreshAll}
       />
       <AddGroceryModal
         isOpen={showGroceryModal}
         onClose={() => setShowGroceryModal(false)}
-        onSuccess={() => refetch()}
+        onSuccess={handleRefreshAll}
       />
       <AddApplianceModal
         isOpen={showApplianceModal}
         onClose={() => setShowApplianceModal(false)}
-        onSuccess={() => refetch()}
+        onSuccess={handleRefreshAll}
       />
       <AddTaskModal
         isOpen={showTaskModal}
         onClose={() => setShowTaskModal(false)}
-        onSuccess={() => refetch()}
+        onSuccess={handleRefreshAll}
       />
     </div>
   );
