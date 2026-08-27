@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Wallet, DollarSign, Calendar, Tag, FileText, Sparkles, Check, Edit3 } from 'lucide-react';
+import { X, Wallet, DollarSign, Calendar, Tag, Sparkles, Check, Edit3 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useSettingStore } from '../../stores/useSettingStore';
 
@@ -31,7 +31,6 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({
   const [amount, setAmount] = useState('');
   const [source, setSource] = useState('Salary');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -45,13 +44,11 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({
       if (initialData.date) {
         setDate(new Date(initialData.date).toISOString().split('T')[0]);
       }
-      setDescription(initialData.description || '');
     } else {
       setTitle('');
       setAmount('');
       setSource('Salary');
       setDate(new Date().toISOString().split('T')[0]);
-      setDescription('');
     }
     setError('');
   }, [initialData, isOpen]);
@@ -76,7 +73,6 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({
           amount: parseFloat(amount),
           source,
           date: new Date(date).toISOString(),
-          description,
         });
       } else {
         // Create new income record
@@ -85,7 +81,6 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({
           amount: parseFloat(amount),
           source,
           date: new Date(date).toISOString(),
-          description,
         });
       }
 
@@ -198,18 +193,6 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* Optional Note */}
-          <div>
-            <label className="text-xs font-bold text-secondary block mb-1.5">Description (Optional)</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Additional details, invoice number, etc."
-              className="w-full bg-secondary/60 border border-primary/80 rounded-xl px-3.5 py-2 text-xs text-primary placeholder-slate-400 focus:outline-none focus:border-emerald-500 font-medium"
-            />
           </div>
 
           {/* Actions */}

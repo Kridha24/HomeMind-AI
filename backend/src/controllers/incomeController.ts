@@ -36,7 +36,7 @@ export const createIncome = async (req: AuthenticatedRequest, res: Response) => 
     const householdId = req.user?.householdId;
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
 
-    const { title, amount, source, date, description } = req.body;
+    const { title, amount, source, date } = req.body;
 
     if (!title || !amount) {
       return res.status(400).json({ error: 'Income title and amount are required' });
@@ -49,7 +49,6 @@ export const createIncome = async (req: AuthenticatedRequest, res: Response) => 
         amount: parseFloat(amount),
         source: source || 'Salary',
         date: date ? new Date(date) : new Date(),
-        description: description || null,
         createdBy: req.user?.userId
       }
     });
@@ -77,7 +76,7 @@ export const updateIncome = async (req: AuthenticatedRequest, res: Response) => 
   try {
     const householdId = req.user?.householdId;
     const { id } = req.params;
-    const { title, amount, source, date, description } = req.body;
+    const { title, amount, source, date } = req.body;
 
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
 
@@ -94,7 +93,6 @@ export const updateIncome = async (req: AuthenticatedRequest, res: Response) => 
         amount: amount !== undefined ? parseFloat(amount) : existing.amount,
         source: source !== undefined ? source : existing.source,
         date: date !== undefined ? new Date(date) : existing.date,
-        description: description !== undefined ? description : existing.description,
         updatedBy: req.user?.userId
       }
     });
