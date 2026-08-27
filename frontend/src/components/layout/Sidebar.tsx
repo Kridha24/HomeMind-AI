@@ -194,10 +194,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
         onClick={onClose}
         className={({ isActive }) =>
           `group relative flex items-center ${
-            sidebarCollapsed ? 'justify-center px-0 py-2.5' : 'justify-between px-3 py-2'
+            sidebarCollapsed ? 'justify-center px-0 py-2' : 'justify-between px-3 py-2'
           } rounded-2xl text-xs font-bold transition-all duration-200 ${
             isActive
-              ? 'bg-blue-50/90 text-blue-700 shadow-sm border border-blue-200/90 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/30'
+              ? 'bg-blue-50 text-blue-700 shadow-xs border border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/30'
               : 'text-secondary hover:text-primary hover:bg-secondary/70'
           }`
         }
@@ -208,16 +208,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
               {/* 3D Elevated Icon Badge */}
               <div
                 className={`${
-                  sidebarCollapsed ? 'w-10 h-10 rounded-2xl' : 'w-7 h-7 rounded-xl'
+                  sidebarCollapsed ? 'w-9 h-9 rounded-xl' : 'w-7 h-7 rounded-xl'
                 } bg-gradient-to-tr ${item.gradient} text-white flex items-center justify-center shadow-md ${
                   item.shadowColor
                 } border border-white/25 transform transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-3 flex-shrink-0`}
               >
-                <Icon className={`${sidebarCollapsed ? 'w-5 h-5' : 'w-3.5 h-3.5'} drop-shadow-sm`} />
+                <Icon className={`${sidebarCollapsed ? 'w-4 h-4' : 'w-3.5 h-3.5'} drop-shadow-sm`} />
               </div>
 
-              {/* Title (visible when expanded) */}
-              {!sidebarCollapsed && <span className="truncate tracking-tight">{item.name}</span>}
+              {/* Title (shown directly in front of icon when expanded) */}
+              {!sidebarCollapsed && (
+                <span className="truncate tracking-tight font-bold">{item.name}</span>
+              )}
             </div>
 
             {/* Right Badges / Active Indicator (when expanded) */}
@@ -241,17 +243,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
               </div>
             )}
 
-            {/* WhatsApp-Style Floating Hover Tooltip (Shown when collapsed) */}
+            {/* WhatsApp-Style Floating Hover Tooltip - placed exactly in front of each icon */}
             {sidebarCollapsed && (
-              <div className="fixed left-20 ml-3.5 hidden group-hover:flex items-center gap-2 px-3 py-2 bg-slate-900/95 dark:bg-slate-900/95 text-white text-xs font-bold rounded-2xl shadow-2xl border border-slate-700/80 backdrop-blur-xl z-[9999] pointer-events-none whitespace-nowrap animate-in fade-in slide-in-from-left-2 duration-150">
+              <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-2 px-3 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-2xl border border-slate-700/80 backdrop-blur-xl z-[9999] pointer-events-none whitespace-nowrap animate-in fade-in slide-in-from-left-2 duration-150">
                 <span>{item.name}</span>
                 {item.tag && (
                   <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-blue-500/30 text-blue-300 border border-blue-400/30 uppercase">
                     {item.tag}
                   </span>
                 )}
-                {/* Arrow */}
-                <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-slate-900 border-l border-b border-slate-700/80 transform rotate-45" />
+                {/* Arrow pointing to the icon */}
+                <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 border-l border-b border-slate-700/80 transform rotate-45" />
               </div>
             )}
           </>
@@ -274,103 +276,99 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
 
       {/* Responsive Sidebar Drawer */}
       <aside
-        className={`${sidebarWidthClass} bg-panel/95 backdrop-blur-xl border-r border-primary/80 h-screen fixed left-0 top-0 z-50 flex flex-col justify-between p-3 sm:p-3.5 transition-all duration-300 ease-in-out shadow-sm dark:shadow-none ${
-          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        className={`${sidebarWidthClass} bg-panel/95 backdrop-blur-xl border-r border-primary/80 h-screen fixed left-0 top-0 z-50 flex flex-col justify-between p-3 transition-all duration-300 ease-in-out shadow-sm dark:shadow-none`}
       >
-        <div className="space-y-4">
-          {/* Brand Header */}
+        {/* Top Header */}
+        <div
+          className={`flex items-center ${
+            sidebarCollapsed ? 'justify-center' : 'justify-between px-2'
+          } py-1 border-b border-primary/60 pb-3 flex-shrink-0`}
+        >
           <div
-            className={`flex items-center ${
-              sidebarCollapsed ? 'justify-center' : 'justify-between px-2'
-            } py-1`}
+            className="flex items-center gap-3 cursor-pointer select-none"
+            onClick={toggleSidebar}
+            title={sidebarCollapsed ? 'Click to expand sidebar' : 'Click to collapse'}
           >
-            <div
-              className={`flex items-center gap-3 cursor-pointer`}
-              onClick={toggleSidebar}
-              title={sidebarCollapsed ? 'Click to expand sidebar' : 'Click to collapse'}
-            >
-              {/* 3D Glowing App Icon */}
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/35 border border-white/20 transform hover:scale-105 transition-transform flex-shrink-0">
-                <Sparkles className="w-5 h-5 drop-shadow-md animate-pulse" />
-              </div>
-              {!sidebarCollapsed && (
-                <div>
-                  <h2 className="font-black text-sm text-primary tracking-tight leading-tight">
-                    HomeMind AI
-                  </h2>
-                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-extrabold tracking-wider uppercase">
-                    Household OS
-                  </span>
-                </div>
-              )}
+            {/* 3D Glowing App Icon */}
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/35 border border-white/20 transform hover:scale-105 transition-transform flex-shrink-0">
+              <Sparkles className="w-5 h-5 drop-shadow-md animate-pulse" />
             </div>
-
-            {/* Desktop Collapse / Expand Toggle */}
             {!sidebarCollapsed && (
-              <button
-                onClick={toggleSidebar}
-                className="hidden lg:flex p-1.5 rounded-xl text-secondary hover:text-primary hover:bg-secondary/80 transition-colors"
-                title="Collapse sidebar to icon rail"
-              >
-                <PanelLeftClose className="w-4 h-4" />
-              </button>
-            )}
-
-            {/* Mobile Close Button */}
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="lg:hidden p-1.5 rounded-xl text-secondary hover:text-primary bg-secondary/80 border border-primary/80"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div>
+                <h2 className="font-black text-sm text-primary tracking-tight leading-tight">
+                  HomeMind AI
+                </h2>
+                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-extrabold tracking-wider uppercase">
+                  Household OS
+                </span>
+              </div>
             )}
           </div>
 
-          {/* Navigation Links */}
-          <nav className="space-y-4 overflow-y-auto max-h-[calc(100vh-190px)] pr-0.5 scrollbar-thin pb-8">
-            {/* Primary Core Suite */}
-            <div className="space-y-1">
-              {!sidebarCollapsed && (
-                <div className="px-3 pb-1">
-                  <span className="text-[10px] font-black text-muted uppercase tracking-widest block">
-                    Core Management
-                  </span>
-                </div>
-              )}
-              {primaryNavItems.map(renderNavLink)}
-            </div>
+          {/* Desktop Collapse / Expand Toggle */}
+          {!sidebarCollapsed && (
+            <button
+              onClick={toggleSidebar}
+              className="hidden lg:flex p-1.5 rounded-xl text-secondary hover:text-primary hover:bg-secondary/80 transition-colors"
+              title="Collapse sidebar to icon rail"
+            >
+              <PanelLeftClose className="w-4 h-4" />
+            </button>
+          )}
 
-            {/* Advanced Household Utilities */}
-            <div className="space-y-1 pt-2 border-t border-primary/60">
-              {!sidebarCollapsed && (
-                <div className="px-3 pb-1">
-                  <span className="text-[10px] font-black text-muted uppercase tracking-widest block">
-                    Household Tools
-                  </span>
-                </div>
-              )}
-              {moreNavItems.map(renderNavLink)}
-            </div>
-          </nav>
+          {/* Mobile Close Button */}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="lg:hidden p-1.5 rounded-xl text-secondary hover:text-primary bg-secondary/80 border border-primary/80"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
+        {/* Scrollable Navigation Links (Smooth, never cut off) */}
+        <nav className="flex-1 overflow-y-auto overflow-x-visible pr-1 scrollbar-thin my-2 space-y-3">
+          {/* Primary Core Suite */}
+          <div className="space-y-1">
+            {!sidebarCollapsed && (
+              <div className="px-3 pb-1">
+                <span className="text-[10px] font-black text-muted uppercase tracking-widest block">
+                  Core Management
+                </span>
+              </div>
+            )}
+            {primaryNavItems.map(renderNavLink)}
+          </div>
+
+          {/* Advanced Household Utilities */}
+          <div className="space-y-1 pt-2 border-t border-primary/60">
+            {!sidebarCollapsed && (
+              <div className="px-3 pb-1">
+                <span className="text-[10px] font-black text-muted uppercase tracking-widest block">
+                  Household Tools
+                </span>
+              </div>
+            )}
+            {moreNavItems.map(renderNavLink)}
+          </div>
+        </nav>
+
         {/* Active Household Info Footer / Toggle Rail Button */}
-        <div className="space-y-2">
+        <div className="pt-2 border-t border-primary/60 flex-shrink-0">
           {sidebarCollapsed ? (
             <button
               onClick={toggleSidebar}
-              className="w-full h-11 rounded-2xl bg-secondary/70 hover:bg-blue-600 hover:text-white border border-primary/80 flex items-center justify-center text-secondary transition-all shadow-xs"
+              className="w-full h-10 rounded-2xl bg-secondary/70 hover:bg-blue-600 hover:text-white border border-primary/80 flex items-center justify-center text-secondary transition-all shadow-xs"
               title="Expand full sidebar"
             >
               <PanelLeftOpen className="w-4 h-4" />
             </button>
           ) : (
-            <div className="bg-secondary/70 border border-primary/80 rounded-2xl p-3 flex items-center justify-between shadow-xs">
+            <div className="bg-secondary/70 border border-primary/80 rounded-2xl p-2.5 flex items-center justify-between shadow-xs">
               <div className="truncate">
                 <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
-                  Active Household
+                  Household
                 </span>
                 <span className="text-xs font-extrabold text-primary truncate block">
                   {household?.name || 'Home Residence'}
