@@ -39,13 +39,13 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
           {
             id: 'bill-1',
             type: 'BILL' as const,
-            title: `Upcoming Bill: ${firstBill.title}`,
-            description: `Amount of ${format(firstBill.amount)} is due on ${new Date(
+            title: `Bill Due: ${firstBill.title}`,
+            description: `${format(firstBill.amount)} is due on ${new Date(
               firstBill.dueDate
             ).toLocaleDateString([], { month: 'short', day: 'numeric' })}.`,
-            impactBadge: 'Prevents Late Fee',
+            impactBadge: 'Avoid Late Fee',
             impactColor: 'amber' as const,
-            primaryActionLabel: 'Log Payment',
+            primaryActionLabel: 'Log Bill Payment',
             onPrimaryAction: () => {
               if (onOpenExpenseModal) onOpenExpenseModal();
               else navigate('/bills');
@@ -56,11 +56,11 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
     {
       id: 'pantry-recipe',
       type: 'RECIPE' as const,
-      title: 'Zero-Waste Chef Recommendation',
-      description: 'Tomatoes, Bell Peppers & Milk are approaching shelf life. Cook a quick Paneer Butter Masala tonight.',
-      impactBadge: 'Saves ₹350 Waste',
+      title: 'Quick Recipe Idea',
+      description: 'Tomatoes, Bell Peppers & Milk need to be used soon. Make a quick 15-min Paneer dish tonight.',
+      impactBadge: 'Save Food Waste',
       impactColor: 'emerald' as const,
-      primaryActionLabel: 'View 15-Min Recipe',
+      primaryActionLabel: 'View Recipe',
       onPrimaryAction: () => {
         if (onOpenAIChatWithPrompt) {
           onOpenAIChatWithPrompt(
@@ -74,11 +74,11 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
     {
       id: 'appliance-service',
       type: 'MAINTENANCE' as const,
-      title: 'Proactive Appliance Care',
-      description: 'Air Conditioner has logged 120+ operational hours this month. Clean dust filters to improve cooling efficiency.',
-      impactBadge: 'Conserves 12% Energy',
+      title: 'Appliance Care Tip',
+      description: 'Air Conditioner has been running a lot this month. Clean dust filters to improve cooling.',
+      impactBadge: 'Saves Power',
       impactColor: 'blue' as const,
-      primaryActionLabel: 'Create Maintenance Task',
+      primaryActionLabel: 'Create Reminder Task',
       onPrimaryAction: () => {
         if (onOpenTaskModal) onOpenTaskModal();
         else navigate('/appliances');
@@ -102,10 +102,10 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
             <Sparkles className="w-3.5 h-3.5" />
           </div>
           <h2 className="text-base sm:text-lg font-extrabold text-primary tracking-tight">
-            Proactive AI Recommendations
+            Smart Home Suggestions
           </h2>
         </div>
-        <span className="text-[11px] text-muted font-bold uppercase tracking-wider">1-Click Actionable</span>
+        <span className="text-[11px] text-muted font-bold uppercase tracking-wider">Quick Actions</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -156,3 +156,5 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
     </div>
   );
 };
+
+export default ActionableAIFeed;

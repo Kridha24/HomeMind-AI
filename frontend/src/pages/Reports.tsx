@@ -35,7 +35,7 @@ export const Reports: React.FC = () => {
       setReports((prev) => [
         {
           id: Date.now().toString(),
-          title: `Monthly Financial & Telemetry Report (${currencySymbol})`,
+          title: `Monthly Home Summary Report (${currencySymbol})`,
           type: 'MONTHLY_FINANCIAL',
           createdAt: new Date().toLocaleDateString([], {
             month: 'short',
@@ -49,7 +49,7 @@ export const Reports: React.FC = () => {
       ]);
     } catch (err: any) {
       console.error('PDF download error:', err);
-      setError('Failed to generate PDF report. Please ensure your session is active.');
+      setError('Failed to generate PDF report. Please try again.');
     } finally {
       setDownloading(false);
     }
@@ -60,10 +60,10 @@ export const Reports: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-primary/80 shadow-sm">
         <div>
           <h1 className="text-2xl font-extrabold text-primary flex items-center gap-2">
-            <FileSpreadsheet className="w-6 h-6 text-emerald-500" /> Executive PDF Reports Exporter
+            <FileSpreadsheet className="w-6 h-6 text-emerald-500" /> Monthly PDF Reports
           </h1>
           <p className="text-xs text-secondary">
-            Generate compiled monthly audit reports containing expenses, utility bills, and low-stock pantry warnings.
+            Download a clear PDF summary of your monthly expenses, bills, and groceries.
           </p>
         </div>
 
@@ -75,12 +75,12 @@ export const Reports: React.FC = () => {
           {downloading ? (
             <>
               <RefreshCw className="w-4 h-4 animate-spin" />
-              <span>Generating PDF...</span>
+              <span>Creating PDF...</span>
             </>
           ) : (
             <>
               <Download className="w-4 h-4" />
-              <span>Generate PDF Report</span>
+              <span>Download PDF Report</span>
             </>
           )}
         </button>
@@ -96,17 +96,17 @@ export const Reports: React.FC = () => {
       {reports.length === 0 ? (
         <EmptyState
           icon={FileSpreadsheet}
-          title="No reports generated in this session"
-          description="Export comprehensive household PDF reports containing monthly expense ledgers, utility bill audits, and appliance telemetry."
-          actionLabel="+ Generate PDF Report"
+          title="No reports downloaded yet"
+          description="Download a complete PDF report of your monthly home spending, bills due, and food inventory."
+          actionLabel="+ Download PDF Report"
           onAction={handleGeneratePDF}
         />
       ) : (
         <div className="glass-panel border-primary/80 overflow-hidden shadow-sm">
           <div className="p-4 border-b border-primary/80 font-bold text-sm text-primary flex items-center justify-between bg-secondary/30">
-            <span>Exported Household Reports</span>
+            <span>Downloaded Reports</span>
             <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-bold">
-              {reports.length} Generated
+              {reports.length} Reports
             </span>
           </div>
           <div className="divide-y divide-slate-200 dark:divide-slate-800/60 font-medium">
@@ -121,7 +121,7 @@ export const Reports: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-bold text-xs text-primary">{report.title}</h4>
-                    <span className="text-[10px] text-muted">Generated on {report.createdAt}</span>
+                    <span className="text-[10px] text-muted">Created on {report.createdAt}</span>
                   </div>
                 </div>
                 <button
@@ -129,7 +129,7 @@ export const Reports: React.FC = () => {
                   disabled={downloading}
                   className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 shadow-xs"
                 >
-                  <Download className="w-3.5 h-3.5" /> Re-download
+                  <Download className="w-3.5 h-3.5" /> Download Again
                 </button>
               </div>
             ))}

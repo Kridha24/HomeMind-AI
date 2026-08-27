@@ -179,7 +179,7 @@ export const Dashboard: React.FC = () => {
             className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-blue-600/20 active:scale-95 transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Log Expense</span>
+            <span>Add Expense</span>
           </button>
           <button
             onClick={() => setShowBillModal(true)}
@@ -200,7 +200,7 @@ export const Dashboard: React.FC = () => {
             className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm"
           >
             <Plus className="w-3.5 h-3.5 text-purple-500" />
-            <span>Assign Task</span>
+            <span>Add Task</span>
           </button>
         </div>
 
@@ -210,11 +210,11 @@ export const Dashboard: React.FC = () => {
           <kbd className="px-1.5 py-0.5 rounded bg-panel font-bold text-primary border border-primary/80 shadow-xs">
             ⌘K
           </kbd>
-          <span>for Command Palette</span>
+          <span>for Quick Menu</span>
         </div>
       </div>
 
-      {/* Main Metric Cards: Income, Monthly Expenses (-), Lifetime Expenses (-), Monthly Savings, Overall Balance */}
+      {/* Main Metric Cards: Simple & Clear */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
         {loading ? (
           <>
@@ -249,7 +249,7 @@ export const Dashboard: React.FC = () => {
               </p>
               <div className="flex items-center justify-between pt-1 border-t border-primary/60 text-[10px]">
                 <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1 font-semibold">
-                  <TrendingUp className="w-3 h-3" /> Monthly Earnings
+                  <TrendingUp className="w-3 h-3" /> Total Earned
                 </span>
               </div>
             </div>
@@ -259,7 +259,7 @@ export const Dashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold text-red-700 dark:text-red-400 uppercase tracking-wider block">
-                    Expenses ({monthShort})
+                    Spent ({monthShort})
                   </span>
                   <span className="text-[10px] text-muted font-mono block">{dateRangeStr}</span>
                 </div>
@@ -271,7 +271,7 @@ export const Dashboard: React.FC = () => {
                 -{format(monthlyExpenses)}
               </p>
               <div className="flex items-center justify-between pt-1 border-t border-primary/60 text-[10px]">
-                <span className="text-red-700 dark:text-red-400 font-semibold">Total Month Spend</span>
+                <span className="text-red-700 dark:text-red-400 font-semibold">Total Spent This Month</span>
               </div>
             </div>
 
@@ -279,7 +279,7 @@ export const Dashboard: React.FC = () => {
             <div className="glass-panel p-5 border-rose-500/30 bg-rose-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-rose-950/20 dark:to-slate-900 space-y-2 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
-                  Lifetime Expenses
+                  All-time Spend
                 </span>
                 <div className="w-8 h-8 rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-600 dark:text-rose-400">
                   <CreditCard className="w-4 h-4" />
@@ -289,7 +289,7 @@ export const Dashboard: React.FC = () => {
                 -{format(overallExpenses)}
               </p>
               <div className="pt-1 border-t border-primary/60 text-[10px] text-muted font-medium">
-                Total Historical Spend
+                Total Expenses Logged
               </div>
             </div>
 
@@ -297,7 +297,7 @@ export const Dashboard: React.FC = () => {
             <div className="glass-panel p-5 border-teal-500/30 bg-teal-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-teal-950/20 dark:to-slate-900 space-y-2 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider">
-                  Net Savings ({monthShort})
+                  Saved ({monthShort})
                 </span>
                 <div className="w-8 h-8 rounded-xl bg-teal-500/15 flex items-center justify-center text-teal-600 dark:text-teal-400">
                   <PiggyBank className="w-4 h-4" />
@@ -311,7 +311,7 @@ export const Dashboard: React.FC = () => {
                 {monthlySavings >= 0 ? `+${format(monthlySavings)}` : format(monthlySavings)}
               </p>
               <div className="pt-1 border-t border-primary/60 text-[10px] text-muted font-medium">
-                Income - Expenses
+                Income Left Over
               </div>
             </div>
 
@@ -319,7 +319,7 @@ export const Dashboard: React.FC = () => {
             <div className="glass-panel p-5 border-purple-500/30 bg-purple-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-purple-950/20 dark:to-slate-900 space-y-2 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider">
-                  Overall Balance
+                  Total Balance
                 </span>
                 <div className="w-8 h-8 rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-600 dark:text-purple-400">
                   <Landmark className="w-4 h-4" />
@@ -333,14 +333,14 @@ export const Dashboard: React.FC = () => {
                 {overallSavings >= 0 ? `+${format(overallSavings)}` : format(overallSavings)}
               </p>
               <div className="pt-1 border-t border-primary/60 text-[10px] text-purple-700 dark:text-purple-400 font-semibold">
-                Lifetime Net Assets
+                Net Household Assets
               </div>
             </div>
           </>
         )}
       </div>
 
-      {/* Apple-Style Concentric Household Vital Rings */}
+      {/* Simple Home Health Score Rings */}
       <HouseholdVitalRings
         monthlyIncome={monthlyIncome}
         monthlyExpenses={monthlyExpenses}
@@ -349,23 +349,22 @@ export const Dashboard: React.FC = () => {
         pantryStats={{ total: 24, fresh: 21, expiringSoon: 3 }}
       />
 
-      {/* Proactive Actionable AI Feed */}
+      {/* Simple Smart Suggestions */}
       <ActionableAIFeed
         upcomingBills={upcomingBills}
         onOpenExpenseModal={() => setShowExpenseModal(true)}
         onOpenTaskModal={() => setShowTaskModal(true)}
       />
 
-      {/* Upcoming Rents & Mess Expenses Planner Section */}
+      {/* Upcoming Bills & Rent Section */}
       <div className="glass-panel p-6 border-amber-500/30 bg-amber-50/40 dark:bg-gradient-to-r dark:from-slate-900 dark:via-amber-950/10 dark:to-slate-900 space-y-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider flex items-center gap-2">
-              <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Upcoming Rents, Mess Fees & Utility Payments Plan
+              <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Upcoming Bills & Rent
             </span>
             <p className="text-xs text-secondary">
-              Save and track room rent, mess fees, WiFi, and electricity bills due for settlement during{' '}
-              {monthName} {year}.
+              Track room rent, mess fees, Wi-Fi, and electricity bills due in {monthName} {year}.
             </p>
           </div>
           <div className="text-right">
@@ -373,7 +372,7 @@ export const Dashboard: React.FC = () => {
               -{format(upcomingBillsTotal)}
             </span>
             <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider">
-              Total Scheduled Payments
+              Total Bills Due
             </span>
           </div>
         </div>
@@ -402,40 +401,40 @@ export const Dashboard: React.FC = () => {
           </div>
         ) : (
           <div className="p-4 rounded-2xl bg-panel border border-primary/80 text-center text-xs text-secondary flex items-center justify-between shadow-sm">
-            <span>No upcoming rent or mess bill entries logged yet for this cycle.</span>
+            <span>No upcoming bills logged yet for this month.</span>
             <button
               onClick={() => setShowBillModal(true)}
               className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400 rounded-xl text-xs font-bold transition-colors shadow-xs"
             >
-              + Add Room Rent / Mess Bill
+              + Add Bill / Rent
             </button>
           </div>
         )}
       </div>
 
-      {/* 5 History Table Section */}
+      {/* Recent Transactions Table */}
       <div className="glass-panel border-primary overflow-hidden shadow-sm">
         <div className="p-4 border-b border-primary/80 font-bold text-sm text-primary flex items-center justify-between bg-secondary/30">
           <span className="flex items-center gap-2">
-            <History className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Recent 5 Transactions History
+            <History className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Recent Transactions
           </span>
-          <span className="text-xs text-secondary font-mono font-medium">Latest Ledger Entries</span>
+          <span className="text-xs text-secondary font-mono font-medium">Latest Entries</span>
         </div>
 
         {recentHistory.length === 0 ? (
           <div className="p-8 text-center text-xs text-muted space-y-1">
-            <p className="font-semibold text-primary">No recent transaction history recorded yet.</p>
-            <p className="text-[11px]">Log an income entry or expense to see historical telemetry here.</p>
+            <p className="font-semibold text-primary">No transactions recorded yet.</p>
+            <p className="text-[11px]">Add an expense or income entry to see history here.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-secondary/60 text-secondary uppercase tracking-wider font-bold border-b border-primary/80">
                 <tr>
-                  <th className="p-4">Transaction Title</th>
-                  <th className="p-4">Category / Source</th>
+                  <th className="p-4">Title</th>
+                  <th className="p-4">Category</th>
                   <th className="p-4">Date</th>
-                  <th className="p-4">User</th>
+                  <th className="p-4">Member</th>
                   <th className="p-4 text-right">Amount ({currencySymbol})</th>
                 </tr>
               </thead>
