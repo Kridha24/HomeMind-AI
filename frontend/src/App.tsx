@@ -2,9 +2,21 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { Navbar } from './components/layout/Navbar';
+import { MobileBottomDock } from './components/layout/MobileBottomDock';
+import { CommandPalette } from './components/common/CommandPalette';
 import { AIChatDrawer } from './components/common/AIChatDrawer';
 import { DraggableFAB } from './components/common/DraggableFAB';
 import { NotificationDrawer } from './components/common/NotificationDrawer';
+
+// Modals
+import { AddExpenseModal } from './components/common/AddExpenseModal';
+import { AddBillModal } from './components/common/AddBillModal';
+import { AddGroceryModal } from './components/common/AddGroceryModal';
+import { AddTaskModal } from './components/common/AddTaskModal';
+import { AddApplianceModal } from './components/common/AddApplianceModal';
+import { AddMedicineModal } from './components/common/AddMedicineModal';
+
+// Pages
 import { Dashboard } from './pages/Dashboard';
 import { Income } from './pages/Income';
 import { Expenses } from './pages/Expenses';
@@ -27,12 +39,8 @@ import { useSettingStore } from './stores/useSettingStore';
 import apiClient from './services/apiClient';
 
 // ─── Protected Route ─────────────────────────────────────────────────────────
-// If accessToken is present but /auth/me fails (e.g. revoked), we try a
-// refresh via the apiClient interceptor (which handles 401 → refresh → retry).
-// If refresh also fails, the interceptor redirects to /login?sessionExpired=true.
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, logout } = useAuthStore();
-  const navigate = useNavigate();
+  const { isAuthenticated } = useAuthStore();
   const [verified, setVerified] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -40,20 +48,16 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
       setVerified(false);
       return;
     }
-    // Fire /auth/me to confirm the stored token is still valid.
-    // On 401 the interceptor will try refresh; if that fails it redirects.
-    apiClient.get('/auth/me')
+    apiClient
+      .get('/auth/me')
       .then(() => setVerified(true))
       .catch(() => {
-        // Interceptor already handled redirect on refresh failure;
-        // if we land here with a non-401 error, still treat as verified.
         setVerified(true);
       });
   }, [isAuthenticated]);
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (verified === null) {
-    // Minimal splash while verifying — avoids flash to login then back
     return (
       <div className="min-h-[100dvh] flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -68,7 +72,17 @@ function AppShell() {
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isFABVisible, setIsFABVisible] = useState(true);
+
+  // Global Quick Action Modals
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isBillModalOpen, setIsBillModalOpen] = useState(false);
+  const [isGroceryModalOpen, setIsGroceryModalOpen] = useState(false);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isApplianceModalOpen, setIsApplianceModalOpen] = useState(false);
+  const [isMedicineModalOpen, setIsMedicineModalOpen] = useState(false);
+
   const { fetchSettings, theme } = useSettingStore();
   const { isAuthenticated } = useAuthStore();
 
@@ -81,6 +95,18 @@ function AppShell() {
     if (theme === 'dark' || theme === 'glass') root.classList.add('dark');
     else root.classList.remove('dark');
   }, [theme]);
+
+  // Global Keyboard Listener for Cmd+K / Ctrl+K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const themeClass =
     theme === 'glass'
@@ -99,7 +125,7 @@ function AppShell() {
         />
 
         {/* Main content: offset for sidebar on large screens, full-width on mobile */}
-        <main className="flex-1 p-3 sm:p-5 md:p-6 overflow-y-auto lg:ml-64 ml-0 pb-20 lg:pb-6">
+        <main className="flex-1 p-3 sm:p-5 md:p-6 overflow-y-auto lg:ml-64 ml-0 pb-24 lg:pb-8">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/income" element={<Income />} />
@@ -122,10 +148,61 @@ function AppShell() {
         </main>
       </div>
 
-      {/* AI FAB — hidden on login, safe padding from bottom CTAs */}
+      {/* AI FAB */}
       {isFABVisible && (
-        <DraggableFAB onClick={() => setIsAIChatOpen(true)} onDismiss={() => setIsFABVisible(false)} />
+        <div className="hidden lg:block">
+          <DraggableFAB onClick={() => setIsAIChatOpen(true)} onDismiss={() => setIsFABVisible(false)} />
+        </div>
       )}
+
+      {/* Mobile Bottom Dock */}
+      <MobileBottomDock
+        onOpenExpenseModal={() => setIsExpenseModalOpen(true)}
+        onOpenBillModal={() => setIsBillModalOpen(true)}
+        onOpenGroceryModal={() => setIsGroceryModalOpen(true)}
+        onOpenTaskModal={() => setIsTaskModalOpen(true)}
+        onOpenAIChat={() => setIsAIChatOpen(true)}
+      />
+
+      {/* Cmd + K Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onOpenExpenseModal={() => setIsExpenseModalOpen(true)}
+        onOpenBillModal={() => setIsBillModalOpen(true)}
+        onOpenGroceryModal={() => setIsGroceryModalOpen(true)}
+        onOpenTaskModal={() => setIsTaskModalOpen(true)}
+        onOpenApplianceModal={() => setIsApplianceModalOpen(true)}
+        onOpenMedicineModal={() => setIsMedicineModalOpen(true)}
+        onOpenAIChat={() => setIsAIChatOpen(true)}
+        onOpenNotifications={() => setIsNotificationsOpen(true)}
+      />
+
+      {/* Global Modals & Drawers */}
+      <AddExpenseModal
+        isOpen={isExpenseModalOpen}
+        onClose={() => setIsExpenseModalOpen(false)}
+      />
+      <AddBillModal
+        isOpen={isBillModalOpen}
+        onClose={() => setIsBillModalOpen(false)}
+      />
+      <AddGroceryModal
+        isOpen={isGroceryModalOpen}
+        onClose={() => setIsGroceryModalOpen(false)}
+      />
+      <AddTaskModal
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+      />
+      <AddApplianceModal
+        isOpen={isApplianceModalOpen}
+        onClose={() => setIsApplianceModalOpen(false)}
+      />
+      <AddMedicineModal
+        isOpen={isMedicineModalOpen}
+        onClose={() => setIsMedicineModalOpen(false)}
+      />
 
       <AIChatDrawer isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />
       <NotificationDrawer isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />

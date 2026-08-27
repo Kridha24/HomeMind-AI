@@ -132,20 +132,30 @@ export const PantryVision: React.FC = () => {
 
       {/* Image Preview Area */}
       {imagePreview && (
-        <div className="glass-panel p-4 border-secondary/50 flex flex-col items-center">
-           <h3 className="text-sm font-semibold text-secondary mb-3 flex items-center gap-2">
+        <div className="glass-panel p-6 border-secondary/50 flex flex-col items-center relative overflow-hidden rounded-3xl">
+           <h3 className="text-sm font-bold text-primary mb-4 flex items-center gap-2">
              <ImageIcon className="w-4 h-4 text-blue-400" />
              Uploaded Image Preview
            </h3>
-           <img 
-             src={imagePreview} 
-             alt="Uploaded scan preview" 
-             className="max-h-64 object-contain rounded-lg border border-secondary/50"
-           />
+           <div className="relative max-h-72 rounded-2xl overflow-hidden shadow-2xl border border-primary/40">
+             <img 
+               src={imagePreview} 
+               alt="Uploaded scan preview" 
+               className="max-h-72 object-contain"
+             />
+
+             {/* Live Glowing Laser Scanline */}
+             {loading && (
+               <div className="absolute inset-0 bg-blue-500/10 pointer-events-none">
+                 <div className="w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_20px_#22d3ee] animate-bounce duration-1000" />
+               </div>
+             )}
+           </div>
+
            {loading && (
-             <div className="mt-4 flex items-center gap-2 text-indigo-400 animate-pulse">
-               <RefreshCw className="w-5 h-5 animate-spin" />
-               <span className="text-sm font-semibold">Running OCR Extraction...</span>
+             <div className="mt-4 flex items-center gap-2 text-cyan-400 font-semibold text-xs animate-pulse bg-cyan-500/10 px-4 py-2 rounded-xl border border-cyan-500/20">
+               <RefreshCw className="w-4 h-4 animate-spin" />
+               <span>Vision OCR Neural Model Processing Image...</span>
              </div>
            )}
         </div>
