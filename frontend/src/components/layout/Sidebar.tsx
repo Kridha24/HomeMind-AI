@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -42,9 +42,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
   const { household } = useAuthStore();
   const location = useLocation();
 
+  // Floating Hover State (Guaranteed zero clipping)
+  const [hoveredItem, setHoveredItem] = useState<{
+    name: string;
+    tag?: string;
+    top: number;
+  } | null>(null);
+
   const primaryNavItems: NavItemDef[] = [
     {
-      name: 'Dashboard',
+      name: 'Dashboard Overview',
       shortName: 'Dashboard',
       path: '/',
       icon: LayoutDashboard,
@@ -129,7 +136,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-red-500/35',
     },
     {
-      name: 'Sustainability',
+      name: 'Sustainability Score',
       shortName: 'Eco Score',
       path: '/sustainability',
       icon: Leaf,
@@ -171,7 +178,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-indigo-500/35',
     },
     {
-      name: 'Settings',
+      name: 'App Settings',
       shortName: 'Settings',
       path: '/settings',
       icon: SettingsIcon,
@@ -179,6 +186,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-slate-500/35',
     },
   ];
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLElement>, item: NavItemDef) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setHoveredItem({
+      name: item.name,
+      tag: item.tag,
+      top: rect.top + rect.height / 2,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredItem(null);
+  };
 
   const renderNavItem = (item: NavItemDef) => {
     const Icon = item.icon;
@@ -188,48 +208,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       <NavLink
         key={item.path}
         to={item.path}
-        onClick={onClose}
-        className="group relative flex flex-col items-center justify-center p-1.5 rounded-2xl transition-all duration-200"
+        onClick={() => {
+          setHoveredItem(null);
+          if (onClose) onClose();
+        }}
+        onMouseEnter={(e) => handleMouseEnter(e, item)}
+        onMouseLeave={handleMouseLeave}
+        className="group relative flex items-center justify-center p-1 rounded-2xl transition-all duration-150"
       >
         <div
-          className={`flex flex-col items-center justify-center transition-all duration-200 ${
-            isActive ? 'scale-105' : 'hover:scale-105'
+          className={`flex items-center justify-center transition-all duration-200 ${
+            isActive ? 'scale-110' : 'hover:scale-110 active:scale-95'
           }`}
         >
           {/* 3D Elevated Vibrant Icon Badge */}
           <div
-            className={`w-10 h-10 rounded-2xl bg-gradient-to-tr ${item.gradient} text-white flex items-center justify-center shadow-md ${
+            className={`w-11 h-11 rounded-2xl bg-gradient-to-tr ${item.gradient} text-white flex items-center justify-center shadow-md ${
               item.shadowColor
             } border ${
-              isActive ? 'border-white ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900' : 'border-white/25'
-            } transform transition-transform duration-200 group-hover:-rotate-3`}
+              isActive
+                ? 'border-white ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900 shadow-blue-500/50'
+                : 'border-white/25 hover:border-white/60'
+            } transform transition-transform duration-200`}
           >
             <Icon className="w-5 h-5 drop-shadow-sm" />
           </div>
 
-          {/* Name Displayed When Active / Clicked */}
+          {/* Active Glowing Dot on Left */}
           {isActive && (
-            <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 mt-1 text-center leading-tight tracking-tight max-w-[72px] truncate animate-in fade-in duration-200">
-              {item.shortName}
-            </span>
+            <div className="absolute -left-1 w-1.5 h-5 rounded-r-full bg-blue-600 dark:bg-blue-400 shadow-[0_0_10px_#3b82f6]" />
           )}
-
-          {/* Active Accent Dot */}
-          {isActive && (
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 shadow-[0_0_8px_#3b82f6] mt-0.5" />
-          )}
-        </div>
-
-        {/* WhatsApp-Style Floating Hover Tooltip */}
-        <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-2 px-3 py-1.5 bg-slate-900/95 dark:bg-slate-900/95 text-white text-xs font-bold rounded-xl shadow-2xl border border-slate-700/80 backdrop-blur-xl z-[9999] pointer-events-none whitespace-nowrap animate-in fade-in slide-in-from-left-2 duration-150">
-          <span>{item.name}</span>
-          {item.tag && (
-            <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-blue-500/30 text-blue-300 border border-blue-400/30 uppercase">
-              {item.tag}
-            </span>
-          )}
-          {/* Arrow pointing to icon */}
-          <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 border-l border-b border-slate-700/80 transform rotate-45" />
         </div>
       </NavLink>
     );
@@ -245,7 +253,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
         />
       )}
 
-      {/* WhatsApp-Style Slim Icon Rail (80px width) */}
+      {/* WhatsApp-Style Slim 3D Icon Dock (80px width) */}
       <aside
         className={`w-20 bg-panel/95 backdrop-blur-xl border-r border-primary/80 h-screen fixed left-0 top-0 z-50 flex flex-col justify-between py-3 px-1 transition-transform duration-300 ease-in-out shadow-sm dark:shadow-none ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
@@ -253,7 +261,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       >
         {/* Top Header Logo */}
         <div className="flex flex-col items-center justify-center pb-2 border-b border-primary/60 flex-shrink-0">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/35 border border-white/20 transform hover:scale-105 transition-transform">
+          <div
+            onMouseEnter={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setHoveredItem({
+                name: 'HomeMind AI OS',
+                tag: 'PRO',
+                top: rect.top + rect.height / 2,
+              });
+            }}
+            onMouseLeave={handleMouseLeave}
+            className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/35 border border-white/20 transform hover:scale-105 transition-transform cursor-pointer"
+          >
             <Sparkles className="w-6 h-6 drop-shadow-md animate-pulse" />
           </div>
 
@@ -268,13 +287,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
           )}
         </div>
 
-        {/* Scrollable Icon Dock (Smooth, compact) */}
-        <nav className="flex-1 overflow-y-auto pr-0.5 scrollbar-thin my-2 space-y-2">
+        {/* Scrollable 3D Icon Dock */}
+        <nav className="flex-1 overflow-y-auto pr-0.5 scrollbar-thin my-2 space-y-2.5">
           {/* Core Modules */}
-          <div className="space-y-1.5">{primaryNavItems.map(renderNavItem)}</div>
+          <div className="space-y-2">{primaryNavItems.map(renderNavItem)}</div>
 
           {/* Advanced Utilities */}
-          <div className="space-y-1.5 pt-2 border-t border-primary/60">
+          <div className="space-y-2 pt-2 border-t border-primary/60">
             {moreNavItems.map(renderNavItem)}
           </div>
         </nav>
@@ -282,22 +301,41 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
         {/* Bottom Household Status */}
         <div className="pt-2 border-t border-primary/60 flex flex-col items-center justify-center flex-shrink-0">
           <div
-            className="w-10 h-10 rounded-2xl bg-secondary/80 border border-primary/80 flex items-center justify-center text-primary shadow-xs relative group cursor-pointer"
-            title={household?.name || 'Home Residence'}
+            onMouseEnter={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setHoveredItem({
+                name: household?.name || 'Home Residence',
+                tag: 'ACTIVE',
+                top: rect.top + rect.height / 2,
+              });
+            }}
+            onMouseLeave={handleMouseLeave}
+            className="w-11 h-11 rounded-2xl bg-secondary/80 border border-primary/80 flex items-center justify-center text-primary shadow-xs relative cursor-pointer hover:border-blue-500/50 transition-colors"
           >
-            <span className="font-extrabold text-xs text-blue-600 dark:text-blue-400">
+            <span className="font-extrabold text-sm text-blue-600 dark:text-blue-400">
               {household?.name?.charAt(0) || 'H'}
             </span>
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] absolute -top-0.5 -right-0.5 animate-pulse" />
-
-            {/* Hover Tooltip for Household */}
-            <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-2xl border border-slate-700/80 whitespace-nowrap z-[9999] pointer-events-none">
-              <span>{household?.name || 'Home Residence'}</span>
-              <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 border-l border-b border-slate-700/80 transform rotate-45" />
-            </div>
           </div>
         </div>
       </aside>
+
+      {/* Floating Hover Tooltip (Fixed coordinate portal - 100% unclipped) */}
+      {hoveredItem && (
+        <div
+          style={{ top: `${hoveredItem.top}px` }}
+          className="fixed left-[84px] -translate-y-1/2 flex items-center gap-2 px-3.5 py-2 bg-slate-900/95 dark:bg-slate-900/95 text-white text-xs font-bold rounded-xl shadow-2xl border border-slate-700/80 backdrop-blur-xl z-[99999] pointer-events-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-100"
+        >
+          <span>{hoveredItem.name}</span>
+          {hoveredItem.tag && (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-blue-500/30 text-blue-300 border border-blue-400/30 uppercase">
+              {hoveredItem.tag}
+            </span>
+          )}
+          {/* Arrow pointer towards icon */}
+          <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-slate-900 border-l border-b border-slate-700/80 transform rotate-45" />
+        </div>
+      )}
     </>
   );
 };
