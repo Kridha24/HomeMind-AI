@@ -113,8 +113,6 @@ function AppShell() {
       ? 'min-h-[100dvh] bg-background text-primary flex bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950'
       : 'min-h-[100dvh] bg-background text-primary flex';
 
-  const mainMarginClass = sidebarCollapsed ? 'lg:ml-20 ml-0' : 'lg:ml-64 ml-0';
-
   return (
     <div className={themeClass}>
       <Sidebar isOpen={isMobileSidebarOpen} onClose={() => setIsMobileSidebarOpen(false)} />
@@ -126,8 +124,8 @@ function AppShell() {
           onToggleMobileSidebar={() => setIsMobileSidebarOpen((p) => !p)}
         />
 
-        {/* Main content: offset for sidebar on large screens, full-width on mobile */}
-        <main className={`flex-1 p-3 sm:p-5 md:p-6 overflow-y-auto ${mainMarginClass} transition-all duration-300 pb-24 lg:pb-8`}>
+        {/* Main content: offset for slim 80px sidebar on large screens, full-width on mobile */}
+        <main className="flex-1 p-3 sm:p-5 md:p-6 overflow-y-auto lg:ml-20 ml-0 transition-all duration-300 pb-24 lg:pb-8">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/income" element={<Income />} />

@@ -1,8 +1,7 @@
 import React from 'react';
-import { Bell, Search, Sparkles, Menu } from 'lucide-react';
+import { Bell, Search, Sparkles, Menu, Command } from 'lucide-react';
 import { ProfileMenu } from '../common/ProfileMenu';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { useSettingStore } from '../../stores/useSettingStore';
 
 interface NavbarProps {
   onOpenAIChat: () => void;
@@ -18,12 +17,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   unreadCount = 0,
 }) => {
   const { household, user } = useAuthStore();
-  const { sidebarCollapsed } = useSettingStore();
-
-  const marginClass = sidebarCollapsed ? 'lg:ml-20 ml-0' : 'lg:ml-64 ml-0';
 
   return (
-    <header className={`h-16 bg-panel/85 backdrop-blur-xl border-b border-primary/80 sticky top-0 z-30 ${marginClass} transition-all duration-300 flex items-center justify-between px-3 sm:px-6 gap-2 sm:gap-4 shadow-sm dark:shadow-none`}>
+    <header className="h-16 bg-panel/85 backdrop-blur-xl border-b border-primary/80 sticky top-0 z-30 lg:ml-20 ml-0 transition-all duration-300 flex items-center justify-between px-3 sm:px-6 gap-2 sm:gap-4 shadow-sm dark:shadow-none">
       {/* Left: Mobile Hamburger & Search Input */}
       <div className="flex items-center gap-2 sm:gap-3 flex-1 max-w-md">
         {/* Mobile Hamburger Toggle Button */}
@@ -58,23 +54,33 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </div>
 
-        {/* Notification Bell */}
+        {/* AI Copilot Action Button */}
+        <button
+          onClick={onOpenAIChat}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-blue-500/20 active:scale-95 transition-all"
+          title="Open AI Household Copilot"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">AI Copilot</span>
+        </button>
+
+        {/* Notification Bell with Badge */}
         <button
           onClick={onOpenNotifications}
-          className="relative p-2 text-secondary hover:text-primary bg-secondary/60 hover:bg-secondary border border-primary/80 rounded-xl hover:border-secondary transition-colors"
+          className="p-2 rounded-xl text-secondary hover:text-primary hover:bg-secondary/80 border border-primary/80 transition-colors relative"
           title="Notifications"
         >
           <Bell className="w-4 h-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
-              {unreadCount}
-            </span>
+            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse ring-2 ring-panel" />
           )}
         </button>
 
-        {/* User Profile Menu */}
+        {/* User Profile Avatar / Logout Dropdown */}
         <ProfileMenu />
       </div>
     </header>
   );
 };
+
+export default Navbar;
