@@ -47,16 +47,14 @@ export const useSettingStore = create<SettingState>((set, get) => ({
   aiRecipes: true,
   aiOcr: true,
   isLoading: false,
-  sidebarCollapsed: localStorage.getItem('hm_sidebar_collapsed') === 'true',
+  sidebarCollapsed: false,
 
   toggleSidebar: () => {
     const current = get().sidebarCollapsed;
-    localStorage.setItem('hm_sidebar_collapsed', String(!current));
     set({ sidebarCollapsed: !current });
   },
 
   setSidebarCollapsed: (collapsed: boolean) => {
-    localStorage.setItem('hm_sidebar_collapsed', String(collapsed));
     set({ sidebarCollapsed: collapsed });
   },
 
