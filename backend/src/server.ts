@@ -35,12 +35,7 @@ const io = new SocketIOServer(server, {
   }
 });
 
-// ============================================================
 // Socket.IO Authentication Middleware
-// Every connection handshake must carry a valid Bearer access
-// token in the Authorization header or as a query param.
-// We reject unauthenticated sockets before they can join rooms.
-// ============================================================
 io.use((socket, next) => {
   try {
     const authHeader = socket.handshake.headers.authorization as string | undefined;
@@ -54,7 +49,6 @@ io.use((socket, next) => {
     }
 
     const payload = verifyAccessToken(rawToken);
-    // Attach verified user data to socket — used exclusively for room assignment.
     socket.data.user = payload;
     next();
   } catch (err) {
@@ -62,23 +56,158 @@ io.use((socket, next) => {
   }
 });
 
+// Household active users map: householdId -> Set of online userIds
+const onlineHouseholdUsers: Record<string, Set<string>> = {};
+
 io.on('connection', (socket) => {
   const user = socket.data.user;
-  console.log(`[Socket.IO] Authenticated client connected: ${socket.id} (user: ${user?.userId})`);
+  const userId = user?.userId;
+  const householdId = user?.householdId;
 
-  socket.on('join_household', () => {
-    // Always use householdId from the verified JWT — never trust client-supplied IDs.
-    const householdId = user?.householdId;
-    if (!householdId) {
-      socket.disconnect(true);
-      return;
-    }
+  console.log(`[Socket.IO] Authenticated client connected: ${socket.id} (user: ${userId})`);
+
+  if (userId && householdId) {
+    // Join personal user room and household room
+    socket.join(`user_${userId}`);
     socket.join(`household_${householdId}`);
-    console.log(`[Socket.IO] Socket ${socket.id} joined household_${householdId}`);
+
+    if (!onlineHouseholdUsers[householdId]) {
+      onlineHouseholdUsers[householdId] = new Set();
+    }
+    onlineHouseholdUsers[householdId].add(userId);
+
+    // Broadcast online status to household
+    io.to(`household_${householdId}`).emit('household_online_members', Array.from(onlineHouseholdUsers[householdId]));
+  }
+
+  // 1. Join Household manually if requested
+  socket.on('join_household', () => {
+    if (!householdId) return;
+    socket.join(`household_${householdId}`);
+    socket.join(`user_${userId}`);
+  });
+
+  // 2. Real-time Family Text Chat
+  socket.on('family_send_message', (payload: {
+    text: string;
+    senderName: string;
+    senderAvatar?: string;
+    recipientId?: string;
+    replyTo?: any;
+  }) => {
+    if (!householdId || !userId) return;
+
+    const messageData = {
+      id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+      senderId: userId,
+      senderName: payload.senderName || 'Family Member',
+      senderAvatar: payload.senderAvatar,
+      text: payload.text,
+      recipientId: payload.recipientId || null,
+      replyTo: payload.replyTo || null,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (payload.recipientId) {
+      // 1-on-1 direct message: send to recipient and sender
+      io.to(`user_${payload.recipientId}`).emit('family_new_message', messageData);
+      socket.emit('family_new_message', messageData);
+    } else {
+      // Household group message
+      io.to(`household_${householdId}`).emit('family_new_message', messageData);
+    }
+  });
+
+  // 3. WebRTC End-to-End P2P Signaling (Encrypted Audio/Video Calls)
+  
+  // Call Initiation
+  socket.on('webrtc_call_user', (data: {
+    targetUserId: string;
+    signalData: any;
+    callType: 'audio' | 'video';
+    callerName: string;
+    callerAvatar?: string;
+  }) => {
+    if (!userId) return;
+    console.log(`[WebRTC] Call from ${userId} (${data.callerName}) to ${data.targetUserId} [${data.callType}]`);
+    io.to(`user_${data.targetUserId}`).emit('webrtc_incoming_call', {
+      callerId: userId,
+      callerName: data.callerName,
+      callerAvatar: data.callerAvatar,
+      callType: data.callType,
+      signalData: data.signalData,
+    });
+  });
+
+  // Call Answered
+  socket.on('webrtc_answer_call', (data: {
+    targetUserId: string;
+    signalData: any;
+  }) => {
+    if (!userId) return;
+    console.log(`[WebRTC] Call answered by ${userId} for ${data.targetUserId}`);
+    io.to(`user_${data.targetUserId}`).emit('webrtc_call_accepted', {
+      signalData: data.signalData,
+      fromUserId: userId,
+    });
+  });
+
+  // ICE Candidates Relay
+  socket.on('webrtc_ice_candidate', (data: {
+    targetUserId: string;
+    candidate: any;
+  }) => {
+    if (!userId) return;
+    io.to(`user_${data.targetUserId}`).emit('webrtc_ice_candidate', {
+      candidate: data.candidate,
+      fromUserId: userId,
+    });
+  });
+
+  // Call Ended
+  socket.on('webrtc_end_call', (data: {
+    targetUserId: string;
+  }) => {
+    if (!userId) return;
+    console.log(`[WebRTC] Call ended by ${userId} with ${data.targetUserId}`);
+    io.to(`user_${data.targetUserId}`).emit('webrtc_call_ended', {
+      fromUserId: userId,
+    });
+  });
+
+  // Call Rejected
+  socket.on('webrtc_reject_call', (data: {
+    targetUserId: string;
+    reason?: string;
+  }) => {
+    if (!userId) return;
+    console.log(`[WebRTC] Call rejected by ${userId}`);
+    io.to(`user_${data.targetUserId}`).emit('webrtc_call_rejected', {
+      fromUserId: userId,
+      reason: data.reason || 'declined',
+    });
+  });
+
+  // Media state toggle (mic mute, camera off)
+  socket.on('webrtc_toggle_media', (data: {
+    targetUserId: string;
+    isAudioMuted?: boolean;
+    isVideoOff?: boolean;
+  }) => {
+    if (!userId) return;
+    io.to(`user_${data.targetUserId}`).emit('webrtc_media_state', {
+      fromUserId: userId,
+      isAudioMuted: data.isAudioMuted,
+      isVideoOff: data.isVideoOff,
+    });
   });
 
   socket.on('disconnect', () => {
     console.log(`[Socket.IO] Client disconnected: ${socket.id}`);
+    if (userId && householdId && onlineHouseholdUsers[householdId]) {
+      onlineHouseholdUsers[householdId].delete(userId);
+      io.to(`household_${householdId}`).emit('household_online_members', Array.from(onlineHouseholdUsers[householdId]));
+    }
   });
 });
 
