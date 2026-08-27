@@ -10,8 +10,6 @@ interface NavbarProps {
   unreadCount?: number;
 }
 
-
-
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenAIChat,
   onOpenNotifications,
@@ -21,14 +19,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { household, user } = useAuthStore();
 
   return (
-    <header className="h-16 bg-panel/40 backdrop-blur-xl border-b border-primary/60 sticky top-0 z-30 lg:ml-64 ml-0 flex items-center justify-between px-3 sm:px-6 gap-2 sm:gap-4">
+    <header className="h-16 bg-panel/85 backdrop-blur-xl border-b border-primary/80 sticky top-0 z-30 lg:ml-64 ml-0 flex items-center justify-between px-3 sm:px-6 gap-2 sm:gap-4 shadow-sm dark:shadow-none">
       {/* Left: Mobile Hamburger & Search Input */}
       <div className="flex items-center gap-2 sm:gap-3 flex-1 max-w-md">
         {/* Mobile Hamburger Toggle Button */}
         {onToggleMobileSidebar && (
           <button
             onClick={onToggleMobileSidebar}
-            className="lg:hidden p-2 text-secondary hover:text-white bg-panel border border-primary/80 rounded-xl hover:border-secondary transition-colors flex-shrink-0"
+            className="lg:hidden p-2 text-secondary hover:text-primary bg-secondary/80 border border-primary/80 rounded-xl hover:border-secondary transition-colors flex-shrink-0"
             title="Open Menu"
           >
             <Menu className="w-4 h-4" />
@@ -40,8 +38,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           <Search className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search expenses, groceries..."
-            className="w-full bg-background/60 border border-primary/80 rounded-xl pl-9 pr-3 py-1.5 text-xs text-primary placeholder-slate-500 focus:outline-none focus:border-blue-500/50 transition-colors"
+            placeholder="Search expenses, groceries, chores (or press ⌘K)..."
+            className="w-full bg-secondary/60 border border-primary/80 rounded-xl pl-9 pr-3 py-1.5 text-xs text-primary placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-panel transition-all"
           />
         </div>
       </div>
@@ -49,8 +47,8 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Right Header Actions */}
       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
         {/* Household & User Info (Desktop/Tablet) */}
-        <div className="hidden sm:flex items-center gap-2 bg-background/40 border border-primary/60 px-3 py-1.5 rounded-xl text-xs text-secondary">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <div className="hidden sm:flex items-center gap-2 bg-secondary/60 border border-primary/60 px-3.5 py-1.5 rounded-xl text-xs text-secondary font-medium">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>
             {household?.name || 'My Home'} • {user?.name?.split(' ')[0] || 'User'}
           </span>
@@ -59,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Notification Bell */}
         <button
           onClick={onOpenNotifications}
-          className="relative p-2 text-secondary hover:text-white bg-panel border border-primary/80 rounded-xl hover:border-secondary transition-colors"
+          className="relative p-2 text-secondary hover:text-primary bg-secondary/60 hover:bg-secondary border border-primary/80 rounded-xl hover:border-secondary transition-colors"
           title="Notifications"
         >
           <Bell className="w-4 h-4" />

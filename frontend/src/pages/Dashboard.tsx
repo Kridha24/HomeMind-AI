@@ -131,14 +131,14 @@ export const Dashboard: React.FC = () => {
             <h1 className="text-2xl font-extrabold text-primary tracking-tight">
               Welcome, {user?.name?.split(' ')[0] || 'there'} 👋
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 border border-blue-500/20 text-blue-400 uppercase tracking-wider">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 uppercase tracking-wider">
               {user?.role || 'OWNER'}
             </span>
           </div>
-          <p className="text-xs text-muted flex items-center gap-2">
-            <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-            <span>{household?.name || 'Home Residence'}</span>
-            <span className="text-slate-600">•</span>
+          <p className="text-xs text-secondary flex items-center gap-2">
+            <MapPin className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="font-semibold text-primary">{household?.name || 'Home Residence'}</span>
+            <span className="text-muted">•</span>
             <span>
               {flag} {countryDefaults.countryName}
             </span>
@@ -147,8 +147,8 @@ export const Dashboard: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Days Left in Month Badge */}
-          <div className="glass-panel px-3.5 py-2 border-emerald-500/30 flex items-center gap-2 bg-emerald-500/10 text-emerald-300 text-xs font-semibold">
-            <Hourglass className="w-4 h-4 text-emerald-400 animate-spin" />
+          <div className="glass-panel px-3.5 py-2 border-emerald-500/30 flex items-center gap-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 text-xs font-semibold shadow-sm">
+            <Hourglass className="w-4 h-4 text-emerald-500 animate-spin" />
             <span>
               {daysRemaining === 0
                 ? 'Last Day of ' + monthName
@@ -157,14 +157,14 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Real-time Digital Clock */}
-          <div className="glass-panel px-4 py-2.5 border-blue-500/30 flex items-center gap-3 bg-panel/80">
-            <Clock className="w-5 h-5 text-blue-400 animate-pulse" />
+          <div className="glass-panel px-4 py-2.5 border-blue-500/30 flex items-center gap-3 bg-panel/90 shadow-sm">
+            <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-pulse" />
             <div className="text-right">
               <span className="font-mono text-base font-extrabold text-primary block tracking-wider leading-none">
                 {timeStr || '12:00:00 PM'}
               </span>
-              <span className="text-[10px] font-semibold text-muted flex items-center gap-1 mt-0.5">
-                <Calendar className="w-3 h-3 text-indigo-400" /> {dateStr}
+              <span className="text-[10px] font-semibold text-secondary flex items-center gap-1 mt-0.5">
+                <Calendar className="w-3 h-3 text-indigo-500" /> {dateStr}
               </span>
             </div>
           </div>
@@ -172,42 +172,42 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Quick Action Bar + Command Palette Shortcut */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-3xl bg-panel/60 border border-primary/30 backdrop-blur-xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-3xl bg-panel/90 border border-primary/80 backdrop-blur-xl shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setShowExpenseModal(true)}
-            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-blue-600/20 active:scale-95 transition-all"
+            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-blue-600/20 active:scale-95 transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Log Expense</span>
           </button>
           <button
             onClick={() => setShowBillModal(true)}
-            className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/40 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all"
+            className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm"
           >
-            <Plus className="w-3.5 h-3.5 text-amber-400" />
+            <Plus className="w-3.5 h-3.5 text-amber-500" />
             <span>Add Bill</span>
           </button>
           <button
             onClick={() => setShowGroceryModal(true)}
-            className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/40 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all"
+            className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm"
           >
-            <Plus className="w-3.5 h-3.5 text-emerald-400" />
+            <Plus className="w-3.5 h-3.5 text-emerald-500" />
             <span>Add Grocery</span>
           </button>
           <button
             onClick={() => setShowTaskModal(true)}
-            className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/40 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all"
+            className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm"
           >
-            <Plus className="w-3.5 h-3.5 text-purple-400" />
+            <Plus className="w-3.5 h-3.5 text-purple-500" />
             <span>Assign Task</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-background/80 border border-primary/20 text-[11px] text-muted font-mono">
-          <Command className="w-3 h-3 text-blue-400" />
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-secondary/70 border border-primary/60 text-[11px] text-secondary font-mono">
+          <Command className="w-3 h-3 text-blue-600 dark:text-blue-400" />
           <span>Press</span>
-          <kbd className="px-1.5 py-0.5 rounded bg-panel font-bold text-primary border border-primary/40">
+          <kbd className="px-1.5 py-0.5 rounded bg-panel font-bold text-primary border border-primary/80 shadow-xs">
             ⌘K
           </kbd>
           <span>for Command Palette</span>
@@ -232,97 +232,107 @@ export const Dashboard: React.FC = () => {
         ) : (
           <>
             {/* Monthly Income Card */}
-            <div className="glass-panel p-5 border-emerald-500/30 bg-gradient-to-tr from-slate-900 via-emerald-950/20 to-slate-900 space-y-2">
+            <div className="glass-panel p-5 border-emerald-500/30 bg-emerald-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-emerald-950/20 dark:to-slate-900 space-y-2 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
                     Income ({monthShort})
                   </span>
                   <span className="text-[10px] text-muted font-mono block">{dateRangeStr}</span>
                 </div>
-                <Wallet className="w-4 h-4 text-emerald-400" />
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                  <Wallet className="w-4 h-4" />
+                </div>
               </div>
-              <p className="text-xl font-extrabold text-primary font-mono pt-1">
+              <p className="text-xl font-extrabold text-emerald-700 dark:text-primary font-mono pt-1">
                 +{format(monthlyIncome)}
               </p>
-              <div className="flex items-center justify-between pt-1 border-t border-primary/80 text-[10px]">
-                <span className="text-emerald-400 flex items-center gap-1 font-medium">
+              <div className="flex items-center justify-between pt-1 border-t border-primary/60 text-[10px]">
+                <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1 font-semibold">
                   <TrendingUp className="w-3 h-3" /> Monthly Earnings
                 </span>
               </div>
             </div>
 
             {/* Monthly Expenses Card with (-) sign */}
-            <div className="glass-panel p-5 border-red-500/30 bg-gradient-to-tr from-slate-900 via-red-950/20 to-slate-900 space-y-2">
+            <div className="glass-panel p-5 border-red-500/30 bg-red-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-red-950/20 dark:to-slate-900 space-y-2 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-red-400 uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-red-700 dark:text-red-400 uppercase tracking-wider block">
                     Expenses ({monthShort})
                   </span>
                   <span className="text-[10px] text-muted font-mono block">{dateRangeStr}</span>
                 </div>
-                <CreditCard className="w-4 h-4 text-red-400" />
+                <div className="w-8 h-8 rounded-xl bg-red-500/15 flex items-center justify-center text-red-600 dark:text-red-400">
+                  <CreditCard className="w-4 h-4" />
+                </div>
               </div>
-              <p className="text-xl font-extrabold text-red-400 font-mono pt-1">
+              <p className="text-xl font-extrabold text-red-600 dark:text-red-400 font-mono pt-1">
                 -{format(monthlyExpenses)}
               </p>
-              <div className="flex items-center justify-between pt-1 border-t border-primary/80 text-[10px]">
-                <span className="text-red-400">Total Month Spend</span>
+              <div className="flex items-center justify-between pt-1 border-t border-primary/60 text-[10px]">
+                <span className="text-red-700 dark:text-red-400 font-semibold">Total Month Spend</span>
               </div>
             </div>
 
             {/* Lifetime Overall Expenses Card with (-) sign */}
-            <div className="glass-panel p-5 border-rose-500/30 bg-gradient-to-tr from-slate-900 via-rose-950/20 to-slate-900 space-y-2">
+            <div className="glass-panel p-5 border-rose-500/30 bg-rose-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-rose-950/20 dark:to-slate-900 space-y-2 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-rose-400 uppercase tracking-wider">
+                <span className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
                   Lifetime Expenses
                 </span>
-                <CreditCard className="w-4 h-4 text-rose-400" />
+                <div className="w-8 h-8 rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                  <CreditCard className="w-4 h-4" />
+                </div>
               </div>
-              <p className="text-xl font-extrabold text-rose-400 font-mono pt-1">
+              <p className="text-xl font-extrabold text-rose-600 dark:text-rose-400 font-mono pt-1">
                 -{format(overallExpenses)}
               </p>
-              <div className="pt-1 border-t border-primary/80 text-[10px] text-muted">
+              <div className="pt-1 border-t border-primary/60 text-[10px] text-muted font-medium">
                 Total Historical Spend
               </div>
             </div>
 
             {/* Monthly Net Savings Card (Income - Expenses) */}
-            <div className="glass-panel p-5 border-teal-500/30 bg-gradient-to-tr from-slate-900 via-teal-950/20 to-slate-900 space-y-2">
+            <div className="glass-panel p-5 border-teal-500/30 bg-teal-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-teal-950/20 dark:to-slate-900 space-y-2 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-teal-400 uppercase tracking-wider">
+                <span className="text-xs font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider">
                   Net Savings ({monthShort})
                 </span>
-                <PiggyBank className="w-4 h-4 text-teal-400" />
+                <div className="w-8 h-8 rounded-xl bg-teal-500/15 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                  <PiggyBank className="w-4 h-4" />
+                </div>
               </div>
               <p
                 className={`text-xl font-extrabold font-mono pt-1 ${
-                  monthlySavings >= 0 ? 'text-teal-400' : 'text-red-400'
+                  monthlySavings >= 0 ? 'text-teal-700 dark:text-teal-400' : 'text-red-600 dark:text-red-400'
                 }`}
               >
                 {monthlySavings >= 0 ? `+${format(monthlySavings)}` : format(monthlySavings)}
               </p>
-              <div className="pt-1 border-t border-primary/80 text-[10px] text-muted">
+              <div className="pt-1 border-t border-primary/60 text-[10px] text-muted font-medium">
                 Income - Expenses
               </div>
             </div>
 
             {/* Overall Lifetime Balance Card */}
-            <div className="glass-panel p-5 border-purple-500/30 bg-gradient-to-tr from-slate-900 via-purple-950/20 to-slate-900 space-y-2">
+            <div className="glass-panel p-5 border-purple-500/30 bg-purple-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-purple-950/20 dark:to-slate-900 space-y-2 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">
+                <span className="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider">
                   Overall Balance
                 </span>
-                <Landmark className="w-4 h-4 text-purple-400" />
+                <div className="w-8 h-8 rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                  <Landmark className="w-4 h-4" />
+                </div>
               </div>
               <p
                 className={`text-xl font-extrabold font-mono pt-1 ${
-                  overallSavings >= 0 ? 'text-purple-300' : 'text-red-400'
+                  overallSavings >= 0 ? 'text-purple-800 dark:text-purple-300' : 'text-red-600 dark:text-red-400'
                 }`}
               >
                 {overallSavings >= 0 ? `+${format(overallSavings)}` : format(overallSavings)}
               </p>
-              <div className="pt-1 border-t border-primary/80 text-[10px] text-purple-400 font-medium">
+              <div className="pt-1 border-t border-primary/60 text-[10px] text-purple-700 dark:text-purple-400 font-semibold">
                 Lifetime Net Assets
               </div>
             </div>
@@ -347,11 +357,11 @@ export const Dashboard: React.FC = () => {
       />
 
       {/* Upcoming Rents & Mess Expenses Planner Section */}
-      <div className="glass-panel p-6 border-amber-500/30 bg-gradient-to-r from-slate-900 via-amber-950/10 to-slate-900 space-y-4">
+      <div className="glass-panel p-6 border-amber-500/30 bg-amber-50/40 dark:bg-gradient-to-r dark:from-slate-900 dark:via-amber-950/10 dark:to-slate-900 space-y-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-              <FileText className="w-4 h-4" /> Upcoming Rents, Mess Fees & Utility Payments Plan
+            <span className="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider flex items-center gap-2">
+              <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Upcoming Rents, Mess Fees & Utility Payments Plan
             </span>
             <p className="text-xs text-secondary">
               Save and track room rent, mess fees, WiFi, and electricity bills due for settlement during{' '}
@@ -359,10 +369,10 @@ export const Dashboard: React.FC = () => {
             </p>
           </div>
           <div className="text-right">
-            <span className="text-2xl font-extrabold text-amber-400 font-mono block">
+            <span className="text-2xl font-extrabold text-amber-800 dark:text-amber-400 font-mono block">
               -{format(upcomingBillsTotal)}
             </span>
-            <span className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider">
+            <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider">
               Total Scheduled Payments
             </span>
           </div>
@@ -373,29 +383,29 @@ export const Dashboard: React.FC = () => {
             {upcomingBills.map((bill: any) => (
               <div
                 key={bill.id}
-                className="p-3.5 rounded-2xl bg-background/80 border border-primary flex items-center justify-between"
+                className="p-3.5 rounded-2xl bg-panel border border-primary/80 flex items-center justify-between shadow-sm"
               >
                 <div className="space-y-1">
                   <span className="text-xs font-bold text-primary block">{bill.title}</span>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 border border-amber-500/20 text-amber-400 uppercase tracking-wider inline-block">
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400 uppercase tracking-wider inline-block">
                     {bill.category || 'Rent/Utility'}
                   </span>
                   <p className="text-[10px] text-muted font-mono">
                     Due: {new Date(bill.dueDate).toLocaleDateString()}
                   </p>
                 </div>
-                <span className="text-sm font-extrabold text-red-400 font-mono">
+                <span className="text-sm font-extrabold text-red-600 dark:text-red-400 font-mono">
                   -{format(bill.amount)}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <div className="p-4 rounded-2xl bg-background/60 border border-primary text-center text-xs text-muted flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-panel border border-primary/80 text-center text-xs text-secondary flex items-center justify-between shadow-sm">
             <span>No upcoming rent or mess bill entries logged yet for this cycle.</span>
             <button
               onClick={() => setShowBillModal(true)}
-              className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl text-xs font-bold hover:bg-amber-500/20 transition-colors"
+              className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400 rounded-xl text-xs font-bold transition-colors shadow-xs"
             >
               + Add Room Rent / Mess Bill
             </button>
@@ -404,23 +414,23 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* 5 History Table Section */}
-      <div className="glass-panel border-primary overflow-hidden">
-        <div className="p-4 border-b border-primary font-bold text-sm text-primary flex items-center justify-between">
+      <div className="glass-panel border-primary overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-primary/80 font-bold text-sm text-primary flex items-center justify-between bg-secondary/30">
           <span className="flex items-center gap-2">
-            <History className="w-4 h-4 text-blue-400" /> Recent 5 Transactions History
+            <History className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Recent 5 Transactions History
           </span>
-          <span className="text-xs text-muted font-mono">Latest Ledger Entries</span>
+          <span className="text-xs text-secondary font-mono font-medium">Latest Ledger Entries</span>
         </div>
 
         {recentHistory.length === 0 ? (
           <div className="p-8 text-center text-xs text-muted space-y-1">
-            <p>No recent transaction history recorded yet.</p>
+            <p className="font-semibold text-primary">No recent transaction history recorded yet.</p>
             <p className="text-[11px]">Log an income entry or expense to see historical telemetry here.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-background/60 text-muted uppercase tracking-wider font-semibold border-b border-primary">
+              <thead className="bg-secondary/60 text-secondary uppercase tracking-wider font-bold border-b border-primary/80">
                 <tr>
                   <th className="p-4">Transaction Title</th>
                   <th className="p-4">Category / Source</th>
@@ -429,13 +439,13 @@ export const Dashboard: React.FC = () => {
                   <th className="p-4 text-right">Amount ({currencySymbol})</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-secondary">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 text-secondary font-medium">
                 {recentHistory.map((item: any) => (
-                  <tr key={item.id} className="hover:bg-panel/40 transition-colors">
-                    <td className="p-4 font-semibold text-primary flex items-center gap-2.5">
+                  <tr key={item.id} className="hover:bg-secondary/40 transition-colors">
+                    <td className="p-4 font-bold text-primary flex items-center gap-2.5">
                       <span
                         className={`w-2 h-2 rounded-full ${
-                          item.type === 'INCOME' ? 'bg-emerald-400' : 'bg-red-400'
+                          item.type === 'INCOME' ? 'bg-emerald-500' : 'bg-red-500'
                         }`}
                       ></span>
                       {item.title}
@@ -444,8 +454,8 @@ export const Dashboard: React.FC = () => {
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                           item.type === 'INCOME'
-                            ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
-                            : 'bg-blue-500/10 border border-blue-500/20 text-blue-400'
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400'
+                            : 'bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400'
                         }`}
                       >
                         {item.category || item.type}
@@ -454,10 +464,10 @@ export const Dashboard: React.FC = () => {
                     <td className="p-4 text-muted font-mono text-[11px]">
                       {new Date(item.date).toLocaleDateString()}
                     </td>
-                    <td className="p-4 text-muted">{item.userName}</td>
+                    <td className="p-4 text-secondary">{item.userName}</td>
                     <td
                       className={`p-4 text-right font-bold font-mono text-sm ${
-                        item.type === 'INCOME' ? 'text-emerald-400' : 'text-primary'
+                        item.type === 'INCOME' ? 'text-emerald-600 dark:text-emerald-400' : 'text-primary'
                       }`}
                     >
                       {item.type === 'INCOME' ? `+${format(item.amount)}` : `-${format(item.amount)}`}

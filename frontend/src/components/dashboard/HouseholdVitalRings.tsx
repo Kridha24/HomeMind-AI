@@ -50,7 +50,7 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
   const strokeDash3 = (taskRatio / 100) * circ3;
 
   return (
-    <div className="glass-panel p-6 sm:p-7 border-primary/30 rounded-3xl relative overflow-hidden bg-panel/75 backdrop-blur-xl shadow-2xl space-y-6">
+    <div className="glass-panel p-6 sm:p-7 border-primary/80 rounded-3xl relative overflow-hidden bg-panel/90 backdrop-blur-xl shadow-sm dark:shadow-2xl space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
@@ -58,19 +58,19 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
             <h2 className="text-lg sm:text-xl font-extrabold text-primary tracking-tight">
               Household Vitality Rings
             </h2>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1 shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Live Telemetry
             </span>
           </div>
-          <p className="text-xs text-muted">Real-time pulse of your finances, pantry, and chores</p>
+          <p className="text-xs text-secondary">Real-time pulse of your finances, pantry, and chores</p>
         </div>
 
         <div className="text-right">
           <span className="text-2xl sm:text-3xl font-black text-primary font-mono tracking-tight block">
             {overallVitality}%
           </span>
-          <span className="text-[11px] text-emerald-400 font-bold uppercase tracking-wider">
+          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">
             Optimal State
           </span>
         </div>
@@ -89,7 +89,7 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
               fill="transparent"
               stroke="currentColor"
               strokeWidth={strokeWidth}
-              className="text-blue-500/15"
+              className="text-blue-500/10 dark:text-blue-500/15"
             />
             <circle
               cx={center}
@@ -98,7 +98,7 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
               fill="transparent"
               stroke="currentColor"
               strokeWidth={strokeWidth}
-              className="text-emerald-500/15"
+              className="text-emerald-500/10 dark:text-emerald-500/15"
             />
             <circle
               cx={center}
@@ -107,7 +107,7 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
               fill="transparent"
               stroke="currentColor"
               strokeWidth={strokeWidth}
-              className="text-purple-500/15"
+              className="text-purple-500/10 dark:text-purple-500/15"
             />
 
             {/* Gradient Definitions */}
@@ -171,7 +171,7 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
 
           {/* Center Logo / Icon */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <Sparkles className="w-6 h-6 text-blue-400" />
+            <Sparkles className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             <span className="text-[10px] font-bold text-muted uppercase tracking-widest mt-0.5">
               Vitals
             </span>
@@ -181,59 +181,59 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
         {/* Right: Detailed Ring Breakdowns */}
         <div className="md:col-span-7 space-y-3">
           {/* 1. Budget Velocity Card */}
-          <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-between gap-3">
+          <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20 flex items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center flex-shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
                 <Wallet className="w-4 h-4" />
               </div>
               <div>
                 <span className="text-xs font-bold text-primary block">Budget Health</span>
-                <span className="text-[11px] text-muted">
+                <span className="text-[11px] text-secondary">
                   {monthlySavings >= 0 ? `${format(monthlySavings)} Saved` : `${format(Math.abs(monthlySavings))} Over`}
                 </span>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-sm font-black text-blue-400 font-mono block">{budgetRatio}%</span>
-              <span className="text-[10px] text-muted">Pacing</span>
+              <span className="text-sm font-black text-blue-600 dark:text-blue-400 font-mono block">{budgetRatio}%</span>
+              <span className="text-[10px] text-muted font-medium">Pacing</span>
             </div>
           </div>
 
           {/* 2. Zero-Waste Pantry Card */}
-          <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between gap-3">
+          <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 flex items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
                 <ShoppingBag className="w-4 h-4" />
               </div>
               <div>
                 <span className="text-xs font-bold text-primary block">Zero-Waste Pantry</span>
-                <span className="text-[11px] text-muted">
+                <span className="text-[11px] text-secondary">
                   {pantryStats.fresh} of {pantryStats.total} items fresh
                 </span>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-sm font-black text-emerald-400 font-mono block">{pantryRatio}%</span>
-              <span className="text-[10px] text-muted">Freshness</span>
+              <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono block">{pantryRatio}%</span>
+              <span className="text-[10px] text-muted font-medium">Freshness</span>
             </div>
           </div>
 
           {/* 3. Task Completion Card */}
-          <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-between gap-3">
+          <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 dark:bg-purple-500/10 dark:border-purple-500/20 flex items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center flex-shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0">
                 <CheckSquare className="w-4 h-4" />
               </div>
               <div>
                 <span className="text-xs font-bold text-primary block">Chore & Task Cadence</span>
-                <span className="text-[11px] text-muted">
+                <span className="text-[11px] text-secondary">
                   {taskStats.completed}/{taskStats.total} done this week
                 </span>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-sm font-black text-purple-400 font-mono block">{taskRatio}%</span>
-              <span className="text-[10px] text-muted">Efficiency</span>
+              <span className="text-sm font-black text-purple-600 dark:text-purple-400 font-mono block">{taskRatio}%</span>
+              <span className="text-[10px] text-muted font-medium">Efficiency</span>
             </div>
           </div>
         </div>

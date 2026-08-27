@@ -105,22 +105,22 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
             Proactive AI Recommendations
           </h2>
         </div>
-        <span className="text-[11px] text-muted font-medium">1-Click Actionable</span>
+        <span className="text-[11px] text-muted font-bold uppercase tracking-wider">1-Click Actionable</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {activeCards.map((card) => {
           const badgeBg =
             card.impactColor === 'amber'
-              ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+              ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20'
               : card.impactColor === 'emerald'
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-              : 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+              ? 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
+              : 'bg-blue-100 text-blue-900 border-blue-300 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20';
 
           return (
             <div
               key={card.id}
-              className="p-5 rounded-3xl bg-panel/75 backdrop-blur-xl border border-primary/30 flex flex-col justify-between space-y-4 hover:border-blue-500/40 transition-all shadow-lg hover:shadow-xl group"
+              className="p-5 rounded-3xl bg-panel border border-primary/80 flex flex-col justify-between space-y-4 hover:border-blue-500/60 transition-all shadow-sm hover:shadow-md group"
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
@@ -129,22 +129,22 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
                   </span>
                   <button
                     onClick={() => handleDismiss(card.id)}
-                    className="text-muted hover:text-primary text-xs transition-colors"
+                    className="text-muted hover:text-primary text-xs transition-colors p-1 rounded-lg hover:bg-secondary/60"
                     title="Dismiss"
                   >
                     ✕
                   </button>
                 </div>
-                <h3 className="text-sm font-bold text-primary group-hover:text-blue-400 transition-colors">
+                <h3 className="text-sm font-bold text-primary group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                   {card.title}
                 </h3>
-                <p className="text-xs text-muted leading-relaxed">{card.description}</p>
+                <p className="text-xs text-secondary leading-relaxed font-medium">{card.description}</p>
               </div>
 
               <button
                 type="button"
                 onClick={card.onPrimaryAction}
-                className="w-full min-h-[40px] bg-secondary/80 hover:bg-blue-600 hover:text-white border border-primary/30 text-primary font-semibold py-2.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                className="w-full min-h-[42px] bg-secondary hover:bg-blue-600 hover:text-white border border-primary/80 text-primary font-bold py-2.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-xs"
               >
                 <span>{card.primaryActionLabel}</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />

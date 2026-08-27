@@ -4,37 +4,37 @@
 
 @layer base {
   :root {
-    --bg-background: 248 250 252;       /* slate-50 */
-    --bg-panel: 255 255 255;            /* white */
-    --bg-secondary: 241 245 249;        /* slate-100 */
-    --text-primary: 15 23 42;           /* slate-900 */
-    --text-secondary: 71 85 105;        /* slate-600 */
-    --text-muted: 148 163 184;          /* slate-400 */
-    --border-primary: 226 232 240;      /* slate-200 */
-    --border-secondary: 203 213 225;    /* slate-300 */
+    --bg-background: 248 250 252;       /* slate-50 crisp bright canvas */
+    --bg-panel: 255 255 255;            /* pure white clean surface */
+    --bg-secondary: 241 245 249;        /* slate-100 refined element background */
+    --text-primary: 15 23 42;           /* slate-900 deep high-contrast ink */
+    --text-secondary: 51 65 85;         /* slate-700 crisp readable text */
+    --text-muted: 100 116 139;          /* slate-500 clear subtle labels */
+    --border-primary: 226 232 240;      /* slate-200 razor-sharp border */
+    --border-secondary: 203 213 225;    /* slate-300 distinct boundary */
   }
 
   .dark {
-    --bg-background: 2 6 23;            /* slate-950 */
-    --bg-panel: 15 23 42;               /* slate-900 */
-    --bg-secondary: 30 41 59;           /* slate-800 */
-    --text-primary: 241 245 249;        /* slate-100 */
-    --text-secondary: 148 163 184;      /* slate-400 */
-    --text-muted: 100 116 139;          /* slate-500 */
-    --border-primary: 30 41 59;         /* slate-800 */
-    --border-secondary: 51 65 85;       /* slate-700 */
+    --bg-background: 2 6 23;            /* slate-950 deep OLED dark */
+    --bg-panel: 15 23 42;               /* slate-900 elevated surface */
+    --bg-secondary: 30 41 59;           /* slate-800 interactive elements */
+    --text-primary: 241 245 249;        /* slate-100 bright crisp text */
+    --text-secondary: 148 163 184;      /* slate-400 secondary info */
+    --text-muted: 100 116 139;          /* slate-500 subtle captions */
+    --border-primary: 30 41 59;         /* slate-800 dark border */
+    --border-secondary: 51 65 85;       /* slate-700 accent border */
   }
 }
 
 @layer utilities {
   .glass-panel {
-    @apply bg-panel/80 backdrop-blur-md border border-primary/80 shadow-lg rounded-2xl md:bg-panel/60 md:backdrop-blur-xl md:shadow-2xl;
+    @apply bg-panel/90 backdrop-blur-md border border-primary/90 shadow-sm rounded-3xl md:bg-panel/80 md:backdrop-blur-xl md:shadow-md dark:shadow-2xl dark:border-primary/50;
   }
   .glass-card {
-    @apply bg-panel/40 backdrop-blur-md border border-primary/60 hover:border-blue-500/40 transition-all duration-300 rounded-xl;
+    @apply bg-panel/80 backdrop-blur-md border border-primary/80 hover:border-blue-500/50 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl dark:bg-panel/40 dark:border-primary/60 dark:hover:border-blue-500/40;
   }
   .glow-effect {
-    box-shadow: 0 0 25px -5px rgba(59, 130, 246, 0.25);
+    box-shadow: 0 0 25px -5px rgba(59, 130, 246, 0.2);
   }
 }
 

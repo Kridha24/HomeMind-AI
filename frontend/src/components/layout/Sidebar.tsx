@@ -68,7 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
 
       {/* Responsive Sidebar Drawer */}
       <aside
-        className={`w-64 bg-background border-r border-primary/80 h-screen fixed left-0 top-0 z-50 flex flex-col justify-between p-4 transition-transform duration-300 ease-in-out ${
+        className={`w-64 bg-panel/95 backdrop-blur-xl border-r border-primary/80 h-screen fixed left-0 top-0 z-50 flex flex-col justify-between p-4 transition-transform duration-300 ease-in-out shadow-sm dark:shadow-none ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -76,12 +76,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
           {/* Brand Header */}
           <div className="flex items-center justify-between px-2 py-1">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="font-extrabold text-sm text-primary tracking-tight leading-none">HomeMind AI</h2>
-                <span className="text-[10px] text-blue-400 font-semibold tracking-wider uppercase">Web Application</span>
+                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold tracking-wider uppercase">
+                  Household OS
+                </span>
               </div>
             </div>
 
@@ -89,7 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
             {onClose && (
               <button
                 onClick={onClose}
-                className="lg:hidden p-1.5 rounded-xl text-muted hover:text-white bg-panel border border-primary"
+                className="lg:hidden p-1.5 rounded-xl text-secondary hover:text-primary bg-secondary/60 border border-primary/80"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -106,10 +108,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                   to={item.path}
                   onClick={onClose}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                    `flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${
                       isActive
-                        ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-sm'
-                        : 'text-muted hover:text-primary hover:bg-panel/60'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm dark:bg-blue-600/15 dark:text-blue-400 dark:border-blue-500/30'
+                        : 'text-secondary hover:text-primary hover:bg-secondary/70'
                     }`
                   }
                 >
@@ -129,10 +131,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                     to={item.path}
                     onClick={onClose}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      `flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${
                         isActive
-                          ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-sm'
-                          : 'text-muted hover:text-primary hover:bg-panel/60'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm dark:bg-blue-600/15 dark:text-blue-400 dark:border-blue-500/30'
+                          : 'text-secondary hover:text-primary hover:bg-secondary/70'
                       }`
                     }
                   >
@@ -151,10 +153,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                     to={item.path}
                     onClick={onClose}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      `flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${
                         isActive
-                          ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-sm'
-                          : 'text-muted hover:text-primary hover:bg-panel/60'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm dark:bg-blue-600/15 dark:text-blue-400 dark:border-blue-500/30'
+                          : 'text-secondary hover:text-primary hover:bg-secondary/70'
                       }`
                     }
                   >
@@ -168,12 +170,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
         </div>
 
         {/* Active Household Info Footer */}
-        <div className="bg-panel/80 border border-primary/80 rounded-2xl p-3 flex items-center justify-between">
+        <div className="bg-secondary/60 border border-primary/80 rounded-2xl p-3 flex items-center justify-between shadow-sm">
           <div className="truncate">
             <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">Household</span>
             <span className="text-xs font-bold text-primary truncate block">{household?.name || 'Home Residence'}</span>
           </div>
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
         </div>
       </aside>
     </>
