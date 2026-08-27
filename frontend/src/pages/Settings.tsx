@@ -276,32 +276,91 @@ export const Settings: React.FC = () => {
                 <label className="text-xs font-semibold text-secondary block mb-1.5">Date Format</label>
                 <input
                   type="text"
-                  value={dateFormat}
-                  onChange={(e) => useSettingStore.setState({ dateFormat: e.target.value })}
-                  className="w-full bg-background border border-primary rounded-xl px-3 py-2 text-xs text-primary focus:outline-none focus:border-purple-500/50 font-mono"
-                />
+                <label className="text-xs font-semibold text-secondary block mb-1.5">Currency</label>
+                <select
+                  value={currency}
+                  onChange={(e) => useSettingStore.setState({ currency: e.target.value })}
+                  className="w-full bg-secondary/60 border border-primary/80 rounded-xl px-4 py-2.5 text-xs text-primary focus:outline-none focus:border-blue-500"
+                >
+                  {Object.keys(SUPPORTED_CURRENCIES).map((code) => (
+                    <option key={code} value={code}>
+                      {code} ({SUPPORTED_CURRENCIES[code].symbol})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-secondary block mb-1.5">Unit System</label>
+                <select
+                  value={unitSystem}
+                  onChange={(e) => useSettingStore.setState({ unitSystem: e.target.value as any })}
+                  className="w-full bg-secondary/60 border border-primary/80 rounded-xl px-4 py-2.5 text-xs text-primary focus:outline-none focus:border-blue-500"
+                >
+                  <option value="METRIC">Metric (kg, L, km)</option>
+                  <option value="IMPERIAL">Imperial (lbs, gal, mi)</option>
+                </select>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Section 3: Artificial Intelligence Engine Features */}
-        <div className="glass-panel p-6 space-y-5 border-primary">
-          <div className="flex items-center gap-3 border-b border-primary pb-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+        {/* Section 2: Appearance & Theme */}
+        <div className="glass-panel p-6 space-y-4 border-primary/80 shadow-sm">
+          <div className="flex items-center gap-3 border-b border-primary/60 pb-3">
+            <div className="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+              <Moon className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-primary">Interface Theme</h3>
+              <p className="text-[11px] text-muted">Select your visual display appearance</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 pt-2">
+            {[
+              { id: 'dark', label: 'Dark Mode', icon: Moon },
+              { id: 'light', label: 'Light Mode', icon: Sun },
+              { id: 'glass', label: 'OLED Glass', icon: Sparkles },
+            ].map((t) => {
+              const Icon = t.icon;
+              const isSelected = theme === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => useSettingStore.setState({ theme: t.id as any })}
+                  className={`p-3.5 rounded-2xl border text-center space-y-2 transition-all ${
+                    isSelected
+                      ? 'bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-600/20 dark:text-blue-300 dark:border-blue-500 shadow-sm'
+                      : 'bg-secondary/60 text-secondary border-primary/80 hover:border-secondary'
+                  }`}
+                >
+                  <Icon className="w-5 h-5 mx-auto" />
+                  <span className="text-xs font-bold block">{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Section 3: AI Intelligence Options */}
+        <div className="glass-panel p-6 space-y-4 border-primary/80 shadow-sm">
+          <div className="flex items-center gap-3 border-b border-primary/60 pb-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
               <Bot className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-primary">AI Microservice Toggles</h3>
-              <p className="text-[11px] text-muted">Enable or disable intelligent background automation</p>
+              <h3 className="font-bold text-sm text-primary">AI Autopilot & Suggestions</h3>
+              <p className="text-[11px] text-muted">Control automated AI telemetry and recipe matching</p>
             </div>
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-xl bg-background/40 border border-primary/60">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-primary/60">
               <div>
-                <span className="text-xs font-semibold text-primary block">AI Smart Recommendations</span>
-                <span className="text-[10px] text-muted">Savings & budget ceiling optimization alerts</span>
+                <span className="text-xs font-bold text-primary block">Proactive AI Recommendations</span>
+                <span className="text-[10px] text-muted">Suggest energy savings and bill warnings</span>
               </div>
               <input
                 type="checkbox"
@@ -311,22 +370,9 @@ export const Settings: React.FC = () => {
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-xl bg-background/40 border border-primary/60">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-primary/60">
               <div>
-                <span className="text-xs font-semibold text-primary block">Predictive Utility Forecasting</span>
-                <span className="text-[10px] text-muted">Polynomial regression for upcoming utility bills</span>
-              </div>
-              <input
-                type="checkbox"
-                checked={aiPredictions}
-                onChange={(e) => useSettingStore.setState({ aiPredictions: e.target.checked })}
-                className="w-4 h-4 rounded bg-background border-primary text-blue-600"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-xl bg-background/40 border border-primary/60">
-              <div>
-                <span className="text-xs font-semibold text-primary block">Zero-Food-Waste Recipe Engine</span>
+                <span className="text-xs font-bold text-primary block">Zero-Waste Meal Recommendations</span>
                 <span className="text-[10px] text-muted">Inventory expiry matching recipes</span>
               </div>
               <input
@@ -340,9 +386,9 @@ export const Settings: React.FC = () => {
         </div>
 
         {/* Section 4: Data Export & Privacy Control */}
-        <div className="glass-panel p-6 space-y-5 border-primary">
-          <div className="flex items-center gap-3 border-b border-primary pb-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+        <div className="glass-panel p-6 space-y-4 border-primary/80 shadow-sm">
+          <div className="flex items-center gap-3 border-b border-primary/60 pb-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <Shield className="w-5 h-5" />
             </div>
             <div>
@@ -354,18 +400,29 @@ export const Settings: React.FC = () => {
           <div className="space-y-3 pt-1">
             <button
               type="button"
-              onClick={() => (window.location.href = '/api/v1/reports/monthly/pdf')}
-              className="w-full bg-background hover:bg-panel border border-primary text-primary text-xs font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all"
+              onClick={handleExportPDF}
+              disabled={downloadingPDF}
+              className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 text-xs font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-xs disabled:opacity-60"
             >
-              <Download className="w-4 h-4 text-emerald-400" /> Export Full Household Telemetry PDF
+              {downloadingPDF ? (
+                <>
+                  <Sparkles className="w-4 h-4 animate-spin" />
+                  <span>Generating PDF...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  <span>Export Full Household Telemetry PDF</span>
+                </>
+              )}
             </button>
 
             <button
               type="button"
               onClick={() => alert('Purging household records requires Owner authorization.')}
-              className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all"
+              className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all"
             >
-              <Trash2 className="w-4 h-4 text-red-400" /> Purge Household Records
+              <Trash2 className="w-4 h-4 text-red-500" /> Purge Household Records
             </button>
           </div>
         </div>
