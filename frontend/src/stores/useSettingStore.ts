@@ -18,11 +18,14 @@ interface SettingState {
   aiRecipes: boolean;
   aiOcr: boolean;
   isLoading: boolean;
+  sidebarCollapsed: boolean;
   
   // Actions
   setCountry: (countryCode: string) => void;
   setCurrency: (currencyCode: string) => void;
   setTheme: (theme: 'dark' | 'light' | 'glass') => void;
+  toggleSidebar: () => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
   updateSettings: (newSettings: Partial<SettingState>) => Promise<void>;
   fetchSettings: () => Promise<void>;
   format: (amount: number) => string;
@@ -44,6 +47,18 @@ export const useSettingStore = create<SettingState>((set, get) => ({
   aiRecipes: true,
   aiOcr: true,
   isLoading: false,
+  sidebarCollapsed: localStorage.getItem('hm_sidebar_collapsed') === 'true',
+
+  toggleSidebar: () => {
+    const current = get().sidebarCollapsed;
+    localStorage.setItem('hm_sidebar_collapsed', String(!current));
+    set({ sidebarCollapsed: !current });
+  },
+
+  setSidebarCollapsed: (collapsed: boolean) => {
+    localStorage.setItem('hm_sidebar_collapsed', String(collapsed));
+    set({ sidebarCollapsed: collapsed });
+  },
 
   setCountry: (countryCode: string) => {
     const defaults = getCountryDefaults(countryCode);
