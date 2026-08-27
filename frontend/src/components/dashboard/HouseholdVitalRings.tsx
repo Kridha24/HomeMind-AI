@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sparkles, TrendingUp, ShieldCheck, ShoppingBag, CheckSquare, Wallet, ArrowUpRight } from 'lucide-react';
 import { useSettingStore } from '../../stores/useSettingStore';
+import { useI18n } from '../../utils/i18n';
 
 interface HouseholdVitalRingsProps {
   monthlyIncome: number;
@@ -18,6 +19,7 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
   pantryStats = { total: 24, fresh: 21, expiringSoon: 3 },
 }) => {
   const { format } = useSettingStore();
+  const { t } = useI18n();
 
   // 1. Savings & Budget Score (Percentage of Income not spent)
   const budgetRatio =
@@ -60,20 +62,20 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
 
   return (
     <div className="glass-panel p-6 sm:p-7 border-primary/80 rounded-3xl relative overflow-hidden bg-panel/90 backdrop-blur-xl shadow-sm dark:shadow-2xl space-y-6">
-      {/* Header with Simple, Friendly Words */}
+      {/* Header with Multi-Language Support */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h2 className="text-lg sm:text-xl font-extrabold text-primary tracking-tight">
-              Home Health Score
+              {t('vitals.title', 'Home Health Score')}
             </h2>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1 shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Live Status
+              {t('vitals.status', 'Live Status')}
             </span>
           </div>
           <p className="text-xs text-secondary">
-            Quick 1-second view of your savings, kitchen food, and home chores
+            {t('vitals.subtitle', 'Quick 1-second view of your savings, kitchen food, and home chores')}
           </p>
         </div>
 
@@ -82,7 +84,7 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
             {overallScore}%
           </span>
           <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">
-            {overallScore >= 70 ? 'Looking Great 👍' : 'Attention Needed ⚠️'}
+            {overallScore >= 70 ? t('vitals.great', 'Looking Great 👍') : t('vitals.attention', 'Attention Needed ⚠️')}
           </span>
         </div>
       </div>
@@ -184,12 +186,12 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <Sparkles className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             <span className="text-[10px] font-extrabold text-muted uppercase tracking-widest mt-0.5">
-              Score
+              {t('vitals.score', 'Score')}
             </span>
           </div>
         </div>
 
-        {/* Right: Detailed Ring Breakdowns (Simple and Clear) */}
+        {/* Right: Detailed Ring Breakdowns */}
         <div className="md:col-span-7 space-y-3">
           {/* 1. Monthly Savings Card */}
           <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20 flex items-center justify-between gap-3 shadow-xs">
@@ -198,9 +200,11 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
                 <Wallet className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-xs font-bold text-primary block">1. Money Saved (Budget)</span>
+                <span className="text-xs font-bold text-primary block">
+                  {t('vitals.budget', '1. Money Saved (Budget)')}
+                </span>
                 <span className="text-[11px] text-secondary">
-                  {monthlySavings >= 0 ? `${format(monthlySavings)} saved this month` : `${format(Math.abs(monthlySavings))} over budget`}
+                  {monthlySavings >= 0 ? `+${format(monthlySavings)}` : `-${format(Math.abs(monthlySavings))}`}
                 </span>
               </div>
             </div>
@@ -208,7 +212,7 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
               <span className="text-sm font-black text-blue-600 dark:text-blue-400 font-mono block">
                 {budgetRatio}%
               </span>
-              <span className="text-[10px] text-muted font-medium">Saved</span>
+              <span className="text-[10px] text-muted font-medium">{t('dash.saved', 'Saved')}</span>
             </div>
           </div>
 
@@ -219,9 +223,11 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
                 <ShoppingBag className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-xs font-bold text-primary block">2. Kitchen Food Freshness</span>
+                <span className="text-xs font-bold text-primary block">
+                  {t('vitals.food', '2. Kitchen Food Freshness')}
+                </span>
                 <span className="text-[11px] text-secondary">
-                  {pantryStats.fresh} of {pantryStats.total} items completely fresh
+                  {pantryStats.fresh} / {pantryStats.total} items fresh
                 </span>
               </div>
             </div>
@@ -240,9 +246,11 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
                 <CheckSquare className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-xs font-bold text-primary block">3. Home Chores & Tasks</span>
+                <span className="text-xs font-bold text-primary block">
+                  {t('vitals.chores', '3. Home Chores & Tasks')}
+                </span>
                 <span className="text-[11px] text-secondary">
-                  {taskStats.completed} of {taskStats.total} tasks completed this week
+                  {taskStats.completed} / {taskStats.total} done
                 </span>
               </div>
             </div>
@@ -258,3 +266,5 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
     </div>
   );
 };
+
+export default HouseholdVitalRings;

@@ -24,6 +24,7 @@ interface SettingState {
   setCountry: (countryCode: string) => void;
   setCurrency: (currencyCode: string) => void;
   setTheme: (theme: 'dark' | 'light' | 'glass') => void;
+  setLanguage: (lang: string) => void;
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   updateSettings: (newSettings: Partial<SettingState>) => Promise<void>;
@@ -39,7 +40,7 @@ export const useSettingStore = create<SettingState>((set, get) => ({
   dateFormat: localStorage.getItem('hm_dateFormat') || 'MM/DD/YYYY',
   unitSystem: (localStorage.getItem('hm_unitSystem') as 'Metric' | 'Imperial') || 'Imperial',
   theme: (localStorage.getItem('hm_theme') as 'dark' | 'light' | 'glass') || 'dark',
-  language: 'English',
+  language: localStorage.getItem('hm_language') || 'English',
   pushNotifications: true,
   emailAlerts: true,
   aiSuggestions: true,
@@ -48,6 +49,11 @@ export const useSettingStore = create<SettingState>((set, get) => ({
   aiOcr: true,
   isLoading: false,
   sidebarCollapsed: false,
+
+  setLanguage: (lang: string) => {
+    localStorage.setItem('hm_language', lang);
+    set({ language: lang });
+  },
 
   toggleSidebar: () => {
     const current = get().sidebarCollapsed;

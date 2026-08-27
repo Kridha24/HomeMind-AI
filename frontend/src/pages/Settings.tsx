@@ -18,11 +18,13 @@ import {
   Phone,
   CheckCircle2,
   User,
+  Languages,
 } from 'lucide-react';
 import { useSettingStore } from '../stores/useSettingStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { VerifyPhoneModal } from '../components/common/VerifyPhoneModal';
 import { SUPPORTED_CURRENCIES, COUNTRY_DEFAULTS } from '../utils/currency';
+import { SUPPORTED_LANGUAGES, useI18n } from '../utils/i18n';
 import apiClient from '../services/apiClient';
 
 export const Settings: React.FC = () => {
@@ -43,11 +45,14 @@ export const Settings: React.FC = () => {
     setCountry,
     setCurrency,
     setTheme,
+    setLanguage,
     setTimeZone,
     setDateFormat,
     setUnitSystem,
     saveSettings,
   } = useSettingStore();
+
+  const { t } = useI18n();
 
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -74,7 +79,7 @@ export const Settings: React.FC = () => {
     setSuccessMsg('');
     try {
       await saveSettings();
-      setSuccessMsg('Household configuration saved successfully!');
+      setSuccessMsg(t('common.saveChanges', 'Settings saved successfully!'));
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (e) {
       console.error(e);
@@ -115,10 +120,10 @@ export const Settings: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-6 border-primary/80 shadow-sm">
         <div>
           <h1 className="text-2xl font-extrabold text-primary flex items-center gap-2">
-            <Globe className="w-6 h-6 text-blue-600 dark:text-blue-400" /> Household Global Settings
+            <Globe className="w-6 h-6 text-blue-600 dark:text-blue-400" /> {t('nav.settings', 'App Settings')}
           </h1>
           <p className="text-xs text-secondary">
-            Configure household currency, regional defaults, appearance, AI features & privacy
+            Configure language, currency, regional defaults, appearance & smart suggestions
           </p>
         </div>
 
@@ -128,7 +133,7 @@ export const Settings: React.FC = () => {
           className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-5 py-3 rounded-2xl shadow-md shadow-blue-600/20 active:scale-95 transition-all disabled:opacity-60"
         >
           {saving ? <Sparkles className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          <span>Save Changes</span>
+          <span>{t('common.saveChanges', 'Save Changes')}</span>
         </button>
       </div>
 
@@ -168,7 +173,7 @@ export const Settings: React.FC = () => {
               <Phone className="w-4 h-4 text-emerald-500" />
               <span>{user.phoneNumber}</span>
               <span className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-sans uppercase flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Verified
+                <CheckCircle2 className="w-3 h-3" /> {t('common.verified', 'Verified')}
               </span>
             </div>
           ) : (
@@ -189,22 +194,40 @@ export const Settings: React.FC = () => {
 
       {/* Grid Settings Sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Section 1: Country & Multi-Currency Engine */}
+        {/* Section 1: Multi-Language & Country Configuration */}
         <div className="glass-panel p-6 space-y-4 border-primary/80 shadow-sm">
           <div className="flex items-center gap-3 border-b border-primary/60 pb-3">
             <div className="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-              <DollarSign className="w-5 h-5" />
+              <Languages className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-primary">Multi-Currency & Country Configuration</h3>
-              <p className="text-[11px] text-muted">Updates all prices, reports, forecasts & AI context instantly</p>
+              <h3 className="font-bold text-sm text-primary">Language & Country Settings</h3>
+              <p className="text-[11px] text-muted">Choose your preferred app language and currency</p>
             </div>
           </div>
 
           <div className="space-y-4">
+            {/* Preferred Language Selector */}
             <div>
               <label className="text-xs font-semibold text-secondary block mb-1.5">
-                Primary Household Country
+                Display Language / भाषा चुनें
+              </label>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="w-full bg-secondary/60 border border-primary/80 rounded-xl px-3.5 py-2.5 text-xs text-primary focus:outline-none focus:border-blue-500 font-bold"
+              >
+                {Object.values(SUPPORTED_LANGUAGES).map((l) => (
+                  <option key={l.code} value={l.name}>
+                    {l.flag} {l.nativeName} ({l.name})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-secondary block mb-1.5">
+                Country & Region
               </label>
               <select
                 value={country}
@@ -258,8 +281,8 @@ export const Settings: React.FC = () => {
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-primary">Regional & Theme Customization</h3>
-              <p className="text-[11px] text-muted">Time zone, date format & visual theme interface</p>
+              <h3 className="font-bold text-sm text-primary">Visual Theme & Time</h3>
+              <p className="text-[11px] text-muted">Theme appearance, time zone & date format</p>
             </div>
           </div>
 
@@ -322,15 +345,15 @@ export const Settings: React.FC = () => {
               <Bot className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-primary">AI Autopilot & Suggestions</h3>
-              <p className="text-[11px] text-muted">Control automated AI telemetry and recipe matching</p>
+              <h3 className="font-bold text-sm text-primary">Smart AI Assistant Settings</h3>
+              <p className="text-[11px] text-muted">Control automatic AI suggestions and recipe ideas</p>
             </div>
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-primary/60">
               <div>
-                <span className="text-xs font-bold text-primary block">Proactive AI Recommendations</span>
+                <span className="text-xs font-bold text-primary block">Smart Home Suggestions</span>
                 <span className="text-[10px] text-muted">Suggest energy savings and bill warnings</span>
               </div>
               <input
@@ -344,7 +367,7 @@ export const Settings: React.FC = () => {
             <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-primary/60">
               <div>
                 <span className="text-xs font-bold text-primary block">Predictive Utility Forecasting</span>
-                <span className="text-[10px] text-muted">Polynomial regression for upcoming utility bills</span>
+                <span className="text-[10px] text-muted">Predict upcoming utility bills accurately</span>
               </div>
               <input
                 type="checkbox"
@@ -357,7 +380,7 @@ export const Settings: React.FC = () => {
             <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-primary/60">
               <div>
                 <span className="text-xs font-bold text-primary block">Zero-Waste Meal Recommendations</span>
-                <span className="text-[10px] text-muted">Inventory expiry matching recipes</span>
+                <span className="text-[10px] text-muted">Suggest quick recipes for expiring groceries</span>
               </div>
               <input
                 type="checkbox"
@@ -376,8 +399,8 @@ export const Settings: React.FC = () => {
               <Shield className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-primary">Data Export & Privacy Controls</h3>
-              <p className="text-[11px] text-muted">Download telemetry backups or purge household records</p>
+              <h3 className="font-bold text-sm text-primary">Data Export & Backup</h3>
+              <p className="text-[11px] text-muted">Download home reports or reset records</p>
             </div>
           </div>
 
@@ -391,12 +414,12 @@ export const Settings: React.FC = () => {
               {downloadingPDF ? (
                 <>
                   <Sparkles className="w-4 h-4 animate-spin" />
-                  <span>Generating PDF...</span>
+                  <span>Creating PDF...</span>
                 </>
               ) : (
                 <>
                   <Download className="w-4 h-4" />
-                  <span>Export Full Household Telemetry PDF</span>
+                  <span>Download Full Household PDF Report</span>
                 </>
               )}
             </button>

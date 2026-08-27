@@ -26,6 +26,7 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '../services/apiClient';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useSettingStore } from '../stores/useSettingStore';
+import { useI18n } from '../utils/i18n';
 import { COUNTRY_DEFAULTS } from '../utils/currency';
 
 // New Startup UI Components
@@ -58,6 +59,7 @@ const COUNTRY_FLAGS: Record<string, string> = {
 export const Dashboard: React.FC = () => {
   const { user, household } = useAuthStore();
   const { format, currencySymbol, country } = useSettingStore();
+  const { t } = useI18n();
 
   const { data: summary, isLoading: loading, error, refetch } = useQuery({
     queryKey: ['dashboardSummary'],
@@ -129,7 +131,7 @@ export const Dashboard: React.FC = () => {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold text-primary tracking-tight">
-              Welcome, {user?.name?.split(' ')[0] || 'there'} 👋
+              {t('dash.welcome', 'Welcome')}, {user?.name?.split(' ')[0] || 'there'} 👋
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 uppercase tracking-wider">
               {user?.role || 'OWNER'}
@@ -137,7 +139,7 @@ export const Dashboard: React.FC = () => {
           </div>
           <p className="text-xs text-secondary flex items-center gap-2">
             <MapPin className="w-3.5 h-3.5 text-emerald-500" />
-            <span className="font-semibold text-primary">{household?.name || 'Home Residence'}</span>
+            <span className="font-semibold text-primary">{household?.name || t('dash.household', 'Home Residence')}</span>
             <span className="text-muted">•</span>
             <span>
               {flag} {countryDefaults.countryName}
@@ -152,7 +154,7 @@ export const Dashboard: React.FC = () => {
             <span>
               {daysRemaining === 0
                 ? 'Last Day of ' + monthName
-                : `${daysRemaining} Days Left in ${monthName}`}
+                : `${daysRemaining} ${t('dash.daysLeft', 'Days Left in')} ${monthName}`}
             </span>
           </div>
 
@@ -179,28 +181,28 @@ export const Dashboard: React.FC = () => {
             className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-blue-600/20 active:scale-95 transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Add Expense</span>
+            <span>{t('dash.addExpense', 'Add Expense')}</span>
           </button>
           <button
             onClick={() => setShowBillModal(true)}
             className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm"
           >
             <Plus className="w-3.5 h-3.5 text-amber-500" />
-            <span>Add Bill</span>
+            <span>{t('dash.addBill', 'Add Bill')}</span>
           </button>
           <button
             onClick={() => setShowGroceryModal(true)}
             className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm"
           >
             <Plus className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Add Grocery</span>
+            <span>{t('dash.addGrocery', 'Add Grocery')}</span>
           </button>
           <button
             onClick={() => setShowTaskModal(true)}
             className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm"
           >
             <Plus className="w-3.5 h-3.5 text-purple-500" />
-            <span>Add Task</span>
+            <span>{t('dash.addTask', 'Add Task')}</span>
           </button>
         </div>
 
@@ -210,11 +212,11 @@ export const Dashboard: React.FC = () => {
           <kbd className="px-1.5 py-0.5 rounded bg-panel font-bold text-primary border border-primary/80 shadow-xs">
             ⌘K
           </kbd>
-          <span>for Quick Menu</span>
+          <span>{t('dash.quickMenu', 'for Quick Menu')}</span>
         </div>
       </div>
 
-      {/* Main Metric Cards: Simple & Clear */}
+      {/* Main Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
         {loading ? (
           <>
@@ -236,7 +238,7 @@ export const Dashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
-                    Income ({monthShort})
+                    {t('dash.income', 'Income')} ({monthShort})
                   </span>
                   <span className="text-[10px] text-muted font-mono block">{dateRangeStr}</span>
                 </div>
@@ -259,7 +261,7 @@ export const Dashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold text-red-700 dark:text-red-400 uppercase tracking-wider block">
-                    Spent ({monthShort})
+                    {t('dash.spent', 'Spent')} ({monthShort})
                   </span>
                   <span className="text-[10px] text-muted font-mono block">{dateRangeStr}</span>
                 </div>
@@ -279,7 +281,7 @@ export const Dashboard: React.FC = () => {
             <div className="glass-panel p-5 border-rose-500/30 bg-rose-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-rose-950/20 dark:to-slate-900 space-y-2 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
-                  All-time Spend
+                  {t('dash.allTimeSpend', 'All-time Spend')}
                 </span>
                 <div className="w-8 h-8 rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-600 dark:text-rose-400">
                   <CreditCard className="w-4 h-4" />
@@ -297,7 +299,7 @@ export const Dashboard: React.FC = () => {
             <div className="glass-panel p-5 border-teal-500/30 bg-teal-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-teal-950/20 dark:to-slate-900 space-y-2 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider">
-                  Saved ({monthShort})
+                  {t('dash.saved', 'Saved')} ({monthShort})
                 </span>
                 <div className="w-8 h-8 rounded-xl bg-teal-500/15 flex items-center justify-center text-teal-600 dark:text-teal-400">
                   <PiggyBank className="w-4 h-4" />
@@ -319,7 +321,7 @@ export const Dashboard: React.FC = () => {
             <div className="glass-panel p-5 border-purple-500/30 bg-purple-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-purple-950/20 dark:to-slate-900 space-y-2 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider">
-                  Total Balance
+                  {t('dash.totalBalance', 'Total Balance')}
                 </span>
                 <div className="w-8 h-8 rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-600 dark:text-purple-400">
                   <Landmark className="w-4 h-4" />
@@ -361,10 +363,10 @@ export const Dashboard: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider flex items-center gap-2">
-              <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Upcoming Bills & Rent
+              <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" /> {t('dash.upcomingBills', 'Upcoming Bills & Rent')}
             </span>
             <p className="text-xs text-secondary">
-              Track room rent, mess fees, Wi-Fi, and electricity bills due in {monthName} {year}.
+              {t('dash.upcomingBillsDesc', 'Track room rent, mess fees, Wi-Fi, and electricity bills due this month.')}
             </p>
           </div>
           <div className="text-right">
@@ -372,7 +374,7 @@ export const Dashboard: React.FC = () => {
               -{format(upcomingBillsTotal)}
             </span>
             <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider">
-              Total Bills Due
+              {t('dash.totalBillsDue', 'Total Bills Due')}
             </span>
           </div>
         </div>
@@ -416,14 +418,14 @@ export const Dashboard: React.FC = () => {
       <div className="glass-panel border-primary overflow-hidden shadow-sm">
         <div className="p-4 border-b border-primary/80 font-bold text-sm text-primary flex items-center justify-between bg-secondary/30">
           <span className="flex items-center gap-2">
-            <History className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Recent Transactions
+            <History className="w-4 h-4 text-blue-600 dark:text-blue-400" /> {t('dash.recentTransactions', 'Recent Transactions')}
           </span>
-          <span className="text-xs text-secondary font-mono font-medium">Latest Entries</span>
+          <span className="text-xs text-secondary font-mono font-medium">{t('dash.latestEntries', 'Latest Entries')}</span>
         </div>
 
         {recentHistory.length === 0 ? (
           <div className="p-8 text-center text-xs text-muted space-y-1">
-            <p className="font-semibold text-primary">No transactions recorded yet.</p>
+            <p className="font-semibold text-primary">{t('dash.noTransactions', 'No transactions recorded yet.')}</p>
             <p className="text-[11px]">Add an expense or income entry to see history here.</p>
           </div>
         ) : (

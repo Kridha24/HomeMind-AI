@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { useI18n } from '../../utils/i18n';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -28,6 +29,7 @@ interface SidebarProps {
 }
 
 interface NavItemDef {
+  key: string;
   name: string;
   shortName: string;
   path: string;
@@ -41,6 +43,7 @@ interface NavItemDef {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   const { household } = useAuthStore();
   const location = useLocation();
+  const { t } = useI18n();
 
   // Floating Hover State (Guaranteed zero clipping)
   const [hoveredItem, setHoveredItem] = useState<{
@@ -51,7 +54,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
 
   const primaryNavItems: NavItemDef[] = [
     {
-      name: 'Dashboard Overview',
+      key: 'nav.dashboard',
+      name: t('nav.dashboard', 'Dashboard'),
       shortName: 'Dashboard',
       path: '/',
       icon: LayoutDashboard,
@@ -59,7 +63,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-blue-500/35',
     },
     {
-      name: 'Expenses & Ledger',
+      key: 'nav.expenses',
+      name: t('nav.expenses', 'Expenses & Ledger'),
       shortName: 'Expenses',
       path: '/expenses',
       icon: CreditCard,
@@ -67,7 +72,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-emerald-500/35',
     },
     {
-      name: 'Bills & Utilities',
+      key: 'nav.bills',
+      name: t('nav.bills', 'Bills & Utilities'),
       shortName: 'Bills',
       path: '/bills',
       icon: FileText,
@@ -75,7 +81,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-amber-500/35',
     },
     {
-      name: 'Grocery Inventory',
+      key: 'nav.inventory',
+      name: t('nav.inventory', 'Grocery Inventory'),
       shortName: 'Inventory',
       path: '/inventory',
       icon: ShoppingBag,
@@ -83,7 +90,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-rose-500/35',
     },
     {
-      name: 'Household Tasks',
+      key: 'nav.tasks',
+      name: t('nav.tasks', 'Household Tasks'),
       shortName: 'Tasks',
       path: '/tasks',
       icon: CheckSquare,
@@ -91,7 +99,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-purple-500/35',
     },
     {
-      name: 'Family Workspace',
+      key: 'nav.family',
+      name: t('nav.family', 'Family Workspace'),
       shortName: 'Family',
       path: '/family',
       icon: Users,
@@ -102,7 +111,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
 
   const moreNavItems: NavItemDef[] = [
     {
-      name: 'Income & Earnings',
+      key: 'nav.income',
+      name: t('nav.income', 'Income & Earnings'),
       shortName: 'Income',
       path: '/income',
       icon: Wallet,
@@ -110,7 +120,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-green-500/35',
     },
     {
-      name: 'Pantry Vision OCR',
+      key: 'nav.pantryVision',
+      name: t('nav.pantryVision', 'Pantry Vision OCR'),
       shortName: 'Vision OCR',
       path: '/pantry-vision',
       icon: Camera,
@@ -120,7 +131,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       tagColor: 'bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-300 border-fuchsia-500/30',
     },
     {
-      name: 'Home Appliances',
+      key: 'nav.appliances',
+      name: t('nav.appliances', 'Home Appliances'),
       shortName: 'Appliances',
       path: '/appliances',
       icon: Tv,
@@ -128,7 +140,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-sky-500/35',
     },
     {
-      name: 'Medicine Tracker',
+      key: 'nav.medicines',
+      name: t('nav.medicines', 'Medicine Tracker'),
       shortName: 'Medicines',
       path: '/medicines',
       icon: Pill,
@@ -136,7 +149,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-red-500/35',
     },
     {
-      name: 'Sustainability Score',
+      key: 'nav.sustainability',
+      name: t('nav.sustainability', 'Sustainability Score'),
       shortName: 'Eco Score',
       path: '/sustainability',
       icon: Leaf,
@@ -146,7 +160,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       tagColor: 'bg-lime-500/15 text-lime-600 dark:text-lime-300 border-lime-500/30',
     },
     {
-      name: 'Analytics & Trends',
+      key: 'nav.analytics',
+      name: t('nav.analytics', 'Analytics & Trends'),
       shortName: 'Analytics',
       path: '/analytics',
       icon: BarChart3,
@@ -154,7 +169,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-violet-500/35',
     },
     {
-      name: 'Financial Reports',
+      key: 'nav.reports',
+      name: t('nav.reports', 'Financial Reports'),
       shortName: 'Reports',
       path: '/reports',
       icon: FileSpreadsheet,
@@ -162,7 +178,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-blue-500/35',
     },
     {
-      name: 'User Manual',
+      key: 'nav.manual',
+      name: t('nav.manual', 'User Manual'),
       shortName: 'Manual',
       path: '/manual',
       icon: BookOpen,
@@ -170,7 +187,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-amber-500/35',
     },
     {
-      name: 'Your Profile',
+      key: 'nav.profile',
+      name: t('nav.profile', 'Your Profile'),
       shortName: 'Profile',
       path: '/profile',
       icon: User,
@@ -178,7 +196,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       shadowColor: 'shadow-indigo-500/35',
     },
     {
-      name: 'App Settings',
+      key: 'nav.settings',
+      name: t('nav.settings', 'App Settings'),
       shortName: 'Settings',
       path: '/settings',
       icon: SettingsIcon,
@@ -304,7 +323,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
             onMouseEnter={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               setHoveredItem({
-                name: household?.name || 'Home Residence',
+                name: household?.name || t('dash.household', 'Home Residence'),
                 tag: 'ACTIVE',
                 top: rect.top + rect.height / 2,
               });
