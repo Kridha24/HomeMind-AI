@@ -6,10 +6,30 @@ import { verifyAccessToken } from './utils/jwt';
 
 const server = http.createServer(app);
 
-// Socket.IO: only allow the configured frontend URL — no wildcards.
+const allowedOrigins = [
+  config.frontendUrl,
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+].filter(Boolean);
+
+// Socket.IO: allow configured frontend URL and local dev origins
 const io = new SocketIOServer(server, {
   cors: {
-    origin: config.frontendUrl,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        origin.endsWith('.onrender.com') ||
+        /^http:\/\/localhost:\d+$/.test(origin) ||
+        /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)
+      ) {
+        return callback(null, true);
+      }
+      return callback(new Error('CORS origin rejected for Socket.IO'));
+    },
     methods: ['GET', 'POST'],
     credentials: true
   }

@@ -47,50 +47,61 @@ export const Login: React.FC = () => {
   // Show "session expired" toast if redirected here from silent refresh failure
   const sessionExpired = searchParams.get('sessionExpired') === 'true';
 
+  const initTokenClient = () => {
+    if (!window.google?.accounts?.oauth2 || !GOOGLE_CLIENT_ID) return null;
+    try {
+      tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'openid email profile',
+        ux_mode: 'popup',
+        callback: async (tokenResponse: any) => {
+          if (tokenResponse?.error) {
+            if (tokenResponse.error === 'popup_closed_by_user' || tokenResponse.error === 'access_denied') {
+              setLoadingGoogle(false);
+              setLoadingState('idle');
+              return;
+            }
+            setError('Google sign-in was cancelled or failed. Please try again.');
+            setLoadingGoogle(false);
+            setLoadingState('idle');
+            return;
+          }
+          const accessToken = tokenResponse?.access_token;
+          if (!accessToken) {
+            setError('Google did not return an account token. Please try again.');
+            setLoadingGoogle(false);
+            setLoadingState('idle');
+            return;
+          }
+          await submitGoogleToken(accessToken);
+        },
+        error_callback: () => {
+          setLoadingGoogle(false);
+          setLoadingState('idle');
+        },
+      });
+      return tokenClientRef.current;
+    } catch (e) {
+      console.warn('[Google] OAuth client init failed:', e);
+      return null;
+    }
+  };
+
   // Load Google Identity Services once — used for the account-picker popup
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
+
+    if (window.google?.accounts?.oauth2) {
+      initTokenClient();
+      return;
+    }
 
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      if (!window.google?.accounts?.oauth2) return;
-      try {
-        tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: 'openid email profile',
-          ux_mode: 'popup',
-          callback: async (tokenResponse: any) => {
-            if (tokenResponse?.error) {
-              if (tokenResponse.error === 'popup_closed_by_user' || tokenResponse.error === 'access_denied') {
-                setLoadingGoogle(false);
-                setLoadingState('idle');
-                return;
-              }
-              setError('Google sign-in was cancelled or failed. Please try again.');
-              setLoadingGoogle(false);
-              setLoadingState('idle');
-              return;
-            }
-            const accessToken = tokenResponse?.access_token;
-            if (!accessToken) {
-              setError('Google did not return an account token. Please try again.');
-              setLoadingGoogle(false);
-              setLoadingState('idle');
-              return;
-            }
-            await submitGoogleToken(accessToken);
-          },
-          error_callback: () => {
-            setLoadingGoogle(false);
-            setLoadingState('idle');
-          },
-        });
-      } catch (e) {
-        console.warn('[Google] OAuth client init failed:', e);
-      }
+      initTokenClient();
     };
     document.body.appendChild(script);
     return () => {
@@ -118,7 +129,7 @@ export const Login: React.FC = () => {
       const msg = err.response?.data?.error;
       setError(
         msg === 'Invalid Google session. Please sign in with your Google account again.'
-          ? 'Google could not verify this account. Try again or use phone login.'
+          ? 'Google could not verify this account. Try again or use phone/email login.'
           : msg || 'Google sign-in failed. Check your connection and try again.'
       );
       setLoadingState('idle');
@@ -130,21 +141,25 @@ export const Login: React.FC = () => {
   const triggerGoogleSignIn = () => {
     setError('');
     if (!GOOGLE_CLIENT_ID) {
-      setError('Google sign-in is not configured. Use phone login, or add VITE_GOOGLE_CLIENT_ID.');
+      setError('Google sign-in is not configured. Use phone or email login, or add VITE_GOOGLE_CLIENT_ID.');
       return;
     }
-    if (!tokenClientRef.current) {
+    let client = tokenClientRef.current;
+    if (!client) {
+      client = initTokenClient();
+    }
+    if (!client) {
       setError('Google is still loading. Wait a second and try again.');
       return;
     }
     setLoadingGoogle(true);
     setLoadingState('connecting');
     try {
-      tokenClientRef.current.requestAccessToken({ prompt: 'select_account' });
+      client.requestAccessToken({ prompt: 'select_account' });
     } catch {
       setLoadingGoogle(false);
       setLoadingState('idle');
-      setError('Could not open Google. Allow popups for this site and try again.');
+      setError('Could not open Google account picker. Allow popups for this site and try again.');
     }
   };
 

@@ -422,10 +422,15 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
       return res.status(503).json({ error: 'Failed to send verification code. Please try again in a moment.' });
     }
 
+    const showCodeInResponse = process.env.NODE_ENV !== 'production' || process.env.ALLOW_OTP_CONSOLE === 'true' || smsResult.provider === 'SYSTEM_OTP';
+
     res.json({
       success: true,
-      message: `SMS verification code sent to ${identifier}. Valid for 5 minutes.`,
-      provider: smsResult.provider
+      message: showCodeInResponse
+        ? `Verification code: ${realOtp}`
+        : `SMS verification code sent to ${identifier}. Valid for 5 minutes.`,
+      provider: smsResult.provider,
+      ...(showCodeInResponse && { devOtp: realOtp, otp: realOtp })
     });
   } catch (err: any) {
     console.error('[requestPhoneOTP] Error:', err.message);

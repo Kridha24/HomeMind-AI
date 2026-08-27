@@ -10,10 +10,15 @@ import axios from 'axios';
 // PRODUCTION: Set VITE_API_URL to your backend URL (e.g. https://api.yourapp.com/api/v1).
 //   Do NOT hardcode any URL here — that leaks backend location into the bundle.
 // ──────────────────────────────────────────────────────────────────────────────
+const isDev = import.meta.env.DEV;
+const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+// In local development, prefer the Vite dev proxy (/api/v1 -> http://localhost:5001) to eliminate CORS.
+// In production or when VITE_FORCE_REMOTE_API=true, use the configured remote backend URL.
 const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_API_BASE_URL ||
-  '/api/v1'; // Falls through to Vite proxy in development
+  (isDev && isLocalhost && import.meta.env.VITE_FORCE_REMOTE_API !== 'true')
+    ? '/api/v1'
+    : (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api/v1');
 
 const apiClient = axios.create({
   baseURL: API_BASE,

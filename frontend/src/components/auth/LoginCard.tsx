@@ -8,7 +8,6 @@ interface LoginCardProps {
   loading: boolean;
   error: string;
   onPhoneClick: () => void;
-  /** If false, Google sign-in is not configured — show informational message */
   googleConfigured?: boolean;
 }
 
@@ -65,22 +64,22 @@ export const LoginCard: React.FC<LoginCardProps> = ({
           type="button"
           onClick={onPhoneClick}
           disabled={loading}
-          className="w-full min-h-[44px] bg-panel hover:bg-secondary border border-primary/40 text-primary font-semibold py-3.5 px-5 rounded-2xl text-sm flex items-center justify-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-60"
+          className="w-full min-h-[48px] bg-panel hover:bg-secondary border border-primary/40 text-primary font-semibold py-3.5 px-5 rounded-2xl text-sm flex items-center justify-center gap-2.5 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 active:scale-[0.98] disabled:opacity-60 group shadow-md"
         >
-          <PhoneCall className="w-4 h-4" />
-          <span>Continue with phone</span>
+          <PhoneCall className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+          <span>Continue with Mobile Number</span>
         </button>
       </div>
 
       {/* Trust Badges */}
       <div className="grid grid-cols-2 gap-2.5">
         <div className="p-3 rounded-2xl bg-background/60 border border-primary/20 text-center space-y-0.5">
-          <span className="text-[10px] text-muted block font-medium">⚡ Quick Login</span>
+          <span className="text-[10px] text-muted block font-medium">⚡ Instant Access</span>
           <span className="text-xs text-primary font-bold block">No Password Needed</span>
         </div>
         <div className="p-3 rounded-2xl bg-background/60 border border-primary/20 text-center space-y-0.5">
-          <span className="text-[10px] text-muted block font-medium">🏠 Private</span>
-          <span className="text-xs text-primary font-bold block">Your Data Only</span>
+          <span className="text-[10px] text-muted block font-medium">🏠 100% Private</span>
+          <span className="text-xs text-primary font-bold block">Isolated Household</span>
         </div>
       </div>
 
