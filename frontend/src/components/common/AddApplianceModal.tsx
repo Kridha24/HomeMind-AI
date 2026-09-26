@@ -5,7 +5,7 @@ import apiClient from '../../services/apiClient';
 interface AddApplianceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 export const AddApplianceModal: React.FC<AddApplianceModalProps> = ({ isOpen, onClose, onSuccess }) => {
@@ -33,7 +33,7 @@ export const AddApplianceModal: React.FC<AddApplianceModalProps> = ({ isOpen, on
         purchaseDate,
         warrantyYears: parseInt(warrantyYears, 10),
       });
-      onSuccess();
+      onSuccess?.();
       onClose();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to register appliance in database');

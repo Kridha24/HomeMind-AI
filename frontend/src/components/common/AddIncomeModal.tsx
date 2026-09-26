@@ -6,7 +6,7 @@ import { useSettingStore } from '../../stores/useSettingStore';
 interface AddIncomeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
   initialData?: any;
 }
 
@@ -84,7 +84,7 @@ export const AddIncomeModal: React.FC<AddIncomeModalProps> = ({
         });
       }
 
-      onSuccess();
+      onSuccess?.();
       onClose();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save income record');

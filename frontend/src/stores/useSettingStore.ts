@@ -25,6 +25,10 @@ interface SettingState {
   setCurrency: (currencyCode: string) => void;
   setTheme: (theme: 'dark' | 'light' | 'glass') => void;
   setLanguage: (lang: string) => void;
+  setTimeZone: (tz: string) => void;
+  setDateFormat: (df: string) => void;
+  setUnitSystem: (unit: 'Metric' | 'Imperial') => void;
+  saveSettings: () => Promise<void>;
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   updateSettings: (newSettings: Partial<SettingState>) => Promise<void>;
@@ -53,6 +57,41 @@ export const useSettingStore = create<SettingState>((set, get) => ({
   setLanguage: (lang: string) => {
     localStorage.setItem('hm_language', lang);
     set({ language: lang });
+  },
+
+  setTimeZone: (tz: string) => {
+    localStorage.setItem('hm_timeZone', tz);
+    set({ timeZone: tz });
+  },
+
+  setDateFormat: (df: string) => {
+    localStorage.setItem('hm_dateFormat', df);
+    set({ dateFormat: df });
+  },
+
+  setUnitSystem: (unit: 'Metric' | 'Imperial') => {
+    localStorage.setItem('hm_unitSystem', unit);
+    set({ unitSystem: unit });
+  },
+
+  saveSettings: async () => {
+    const state = get();
+    await state.updateSettings({
+      country: state.country,
+      currency: state.currency,
+      currencySymbol: state.currencySymbol,
+      timeZone: state.timeZone,
+      dateFormat: state.dateFormat,
+      unitSystem: state.unitSystem,
+      theme: state.theme,
+      language: state.language,
+      pushNotifications: state.pushNotifications,
+      emailAlerts: state.emailAlerts,
+      aiSuggestions: state.aiSuggestions,
+      aiPredictions: state.aiPredictions,
+      aiRecipes: state.aiRecipes,
+      aiOcr: state.aiOcr,
+    });
   },
 
   toggleSidebar: () => {

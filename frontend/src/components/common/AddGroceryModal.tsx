@@ -5,7 +5,7 @@ import apiClient from '../../services/apiClient';
 interface AddGroceryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
   initialData?: any;
 }
 
@@ -75,7 +75,7 @@ export const AddGroceryModal: React.FC<AddGroceryModalProps> = ({
           expiryDate: expiryDate ? new Date(expiryDate).toISOString() : undefined,
         });
       }
-      onSuccess();
+      onSuccess?.();
       onClose();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save grocery item');

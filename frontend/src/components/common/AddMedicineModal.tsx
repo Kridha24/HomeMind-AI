@@ -5,7 +5,7 @@ import apiClient from '../../services/apiClient';
 interface AddMedicineModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 export const AddMedicineModal: React.FC<AddMedicineModalProps> = ({ isOpen, onClose, onSuccess }) => {
@@ -42,7 +42,7 @@ export const AddMedicineModal: React.FC<AddMedicineModalProps> = ({ isOpen, onCl
         doctorName,
         schedules,
       });
-      onSuccess();
+      onSuccess?.();
       onClose();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save medicine prescription');

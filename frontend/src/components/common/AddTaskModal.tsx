@@ -5,7 +5,7 @@ import apiClient from '../../services/apiClient';
 interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
   initialData?: any;
 }
 
@@ -70,7 +70,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
           isRecurring,
         });
       }
-      onSuccess();
+      onSuccess?.();
       onClose();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save task in database');

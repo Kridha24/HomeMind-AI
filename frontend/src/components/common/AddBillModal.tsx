@@ -6,7 +6,7 @@ import { useSettingStore } from '../../stores/useSettingStore';
 interface AddBillModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
   initialData?: any;
 }
 
@@ -78,7 +78,7 @@ export const AddBillModal: React.FC<AddBillModalProps> = ({
           notes,
         });
       }
-      onSuccess();
+      onSuccess?.();
       onClose();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save bill record');
