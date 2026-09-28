@@ -1,0 +1,420 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "HomeMind AI System Architecture",
+    "output": "homemind-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/Kridha24/HomeMind-AI",
+      "provider": "github",
+      "revision": "3ccb8c34e52a4c90d887760bae74486c5cad93d0"
+    },
+    "views": [
+      {
+        "id": "full-overview",
+        "label": "Full System Overview",
+        "focus": [
+          "client_web",
+          "client_android",
+          "api_gateway",
+          "socket_gateway",
+          "auth_middleware",
+          "ai_orchestrator",
+          "ai_microservice",
+          "prisma_orm",
+          "db_primary"
+        ],
+        "note": "Complete client-to-data request flow, realtime gateway, and dual AI engines."
+      },
+      {
+        "id": "tenant-isolation",
+        "label": "Tenant Isolation & Auth",
+        "focus": [
+          "auth_provider",
+          "api_gateway",
+          "auth_middleware",
+          "prisma_orm",
+          "db_primary"
+        ],
+        "note": "JWT authentication and strict householdId multi-tenant boundary scoping."
+      },
+      {
+        "id": "ai-pipeline",
+        "label": "AI Subsystem",
+        "focus": [
+          "api_gateway",
+          "auth_middleware",
+          "ai_orchestrator",
+          "ai_microservice",
+          "prisma_orm"
+        ],
+        "note": "Contextual orchestrator tool execution and internal FastAPI microservice."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "auth_provider",
+      "type": "security",
+      "label": "External Auth",
+      "sublabel": "Google & Firebase",
+      "pos": [40, 60],
+      "size": [150, 60],
+      "tag": "IdP / SMS",
+      "sources": [
+        {
+          "path": "frontend/src/config/firebase.ts",
+          "line": 12,
+          "label": "Firebase Config"
+        },
+        {
+          "path": "backend/src/controllers/authController.ts",
+          "line": 40,
+          "label": "Google Token Auth"
+        }
+      ]
+    },
+    {
+      "id": "client_web",
+      "type": "frontend",
+      "label": "Web Application",
+      "sublabel": "React 18 / Vite SPA",
+      "pos": [40, 200],
+      "size": [150, 60],
+      "brand": "react",
+      "sources": [
+        {
+          "path": "frontend/src/App.tsx",
+          "line": 214,
+          "label": "App Root Router"
+        },
+        {
+          "path": "frontend/src/services/apiClient.ts",
+          "line": 13,
+          "label": "Axios Client"
+        }
+      ]
+    },
+    {
+      "id": "client_android",
+      "type": "frontend",
+      "label": "Android App",
+      "sublabel": "Capacitor 7 Shell",
+      "pos": [40, 340],
+      "size": [150, 60],
+      "sources": [
+        {
+          "path": "frontend/src/components/layout/MobileBottomDock.tsx",
+          "line": 23,
+          "label": "Mobile Shell Dock"
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "line": 158,
+          "label": "Mobile Shell Mounting"
+        }
+      ]
+    },
+    {
+      "id": "api_gateway",
+      "type": "cloud",
+      "label": "Express API Server",
+      "sublabel": "REST API :5001",
+      "pos": [280, 200],
+      "size": [150, 60],
+      "tag": "CORS & Limiter",
+      "sources": [
+        {
+          "path": "backend/src/app.ts",
+          "line": 26,
+          "label": "Express App & CORS"
+        },
+        {
+          "path": "backend/src/routes/index.ts",
+          "line": 24,
+          "label": "API Router"
+        }
+      ]
+    },
+    {
+      "id": "socket_gateway",
+      "type": "messagebus",
+      "label": "Realtime Gateway",
+      "sublabel": "Socket.IO Server",
+      "pos": [280, 340],
+      "size": [150, 60],
+      "tag": "Rooms by Household",
+      "sources": [
+        {
+          "path": "backend/src/server.ts",
+          "line": 18,
+          "label": "Socket.IO Setup"
+        },
+        {
+          "path": "backend/src/server.ts",
+          "line": 73,
+          "label": "Household Room Join"
+        }
+      ]
+    },
+    {
+      "id": "ai_orchestrator",
+      "type": "backend",
+      "label": "AI Orchestrator",
+      "sublabel": "Context & Tools Engine",
+      "pos": [520, 60],
+      "size": [160, 60],
+      "tag": "Household AI",
+      "sources": [
+        {
+          "path": "backend/src/services/ai/orchestrator.ts",
+          "line": 17,
+          "label": "AI Orchestrator"
+        },
+        {
+          "path": "backend/src/controllers/assistantController.ts",
+          "line": 8,
+          "label": "Assistant Controller"
+        }
+      ]
+    },
+    {
+      "id": "auth_middleware",
+      "type": "security",
+      "label": "Auth & Tenant Guard",
+      "sublabel": "JWT & Household Scope",
+      "pos": [520, 200],
+      "size": [160, 60],
+      "tag": "Tenant Isolation",
+      "sources": [
+        {
+          "path": "backend/src/middleware/auth.ts",
+          "line": 13,
+          "label": "JWT Authenticate"
+        },
+        {
+          "path": "backend/src/middleware/auth.ts",
+          "line": 55,
+          "label": "Attach Household Context"
+        }
+      ]
+    },
+    {
+      "id": "prisma_orm",
+      "type": "backend",
+      "label": "Prisma ORM Layer",
+      "sublabel": "Tenant Scoped Queries",
+      "pos": [760, 200],
+      "size": [160, 60],
+      "brand": "prisma",
+      "sources": [
+        {
+          "path": "backend/src/repositories/db.ts",
+          "line": 3,
+          "label": "Prisma Instance"
+        },
+        {
+          "path": "backend/src/services/ai/tools/executor.ts",
+          "line": 35,
+          "label": "Scoped Tool Queries"
+        }
+      ]
+    },
+    {
+      "id": "ai_microservice",
+      "type": "backend",
+      "label": "AI Microservice",
+      "sublabel": "FastAPI :8000",
+      "pos": [1000, 60],
+      "size": [160, 60],
+      "tag": "OCR & Forecast",
+      "brand": "fastapi",
+      "sources": [
+        {
+          "path": "ai-service/app/main.py",
+          "line": 16,
+          "label": "FastAPI App"
+        },
+        {
+          "path": "backend/src/services/aiClient.ts",
+          "line": 10,
+          "label": "Service Secret Client"
+        }
+      ]
+    },
+    {
+      "id": "db_primary",
+      "type": "database",
+      "label": "Primary Database",
+      "sublabel": "SQLite / PostgreSQL",
+      "pos": [1000, 200],
+      "size": [160, 60],
+      "brand": "sqlite",
+      "sources": [
+        {
+          "path": "backend/prisma/schema.prisma",
+          "line": 78,
+          "label": "Household Data Schema"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Client Applications",
+      "wraps": ["client_web", "client_android"]
+    },
+    {
+      "kind": "region",
+      "label": "Node.js Core Backend",
+      "wraps": [
+        "api_gateway",
+        "socket_gateway",
+        "auth_middleware",
+        "ai_orchestrator",
+        "prisma_orm"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Python Intelligence Microservice",
+      "wraps": ["ai_microservice"]
+    },
+    {
+      "kind": "region",
+      "label": "Persistent Storage",
+      "wraps": ["db_primary"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "auth-to-web",
+      "from": "auth_provider",
+      "to": "client_web",
+      "label": "OAuth Tokens",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    },
+    {
+      "id": "web-to-api",
+      "from": "client_web",
+      "to": "api_gateway",
+      "label": "HTTPS REST",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "android-to-api",
+      "from": "client_android",
+      "to": "api_gateway",
+      "label": "CapacitorHttp",
+      "variant": "emphasis"
+    },
+    {
+      "id": "socket-to-android",
+      "from": "socket_gateway",
+      "to": "client_android",
+      "label": "Realtime Sync",
+      "fromSide": "bottom",
+      "toSide": "bottom"
+    },
+    {
+      "id": "api-to-socket",
+      "from": "api_gateway",
+      "to": "socket_gateway",
+      "label": "Household Events",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    },
+    {
+      "id": "api-to-guard",
+      "from": "api_gateway",
+      "to": "auth_middleware",
+      "label": "Validate JWT",
+      "variant": "security",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "guard-to-ai",
+      "from": "auth_middleware",
+      "to": "ai_orchestrator",
+      "label": "Scoped Intent",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "guard-to-prisma",
+      "from": "auth_middleware",
+      "to": "prisma_orm",
+      "label": "Tenant Scope",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "ai-to-microservice",
+      "from": "ai_orchestrator",
+      "to": "ai_microservice",
+      "label": "Service Secret",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "ai-to-prisma",
+      "from": "ai_orchestrator",
+      "to": "prisma_orm",
+      "label": "Tool DB Access",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "prisma-to-db",
+      "from": "prisma_orm",
+      "to": "db_primary",
+      "label": "SQL / Cascade",
+      "fromSide": "right",
+      "toSide": "left"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Dual Clients",
+      "items": [
+        "Vite + React 18 responsive SPA deployed on Vercel",
+        "Capacitor 7 Android shell with bundled assets, safe area support, and hardware back navigation"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Tenant Isolation & Auth",
+      "items": [
+        "Google OAuth & Firebase Phone OTP exchange for 15-minute access JWTs and 30-day refresh tokens",
+        "Strict middleware enforcement scopes all queries and Socket.IO rooms by householdId"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Verified AI Integration",
+      "items": [
+        "In-process AI Orchestrator executes context-aware household tools with live database context",
+        "Internal FastAPI microservice provides OCR receipt extraction and utility forecasting via shared secret"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Persistence",
+      "items": [
+        "Prisma ORM enforcing foreign keys, indexes on householdId, and cascade deletions across all household models",
+        "SQLite locally / PostgreSQL in production with strict relation integrity"
+      ]
+    }
+  ]
+}

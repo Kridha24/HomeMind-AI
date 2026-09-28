@@ -131,7 +131,7 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
       )}
 
       {/* Floating Bottom Navigation Dock */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-panel/90 backdrop-blur-2xl border-t border-primary/20 px-3 py-2 lg:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.3)]">
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-panel/90 backdrop-blur-2xl border-t border-primary/20 px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] lg:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.3)]">
         <div className="flex items-center justify-around max-w-md mx-auto relative">
           {/* First 2 Tabs */}
           {navItems.slice(0, 2).map((item) => {

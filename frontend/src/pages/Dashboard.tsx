@@ -24,6 +24,8 @@ import {
   ArrowUpRight,
   BadgeDollarSign,
   Edit3,
+  Circle,
+  CheckCircle2,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../services/apiClient';
@@ -99,6 +101,7 @@ export const Dashboard: React.FC = () => {
   const [showGroceryModal, setShowGroceryModal] = useState(false);
   const [showApplianceModal, setShowApplianceModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
+  const [actionCenterTab, setActionCenterTab] = useState<'bills' | 'tasks'>('bills');
 
   const countryDefaults = COUNTRY_DEFAULTS[country] || COUNTRY_DEFAULTS['US'];
   const flag = COUNTRY_FLAGS[country] || '🌐';
@@ -142,6 +145,7 @@ export const Dashboard: React.FC = () => {
     summary?.overallSavings !== undefined ? summary.overallSavings : summary?.summary?.overallSavings || 0;
   const upcomingBillsTotal = summary?.upcomingBillsTotal || 0;
   const upcomingBills = summary?.upcomingBills || [];
+  const pendingTasks = summary?.pendingTasks || [];
   const recentHistory = summary?.recent5History || [];
   const incomesList = Array.isArray(incomeData) ? incomeData : [];
 
@@ -160,10 +164,59 @@ export const Dashboard: React.FC = () => {
     setShowBillModal(true);
   };
 
+  const handleMarkBillPaid = async (billId: string) => {
+    try {
+      await apiClient.put(`/bills/${billId}/pay`);
+      handleRefreshAll();
+    } catch (e) {
+      console.error('Failed to mark bill paid', e);
+    }
+  };
+
+  const handleCompleteTask = async (taskId: string) => {
+    try {
+      await apiClient.put(`/tasks/${taskId}/status`, { status: 'COMPLETED' });
+      handleRefreshAll();
+    } catch (e) {
+      console.error('Failed to complete task', e);
+    }
+  };
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-200 pb-12">
-      {/* Real-time Location & Clock Header */}
-      <div className="glass-panel p-6 border-primary flex flex-col md:flex-row items-center justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8 animate-in fade-in duration-200 pb-8 sm:pb-12">
+      {/* Mobile Compact Header */}
+      <div className="sm:hidden glass-panel p-3.5 border-primary flex flex-col gap-2 rounded-2xl bg-panel/95 shadow-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <h1 className="text-base font-extrabold text-primary truncate">
+              {t('dash.welcome', 'Welcome')}, {user?.name?.split(' ')[0] || 'there'} 👋
+            </h1>
+            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 uppercase tracking-wider flex-shrink-0">
+              {user?.role || 'OWNER'}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold flex items-center gap-1">
+              <Hourglass className="w-2.5 h-2.5 animate-spin" />
+              <span>{daysRemaining === 0 ? 'Last day' : `${daysRemaining}d left`}</span>
+            </div>
+            <div className="px-2 py-0.5 rounded-lg bg-secondary/80 border border-primary/60 text-[11px] font-mono font-bold text-primary flex items-center gap-1">
+              <Clock className="w-2.5 h-2.5 text-blue-500" />
+              <span>{timeStr?.slice(0, 5) || '12:00'}</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-between text-[11px] text-secondary pt-1 border-t border-primary/40">
+          <span className="flex items-center gap-1 truncate font-medium">
+            <MapPin className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+            <span className="truncate">{household?.name || t('dash.household', 'Home Residence')}</span>
+          </span>
+          <span className="flex-shrink-0 font-medium">{flag} {countryDefaults.countryName}</span>
+        </div>
+      </div>
+
+      {/* Desktop / Tablet Spacious Header */}
+      <div className="hidden sm:flex glass-panel p-6 border-primary flex-col md:flex-row items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold text-primary tracking-tight">
@@ -209,19 +262,18 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Quick Action Bar + Command Palette Shortcut */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-3xl bg-panel/90 border border-primary/80 backdrop-blur-xl shadow-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          {/* + Add Income Action Button */}
+      {/* Quick Action Bar */}
+      <div className="flex items-center justify-between p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-panel/90 border border-primary/80 backdrop-blur-xl shadow-xs">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5 w-full sm:w-auto -mx-0.5 px-0.5">
           <button
             onClick={() => {
               setEditingIncome(null);
               setShowIncomeModal(true);
             }}
-            className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-emerald-600/20 active:scale-95 transition-all"
+            className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95 transition-all flex-shrink-0"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>{t('dash.addIncome', 'Add Income')}</span>
+            <Plus className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+            <span>{t('dash.addIncome', 'Income')}</span>
           </button>
 
           <button
@@ -229,10 +281,10 @@ export const Dashboard: React.FC = () => {
               setEditingExpense(null);
               setShowExpenseModal(true);
             }}
-            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-blue-600/20 active:scale-95 transition-all"
+            className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95 transition-all flex-shrink-0"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>{t('dash.addExpense', 'Add Expense')}</span>
+            <Plus className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+            <span>{t('dash.addExpense', 'Expense')}</span>
           </button>
 
           <button
@@ -240,30 +292,30 @@ export const Dashboard: React.FC = () => {
               setEditingBill(null);
               setShowBillModal(true);
             }}
-            className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm"
+            className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-bold flex items-center gap-1 active:scale-95 transition-all shadow-xs flex-shrink-0"
           >
-            <Plus className="w-3.5 h-3.5 text-amber-500" />
-            <span>{t('dash.addBill', 'Add Bill')}</span>
+            <Plus className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-amber-500" />
+            <span>{t('dash.addBill', 'Bill')}</span>
           </button>
 
           <button
             onClick={() => setShowGroceryModal(true)}
-            className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm"
+            className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-bold flex items-center gap-1 active:scale-95 transition-all shadow-xs flex-shrink-0"
           >
-            <Plus className="w-3.5 h-3.5 text-emerald-500" />
-            <span>{t('dash.addGrocery', 'Add Grocery')}</span>
+            <Plus className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-emerald-500" />
+            <span>{t('dash.addGrocery', 'Grocery')}</span>
           </button>
 
           <button
             onClick={() => setShowTaskModal(true)}
-            className="px-3.5 py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-2xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-sm"
+            className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-secondary hover:bg-secondary/80 border border-primary/60 text-primary rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-bold flex items-center gap-1 active:scale-95 transition-all shadow-xs flex-shrink-0"
           >
-            <Plus className="w-3.5 h-3.5 text-purple-500" />
-            <span>{t('dash.addTask', 'Add Task')}</span>
+            <Plus className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-purple-500" />
+            <span>{t('dash.addTask', 'Task')}</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-secondary/70 border border-primary/60 text-[11px] text-secondary font-mono">
+        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-secondary/70 border border-primary/60 text-[11px] text-secondary font-mono flex-shrink-0">
           <Command className="w-3 h-3 text-blue-600 dark:text-blue-400" />
           <span>Press</span>
           <kbd className="px-1.5 py-0.5 rounded bg-panel font-bold text-primary border border-primary/80 shadow-xs">
@@ -273,130 +325,356 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+      {/* Main Metric Cards (Compact 2-col on mobile, 5-col on desktop) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
         {loading ? (
           <>
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="glass-panel p-5 animate-pulse space-y-4">
+              <div key={i} className={`glass-panel p-3 sm:p-5 animate-pulse space-y-2 sm:space-y-4 ${i === 5 ? 'col-span-2 sm:col-span-1' : ''}`}>
                 <div className="flex items-center justify-between">
-                  <div className="w-16 h-3 bg-primary/10 rounded-full"></div>
+                  <div className="w-14 h-3 bg-primary/10 rounded-full"></div>
                   <div className="w-4 h-4 bg-primary/10 rounded-full"></div>
                 </div>
-                <div className="w-24 h-6 bg-primary/10 rounded-full"></div>
-                <div className="w-20 h-2 bg-primary/10 rounded-full mt-2"></div>
+                <div className="w-20 h-5 bg-primary/10 rounded-full"></div>
               </div>
             ))}
           </>
         ) : (
           <>
             {/* Monthly Income Card */}
-            <div className="glass-panel p-5 border-emerald-500/30 bg-emerald-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-emerald-950/20 dark:to-slate-900 space-y-2 shadow-sm">
+            <div className="glass-panel p-3 sm:p-5 rounded-2xl border-emerald-500/30 bg-emerald-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-emerald-950/20 dark:to-slate-900 space-y-1 sm:space-y-2 shadow-xs">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
+                  <span className="text-[10px] sm:text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
                     {t('dash.income', 'Income')} ({monthShort})
                   </span>
-                  <span className="text-[10px] text-muted font-mono block">{dateRangeStr}</span>
+                  <span className="text-[9px] sm:text-[10px] text-muted font-mono hidden sm:block">{dateRangeStr}</span>
                 </div>
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                  <Wallet className="w-4 h-4" />
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                  <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               </div>
-              <p className="text-xl font-extrabold text-emerald-700 dark:text-primary font-mono pt-1">
+              <p className="text-base sm:text-xl font-extrabold text-emerald-700 dark:text-primary font-mono truncate">
                 +{format(monthlyIncome)}
               </p>
-              <div className="flex items-center justify-between pt-1 border-t border-primary/60 text-[10px]">
-                <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1 font-semibold">
-                  <TrendingUp className="w-3 h-3" /> Total Earned
+              <div className="flex items-center justify-between pt-1 border-t border-primary/60 text-[9px] sm:text-[10px]">
+                <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1 font-semibold truncate">
+                  <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Earned
                 </span>
               </div>
             </div>
 
-            {/* Monthly Expenses Card with (-) sign */}
-            <div className="glass-panel p-5 border-red-500/30 bg-red-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-red-950/20 dark:to-slate-900 space-y-2 shadow-sm">
+            {/* Monthly Expenses Card */}
+            <div className="glass-panel p-3 sm:p-5 rounded-2xl border-red-500/30 bg-red-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-red-950/20 dark:to-slate-900 space-y-1 sm:space-y-2 shadow-xs">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-red-700 dark:text-red-400 uppercase tracking-wider block">
+                  <span className="text-[10px] sm:text-xs font-bold text-red-700 dark:text-red-400 uppercase tracking-wider block">
                     {t('dash.spent', 'Spent')} ({monthShort})
                   </span>
-                  <span className="text-[10px] text-muted font-mono block">{dateRangeStr}</span>
+                  <span className="text-[9px] sm:text-[10px] text-muted font-mono hidden sm:block">{dateRangeStr}</span>
                 </div>
-                <div className="w-8 h-8 rounded-xl bg-red-500/15 flex items-center justify-center text-red-600 dark:text-red-400">
-                  <CreditCard className="w-4 h-4" />
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-red-500/15 flex items-center justify-center text-red-600 dark:text-red-400 flex-shrink-0">
+                  <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               </div>
-              <p className="text-xl font-extrabold text-red-600 dark:text-red-400 font-mono pt-1">
+              <p className="text-base sm:text-xl font-extrabold text-red-600 dark:text-red-400 font-mono truncate">
                 -{format(monthlyExpenses)}
               </p>
-              <div className="flex items-center justify-between pt-1 border-t border-primary/60 text-[10px]">
-                <span className="text-red-700 dark:text-red-400 font-semibold">Total Spent This Month</span>
+              <div className="flex items-center justify-between pt-1 border-t border-primary/60 text-[9px] sm:text-[10px]">
+                <span className="text-red-700 dark:text-red-400 font-semibold truncate">This Month</span>
               </div>
             </div>
 
-            {/* Lifetime Overall Expenses Card with (-) sign */}
-            <div className="glass-panel p-5 border-rose-500/30 bg-rose-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-rose-950/20 dark:to-slate-900 space-y-2 shadow-sm">
+            {/* Lifetime Overall Expenses */}
+            <div className="glass-panel p-3 sm:p-5 rounded-2xl border-rose-500/30 bg-rose-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-rose-950/20 dark:to-slate-900 space-y-1 sm:space-y-2 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
-                  {t('dash.allTimeSpend', 'All-time Spend')}
+                <span className="text-[10px] sm:text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider block truncate">
+                  {t('dash.allTimeSpend', 'All-Time')}
                 </span>
-                <div className="w-8 h-8 rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-600 dark:text-rose-400">
-                  <CreditCard className="w-4 h-4" />
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-600 dark:text-rose-400 flex-shrink-0">
+                  <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               </div>
-              <p className="text-xl font-extrabold text-rose-600 dark:text-rose-400 font-mono pt-1">
+              <p className="text-base sm:text-xl font-extrabold text-rose-600 dark:text-rose-400 font-mono truncate">
                 -{format(overallExpenses)}
               </p>
-              <div className="pt-1 border-t border-primary/60 text-[10px] text-muted font-medium">
-                Total Expenses Logged
+              <div className="pt-1 border-t border-primary/60 text-[9px] sm:text-[10px] text-muted font-medium truncate">
+                All Expenses Logged
               </div>
             </div>
 
-            {/* Monthly Net Savings Card (Income - Expenses) */}
-            <div className="glass-panel p-5 border-teal-500/30 bg-teal-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-teal-950/20 dark:to-slate-900 space-y-2 shadow-sm">
+            {/* Monthly Net Savings */}
+            <div className="glass-panel p-3 sm:p-5 rounded-2xl border-teal-500/30 bg-teal-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-teal-950/20 dark:to-slate-900 space-y-1 sm:space-y-2 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider">
+                <span className="text-[10px] sm:text-xs font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider block truncate">
                   {t('dash.saved', 'Saved')} ({monthShort})
                 </span>
-                <div className="w-8 h-8 rounded-xl bg-teal-500/15 flex items-center justify-center text-teal-600 dark:text-teal-400">
-                  <PiggyBank className="w-4 h-4" />
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-teal-500/15 flex items-center justify-center text-teal-600 dark:text-teal-400 flex-shrink-0">
+                  <PiggyBank className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               </div>
               <p
-                className={`text-xl font-extrabold font-mono pt-1 ${
+                className={`text-base sm:text-xl font-extrabold font-mono truncate ${
                   monthlySavings >= 0 ? 'text-teal-700 dark:text-teal-400' : 'text-red-600 dark:text-red-400'
                 }`}
               >
                 {monthlySavings >= 0 ? `+${format(monthlySavings)}` : format(monthlySavings)}
               </p>
-              <div className="pt-1 border-t border-primary/60 text-[10px] text-muted font-medium">
-                Income Left Over
+              <div className="pt-1 border-t border-primary/60 text-[9px] sm:text-[10px] text-muted font-medium truncate">
+                Remaining Balance
               </div>
             </div>
 
-            {/* Overall Lifetime Balance Card */}
-            <div className="glass-panel p-5 border-purple-500/30 bg-purple-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-purple-950/20 dark:to-slate-900 space-y-2 shadow-sm">
+            {/* Overall Lifetime Balance Card (Spans 2 cols on mobile, 1 on desktop) */}
+            <div className="col-span-2 sm:col-span-1 lg:col-span-1 glass-panel p-3 sm:p-5 rounded-2xl border-purple-500/30 bg-purple-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-purple-950/20 dark:to-slate-900 space-y-1 sm:space-y-2 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider">
+                <span className="text-[10px] sm:text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider block truncate">
                   {t('dash.totalBalance', 'Total Balance')}
                 </span>
-                <div className="w-8 h-8 rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-600 dark:text-purple-400">
-                  <Landmark className="w-4 h-4" />
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-600 dark:text-purple-400 flex-shrink-0">
+                  <Landmark className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               </div>
               <p
-                className={`text-xl font-extrabold font-mono pt-1 ${
+                className={`text-base sm:text-xl font-extrabold font-mono truncate ${
                   overallSavings >= 0 ? 'text-purple-800 dark:text-purple-300' : 'text-red-600 dark:text-red-400'
                 }`}
               >
                 {overallSavings >= 0 ? `+${format(overallSavings)}` : format(overallSavings)}
               </p>
-              <div className="pt-1 border-t border-primary/60 text-[10px] text-purple-700 dark:text-purple-400 font-semibold">
+              <div className="pt-1 border-t border-primary/60 text-[9px] sm:text-[10px] text-purple-700 dark:text-purple-400 font-semibold truncate">
                 Net Household Assets
               </div>
             </div>
           </>
         )}
+      </div>
+
+      {/* High-Priority Action Center: Upcoming Bills & Due Tasks */}
+      <div className="space-y-3">
+        {/* Mobile View Toggle */}
+        <div className="lg:hidden flex p-1 bg-secondary/80 rounded-2xl border border-primary/60">
+          <button
+            type="button"
+            onClick={() => setActionCenterTab('bills')}
+            className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+              actionCenterTab === 'bills'
+                ? 'bg-amber-500 text-white shadow-xs'
+                : 'text-secondary hover:text-primary'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Bills & Rent</span>
+            {upcomingBills.length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-black/20 text-white font-bold">
+                {upcomingBills.length}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActionCenterTab('tasks')}
+            className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+              actionCenterTab === 'tasks'
+                ? 'bg-purple-600 text-white shadow-xs'
+                : 'text-secondary hover:text-primary'
+            }`}
+          >
+            <CheckSquare className="w-3.5 h-3.5" />
+            <span>Tasks & Chores</span>
+            {pendingTasks.length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-black/20 text-white font-bold">
+                {pendingTasks.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+          {/* 1. Upcoming Bills & Rent */}
+          <div className={`${actionCenterTab === 'bills' ? 'flex' : 'hidden lg:flex'} glass-panel p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-amber-500/30 bg-amber-50/40 dark:bg-gradient-to-br dark:from-slate-900 dark:via-amber-950/15 dark:to-slate-900 space-y-3 sm:space-y-4 shadow-xs flex-col justify-between`}>
+            <div>
+              <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-primary/60">
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-600 dark:text-amber-400 flex-shrink-0">
+                    <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-xs sm:text-sm font-extrabold text-primary flex items-center gap-1.5">
+                      {t('dash.upcomingBills', 'Upcoming Bills & Rent')}
+                    </h2>
+                    <p className="text-[10px] sm:text-[11px] text-muted">Room rent, electricity, Wi-Fi & due amounts</p>
+                  </div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <span className="text-base sm:text-xl font-extrabold text-red-600 dark:text-red-400 font-mono block">
+                    -{format(upcomingBillsTotal)}
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider">
+                    Total Due
+                  </span>
+                </div>
+              </div>
+
+              {upcomingBills.length > 0 ? (
+                <div className="divide-y divide-primary/60 pt-0.5 sm:pt-1">
+                  {upcomingBills.slice(0, 4).map((bill: any) => (
+                    <div
+                      key={bill.id}
+                      className="py-2 sm:py-3 flex items-center justify-between gap-2 sm:gap-3 group hover:bg-secondary/20 px-1 sm:px-2 rounded-xl transition-colors"
+                    >
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <span className="text-xs font-bold text-primary truncate">{bill.title}</span>
+                          <span className="px-1.5 py-0.2 rounded-full text-[8px] sm:text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400 uppercase tracking-wider flex-shrink-0">
+                            {bill.category || 'Rent/Utility'}
+                          </span>
+                        </div>
+                        <p className="text-[10px] sm:text-[11px] text-muted flex items-center gap-1">
+                          <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-500 flex-shrink-0" />
+                          <span>Due: {new Date(bill.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                        <span className="text-xs sm:text-sm font-extrabold text-red-600 dark:text-red-400 font-mono">
+                          -{format(bill.amount)}
+                        </span>
+                        <button
+                          onClick={() => handleMarkBillPaid(bill.id)}
+                          className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-emerald-600/10 hover:bg-emerald-600 text-emerald-600 hover:text-white border border-emerald-500/30 rounded-lg sm:rounded-xl text-[10px] font-bold transition-all shadow-2xs"
+                          title="Mark as Paid"
+                        >
+                          Pay
+                        </button>
+                        <button
+                          onClick={() => handleEditBill(bill)}
+                          className="p-1 text-muted hover:text-blue-500 rounded-md transition-colors"
+                          title="Edit Bill"
+                        >
+                          <Edit3 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-5 sm:py-8 text-center text-xs text-secondary space-y-1">
+                  <p className="font-semibold text-primary">No upcoming bills due right now! 🎉</p>
+                  <p className="text-muted text-[10px] sm:text-[11px]">All room rent, mess and utility expenses are clear.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 border-t border-primary/60 flex items-center justify-between">
+              <span className="text-[10px] sm:text-[11px] text-muted font-medium">
+                {upcomingBills.length} unpaid bill{upcomingBills.length === 1 ? '' : 's'} registered
+              </span>
+              <button
+                onClick={() => {
+                  setEditingBill(null);
+                  setShowBillModal(true);
+                }}
+                className="text-[11px] sm:text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline flex items-center gap-1"
+              >
+                <Plus className="w-3 sm:w-3.5 h-3 sm:h-3.5" /> Add Bill / Rent
+              </button>
+            </div>
+          </div>
+
+          {/* 2. Pending Household Tasks */}
+          <div className={`${actionCenterTab === 'tasks' ? 'flex' : 'hidden lg:flex'} glass-panel p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-purple-500/30 bg-purple-50/40 dark:bg-gradient-to-br dark:from-slate-900 dark:via-purple-950/15 dark:to-slate-900 space-y-3 sm:space-y-4 shadow-xs flex-col justify-between`}>
+            <div>
+              <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-primary/60">
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-600 dark:text-purple-400 flex-shrink-0">
+                    <CheckSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-xs sm:text-sm font-extrabold text-primary flex items-center gap-1.5">
+                      {t('dash.pendingTasks', 'Pending Household Tasks')}
+                    </h2>
+                    <p className="text-[10px] sm:text-[11px] text-muted">Daily chores, maintenance, grocery runs & schedules</p>
+                  </div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <span className="text-base sm:text-xl font-extrabold text-purple-700 dark:text-purple-300 font-mono block">
+                    {pendingTasks.length}
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] text-purple-700 dark:text-purple-400 font-bold uppercase tracking-wider">
+                    Pending Tasks
+                  </span>
+                </div>
+              </div>
+
+              {pendingTasks.length > 0 ? (
+                <div className="divide-y divide-primary/60 pt-0.5 sm:pt-1">
+                  {pendingTasks.slice(0, 4).map((task: any) => (
+                    <div
+                      key={task.id}
+                      className="py-2 sm:py-3 flex items-center justify-between gap-2 sm:gap-3 group hover:bg-secondary/20 px-1 sm:px-2 rounded-xl transition-colors"
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <button
+                          onClick={() => handleCompleteTask(task.id)}
+                          className="text-muted hover:text-emerald-500 transition-colors p-0.5 rounded-full flex-shrink-0"
+                          title="Mark Complete"
+                        >
+                          <Circle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </button>
+                        <div className="space-y-0.5 min-w-0">
+                          <span className="text-xs font-bold text-primary block truncate">{task.title}</span>
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <span
+                              className={`px-1.5 py-0.2 rounded-full text-[8px] sm:text-[9px] font-bold uppercase tracking-wider ${
+                                task.priority === 'URGENT'
+                                  ? 'bg-red-500/15 text-red-500 border border-red-500/30'
+                                  : task.priority === 'HIGH'
+                                  ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30'
+                                  : 'bg-blue-500/15 text-blue-500 border border-blue-500/30'
+                              }`}
+                            >
+                              {task.priority || 'NORMAL'}
+                            </span>
+                            {task.dueDate && (
+                              <span className="text-[9px] sm:text-[10px] text-muted font-mono truncate">
+                                Due: {new Date(task.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleCompleteTask(task.id)}
+                        className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-purple-600/10 hover:bg-purple-600 text-purple-600 hover:text-white border border-purple-500/30 rounded-lg sm:rounded-xl text-[10px] font-bold transition-all shadow-2xs flex-shrink-0"
+                      >
+                        Done
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-5 sm:py-8 text-center text-xs text-secondary space-y-1">
+                  <p className="font-semibold text-primary">All chores & tasks are completed! ✨</p>
+                  <p className="text-muted text-[10px] sm:text-[11px]">No urgent routines or pending household chores.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 border-t border-primary/60 flex items-center justify-between">
+              <span className="text-[10px] sm:text-[11px] text-muted font-medium">
+                {pendingTasks.length} task{pendingTasks.length === 1 ? '' : 's'} to complete
+              </span>
+              <button
+                onClick={() => setShowTaskModal(true)}
+                className="text-[11px] sm:text-xs font-bold text-purple-700 dark:text-purple-400 hover:underline flex items-center gap-1"
+              >
+                <Plus className="w-3 sm:w-3.5 h-3 sm:h-3.5" /> Add New Task
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Simple Home Health Score Rings */}
@@ -419,157 +697,129 @@ export const Dashboard: React.FC = () => {
       />
 
       {/* Household Income & Earnings Overview Section with Edit Shortcut */}
-      <div className="glass-panel p-6 border-emerald-500/30 bg-emerald-50/40 dark:bg-gradient-to-r dark:from-slate-900 dark:via-emerald-950/15 dark:to-slate-900 space-y-4 shadow-sm">
+      <div className="glass-panel p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-emerald-500/30 bg-emerald-50/40 dark:bg-gradient-to-r dark:from-slate-900 dark:via-emerald-950/15 dark:to-slate-900 space-y-3 sm:space-y-4 shadow-xs">
         <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-2">
-              <Wallet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Household Income & Earnings
+          <div className="space-y-0.5 sm:space-y-1">
+            <span className="text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 sm:gap-2">
+              <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 dark:text-emerald-400" /> Income & Earnings
             </span>
-            <p className="text-xs text-secondary">
+            <p className="text-[11px] sm:text-xs text-secondary hidden sm:block">
               Track salary, freelance payments, dividends, and earnings for {monthName} {year}.
             </p>
           </div>
           <div className="text-right">
-            <span className="text-2xl font-extrabold text-emerald-700 dark:text-emerald-400 font-mono block">
+            <span className="text-base sm:text-2xl font-extrabold text-emerald-700 dark:text-emerald-400 font-mono block">
               +{format(monthlyIncome)}
             </span>
-            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider">
-              Total Monthly Income
+            <span className="text-[9px] sm:text-[10px] text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider">
+              Monthly Total
             </span>
           </div>
         </div>
 
         {incomesList.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+          <div className="flex overflow-x-auto no-scrollbar gap-2.5 pb-1 sm:grid sm:grid-cols-2 md:grid-cols-3 sm:gap-3">
             {incomesList.slice(0, 3).map((inc: any) => (
               <div
                 key={inc.id}
-                className="p-3.5 rounded-2xl bg-panel border border-primary/80 flex items-center justify-between shadow-sm group hover:border-emerald-500/50 transition-colors"
+                className="min-w-[210px] sm:min-w-0 p-3 rounded-xl sm:rounded-2xl bg-panel border border-primary/80 flex items-center justify-between shadow-xs group hover:border-emerald-500/50 transition-colors flex-shrink-0 sm:flex-shrink"
               >
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-primary block">{inc.title}</span>
+                    <span className="text-xs font-bold text-primary block truncate max-w-[110px]">{inc.title}</span>
                     <button
                       onClick={() => handleEditIncome(inc)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-blue-500 rounded-md transition-opacity"
+                      className="p-1 text-muted hover:text-blue-500 rounded-md transition-colors"
                       title="Edit Income"
                     >
                       <Edit3 className="w-3 h-3" />
                     </button>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 uppercase tracking-wider inline-block">
+                  <span className="px-1.5 py-0.2 rounded-full text-[8px] sm:text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 uppercase tracking-wider inline-block">
                     {inc.source || 'Salary'}
                   </span>
-                  <p className="text-[10px] text-muted font-mono">
-                    {new Date(inc.date).toLocaleDateString()}
+                  <p className="text-[9px] sm:text-[10px] text-muted font-mono">
+                    {new Date(inc.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                   </p>
                 </div>
-                <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
+                <span className="text-xs sm:text-sm font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
                   +{format(inc.amount)}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <div className="p-4 rounded-2xl bg-panel border border-primary/80 text-center text-xs text-secondary flex items-center justify-between shadow-sm">
-            <span>No income entries logged yet for this month.</span>
+          <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-panel border border-primary/80 text-center text-xs text-secondary flex items-center justify-between shadow-xs">
+            <span className="text-[11px] sm:text-xs">No income entries logged yet for this month.</span>
             <button
               onClick={() => {
                 setEditingIncome(null);
                 setShowIncomeModal(true);
               }}
-              className="px-3.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 rounded-xl text-xs font-bold transition-colors shadow-xs flex items-center gap-1"
+              className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-colors shadow-2xs flex items-center gap-1"
             >
-              <Plus className="w-3.5 h-3.5" /> Add First Income
+              <Plus className="w-3 sm:w-3.5 h-3 sm:h-3.5" /> Add Income
             </button>
           </div>
         )}
       </div>
 
-      {/* Upcoming Bills & Rent Section with Edit Shortcut */}
-      <div className="glass-panel p-6 border-amber-500/30 bg-amber-50/40 dark:bg-gradient-to-r dark:from-slate-900 dark:via-amber-950/10 dark:to-slate-900 space-y-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider flex items-center gap-2">
-              <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" /> {t('dash.upcomingBills', 'Upcoming Bills & Rent')}
-            </span>
-            <p className="text-xs text-secondary">
-              {t('dash.upcomingBillsDesc', 'Track room rent, mess fees, Wi-Fi, and electricity bills due this month.')}
-            </p>
-          </div>
-          <div className="text-right">
-            <span className="text-2xl font-extrabold text-amber-800 dark:text-amber-400 font-mono block">
-              -{format(upcomingBillsTotal)}
-            </span>
-            <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider">
-              {t('dash.totalBillsDue', 'Total Bills Due')}
-            </span>
-          </div>
-        </div>
-
-        {upcomingBills.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2">
-            {upcomingBills.map((bill: any) => (
-              <div
-                key={bill.id}
-                className="p-3.5 rounded-2xl bg-panel border border-primary/80 flex items-center justify-between shadow-sm group hover:border-amber-500/50 transition-colors"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-primary block">{bill.title}</span>
-                    <button
-                      onClick={() => handleEditBill(bill)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-blue-500 rounded-md transition-opacity"
-                      title="Edit Bill"
-                    >
-                      <Edit3 className="w-3 h-3" />
-                    </button>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400 uppercase tracking-wider inline-block">
-                    {bill.category || 'Rent/Utility'}
-                  </span>
-                  <p className="text-[10px] text-muted font-mono">
-                    Due: {new Date(bill.dueDate).toLocaleDateString()}
-                  </p>
-                </div>
-                <span className="text-sm font-extrabold text-red-600 dark:text-red-400 font-mono">
-                  -{format(bill.amount)}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="p-4 rounded-2xl bg-panel border border-primary/80 text-center text-xs text-secondary flex items-center justify-between shadow-sm">
-            <span>No upcoming bills logged yet for this month.</span>
-            <button
-              onClick={() => {
-                setEditingBill(null);
-                setShowBillModal(true);
-              }}
-              className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400 rounded-xl text-xs font-bold transition-colors shadow-xs"
-            >
-              + Add Bill / Rent
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Recent Transactions Table */}
-      <div className="glass-panel border-primary overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-primary/80 font-bold text-sm text-primary flex items-center justify-between bg-secondary/30">
+      {/* Recent Transactions */}
+      <div className="glass-panel rounded-2xl sm:rounded-3xl border-primary overflow-hidden shadow-xs">
+        <div className="p-3 sm:p-4 border-b border-primary/80 font-bold text-xs sm:text-sm text-primary flex items-center justify-between bg-secondary/30">
           <span className="flex items-center gap-2">
-            <History className="w-4 h-4 text-blue-600 dark:text-blue-400" /> {t('dash.recentTransactions', 'Recent Transactions')}
+            <History className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" /> {t('dash.recentTransactions', 'Recent Transactions')}
           </span>
-          <span className="text-xs text-secondary font-mono font-medium">{t('dash.latestEntries', 'Latest Entries')}</span>
+          <span className="text-[10px] sm:text-xs text-secondary font-mono font-medium">{t('dash.latestEntries', 'Latest Entries')}</span>
         </div>
 
         {recentHistory.length === 0 ? (
-          <div className="p-8 text-center text-xs text-muted space-y-1">
+          <div className="p-6 sm:p-8 text-center text-xs text-muted space-y-1">
             <p className="font-semibold text-primary">{t('dash.noTransactions', 'No transactions recorded yet.')}</p>
-            <p className="text-[11px]">Add an expense or income entry to see history here.</p>
+            <p className="text-[10px] sm:text-[11px]">Add an expense or income entry to see history here.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            {/* Mobile Native App Transaction Cards (No horizontal scroll required!) */}
+            <div className="sm:hidden divide-y divide-primary/50">
+              {recentHistory.map((item: any) => (
+                <div key={item.id} className="py-2.5 px-3 flex items-center justify-between gap-2.5 hover:bg-secondary/20 transition-colors">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        item.type === 'INCOME'
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-red-500/15 text-red-600 dark:text-red-400'
+                      }`}
+                    >
+                      {item.type === 'INCOME' ? <Wallet className="w-3.5 h-3.5" /> : <CreditCard className="w-3.5 h-3.5" />}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-primary truncate">{item.title}</p>
+                      <div className="flex items-center gap-1.5 text-[10px] text-muted">
+                        <span className="truncate max-w-[80px]">{item.category || item.type}</span>
+                        <span>•</span>
+                        <span>{new Date(item.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right flex-shrink-0">
+                    <span
+                      className={`text-xs font-bold font-mono block ${
+                        item.type === 'INCOME' ? 'text-emerald-600 dark:text-emerald-400' : 'text-primary'
+                      }`}
+                    >
+                      {item.type === 'INCOME' ? `+${format(item.amount)}` : `-${format(item.amount)}`}
+                    </span>
+                    <span className="text-[9px] text-muted block">{item.userName?.split(' ')[0]}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Full Data Table */}
+            <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-secondary/60 text-secondary uppercase tracking-wider font-bold border-b border-primary/80">
                 <tr>
@@ -618,6 +868,7 @@ export const Dashboard: React.FC = () => {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // API Base URL
@@ -7,18 +8,29 @@ import axios from 'axios';
 //   Frontend runs on :3000, backend on :5001, no CORS issues in dev.
 //   Set baseURL to '/api/v1' so requests go through the proxy.
 //
-// PRODUCTION: Set VITE_API_URL to your backend URL (e.g. https://api.yourapp.com/api/v1).
-//   Do NOT hardcode any URL here — that leaks backend location into the bundle.
+// PRODUCTION / NATIVE: Set VITE_API_URL to your backend URL (e.g. https://api.yourapp.com/api/v1).
+//   On Android Capacitor or deployed web, calls go directly to the HTTPS backend.
 // ──────────────────────────────────────────────────────────────────────────────
 const isDev = import.meta.env.DEV;
-const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const isLocalhost = typeof window !== 'undefined' && (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname === '[::1]' ||
+  window.location.hostname === '::1' ||
+  /^192\.168\.\d+\.\d+$/.test(window.location.hostname) ||
+  /^10\.\d+\.\d+\.\d+$/.test(window.location.hostname) ||
+  /^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$/.test(window.location.hostname)
+);
+const isNative = typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform();
 
-// In local development, prefer the Vite dev proxy (/api/v1 -> http://localhost:5001) to eliminate CORS.
-// In production or when VITE_FORCE_REMOTE_API=true, use the configured remote backend URL.
+const configuredRemoteUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://homemind-ai-backend-yjk3.onrender.com/api/v1';
+
+// In local browser development without remote flag, prefer Vite dev proxy.
+// On Android/Capacitor or production, always use the remote HTTPS backend URL.
 const API_BASE =
-  (isDev && isLocalhost && import.meta.env.VITE_FORCE_REMOTE_API !== 'true')
+  (!isNative && isDev && isLocalhost && import.meta.env.VITE_FORCE_REMOTE_API !== 'true')
     ? '/api/v1'
-    : (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api/v1');
+    : configuredRemoteUrl;
 
 const apiClient = axios.create({
   baseURL: API_BASE,

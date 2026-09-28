@@ -23,6 +23,8 @@ frontend/.env
 credentials.json
 secrets.json
 .DS_Store
+.idea/
+*.iml
 
 # Logs
 *.log

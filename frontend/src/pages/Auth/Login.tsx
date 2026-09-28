@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Sparkles, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Capacitor } from '@capacitor/core';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSettingStore } from '../../stores/useSettingStore';
@@ -75,9 +77,11 @@ export const Login: React.FC = () => {
           }
           await submitGoogleToken(accessToken);
         },
-        error_callback: () => {
+        error_callback: (err: any) => {
+          console.error('[Google GIS Error Callback]', err);
           setLoadingGoogle(false);
           setLoadingState('idle');
+          setError(err?.message || 'Google account picker could not be opened. Check popup blocker or authorized origins.');
         },
       });
       return tokenClientRef.current;
@@ -87,8 +91,9 @@ export const Login: React.FC = () => {
     }
   };
 
-  // Load Google Identity Services once — used for the account-picker popup
+  // Load Google Identity Services once on web platform
   useEffect(() => {
+    if (Capacitor.isNativePlatform()) return;
     if (!GOOGLE_CLIENT_ID) return;
 
     if (window.google?.accounts?.oauth2) {
@@ -96,19 +101,26 @@ export const Login: React.FC = () => {
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      initTokenClient();
-    };
-    document.body.appendChild(script);
-    return () => {
-      try {
-        document.body.removeChild(script);
-      } catch (_) {}
-    };
+    const existingScript = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        initTokenClient();
+      };
+      document.head.appendChild(script);
+    } else {
+      // Script already in DOM, poll briefly for window.google
+      const interval = setInterval(() => {
+        if (window.google?.accounts?.oauth2) {
+          initTokenClient();
+          clearInterval(interval);
+        }
+      }, 100);
+      return () => clearInterval(interval);
+    }
   }, []);
 
   const submitGoogleToken = async (googleToken: string) => {
@@ -138,12 +150,74 @@ export const Login: React.FC = () => {
     }
   };
 
-  const triggerGoogleSignIn = () => {
+  const triggerGoogleSignIn = async () => {
     setError('');
     if (!GOOGLE_CLIENT_ID) {
       setError('Google sign-in is not configured. Use phone or email login, or add VITE_GOOGLE_CLIENT_ID.');
       return;
     }
+
+    // Native Android / iOS flow using Android Credential Manager / SocialLogin
+    if (Capacitor.isNativePlatform()) {
+      setLoadingGoogle(true);
+      setLoadingState('connecting');
+      try {
+        await SocialLogin.initialize({
+          google: {
+            webClientId: GOOGLE_CLIENT_ID,
+            mode: 'online',
+          },
+        });
+
+        const res = await SocialLogin.login({
+          provider: 'google',
+          options: {},
+        });
+
+        const result = res.result;
+        const idToken = (result as any)?.idToken || (result as any)?.accessToken?.token;
+        if (!idToken) {
+          setError('Google did not return an account token. Please try again.');
+          setLoadingGoogle(false);
+          setLoadingState('idle');
+          return;
+        }
+
+        await submitGoogleToken(idToken);
+      } catch (err: any) {
+        console.warn('[Google Native] Login error:', err);
+        setLoadingGoogle(false);
+        setLoadingState('idle');
+        const errorMsg = err?.message || String(err || '');
+        const isDismissed =
+          (errorMsg.toLowerCase().includes('user cancelled') ||
+           errorMsg.toLowerCase().includes('cancelled by user') ||
+           errorMsg.toLowerCase().includes('canceled by user')) &&
+          !errorMsg.toLowerCase().includes('reauth');
+
+        if (isDismissed) {
+          // User genuinely dismissed account picker dialog
+          return;
+        }
+
+        if (
+          errorMsg.includes('16') ||
+          errorMsg.toLowerCase().includes('reauth') ||
+          errorMsg.includes('10') ||
+          errorMsg.includes('DEVELOPER_ERROR') ||
+          errorMsg.includes('28444')
+        ) {
+          setError(
+            'Google Sign-In configuration error ([16] Account reauth failed). Please ensure the Android OAuth Client ID (Package: com.kridha.homemind + SHA-1) is added in Google Cloud Console.'
+          );
+        } else {
+          setError(err?.message || 'Google sign-in failed. Please try again.');
+        }
+      }
+      return;
+    }
+
+    // Web flow using Google Identity Services (GIS)
     let client = tokenClientRef.current;
     if (!client) {
       client = initTokenClient();

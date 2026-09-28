@@ -61,39 +61,39 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
   const strokeDash3 = (taskRatio / 100) * circ3;
 
   return (
-    <div className="glass-panel p-6 sm:p-7 border-primary/80 rounded-3xl relative overflow-hidden bg-panel/90 backdrop-blur-xl shadow-sm dark:shadow-2xl space-y-6">
+    <div className="glass-panel p-4 sm:p-6 md:p-7 border-primary/80 rounded-2xl sm:rounded-3xl relative overflow-hidden bg-panel/90 backdrop-blur-xl shadow-sm dark:shadow-2xl space-y-4 sm:space-y-6">
       {/* Header with Multi-Language Support */}
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
+        <div className="space-y-0.5 sm:space-y-1">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg sm:text-xl font-extrabold text-primary tracking-tight">
+            <h2 className="text-base sm:text-lg md:text-xl font-extrabold text-primary tracking-tight">
               {t('vitals.title', 'Home Health Score')}
             </h2>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1 shadow-xs">
+            <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1 shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {t('vitals.status', 'Live Status')}
             </span>
           </div>
-          <p className="text-xs text-secondary">
+          <p className="text-[11px] sm:text-xs text-secondary">
             {t('vitals.subtitle', 'Quick 1-second view of your savings, kitchen food, and home chores')}
           </p>
         </div>
 
-        <div className="text-right">
-          <span className="text-2xl sm:text-3xl font-black text-primary font-mono tracking-tight block">
+        <div className="text-right flex-shrink-0">
+          <span className="text-xl sm:text-2xl md:text-3xl font-black text-primary font-mono tracking-tight block">
             {overallScore}%
           </span>
-          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">
+          <span className="text-[10px] sm:text-[11px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">
             {overallScore >= 70 ? t('vitals.great', 'Looking Great 👍') : t('vitals.attention', 'Attention Needed ⚠️')}
           </span>
         </div>
       </div>
 
       {/* Main Grid: Concentric Rings + Metrics Legend */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 items-center">
         {/* Left: Concentric Activity Rings */}
-        <div className="md:col-span-5 flex justify-center items-center relative py-2">
-          <svg width={size} height={size} className="transform -rotate-90">
+        <div className="md:col-span-5 flex justify-center items-center relative py-1 sm:py-2">
+          <svg viewBox={`0 0 ${size} ${size}`} className="w-36 h-36 sm:w-44 sm:h-44 md:w-[220px] md:h-[220px] transform -rotate-90">
             {/* Background Tracks */}
             <circle
               cx={center}

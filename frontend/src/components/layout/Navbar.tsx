@@ -22,7 +22,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { t } = useI18n();
 
   return (
-    <header className="h-16 bg-panel/85 backdrop-blur-xl border-b border-primary/80 sticky top-0 z-30 lg:ml-20 ml-0 transition-all duration-300 flex items-center justify-between px-3 sm:px-6 gap-2 sm:gap-4 shadow-sm dark:shadow-none">
+    <header className="min-h-16 pt-[env(safe-area-inset-top,0px)] bg-panel/85 backdrop-blur-xl border-b border-primary/80 sticky top-0 z-30 lg:ml-20 ml-0 transition-all duration-300 flex items-center justify-between px-3 sm:px-6 gap-2 sm:gap-4 shadow-sm dark:shadow-none">
       {/* Left: Mobile Hamburger & Search Input */}
       <div className="flex items-center gap-2 sm:gap-3 flex-1 max-w-md">
         {/* Mobile Hamburger Toggle Button */}

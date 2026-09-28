@@ -60,7 +60,55 @@ export const Income: React.FC = () => {
     setShowModal(true);
   };
 
-  const totalMonthlyIncome = (incomes || []).reduce((acc, curr) => acc + curr.amount, 0);
+  const [selectedMonth, setSelectedMonth] = useState<string>('ALL');
+
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const currentMonthName = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const currentMonthShort = now.toLocaleString('default', { month: 'short' });
+
+  // 1. Overall lifetime income across all records
+  const overallIncome = (incomes || []).reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+
+  // 2. Current Month's Income
+  const currentMonthRecords = (incomes || []).filter((inc) => {
+    if (!inc.date) return false;
+    const d = new Date(inc.date);
+    return !isNaN(d.getTime()) && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+  const currentMonthIncome = currentMonthRecords.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+
+  // 3. Top primary income source
+  const sourceTotals = (incomes || []).reduce((acc: Record<string, number>, curr) => {
+    const s = curr.source || 'Salary';
+    acc[s] = (acc[s] || 0) + (Number(curr.amount) || 0);
+    return acc;
+  }, {});
+  const primarySource = Object.entries(sourceTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Salary';
+
+  // 4. Available months for filtering
+  const availableMonths = React.useMemo(() => {
+    const monthsMap = new Map<string, string>();
+    (incomes || []).forEach((inc) => {
+      if (!inc.date) return;
+      const d = new Date(inc.date);
+      if (isNaN(d.getTime())) return;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleString('default', { month: 'short', year: 'numeric' });
+      monthsMap.set(key, label);
+    });
+    return Array.from(monthsMap.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+  }, [incomes]);
+
+  const filteredIncomes = selectedMonth === 'ALL'
+    ? incomes
+    : incomes.filter((inc) => {
+        if (!inc.date) return false;
+        const d = new Date(inc.date);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        return key === selectedMonth;
+      });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -85,31 +133,57 @@ export const Income: React.FC = () => {
       </div>
 
       {/* Highlights Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="glass-panel p-5 border-emerald-500/30 bg-emerald-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-emerald-950/20 dark:to-slate-900 space-y-1 shadow-sm">
-          <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-            Total Monthly Income
-          </span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Overall Lifetime Income */}
+        <div className="glass-panel p-5 border-emerald-500/30 bg-emerald-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-emerald-950/20 dark:to-slate-900 space-y-1.5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+              Total Overall Income
+            </span>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              All-Time
+            </span>
+          </div>
           <p className="text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-primary font-mono">
-            +{format(totalMonthlyIncome)}
+            +{format(overallIncome)}
           </p>
-          <p className="text-[11px] text-muted">Recorded across {incomes.length} earnings streams</p>
+          <p className="text-[11px] text-muted">Across {incomes.length} earnings streams</p>
         </div>
 
-        <div className="glass-panel p-5 border-primary/80 space-y-1 shadow-sm">
+        {/* Current Month's Income */}
+        <div className="glass-panel p-5 border-teal-500/30 bg-teal-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-teal-950/20 dark:to-slate-900 space-y-1.5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider">
+              Monthly Income ({currentMonthShort})
+            </span>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
+              {currentMonthName}
+            </span>
+          </div>
+          <p className="text-2xl sm:text-3xl font-extrabold text-teal-700 dark:text-primary font-mono">
+            +{format(currentMonthIncome)}
+          </p>
+          <p className="text-[11px] text-muted">
+            {currentMonthRecords.length} {currentMonthRecords.length === 1 ? 'record' : 'records'} logged in {currentMonthShort}
+          </p>
+        </div>
+
+        {/* Primary Income Source */}
+        <div className="glass-panel p-5 border-primary/80 space-y-1.5 shadow-sm">
           <span className="text-xs font-bold text-muted uppercase tracking-wider">Primary Income Source</span>
-          <p className="text-2xl font-extrabold text-primary">
-            {incomes.length > 0 ? incomes[0].source : 'Salary'}
+          <p className="text-2xl font-extrabold text-primary truncate">
+            {primarySource}
           </p>
           <p className="text-[11px] text-muted">Main financial pillar</p>
         </div>
 
-        <div className="glass-panel p-5 border-primary/80 space-y-1 shadow-sm">
+        {/* Total Income Entries */}
+        <div className="glass-panel p-5 border-primary/80 space-y-1.5 shadow-sm">
           <span className="text-xs font-bold text-muted uppercase tracking-wider">Total Income Entries</span>
           <p className="text-2xl font-extrabold text-indigo-500 dark:text-indigo-400 font-mono">
             {incomes.length} Records
           </p>
-          <p className="text-[11px] text-muted">Active transactions this month</p>
+          <p className="text-[11px] text-muted">{currentMonthRecords.length} recorded this month</p>
         </div>
       </div>
 
@@ -126,11 +200,31 @@ export const Income: React.FC = () => {
         />
       ) : (
         <div className="glass-panel border-primary/80 overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-primary/80 font-bold text-sm text-primary flex items-center justify-between bg-secondary/30">
-            <span>Historical Income Transactions</span>
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-bold">
-              {incomes.length} Entries
-            </span>
+          <div className="p-4 border-b border-primary/80 font-bold text-sm text-primary flex flex-wrap items-center justify-between gap-3 bg-secondary/30">
+            <div className="flex items-center gap-2">
+              <span>Historical Income Transactions</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-bold">
+                {filteredIncomes.length} {filteredIncomes.length === 1 ? 'Entry' : 'Entries'}
+              </span>
+            </div>
+
+            {availableMonths.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Filter className="w-3.5 h-3.5 text-muted" />
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="text-xs bg-panel border border-primary/80 rounded-xl px-2.5 py-1.5 text-primary focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium cursor-pointer"
+                >
+                  <option value="ALL">All Months ({incomes.length})</option>
+                  {availableMonths.map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="overflow-x-auto">
@@ -145,7 +239,7 @@ export const Income: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 text-secondary font-medium">
-                {incomes.map((inc) => (
+                {filteredIncomes.map((inc) => (
                   <tr key={inc.id} className="hover:bg-secondary/40 transition-colors">
                     <td className="p-4 font-bold text-primary flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">

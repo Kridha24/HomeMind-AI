@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { App as CapApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { SplashScreen } from '@capacitor/splash-screen';
 import { Sidebar } from './components/layout/Sidebar';
 import { Navbar } from './components/layout/Navbar';
 import { MobileBottomDock } from './components/layout/MobileBottomDock';
@@ -83,6 +87,9 @@ function AppShell() {
   const [isApplianceModalOpen, setIsApplianceModalOpen] = useState(false);
   const [isMedicineModalOpen, setIsMedicineModalOpen] = useState(false);
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const { fetchSettings, theme, sidebarCollapsed } = useSettingStore();
   const { isAuthenticated } = useAuthStore();
 
@@ -107,6 +114,81 @@ function AppShell() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Android Native Back Navigation: dismiss modals/drawers first, then history back, then exit
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const backListenerPromise = CapApp.addListener('backButton', () => {
+      // 1. Close overlay drawers & command palette
+      if (isCommandPaletteOpen) {
+        setIsCommandPaletteOpen(false);
+        return;
+      }
+      if (isAIChatOpen) {
+        setIsAIChatOpen(false);
+        return;
+      }
+      if (isNotificationsOpen) {
+        setIsNotificationsOpen(false);
+        return;
+      }
+      if (isMobileSidebarOpen) {
+        setIsMobileSidebarOpen(false);
+        return;
+      }
+
+      // 2. Close quick action modals
+      if (isExpenseModalOpen) {
+        setIsExpenseModalOpen(false);
+        return;
+      }
+      if (isBillModalOpen) {
+        setIsBillModalOpen(false);
+        return;
+      }
+      if (isGroceryModalOpen) {
+        setIsGroceryModalOpen(false);
+        return;
+      }
+      if (isTaskModalOpen) {
+        setIsTaskModalOpen(false);
+        return;
+      }
+      if (isApplianceModalOpen) {
+        setIsApplianceModalOpen(false);
+        return;
+      }
+      if (isMedicineModalOpen) {
+        setIsMedicineModalOpen(false);
+        return;
+      }
+
+      // 3. React Router navigation
+      if (location.pathname !== '/' && location.pathname !== '/login') {
+        navigate(-1);
+      } else {
+        CapApp.exitApp();
+      }
+    });
+
+    return () => {
+      backListenerPromise.then((handle) => handle.remove()).catch(() => {});
+    };
+  }, [
+    isCommandPaletteOpen,
+    isAIChatOpen,
+    isNotificationsOpen,
+    isMobileSidebarOpen,
+    isExpenseModalOpen,
+    isBillModalOpen,
+    isGroceryModalOpen,
+    isTaskModalOpen,
+    isApplianceModalOpen,
+    isMedicineModalOpen,
+    location.pathname,
+    navigate,
+  ]);
 
   const themeClass =
     theme === 'glass'
@@ -210,10 +292,35 @@ function AppShell() {
   );
 }
 
+// ─── Native App Bridge (Status Bar, Splash Screen, Login Back Button) ────────
+function NativeAppBridge() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+    SplashScreen.hide().catch(() => {});
+
+    // On login screen, pressing Android back exits the app
+    if (location.pathname === '/login') {
+      const listenerPromise = CapApp.addListener('backButton', () => {
+        CapApp.exitApp();
+      });
+      return () => {
+        listenerPromise.then((handle) => handle.remove()).catch(() => {});
+      };
+    }
+  }, [location.pathname]);
+
+  return null;
+}
+
 // ─── Root ─────────────────────────────────────────────────────────────────────
 export function App() {
   return (
     <Router>
+      <NativeAppBridge />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route

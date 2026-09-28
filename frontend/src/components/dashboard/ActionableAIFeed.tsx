@@ -108,7 +108,7 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
         <span className="text-[11px] text-muted font-bold uppercase tracking-wider">Quick Actions</span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="flex overflow-x-auto no-scrollbar gap-3 snap-x snap-mandatory pb-1 -mx-1 px-1 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible">
         {activeCards.map((card) => {
           const badgeBg =
             card.impactColor === 'amber'
@@ -120,11 +120,11 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
           return (
             <div
               key={card.id}
-              className="p-5 rounded-3xl bg-panel border border-primary/80 flex flex-col justify-between space-y-4 hover:border-blue-500/60 transition-all shadow-sm hover:shadow-md group"
+              className="min-w-[260px] sm:min-w-[280px] md:min-w-0 snap-center p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-panel border border-primary/80 flex flex-col justify-between space-y-3 sm:space-y-4 hover:border-blue-500/60 transition-all shadow-sm hover:shadow-md group flex-shrink-0 md:flex-shrink"
             >
-              <div className="space-y-2">
+              <div className="space-y-1.5 sm:space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${badgeBg}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold border uppercase tracking-wider ${badgeBg}`}>
                     {card.impactBadge}
                   </span>
                   <button
@@ -135,19 +135,19 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
                     ✕
                   </button>
                 </div>
-                <h3 className="text-sm font-bold text-primary group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <h3 className="text-xs sm:text-sm font-bold text-primary group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                   {card.title}
                 </h3>
-                <p className="text-xs text-secondary leading-relaxed font-medium">{card.description}</p>
+                <p className="text-[11px] sm:text-xs text-secondary leading-relaxed font-medium line-clamp-2 sm:line-clamp-none">{card.description}</p>
               </div>
 
               <button
                 type="button"
                 onClick={card.onPrimaryAction}
-                className="w-full min-h-[42px] bg-secondary hover:bg-blue-600 hover:text-white border border-primary/80 text-primary font-bold py-2.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-xs"
+                className="w-full min-h-[36px] sm:min-h-[42px] bg-secondary hover:bg-blue-600 hover:text-white border border-primary/80 text-primary font-bold py-1.5 sm:py-2.5 px-3 sm:px-4 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs flex items-center justify-center gap-1.5 sm:gap-2 transition-all active:scale-[0.98] shadow-xs"
               >
                 <span>{card.primaryActionLabel}</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </div>
           );
