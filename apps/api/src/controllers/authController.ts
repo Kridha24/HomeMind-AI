@@ -13,6 +13,7 @@ import { generateCryptographicOTP, sendMobileSMS } from '../services/smsService'
 import { emailService } from '../services/emailService';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { normalizePhone, phoneLookupVariants } from '../utils/phone';
+import { checkOTPSendAbuse, checkOTPVerifyLockout } from '../infrastructure/rate-limit';
 
 /**
  * 1. Real Google OAuth Authentication Endpoint
@@ -386,6 +387,13 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
     if (!identifier) {
       return res.status(400).json({ error: 'Enter a valid 10-digit mobile number' });
     }
+
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
+    const abuseCheck = await checkOTPSendAbuse(ip, identifier);
+    if (!abuseCheck.allowed) {
+      return res.status(429).json({ error: abuseCheck.reason });
+    }
+
     const realOtp = generateCryptographicOTP();
     const otpHash = await bcrypt.hash(realOtp, 10);
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
@@ -456,6 +464,12 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
     if (!identifier) {
       return res.status(400).json({ error: 'Enter a valid 10-digit mobile number' });
     }
+
+    const lockoutCheck = await checkOTPVerifyLockout(identifier);
+    if (lockoutCheck.locked) {
+      return res.status(429).json({ error: lockoutCheck.reason });
+    }
+
     const otpRecord = await prisma.oTPVerification.findUnique({ where: { identifier } });
 
     if (!otpRecord) {
@@ -624,6 +638,12 @@ export const requestEmailOTP = async (req: AuthenticatedRequest, res: Response) 
     if (!email || !email.includes('@')) return res.status(400).json({ error: 'Valid email address is required' });
 
     const identifier = email.toLowerCase().trim();
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
+    const abuseCheck = await checkOTPSendAbuse(ip, identifier);
+    if (!abuseCheck.allowed) {
+      return res.status(429).json({ error: abuseCheck.reason });
+    }
+
     const realOtp = generateCryptographicOTP();
     const otpHash = await bcrypt.hash(realOtp, 10);
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
@@ -686,6 +706,11 @@ export const verifyEmailOTP = async (req: AuthenticatedRequest, res: Response) =
     }
 
     const identifier = email.toLowerCase().trim();
+    const lockoutCheck = await checkOTPVerifyLockout(identifier);
+    if (lockoutCheck.locked) {
+      return res.status(429).json({ error: lockoutCheck.reason });
+    }
+
     const otpRecord = await prisma.oTPVerification.findUnique({ where: { identifier } });
 
     if (!otpRecord) {
