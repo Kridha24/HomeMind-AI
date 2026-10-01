@@ -47,3 +47,32 @@ export const googleAuthSchema = z.object({
     path: ['idToken'],
   })
 });
+
+export const importSmsTransactionSchema = z.object({
+  body: z.object({
+    amount: z.number().positive('Amount must be greater than zero'),
+    currency: z.string().default('INR'),
+    type: z.enum(['DEBIT', 'CREDIT']),
+    merchant: z.string().max(120).optional().nullable(),
+    category: z.string().max(60).optional().nullable(),
+    paymentMethod: z.string().max(30).optional().nullable(),
+    accountLast4: z.string().max(12).optional().nullable(),
+    bankName: z.string().max(60).optional().nullable(),
+    reference: z.string().max(120).optional().nullable(),
+    occurredAt: z.union([z.string(), z.date()]),
+    sourceHash: z.string().optional().nullable(),
+    parserConfidence: z.number().min(0).max(1).optional().nullable(),
+    rawSender: z.string().max(60).optional().nullable(),
+    status: z.enum(['CONFIRMED', 'NEEDS_REVIEW', 'IGNORED']).optional(),
+  })
+});
+
+export const updateTransactionSchema = z.object({
+  body: z.object({
+    merchant: z.string().max(120).optional().nullable(),
+    category: z.string().max(60).optional().nullable(),
+    amount: z.number().positive('Amount must be greater than zero').optional(),
+    status: z.enum(['CONFIRMED', 'NEEDS_REVIEW', 'IGNORED']).optional(),
+  })
+});
+

@@ -23,3 +23,12 @@ export const otpLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many OTP requests. Please wait 15 minutes before requesting another code.' }
 });
+
+export const smsImportLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many SMS import requests. Please wait a few minutes.' }
+});
+

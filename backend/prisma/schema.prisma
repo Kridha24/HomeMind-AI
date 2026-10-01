@@ -24,6 +24,7 @@ model User {
   assignedTasks  Task[]         @relation("AssignedTasks")
   createdTasks   Task[]         @relation("CreatedTasks")
   expenses       Expense[]
+  transactions   Transaction[]
   aiMemories     AIMemory[]
   aiThreads      AIThread[]
   isVerified     Boolean        @default(true)
@@ -83,6 +84,7 @@ model Household {
   expenses              Expense[]
   expenseCategories     ExpenseCategory[]
   incomes               Income[]
+  transactions          Transaction[]
   budgets               Budget[]
   bills                 Bill[]
   billCategories        BillCategory[]
@@ -133,6 +135,7 @@ model Expense {
   date        DateTime
   isRecurring Boolean   @default(false)
   receiptUrl  String?
+  transaction Transaction?
   createdBy   String?
   updatedBy   String?
   softDelete  Boolean   @default(false)
@@ -150,11 +153,53 @@ model Income {
   amount      Float
   source      String
   date        DateTime
+  transaction Transaction?
   createdBy   String?
   updatedBy   String?
   softDelete  Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+model Transaction {
+  id               String       @id @default(uuid())
+  householdId      String
+  household        Household    @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  amount           Float
+  currency         String       @default("INR")
+  type             String       // DEBIT, CREDIT
+  merchant         String?
+  category         String?
+  paymentMethod    String?      // UPI, CARD, IMPS, NEFT, RTGS, ATM, BANK
+  accountLast4     String?
+  bankName         String?
+  reference        String?
+  source           String       @default("SMS") // SMS, MANUAL, IMPORTED
+  sourceHash       String?      @unique
+  parserConfidence Float?
+  status           String       @default("CONFIRMED") // CONFIRMED, NEEDS_REVIEW, IGNORED
+
+  // Linked Expense or Income
+  expenseId        String?      @unique
+  expense          Expense?     @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  incomeId         String?      @unique
+  income           Income?      @relation(fields: [incomeId], references: [id], onDelete: SetNull)
+
+  occurredAt       DateTime
+  rawSender        String?
+
+  softDelete       Boolean      @default(false)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([householdId, occurredAt])
+  @@index([userId])
+  @@index([reference])
+  @@index([sourceHash])
+  @@index([status])
 }
 
 model Budget {

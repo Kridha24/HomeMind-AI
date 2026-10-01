@@ -15,6 +15,7 @@ import * as reportController from '../controllers/reportController';
 import * as settingController from '../controllers/settingController';
 import * as incomeController from '../controllers/incomeController';
 import * as assistantController from '../controllers/assistantController';
+import transactionRoutes from './transactionRoutes';
 import { validate } from '../middleware/validator';
 import { googleAuthSchema } from '../utils/validators';
 import { authLimiter, otpLimiter } from '../middleware/rateLimiter';
@@ -60,6 +61,9 @@ router.get('/income', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), incom
 router.post('/income', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), incomeController.createIncome);
 router.put('/income/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), incomeController.updateIncome);
 router.delete('/income/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), incomeController.deleteIncome);
+
+// Automatic SMS / Bank Transaction Engine
+router.use('/transactions', transactionRoutes);
 
 // Expense Management
 router.get('/expenses', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), expenseController.getExpenses);

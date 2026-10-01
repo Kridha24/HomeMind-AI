@@ -26,6 +26,7 @@ import { VerifyPhoneModal } from '../components/common/VerifyPhoneModal';
 import { SUPPORTED_CURRENCIES, COUNTRY_DEFAULTS } from '../utils/currency';
 import { SUPPORTED_LANGUAGES, useI18n } from '../utils/i18n';
 import apiClient from '../services/apiClient';
+import { AutomaticSmsSettingsSection } from '../components/sms/AutomaticSmsSettingsSection';
 
 export const Settings: React.FC = () => {
   const { user } = useAuthStore();
@@ -194,6 +195,9 @@ export const Settings: React.FC = () => {
 
       {/* Grid Settings Sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Automatic UPI & Bank Transaction Tracking Section */}
+        <AutomaticSmsSettingsSection />
+
         {/* Section 1: Multi-Language & Country Configuration */}
         <div className="glass-panel p-6 space-y-4 border-primary/80 shadow-sm">
           <div className="flex items-center gap-3 border-b border-primary/60 pb-3">
