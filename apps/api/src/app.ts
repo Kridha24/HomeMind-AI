@@ -72,25 +72,40 @@ app.get('/health/live', (req: Request, res: Response) => {
   });
 });
 
-// 2. Readiness: Database connection is verified
+// 2. Readiness: Database and Redis dependencies are verified
 app.get('/health/ready', async (req: Request, res: Response) => {
+  let dbStatus = 'down';
+  let redisStatus = 'disabled';
+
   try {
     await prisma.$queryRaw`SELECT 1`;
-    res.json({
-      status: 'ready',
-      database: 'connected',
-      timestamp: new Date().toISOString(),
-      requestId: req.requestId,
-    });
-  } catch (err: any) {
-    res.status(503).json({
-      status: 'not_ready',
-      database: 'disconnected',
-      error: config.isProduction ? 'Database unavailable' : err.message,
-      requestId: req.requestId,
-    });
+    dbStatus = 'up';
+  } catch (err) {
+    dbStatus = 'down';
   }
+
+  try {
+    const { redis } = await import('./infrastructure/redis');
+    const health = await redis.getHealth();
+    redisStatus = health.status;
+  } catch (err) {
+    redisStatus = 'down';
+  }
+
+  const isReady = dbStatus === 'up'; // Redis outage operates in degraded mode, so db is primary
+  const statusCode = isReady ? 200 : 503;
+
+  res.status(statusCode).json({
+    status: isReady ? 'ready' : 'not_ready',
+    dependencies: {
+      database: dbStatus,
+      redis: redisStatus,
+    },
+    timestamp: new Date().toISOString(),
+    requestId: req.requestId,
+  });
 });
+
 
 // 3. Backward-compatible health check
 app.get('/health', (req: Request, res: Response) => {

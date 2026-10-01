@@ -239,6 +239,17 @@ const handleShutdown = async (signal: string) => {
       console.error('[API] Error closing Socket.IO:', err);
     }
 
+    // Disconnect Redis and BullMQ
+    try {
+      const { redis } = await import('./infrastructure/redis');
+      await redis.shutdown();
+      const { queueService } = await import('./infrastructure/queue/queueProducer');
+      await queueService.shutdown();
+      console.log('[API] Redis & Queue connections closed.');
+    } catch (err) {
+      console.error('[API] Error closing Redis/Queue:', err);
+    }
+
     // Disconnect Prisma
     try {
       const { prisma } = await import('./repositories/db');
@@ -250,6 +261,7 @@ const handleShutdown = async (signal: string) => {
 
     console.log('[API] Graceful shutdown completed. Exiting cleanly.');
     process.exit(0);
+
   });
 
   // Force shutdown after 10s if connections refuse to close
