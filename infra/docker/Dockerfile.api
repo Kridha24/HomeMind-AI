@@ -1,0 +1,45 @@
+# ==========================================
+# Production Multi-Stage Dockerfile for API
+# Non-root unprivileged execution & Health Check
+# ==========================================
+
+FROM node:20-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+FROM base AS builder
+WORKDIR /app
+RUN apk add --no-cache libc6-compat openssl
+
+# Copy workspace manifests
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json tsconfig.base.json .npmrc ./
+COPY packages ./packages
+COPY apps/api ./apps/api
+
+# Install dependencies and build
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter api build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+RUN apk add --no-cache openssl curl
+ENV NODE_ENV=production
+ENV PORT=5001
+
+# Run as non-root node user
+USER node
+
+# Copy built application and production dependencies
+COPY --chown=node:node --from=builder /app/apps/api/dist ./dist
+COPY --chown=node:node --from=builder /app/apps/api/node_modules ./node_modules
+COPY --chown=node:node --from=builder /app/apps/api/prisma ./prisma
+COPY --chown=node:node --from=builder /app/apps/api/package.json ./package.json
+
+EXPOSE 5001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:5001/health/live || exit 1
+
+CMD ["node", "dist/server.js"]

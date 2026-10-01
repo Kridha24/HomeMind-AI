@@ -1,0 +1,23 @@
+{
+  "name": "worker",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'worker lint ok'",
+    "test": "echo 'worker test ok'",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@homemind/shared": "workspace:*",
+    "@homemind/observability": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

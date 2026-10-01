@@ -1,0 +1,36 @@
+# ==========================================
+# Production Multi-Stage Dockerfile for Worker
+# Non-root unprivileged execution
+# ==========================================
+
+FROM node:20-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+FROM base AS builder
+WORKDIR /app
+RUN apk add --no-cache libc6-compat openssl
+
+# Copy workspace manifests
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json tsconfig.base.json .npmrc ./
+COPY packages ./packages
+COPY apps/worker ./apps/worker
+
+# Install dependencies and build
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter worker build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Run as non-root node user
+USER node
+
+COPY --chown=node:node --from=builder /app/apps/worker/dist ./dist
+COPY --chown=node:node --from=builder /app/apps/worker/node_modules ./node_modules
+COPY --chown=node:node --from=builder /app/apps/worker/package.json ./package.json
+
+CMD ["node", "dist/index.js"]

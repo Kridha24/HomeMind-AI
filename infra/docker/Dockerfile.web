@@ -1,0 +1,43 @@
+# ==========================================
+# Production Multi-Stage Dockerfile for Web
+# High-performance Nginx static serving
+# ==========================================
+
+FROM node:20-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+FROM base AS builder
+WORKDIR /app
+
+# Copy workspace manifests
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json tsconfig.base.json .npmrc ./
+COPY packages ./packages
+COPY apps/web ./apps/web
+
+# Install dependencies and build
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter web build
+
+FROM nginx:1.25-alpine AS runner
+
+# Copy built static SPA assets
+COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+
+# Nginx SPA fallback configuration
+RUN echo 'server { \
+    listen 80; \
+    location / { \
+        root /usr/share/nginx/html; \
+        index index.html; \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget -qO- http://localhost:80/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,16 @@
+{
+  "name": "homemind-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test"
+  },
+  "devDependencies": {
+    "turbo": "^2.1.0"
+  },
+  "packageManager": "pnpm@12.8.1"
+}
