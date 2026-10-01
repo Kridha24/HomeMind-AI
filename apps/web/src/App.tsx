@@ -204,10 +204,15 @@ function AppShell() {
           onOpenAIChat={() => setIsAIChatOpen(true)}
           onOpenNotifications={() => setIsNotificationsOpen(true)}
           onToggleMobileSidebar={() => setIsMobileSidebarOpen((p) => !p)}
+          onOpenSearch={() => setIsCommandPaletteOpen(true)}
         />
 
-        {/* Main content: offset for slim 80px sidebar on large screens, full-width on mobile */}
-        <main className="flex-1 p-3 sm:p-5 md:p-6 overflow-y-auto lg:ml-20 ml-0 transition-all duration-300 pb-24 lg:pb-8">
+        {/* Main content: offset for 72px default / 220px expanded sidebar on desktop */}
+        <main
+          className={`flex-1 p-3 sm:p-5 md:p-6 overflow-y-auto ${
+            sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[220px]'
+          } ml-0 transition-all duration-200 pb-24 lg:pb-8`}
+        >
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/income" element={<Income />} />
