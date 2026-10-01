@@ -217,6 +217,10 @@ export const emitHouseholdAlert = (householdId: string, alert: any) => {
   io.to(`household_${householdId}`).emit('new_notification', alert);
 };
 
+// Validate production secrets and environment hardening
+import { validateProductionSecrets } from './infrastructure/security';
+validateProductionSecrets();
+
 server.listen(config.port, () => {
   console.log(`🚀 HomeMind AI Backend running on port ${config.port} [${config.nodeEnv}]`);
 });
