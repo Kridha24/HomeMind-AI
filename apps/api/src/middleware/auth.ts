@@ -105,3 +105,37 @@ export const validateSession = async (
   }
   next();
 };
+
+/**
+ * P0 Tenant Security Helpers
+ */
+export function getAuthenticatedUser(req: AuthenticatedRequest) {
+  if (!req.user?.userId) {
+    throw new Error('Authentication required');
+  }
+  return req.user;
+}
+
+export function requireHouseholdMembership(req: AuthenticatedRequest): string {
+  const user = getAuthenticatedUser(req);
+  if (!user.householdId) {
+    throw new Error('User does not belong to any active household');
+  }
+  return user.householdId;
+}
+
+export function requireHouseholdRole(req: AuthenticatedRequest, allowedRoles: string[]): void {
+  const user = getAuthenticatedUser(req);
+  if (!allowedRoles.includes(user.role)) {
+    throw new Error(`Insufficient permissions. Required: ${allowedRoles.join(', ')}`);
+  }
+}
+
+export function assertResourceBelongsToHousehold(
+  resourceHouseholdId: string,
+  userHouseholdId: string
+): void {
+  if (resourceHouseholdId !== userHouseholdId) {
+    throw new Error('Access denied: resource belongs to a different household');
+  }
+}
