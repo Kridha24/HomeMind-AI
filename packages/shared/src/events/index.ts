@@ -38,6 +38,9 @@ export interface DomainEventEnvelope<T = any> {
   aggregateId: string;
   householdId?: string;
   version: number;
+  traceId?: string;
+  spanId?: string;
+  requestId?: string;
   data: T;
 }
 
@@ -49,6 +52,9 @@ export function createEventEnvelope<T>(params: {
   data: T;
   eventId?: string;
   version?: number;
+  traceId?: string;
+  spanId?: string;
+  requestId?: string;
 }): DomainEventEnvelope<T> {
   return {
     eventId: params.eventId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2)),
@@ -58,6 +64,10 @@ export function createEventEnvelope<T>(params: {
     aggregateId: params.aggregateId,
     householdId: params.householdId,
     version: params.version || 1,
+    traceId: params.traceId,
+    spanId: params.spanId,
+    requestId: params.requestId,
     data: params.data,
   };
 }
+

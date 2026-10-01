@@ -21,6 +21,18 @@ export class OutboxService {
     params: CreateOutboxEventParams<T>
   ) {
     const eventId = crypto.randomUUID();
+    let traceId: string | undefined;
+    let spanId: string | undefined;
+
+    try {
+      const { tracer } = await import('@homemind/observability');
+      const activeSpan = tracer.getActiveSpan();
+      if (activeSpan) {
+        traceId = activeSpan.context.traceId;
+        spanId = activeSpan.context.spanId;
+      }
+    } catch {}
+
     const envelope: DomainEventEnvelope<T> = createEventEnvelope({
       eventId,
       eventType: params.eventType,
@@ -28,6 +40,8 @@ export class OutboxService {
       aggregateId: params.aggregateId,
       householdId: params.householdId,
       version: params.version || 1,
+      traceId,
+      spanId,
       data: params.data,
     });
 

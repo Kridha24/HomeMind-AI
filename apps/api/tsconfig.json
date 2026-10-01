@@ -18,7 +18,7 @@
       "@homemind/validation": ["../../packages/validation/src"],
       "@homemind/config": ["../../packages/config/src"],
       "@homemind/database": ["../../packages/database/src"],
-      "@homemind/observability": ["../../packages/observability/src"]
+      "@homemind/observability": ["../../packages/observability/dist"]
     }
   },
   "include": ["src/**/*"],
