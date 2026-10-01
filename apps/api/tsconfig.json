@@ -9,7 +9,15 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@homemind/shared": ["../../packages/shared/src"],
+      "@homemind/validation": ["../../packages/validation/src"],
+      "@homemind/config": ["../../packages/config/src"],
+      "@homemind/database": ["../../packages/database/src"],
+      "@homemind/observability": ["../../packages/observability/src"]
+    }
   },
   "include": ["src/**/*"]
 }

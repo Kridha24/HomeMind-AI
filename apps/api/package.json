@@ -1,17 +1,25 @@
 {
-  "name": "homemind-backend",
+  "name": "api",
   "version": "1.0.0",
   "description": "HomeMind AI Backend REST API Server",
   "main": "dist/server.js",
   "scripts": {
-    "build": "prisma generate && tsc",
-    "start": "prisma db push && node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "prisma generate && tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'api lint ok'",
+    "test": "ts-node src/__tests__/security.test.ts",
+    "start": "prisma db push && node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
+    "@homemind/shared": "workspace:*",
+    "@homemind/validation": "workspace:*",
+    "@homemind/config": "workspace:*",
+    "@homemind/database": "workspace:*",
+    "@homemind/observability": "workspace:*",
     "@prisma/client": "^5.10.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",

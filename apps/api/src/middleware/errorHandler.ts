@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { AppError } from '../utils/errors';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -8,20 +9,37 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
-  // Always log full error details server-side.
-  console.error('[Unhandled Error]', {
-    message: err.message,
-    stack: err.stack,
-    path: req.path,
-    method: req.method,
-  });
+  const requestId = req.requestId || req.id || 'unknown';
 
-  const status = err.status || err.statusCode || 500;
+  const statusCode = err instanceof AppError
+    ? err.statusCode
+    : (err.status || err.statusCode || 500);
 
-  // Never leak raw error messages, stack traces, or internal DB details to clients in production.
-  const message = isProduction
+  const errorCode = err instanceof AppError
+    ? err.code
+    : (err.code || 'INTERNAL_SERVER_ERROR');
+
+  const message = isProduction && statusCode === 500
     ? 'An unexpected error occurred. Please try again.'
     : (err.message || 'Internal Server Error');
 
-  res.status(status).json({ error: message });
+  // Server-side structured log
+  console.error('[API Error]', {
+    requestId,
+    code: errorCode,
+    statusCode,
+    message: err.message,
+    path: req.path,
+    method: req.method,
+    stack: isProduction ? undefined : err.stack,
+  });
+
+  res.status(statusCode).json({
+    error: {
+      code: errorCode,
+      message,
+      requestId,
+      ...(err.details ? { details: err.details } : {}),
+    },
+  });
 };

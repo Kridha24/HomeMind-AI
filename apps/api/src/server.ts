@@ -220,3 +220,44 @@ export const emitHouseholdAlert = (householdId: string, alert: any) => {
 server.listen(config.port, () => {
   console.log(`🚀 HomeMind AI Backend running on port ${config.port} [${config.nodeEnv}]`);
 });
+
+// ==========================================
+// GRACEFUL SHUTDOWN (SIGTERM / SIGINT)
+// ==========================================
+const handleShutdown = async (signal: string) => {
+  console.log(`\n[API] Received ${signal}. Starting graceful shutdown...`);
+
+  // Close HTTP server to stop accepting new requests
+  server.close(async () => {
+    console.log('[API] HTTP server closed.');
+
+    // Disconnect Socket.IO clients
+    try {
+      io.close();
+      console.log('[API] Socket.IO server closed.');
+    } catch (err) {
+      console.error('[API] Error closing Socket.IO:', err);
+    }
+
+    // Disconnect Prisma
+    try {
+      const { prisma } = await import('./repositories/db');
+      await prisma.$disconnect();
+      console.log('[API] Database connection closed.');
+    } catch (err) {
+      console.error('[API] Error disconnecting Prisma:', err);
+    }
+
+    console.log('[API] Graceful shutdown completed. Exiting cleanly.');
+    process.exit(0);
+  });
+
+  // Force shutdown after 10s if connections refuse to close
+  setTimeout(() => {
+    console.error('[API] Graceful shutdown timed out. Forcing termination.');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+process.on('SIGINT', () => handleShutdown('SIGINT'));
