@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: homemind-prod
+  labels:
+    app.kubernetes.io/name: homemind
+    app.kubernetes.io/part-of: homemind-platform
+    environment: production

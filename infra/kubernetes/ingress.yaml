@@ -1,0 +1,36 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homemind-ingress
+  namespace: homemind-prod
+  labels:
+    app.kubernetes.io/name: homemind-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "15m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    # Block direct public access to /metrics from public internet
+    nginx.ingress.kubernetes.io/server-snippet: |
+      location = /metrics {
+        deny all;
+        return 403;
+      }
+spec:
+  tls:
+    - hosts:
+        - api.homemind.ai
+      secretName: homemind-api-tls
+  rules:
+    - host: api.homemind.ai
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homemind-api
+                port:
+                  number: 5001

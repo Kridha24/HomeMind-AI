@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homemind-config
+  namespace: homemind-prod
+  labels:
+    app.kubernetes.io/name: homemind
+    app.kubernetes.io/part-of: homemind-platform
+data:
+  NODE_ENV: "production"
+  PORT: "5001"
+  FRONTEND_URL: "https://homemind.ai"
+  METRICS_ENABLED: "true"
+  OUTBOX_POLL_INTERVAL_MS: "1000"
+  OUTBOX_BATCH_SIZE: "50"
+  OUTBOX_MAX_ATTEMPTS: "5"
+  AI_CONCURRENCY: "5"
+  NOTIFICATION_CONCURRENCY: "10"
+  FLAG_NEWSMSPARSER: "true"
+  FLAG_AICATEGORIES: "true"
+  FLAG_NEWDASHBOARD: "true"
+  FLAG_MAINTENANCEMODE: "false"

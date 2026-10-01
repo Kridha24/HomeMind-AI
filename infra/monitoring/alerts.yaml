@@ -1,0 +1,105 @@
+groups:
+  - name: homemind_slo_alerts
+    rules:
+      # ==========================================
+      # P1 - CRITICAL ALERTS (Page immediately)
+      # ==========================================
+      - alert: APIHighErrorRate
+        expr: |
+          (
+            sum(rate(http_errors_total{error_type="server_error"}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) * 100 > 2.0
+        for: 2m
+        labels:
+          severity: P1
+          service: homemind-api
+        annotations:
+          summary: "API 5xx error rate exceeded 2% (SLO breached)"
+          description: "Current error rate is {{ $value | printf \"%.2f\" }}% over the last 5 minutes."
+          runbook_url: "docs/operations/API_RUNBOOK.md#high-error-rate"
+
+      - alert: DatabaseUnavailable
+        expr: absent(up{job="postgresql"}) == 1
+        for: 1m
+        labels:
+          severity: P1
+          service: postgresql
+        annotations:
+          summary: "Primary PostgreSQL database is down"
+          description: "Database health probe has failed for over 1 minute."
+          runbook_url: "docs/operations/DATABASE_RUNBOOK.md#database-down"
+
+      - alert: OutboxOldestEventCriticallyDelayed
+        expr: outbox_oldest_event_age_seconds{service="homemind-worker"} > 300
+        for: 3m
+        labels:
+          severity: P1
+          service: homemind-worker
+        annotations:
+          summary: "Outbox dispatcher lag exceeded 5 minutes"
+          description: "Unpublished events are aging beyond 300 seconds. Outbox dispatcher or BullMQ may be stuck."
+          runbook_url: "docs/operations/QUEUE_RUNBOOK.md#outbox-lag"
+
+      # ==========================================
+      # P2 - HIGH ALERTS (Notify within 15 minutes)
+      # ==========================================
+      - alert: APIHighLatencyP95
+        expr: |
+          histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 0.5
+        for: 5m
+        labels:
+          severity: P2
+          service: homemind-api
+        annotations:
+          summary: "API p95 latency exceeded 500ms target"
+          description: "p95 response latency is {{ $value | printf \"%.3f\" }}s over 5 minutes."
+          runbook_url: "docs/operations/API_RUNBOOK.md#high-latency"
+
+      - alert: RedisServiceDegraded
+        expr: rate(redis_errors_total[5m]) > 5
+        for: 3m
+        labels:
+          severity: P2
+          service: redis
+        annotations:
+          summary: "Redis error rate elevated (operating in degraded fallback mode)"
+          description: "Redis command errors are occurring at {{ $value | printf \"%.1f\" }}/s."
+          runbook_url: "docs/operations/REDIS_RUNBOOK.md#connection-errors"
+
+      - alert: BullMQQueueBacklogGrowing
+        expr: bullmq_queue_depth{state="waiting"} > 500
+        for: 5m
+        labels:
+          severity: P2
+          service: homemind-worker
+        annotations:
+          summary: "BullMQ queue backlog exceeded 500 jobs"
+          description: "Queue depth has remained elevated for 5 minutes. Consider worker autoscaling."
+          runbook_url: "docs/operations/QUEUE_RUNBOOK.md#queue-backlog"
+
+      # ==========================================
+      # P3 - MEDIUM / WARNING ALERTS (Triage in work hours)
+      # ==========================================
+      - alert: OTPAbuseDetected
+        expr: sum(rate(http_errors_total{route=~".*otp.*"}[10m])) > 10
+        for: 5m
+        labels:
+          severity: P3
+          service: homemind-api
+        annotations:
+          summary: "Elevated rate of 429/400 responses on OTP endpoints"
+          description: "Possible automated brute-force or SMS flooding attempt detected."
+          runbook_url: "docs/operations/SECURITY_INCIDENT.md#otp-flooding"
+
+      - alert: AICircuitBreakerTripped
+        expr: rate(ai_jobs_failed_total[5m]) > 2
+        for: 5m
+        labels:
+          severity: P3
+          service: homemind-worker
+        annotations:
+          summary: "AI categorization failure spike or circuit breaker open"
+          description: "External AI provider calls are failing or tripping the circuit breaker."
+          runbook_url: "docs/operations/OBSERVABILITY_RUNBOOK.md#ai-failures"
