@@ -1,361 +1,281 @@
 import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
-  Wallet,
   CreditCard,
+  Wallet,
   FileText,
   ShoppingBag,
-  Camera,
-  Tv,
-  Pill,
   CheckSquare,
   Users,
+  BookOpen,
+  Pill,
+  Tv,
   Leaf,
   BarChart3,
+  Camera,
   FileSpreadsheet,
   Settings as SettingsIcon,
   User,
   Sparkles,
-  BookOpen,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { useI18n } from '../../utils/i18n';
+import { useSettingStore } from '../../stores/useSettingStore';
+import { SidebarItem } from './SidebarItem';
+import { SidebarTooltip } from './SidebarTooltip';
 
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-interface NavItemDef {
-  key: string;
+interface NavItem {
   name: string;
-  shortName: string;
   path: string;
   icon: React.ElementType;
-  gradient: string;
-  shadowColor: string;
-  tag?: string;
-  tagColor?: string;
+  accent: 'blue' | 'emerald' | 'amber' | 'purple' | 'cyan' | 'neutral';
+  badge?: string;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   const { household } = useAuthStore();
+  const { sidebarCollapsed, toggleSidebar } = useSettingStore();
   const location = useLocation();
-  const { t } = useI18n();
 
-  // Floating Hover State (Guaranteed zero clipping)
   const [hoveredItem, setHoveredItem] = useState<{
     name: string;
-    tag?: string;
+    badge?: string;
     top: number;
   } | null>(null);
 
-  const primaryNavItems: NavItemDef[] = [
-    {
-      key: 'nav.dashboard',
-      name: t('nav.dashboard', 'Dashboard'),
-      shortName: 'Dashboard',
-      path: '/',
-      icon: LayoutDashboard,
-      gradient: 'from-blue-500 via-indigo-500 to-blue-600',
-      shadowColor: 'shadow-blue-500/35',
-    },
-    {
-      key: 'nav.expenses',
-      name: t('nav.expenses', 'Expenses & Ledger'),
-      shortName: 'Expenses',
-      path: '/expenses',
-      icon: CreditCard,
-      gradient: 'from-emerald-400 via-teal-500 to-emerald-600',
-      shadowColor: 'shadow-emerald-500/35',
-    },
-    {
-      key: 'nav.bills',
-      name: t('nav.bills', 'Bills & Utilities'),
-      shortName: 'Bills',
-      path: '/bills',
-      icon: FileText,
-      gradient: 'from-amber-400 via-orange-500 to-amber-600',
-      shadowColor: 'shadow-amber-500/35',
-    },
-    {
-      key: 'nav.inventory',
-      name: t('nav.inventory', 'Grocery Inventory'),
-      shortName: 'Inventory',
-      path: '/inventory',
-      icon: ShoppingBag,
-      gradient: 'from-rose-400 via-pink-500 to-rose-600',
-      shadowColor: 'shadow-rose-500/35',
-    },
-    {
-      key: 'nav.tasks',
-      name: t('nav.tasks', 'Household Tasks'),
-      shortName: 'Tasks',
-      path: '/tasks',
-      icon: CheckSquare,
-      gradient: 'from-purple-400 via-violet-500 to-purple-600',
-      shadowColor: 'shadow-purple-500/35',
-    },
-    {
-      key: 'nav.family',
-      name: t('nav.family', 'Family Workspace'),
-      shortName: 'Family',
-      path: '/family',
-      icon: Users,
-      gradient: 'from-cyan-400 via-sky-500 to-blue-600',
-      shadowColor: 'shadow-cyan-500/35',
-    },
+  // Grouped Navigation Items (Using only existing routes)
+  const coreItems: NavItem[] = [
+    { name: 'Dashboard', path: '/', icon: LayoutDashboard, accent: 'blue' },
+    { name: 'Expenses', path: '/expenses', icon: CreditCard, accent: 'emerald' },
+    { name: 'Income', path: '/income', icon: Wallet, accent: 'emerald' },
+    { name: 'Bills', path: '/bills', icon: FileText, accent: 'amber' },
+    { name: 'Groceries', path: '/inventory', icon: ShoppingBag, accent: 'emerald' },
+    { name: 'Tasks', path: '/tasks', icon: CheckSquare, accent: 'purple' },
   ];
 
-  const moreNavItems: NavItemDef[] = [
-    {
-      key: 'nav.income',
-      name: t('nav.income', 'Income & Earnings'),
-      shortName: 'Income',
-      path: '/income',
-      icon: Wallet,
-      gradient: 'from-green-400 via-emerald-500 to-teal-600',
-      shadowColor: 'shadow-green-500/35',
-    },
-    {
-      key: 'nav.pantryVision',
-      name: t('nav.pantryVision', 'Pantry Vision OCR'),
-      shortName: 'Vision OCR',
-      path: '/pantry-vision',
-      icon: Camera,
-      gradient: 'from-fuchsia-400 via-pink-500 to-purple-600',
-      shadowColor: 'shadow-fuchsia-500/35',
-      tag: 'AI',
-      tagColor: 'bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-300 border-fuchsia-500/30',
-    },
-    {
-      key: 'nav.appliances',
-      name: t('nav.appliances', 'Home Appliances'),
-      shortName: 'Appliances',
-      path: '/appliances',
-      icon: Tv,
-      gradient: 'from-sky-400 via-indigo-500 to-blue-600',
-      shadowColor: 'shadow-sky-500/35',
-    },
-    {
-      key: 'nav.medicines',
-      name: t('nav.medicines', 'Medicine Tracker'),
-      shortName: 'Medicines',
-      path: '/medicines',
-      icon: Pill,
-      gradient: 'from-red-400 via-rose-500 to-red-600',
-      shadowColor: 'shadow-red-500/35',
-    },
-    {
-      key: 'nav.sustainability',
-      name: t('nav.sustainability', 'Sustainability & Eco'),
-      shortName: 'Eco Score',
-      path: '/sustainability',
-      icon: Leaf,
-      gradient: 'from-lime-400 via-emerald-500 to-green-600',
-      shadowColor: 'shadow-lime-500/35',
-      tag: 'ECO',
-      tagColor: 'bg-lime-500/15 text-lime-600 dark:text-lime-300 border-lime-500/30',
-    },
-    {
-      key: 'nav.analytics',
-      name: t('nav.analytics', 'Analytics & Trends'),
-      shortName: 'Analytics',
-      path: '/analytics',
-      icon: BarChart3,
-      gradient: 'from-violet-400 via-purple-500 to-indigo-600',
-      shadowColor: 'shadow-violet-500/35',
-    },
-    {
-      key: 'nav.reports',
-      name: t('nav.reports', 'Financial Reports'),
-      shortName: 'Reports',
-      path: '/reports',
-      icon: FileSpreadsheet,
-      gradient: 'from-blue-500 via-slate-600 to-slate-700',
-      shadowColor: 'shadow-blue-500/35',
-    },
-    {
-      key: 'nav.manual',
-      name: t('nav.manual', 'User Manual'),
-      shortName: 'Manual',
-      path: '/manual',
-      icon: BookOpen,
-      gradient: 'from-amber-400 via-yellow-500 to-orange-500',
-      shadowColor: 'shadow-amber-500/35',
-    },
-    {
-      key: 'nav.profile',
-      name: t('nav.profile', 'Your Profile'),
-      shortName: 'Profile',
-      path: '/profile',
-      icon: User,
-      gradient: 'from-indigo-400 via-blue-500 to-indigo-600',
-      shadowColor: 'shadow-indigo-500/35',
-    },
-    {
-      key: 'nav.settings',
-      name: t('nav.settings', 'App Settings'),
-      shortName: 'Settings',
-      path: '/settings',
-      icon: SettingsIcon,
-      gradient: 'from-slate-400 via-zinc-500 to-slate-700',
-      shadowColor: 'shadow-slate-500/35',
-    },
+  const householdItems: NavItem[] = [
+    { name: 'Family Workspace', path: '/family', icon: Users, accent: 'cyan' },
+    { name: 'User Manual', path: '/manual', icon: BookOpen, accent: 'amber' },
+    { name: 'Medicines', path: '/medicines', icon: Pill, accent: 'purple' },
+    { name: 'Appliances', path: '/appliances', icon: Tv, accent: 'cyan' },
+    { name: 'Sustainability', path: '/sustainability', icon: Leaf, accent: 'emerald', badge: 'ECO' },
   ];
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLElement>, item: NavItemDef) => {
+  const insightItems: NavItem[] = [
+    { name: 'Analytics', path: '/analytics', icon: BarChart3, accent: 'blue' },
+    { name: 'Vision OCR', path: '/pantry-vision', icon: Camera, accent: 'purple', badge: 'AI' },
+    { name: 'Reports', path: '/reports', icon: FileSpreadsheet, accent: 'neutral' },
+    { name: 'Settings', path: '/settings', icon: SettingsIcon, accent: 'neutral' },
+    { name: 'Profile', path: '/profile', icon: User, accent: 'blue' },
+  ];
+
+  const handleHover = (e: React.MouseEvent<HTMLElement>, item: NavItem) => {
+    if (!sidebarCollapsed) return; // Only show floating tooltip when collapsed
     const rect = e.currentTarget.getBoundingClientRect();
     setHoveredItem({
       name: item.name,
-      tag: item.tag,
+      badge: item.badge,
       top: rect.top + rect.height / 2,
     });
   };
 
-  const handleMouseLeave = () => {
+  const handleLeave = () => {
     setHoveredItem(null);
   };
 
-  const renderNavItem = (item: NavItemDef) => {
-    const Icon = item.icon;
-    const isActive = location.pathname === item.path;
-
-    return (
-      <NavLink
-        key={item.path}
-        to={item.path}
-        aria-label={item.name}
-        onClick={() => {
-          setHoveredItem(null);
-          if (onClose) onClose();
-        }}
-        onMouseEnter={(e) => handleMouseEnter(e, item)}
-        onMouseLeave={handleMouseLeave}
-        className="group relative flex items-center justify-center p-1 rounded-2xl transition-all duration-150"
-      >
-        <div
-          className={`relative flex items-center justify-center transition-all duration-200 ${
-            isActive ? 'scale-105' : 'hover:scale-105 active:scale-95'
-          }`}
-        >
-          {/* 3D Elevated Vibrant Icon Badge */}
-          <div
-            className={`w-11 h-11 rounded-2xl bg-gradient-to-tr ${item.gradient} text-white flex items-center justify-center shadow-md ${
-              item.shadowColor
-            } border ${
-              isActive
-                ? 'border-white ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900 shadow-blue-500/50'
-                : 'border-white/25 hover:border-white/60'
-            } transform transition-all duration-200`}
-          >
-            <Icon className="w-5 h-5 drop-shadow-sm" />
-          </div>
-
-          {/* Active Glowing Indicator Pill on Left */}
-          {isActive && (
-            <div className="absolute -left-3 w-1.5 h-6 rounded-r-full bg-blue-600 dark:bg-blue-400 shadow-[0_0_10px_#3b82f6]" />
-          )}
-        </div>
-      </NavLink>
-    );
-  };
+  const isCollapsed = sidebarCollapsed;
+  const widthClass = isCollapsed ? 'w-[72px]' : 'w-[220px]';
 
   return (
     <>
-      {/* Mobile/Tablet Backdrop Overlay */}
+      {/* Mobile Backdrop */}
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 lg:hidden animate-in fade-in duration-150"
         />
       )}
 
-      {/* Slim 3D Icon Dock (80px width) */}
+      {/* Main Sidebar Aside */}
       <aside
-        className={`w-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200/80 dark:border-slate-800 h-screen fixed left-0 top-0 z-50 flex flex-col justify-between py-3 px-1 transition-transform duration-300 ease-in-out shadow-sm dark:shadow-none ${
+        className={`${widthClass} bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200/80 dark:border-slate-800 h-screen fixed left-0 top-0 z-50 flex flex-col justify-between py-3 px-1 transition-all duration-200 ease-out shadow-xs dark:shadow-none ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
+        aria-label="Household Operating System Navigation"
       >
-        {/* Top Header Logo */}
-        <div className="flex flex-col items-center justify-center pb-2 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
-          <div
-            onMouseEnter={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              setHoveredItem({
-                name: 'HomeMind AI OS',
-                tag: 'PRO',
-                top: rect.top + rect.height / 2,
-              });
-            }}
-            onMouseLeave={handleMouseLeave}
-            className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/35 border border-white/20 transform hover:scale-105 active:scale-95 transition-transform cursor-pointer"
-          >
-            <Sparkles className="w-5 h-5 drop-shadow-md animate-pulse" />
+        {/* Top: Brand Logo + Mobile Close */}
+        <div className="flex items-center justify-between px-2 pb-2.5 border-b border-slate-100 dark:border-slate-800/80 flex-shrink-0">
+          <div className="flex items-center gap-2.5 overflow-hidden">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/25 flex-shrink-0">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            {!isCollapsed && (
+              <div className="min-w-0">
+                <span className="font-black text-sm text-slate-900 dark:text-white block leading-none tracking-tight">
+                  HomeMind
+                </span>
+                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block mt-0.5">
+                  AI OS
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Mobile Close Button */}
           {onClose && (
             <button
               onClick={onClose}
-              aria-label="Close menu"
-              className="lg:hidden mt-2 p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+              aria-label="Close navigation"
+              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800"
             >
               <X className="w-4 h-4" />
             </button>
           )}
         </div>
 
-        {/* Scrollable 3D Icon Dock */}
-        <nav className="flex-1 overflow-y-auto pr-0.5 scrollbar-thin my-2 space-y-2" aria-label="Sidebar Navigation">
-          {/* Core Modules */}
-          <div className="space-y-1.5">{primaryNavItems.map(renderNavItem)}</div>
+        {/* Scrollable Navigation Groups */}
+        <nav
+          className="flex-1 overflow-y-auto no-scrollbar py-2 space-y-3"
+          aria-label="Navigation Sections"
+        >
+          {/* Section 1: CORE */}
+          <div className="space-y-0.5">
+            {!isCollapsed && (
+              <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block pb-1">
+                Core
+              </span>
+            )}
+            {coreItems.map((item) => (
+              <SidebarItem
+                key={item.path}
+                icon={item.icon}
+                label={item.name}
+                href={item.path}
+                active={location.pathname === item.path}
+                accent={item.accent}
+                badge={item.badge}
+                isCollapsed={isCollapsed}
+                onHover={(e) => handleHover(e, item)}
+                onLeave={handleLeave}
+                onClick={() => {
+                  setHoveredItem(null);
+                  if (onClose) onClose();
+                }}
+              />
+            ))}
+          </div>
 
-          {/* Advanced Utilities */}
-          <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-            {moreNavItems.map(renderNavItem)}
+          {/* Section 2: HOUSEHOLD */}
+          <div className="space-y-0.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+            {!isCollapsed && (
+              <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block pb-1">
+                Household
+              </span>
+            )}
+            {householdItems.map((item) => (
+              <SidebarItem
+                key={item.path}
+                icon={item.icon}
+                label={item.name}
+                href={item.path}
+                active={location.pathname === item.path}
+                accent={item.accent}
+                badge={item.badge}
+                isCollapsed={isCollapsed}
+                onHover={(e) => handleHover(e, item)}
+                onLeave={handleLeave}
+                onClick={() => {
+                  setHoveredItem(null);
+                  if (onClose) onClose();
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Section 3: INSIGHTS & UTILITIES */}
+          <div className="space-y-0.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+            {!isCollapsed && (
+              <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block pb-1">
+                Insights
+              </span>
+            )}
+            {insightItems.map((item) => (
+              <SidebarItem
+                key={item.path}
+                icon={item.icon}
+                label={item.name}
+                href={item.path}
+                active={location.pathname === item.path}
+                accent={item.accent}
+                badge={item.badge}
+                isCollapsed={isCollapsed}
+                onHover={(e) => handleHover(e, item)}
+                onLeave={handleLeave}
+                onClick={() => {
+                  setHoveredItem(null);
+                  if (onClose) onClose();
+                }}
+              />
+            ))}
           </div>
         </nav>
 
-        {/* Bottom Household Status */}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center flex-shrink-0">
-          <div
-            onMouseEnter={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              setHoveredItem({
-                name: household?.name || t('dash.household', 'Home Residence'),
-                tag: 'ACTIVE',
-                top: rect.top + rect.height / 2,
-              });
-            }}
-            onMouseLeave={handleMouseLeave}
-            className="w-11 h-11 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 shadow-xs relative cursor-pointer hover:border-blue-500/50 transition-colors"
+        {/* Bottom: Desktop Expand Toggle & Dynamic Household Avatar Status */}
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-col items-center gap-1.5 flex-shrink-0">
+          {/* Toggle Expand / Collapse */}
+          <button
+            onClick={toggleSidebar}
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="hidden lg:flex items-center justify-center w-full py-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
           >
-            <span className="font-extrabold text-sm text-blue-600 dark:text-blue-400">
+            {isCollapsed ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <div className="flex items-center gap-1 text-[10px] font-semibold">
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span>Collapse</span>
+              </div>
+            )}
+          </button>
+
+          {/* Household Status Pill */}
+          <div
+            className={`flex items-center ${
+              isCollapsed ? 'justify-center w-10 h-10' : 'w-full px-2 py-1.5'
+            } rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 relative hover:border-blue-500/40 transition-colors`}
+          >
+            <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs flex-shrink-0">
               {household?.name?.charAt(0) || 'H'}
-            </span>
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] absolute -top-0.5 -right-0.5 animate-pulse" />
+            </div>
+            {!isCollapsed && (
+              <div className="ml-2 min-w-0 flex-1">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
+                  {household?.name || 'Home Residence'}
+                </span>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">
+                  Active Household
+                </span>
+              </div>
+            )}
+            <span className="w-2 h-2 rounded-full bg-emerald-500 absolute top-1 right-1 shadow-[0_0_6px_#10b981]" />
           </div>
         </div>
       </aside>
 
-      {/* Floating Hover Tooltip (Fixed coordinate portal - 100% unclipped) */}
+      {/* Floating Hover Tooltip (When Collapsed) */}
       {hoveredItem && (
-        <div
-          style={{ top: `${hoveredItem.top}px` }}
-          className="fixed left-[86px] -translate-y-1/2 flex items-center gap-2 px-3.5 py-2 bg-slate-900/95 dark:bg-slate-900/95 text-white text-xs font-bold rounded-xl shadow-2xl border border-slate-700/80 backdrop-blur-xl z-[99999] pointer-events-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-100"
-        >
-          <span>{hoveredItem.name}</span>
-          {hoveredItem.tag && (
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-blue-500/30 text-blue-300 border border-blue-400/30 uppercase">
-              {hoveredItem.tag}
-            </span>
-          )}
-          {/* Arrow pointer towards icon */}
-          <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-slate-900 border-l border-b border-slate-700/80 transform rotate-45" />
-        </div>
+        <SidebarTooltip
+          label={hoveredItem.name}
+          badge={hoveredItem.badge}
+          top={hoveredItem.top}
+        />
       )}
     </>
   );
