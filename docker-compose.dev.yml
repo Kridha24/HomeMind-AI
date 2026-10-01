@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: homemind_dev_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-homemind}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-homemind_dev_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-homemind_dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - homemind-net
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: homemind_dev_api
+    ports:
+      - "5001:5001"
+    environment:
+      NODE_ENV: development
+      PORT: 5001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-homemind}:${POSTGRES_PASSWORD:-homemind_dev_secret}@postgres:5432/${POSTGRES_DB:-homemind_dev}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_must_be_at_least_16_chars}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev_refresh_jwt_secret_at_least_16_chars}
+      FRONTEND_URL: http://localhost:3000
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - homemind-net
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.web
+    container_name: homemind_dev_web
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - homemind-net
+
+  worker:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.worker
+    container_name: homemind_dev_worker
+    environment:
+      NODE_ENV: development
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - homemind-net
+
+networks:
+  homemind-net:
+    driver: bridge
+
+volumes:
+  pgdata_dev:
