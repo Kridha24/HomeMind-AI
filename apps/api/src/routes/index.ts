@@ -18,22 +18,26 @@ import * as settingController from '../controllers/settingController';
 import * as assistantController from '../controllers/assistantController';
 import { validate } from '../middleware/validator';
 import { googleAuthSchema } from '../utils/validators';
-import { authLimiter, otpLimiter } from '../middleware/rateLimiter';
-
+import {
+  loginDistributedLimiter,
+  googleAuthDistributedLimiter,
+  sensitiveEndpointLimiter,
+} from '../infrastructure/rate-limit';
+import { storageRoutes } from '../infrastructure/storage';
 
 const router = Router();
 
 // ==========================================
 // PUBLIC AUTHENTICATION ENDPOINTS
-// Auth endpoints are rate-limited (30 req/15 min).
-// OTP request endpoints are additionally limited (10 req/15 min).
+// Protected by Redis-backed Distributed Rate Limiters
+// and multi-layered OTP abuse mitigation
 // ==========================================
 
-router.post('/auth/google', authLimiter, validate(googleAuthSchema), authController.googleLogin);
-router.post('/auth/phone/request-otp', otpLimiter, authController.requestPhoneOTP);
-router.post('/auth/phone/verify-otp', authLimiter, authController.verifyPhoneOTP);
-router.post('/auth/email/request-otp', otpLimiter, authController.requestEmailOTP);
-router.post('/auth/email/verify-otp', authLimiter, authController.verifyEmailOTP);
+router.post('/auth/google', googleAuthDistributedLimiter, validate(googleAuthSchema), authController.googleLogin);
+router.post('/auth/phone/request-otp', sensitiveEndpointLimiter, authController.requestPhoneOTP);
+router.post('/auth/phone/verify-otp', loginDistributedLimiter, authController.verifyPhoneOTP);
+router.post('/auth/email/request-otp', sensitiveEndpointLimiter, authController.requestEmailOTP);
+router.post('/auth/email/verify-otp', loginDistributedLimiter, authController.verifyEmailOTP);
 router.post('/auth/refresh', authController.refresh);
 router.post('/auth/logout', authController.logout);
 
@@ -128,5 +132,8 @@ router.use('/notifications', notificationRoutes);
 router.get('/reports/monthly', reportController.exportMonthlyReport);
 router.get('/reports/monthly/pdf', reportController.exportMonthlyReport);
 router.get('/analytics/summary', reportController.getAnalyticsSummary);
+
+// Signed Object Storage (Receipts, Avatars, Documents)
+router.use('/storage', storageRoutes);
 
 export default router;
