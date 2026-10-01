@@ -37,11 +37,16 @@ const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach JWT access token to every request
+// Attach JWT access token and X-Request-ID to every request
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  if (!config.headers['X-Request-ID']) {
+    config.headers['X-Request-ID'] = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `req_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   }
   return config;
 });
