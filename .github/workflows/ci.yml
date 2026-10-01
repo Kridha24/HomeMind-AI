@@ -1,0 +1,43 @@
+name: Monorepo CI Pipeline
+
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [master, main]
+
+jobs:
+  validate:
+    name: Lint, Typecheck, Test & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.8.1
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Typecheck
+        run: pnpm typecheck
+
+      - name: Run Lint
+        run: pnpm lint
+
+      - name: Run Security & Unit Tests
+        run: pnpm test
+
+      - name: Run Production Build
+        run: pnpm build

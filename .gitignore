@@ -22,6 +22,7 @@ apps/api/prisma/*.db-journal
 .env
 .env.*
 *.env
+!.env.example
 apps/*/.env
 apps/*/.env.*
 packages/*/.env
