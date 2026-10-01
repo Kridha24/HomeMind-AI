@@ -7,6 +7,8 @@ allowBuilds:
   '@prisma/client': true
   '@prisma/engines': true
   esbuild: true
+  msgpackr-extract: false
   prisma: true
   protobufjs: true
   tesseract.js: true
+

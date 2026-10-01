@@ -12,6 +12,27 @@ services:
       - "5432:5432"
     volumes:
       - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-homemind} -d ${POSTGRES_DB:-homemind_dev}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - homemind-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: homemind_dev_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata_dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     restart: unless-stopped
     networks:
       - homemind-net
@@ -27,11 +48,16 @@ services:
       NODE_ENV: development
       PORT: 5001
       DATABASE_URL: postgresql://${POSTGRES_USER:-homemind}:${POSTGRES_PASSWORD:-homemind_dev_secret}@postgres:5432/${POSTGRES_DB:-homemind_dev}?schema=public
+      REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_must_be_at_least_16_chars}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev_refresh_jwt_secret_at_least_16_chars}
       FRONTEND_URL: http://localhost:3000
+      DASHBOARD_CACHE_TTL_SECONDS: 60
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - homemind-net
@@ -56,8 +82,20 @@ services:
     container_name: homemind_dev_worker
     environment:
       NODE_ENV: development
+      DATABASE_URL: postgresql://${POSTGRES_USER:-homemind}:${POSTGRES_PASSWORD:-homemind_dev_secret}@postgres:5432/${POSTGRES_DB:-homemind_dev}?schema=public
+      REDIS_URL: redis://redis:6379
+      WORKER_CONCURRENCY: 5
+      TRANSACTION_WORKER_CONCURRENCY: 5
+      NOTIFICATION_WORKER_CONCURRENCY: 10
+      AI_WORKER_CONCURRENCY: 2
+      ANALYTICS_WORKER_CONCURRENCY: 3
+      OUTBOX_BATCH_SIZE: 50
+      OUTBOX_POLL_INTERVAL_MS: 3000
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - homemind-net
@@ -68,3 +106,4 @@ networks:
 
 volumes:
   pgdata_dev:
+  redisdata_dev:
