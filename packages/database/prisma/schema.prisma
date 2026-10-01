@@ -579,3 +579,39 @@ model AuditLog {
   performedBy String
   createdAt   DateTime  @default(now())
 }
+
+model OutboxEvent {
+  id            String    @id @default(uuid())
+  eventId       String    @unique
+  eventType     String    // e.g. finance.expense.created.v1, finance.transaction.created.v1
+  aggregateType String    // e.g. Expense, Transaction, Bill, Income
+  aggregateId   String
+  householdId   String?
+  payload       String    // JSON-serialized domain event envelope
+  createdAt     DateTime  @default(now())
+  publishedAt   DateTime?
+  attempts      Int       @default(0)
+  lastError     String?
+  nextAttemptAt DateTime?
+
+  @@index([publishedAt, nextAttemptAt, createdAt])
+  @@index([householdId])
+  @@index([aggregateType, aggregateId])
+}
+
+model IdempotencyRecord {
+  id           String    @id @default(uuid())
+  householdId  String
+  key          String
+  requestHash  String
+  status       String    @default("PENDING") // PENDING, COMPLETED, FAILED
+  responseCode Int?
+  responseBody String?
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime
+
+  @@unique([householdId, key])
+  @@index([expiresAt])
+  @@index([householdId])
+}
+
