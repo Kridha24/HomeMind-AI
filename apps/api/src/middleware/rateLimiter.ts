@@ -29,6 +29,10 @@ export const smsImportLimiter = rateLimit({
   max: 120,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req: any) => {
+    return req.user?.householdId ? `household:${req.user.householdId}` : (req.ip || 'unknown-ip');
+  },
   message: { error: 'Too many SMS import requests. Please wait a few minutes.' }
 });
+
 

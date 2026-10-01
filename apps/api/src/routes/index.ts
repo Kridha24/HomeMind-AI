@@ -1,24 +1,25 @@
 import { Router } from 'express';
 import { authenticate, attachHousehold, validateSession, authorize } from '../middleware/auth';
 import * as authController from '../controllers/authController';
-import * as dashboardController from '../controllers/dashboardController';
-import * as expenseController from '../controllers/expenseController';
-import * as billController from '../controllers/billController';
+import { dashboardRoutes } from '../modules/dashboard';
+import { expenseRoutes } from '../modules/finance/expenses';
+import { incomeRoutes } from '../modules/finance/income';
+import { billRoutes } from '../modules/bills';
+import { notificationRoutes } from '../modules/notifications';
+import { transactionRoutes } from '../modules/finance/transactions';
 import * as inventoryController from '../controllers/inventoryController';
 import * as applianceController from '../controllers/applianceController';
 import * as medicineController from '../controllers/medicineController';
 import * as taskController from '../controllers/taskController';
 import * as familyController from '../controllers/familyController';
 import * as aiController from '../controllers/aiController';
-import * as notificationController from '../controllers/notificationController';
 import * as reportController from '../controllers/reportController';
 import * as settingController from '../controllers/settingController';
-import * as incomeController from '../controllers/incomeController';
 import * as assistantController from '../controllers/assistantController';
-import transactionRoutes from './transactionRoutes';
 import { validate } from '../middleware/validator';
 import { googleAuthSchema } from '../utils/validators';
 import { authLimiter, otpLimiter } from '../middleware/rateLimiter';
+
 
 const router = Router();
 
@@ -53,30 +54,21 @@ router.post('/auth/logout-all', authController.logoutAllDevices);
 router.get('/settings', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), settingController.getSettings);
 router.put('/settings', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), settingController.updateSettings);
 
-// Dashboard Overview Telemetry
-router.get('/dashboard/summary', dashboardController.getDashboardSummary);
+// Dashboard Overview Telemetry (Redis Cached)
+router.use('/dashboard', dashboardRoutes);
 
-// Income Management
-router.get('/income', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), incomeController.getIncomes);
-router.post('/income', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), incomeController.createIncome);
-router.put('/income/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), incomeController.updateIncome);
-router.delete('/income/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), incomeController.deleteIncome);
+// Income Management (Modular Domain)
+router.use('/income', incomeRoutes);
 
-// Automatic SMS / Bank Transaction Engine
+// Automatic SMS / Bank Transaction Engine (Modular Domain)
 router.use('/transactions', transactionRoutes);
 
-// Expense Management
-router.get('/expenses', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), expenseController.getExpenses);
-router.post('/expenses', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), expenseController.createExpense);
-router.put('/expenses/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), expenseController.updateExpense);
-router.delete('/expenses/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), expenseController.deleteExpense);
+// Expense Management (Modular Domain)
+router.use('/expenses', expenseRoutes);
 
-// Bills Management
-router.get('/bills', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), billController.getBills);
-router.post('/bills', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), billController.createBill);
-router.put('/bills/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), billController.updateBill);
-router.delete('/bills/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), billController.deleteBill);
-router.put('/bills/:id/pay', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), billController.markBillPaid);
+// Bills Management (Modular Domain)
+router.use('/bills', billRoutes);
+
 
 // Grocery Inventory
 router.get('/inventory', inventoryController.getInventory);
@@ -131,8 +123,8 @@ router.post('/ai/scan', aiController.scanReceiptOrPantry);
 router.post('/ai/chat', aiController.chatWithAI);
 
 // Notifications & Reports
-router.get('/notifications', notificationController.getNotifications);
-router.put('/notifications/:id/read', notificationController.markAsRead);
+router.use('/notifications', notificationRoutes);
+
 router.get('/reports/monthly', reportController.exportMonthlyReport);
 router.get('/reports/monthly/pdf', reportController.exportMonthlyReport);
 router.get('/analytics/summary', reportController.getAnalyticsSummary);
