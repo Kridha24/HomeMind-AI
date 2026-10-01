@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { MapPin, Hourglass, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
 import { LiveClockPill } from './LiveClockPill';
 import { getGreetingName, getTimeGreeting } from './utils/dashboardUtils';
@@ -27,6 +27,7 @@ export const DashboardGreeting: React.FC<DashboardGreetingProps> = ({
   upcomingBillsCount = 0,
   isReady = true,
 }) => {
+  const shouldReduceMotion = useReducedMotion();
   const greetingName = getGreetingName(user);
   const { greeting } = getTimeGreeting();
 
@@ -45,9 +46,9 @@ export const DashboardGreeting: React.FC<DashboardGreetingProps> = ({
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: 6 }}
+      initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      transition={{ duration: shouldReduceMotion ? 0 : 0.3, ease: 'easeOut' }}
       className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 sm:p-5 md:p-6 space-y-3"
       aria-label="Household Command Header"
     >

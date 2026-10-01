@@ -10,6 +10,15 @@ export const ProfileMenu: React.FC = () => {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const { user, household, logout } = useAuthStore();
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
   const handleLogout = async () => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');

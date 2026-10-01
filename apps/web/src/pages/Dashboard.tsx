@@ -17,6 +17,7 @@ import {
   Edit3,
 } from 'lucide-react';
 import apiClient from '../services/apiClient';
+import socketService from '../services/socketService';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useSettingStore } from '../stores/useSettingStore';
 import { useI18n } from '../utils/i18n';
@@ -74,7 +75,7 @@ export const Dashboard: React.FC = () => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['dashboardSummary'],
+    queryKey: ['dashboardSummary', household?.id],
     queryFn: async () => {
       const res = await apiClient.get('/dashboard/summary');
       return res.data;
@@ -83,7 +84,7 @@ export const Dashboard: React.FC = () => {
 
   // Fetch live income entries
   const { data: incomeData, refetch: refetchIncomes } = useQuery({
-    queryKey: ['dashboardIncomes'],
+    queryKey: ['dashboardIncomes', household?.id],
     queryFn: async () => {
       const res = await apiClient.get('/income');
       return Array.isArray(res.data) ? res.data : res.data?.incomes || [];
@@ -163,6 +164,29 @@ export const Dashboard: React.FC = () => {
     refetch();
     refetchIncomes();
   };
+
+  React.useEffect(() => {
+    const socket = socketService.getSocket();
+    if (!socket) return;
+
+    const onUpdate = () => {
+      handleRefreshAll();
+    };
+
+    socket.on('expense_created', onUpdate);
+    socket.on('income_created', onUpdate);
+    socket.on('bill_paid', onUpdate);
+    socket.on('task_updated', onUpdate);
+    socket.on('transaction_created', onUpdate);
+
+    return () => {
+      socket.off('expense_created', onUpdate);
+      socket.off('income_created', onUpdate);
+      socket.off('bill_paid', onUpdate);
+      socket.off('task_updated', onUpdate);
+      socket.off('transaction_created', onUpdate);
+    };
+  }, [household?.id]);
 
   const handleEditIncome = (inc: any) => {
     setEditingIncome(inc);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 export interface SidebarItemProps {
   icon: React.ElementType;
@@ -36,6 +36,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
   onLeave,
   onClick,
 }) => {
+  const shouldReduceMotion = useReducedMotion();
   const hoverClass = accentHoverMap[accent] || accentHoverMap.neutral;
 
   return (
@@ -54,14 +55,18 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
           active
             ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/25 shadow-2xs'
             : `text-slate-500 dark:text-slate-400 font-medium ${hoverClass}`
-        } group-hover:scale-[1.04] group-hover:translate-x-[2px]`}
+        } ${shouldReduceMotion ? '' : 'group-hover:scale-[1.04] group-hover:translate-x-[2px]'}`}
       >
         {/* Active Pill Indicator (3px blue/violet vertical pill on the left) */}
         {active && (
           <motion.div
-            layoutId="sidebarActivePill"
+            layoutId={shouldReduceMotion ? undefined : 'sidebarActivePill'}
             className="absolute -left-2 w-[3px] h-6 rounded-r-full bg-blue-600 dark:bg-blue-400 shadow-[0_0_8px_#3b82f6]"
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            transition={
+              shouldReduceMotion
+                ? { duration: 0 }
+                : { type: 'spring', stiffness: 400, damping: 30 }
+            }
           />
         )}
 

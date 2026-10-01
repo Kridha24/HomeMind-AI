@@ -41,6 +41,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   const householdName = household?.name || 'Home Residence';
   const marginClass = sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[220px]';
 
+  React.useEffect(() => {
+    if (!isHouseholdMenuOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsHouseholdMenuOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isHouseholdMenuOpen]);
+
   const handleCopyInvite = () => {
     if (household?.inviteCode) {
       navigator.clipboard.writeText(household.inviteCode);

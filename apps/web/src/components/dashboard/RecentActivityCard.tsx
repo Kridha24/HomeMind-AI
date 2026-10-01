@@ -26,7 +26,7 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
   return (
     <section
       className="rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 shadow-sm space-y-3.5"
-      aria-label="Recent Household Activity"
+      aria-label="Recent Household Transactions"
     >
       <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-2">
@@ -35,9 +35,9 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
           </div>
           <div>
             <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
-              Recent Activity
+              Recent Transactions
             </h3>
-            <p className="text-[10px] text-slate-400">Latest financial & ledger records</p>
+            <p className="text-[10px] text-slate-400">Latest income and expense records</p>
           </div>
         </div>
 
@@ -113,10 +113,10 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
       ) : (
         <div className="py-6 text-center space-y-1">
           <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-            No activity recorded yet
+            No transactions recorded yet
           </p>
           <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
-            Log your daily expenses, bills, or income to build your household ledger timeline.
+            Log your daily expenses or income to build your household ledger timeline.
           </p>
         </div>
       )}

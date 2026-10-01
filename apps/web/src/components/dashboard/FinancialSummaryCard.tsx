@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 export interface FinancialSummaryCardProps {
   title: string;
@@ -50,18 +50,19 @@ export const FinancialSummaryCard: React.FC<FinancialSummaryCardProps> = ({
   delay = 0,
   isFullWidthOnMobile = false,
 }) => {
+  const shouldReduceMotion = useReducedMotion();
   const styles = accentMap[accent];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration: 0.28,
-        delay: delay / 1000,
+        duration: shouldReduceMotion ? 0 : 0.28,
+        delay: shouldReduceMotion ? 0 : delay / 1000,
         ease: 'easeOut',
       }}
-      whileHover={{ y: -3 }}
+      whileHover={shouldReduceMotion ? undefined : { y: -3 }}
       className={`group rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${styles.borderHover} p-3.5 sm:p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-2 sm:space-y-3 ${
         isFullWidthOnMobile ? 'col-span-2 sm:col-span-1' : ''
       }`}
@@ -90,7 +91,7 @@ export const FinancialSummaryCard: React.FC<FinancialSummaryCardProps> = ({
       {/* Main Monetary Value */}
       <div className="min-w-0">
         <p
-          className={`text-lg sm:text-2xl font-black font-mono tracking-tight truncate leading-none ${styles.text}`}
+          className={`text-base sm:text-xl lg:text-[22px] xl:text-2xl font-black font-mono tracking-tight truncate leading-tight ${styles.text}`}
           title={formattedValue}
         >
           {formattedValue}
