@@ -6,6 +6,13 @@ import {
   EventType,
   DomainEventEnvelope,
 } from '@homemind/shared';
+import {
+  tracer,
+  outboxPendingCount,
+  outboxOldestEventAgeSeconds,
+  outboxDispatchFailuresTotal,
+  logger,
+} from '@homemind/observability';
 import { workerConfig } from '../config';
 
 export class OutboxDispatcher {
@@ -74,7 +81,13 @@ export class OutboxDispatcher {
     const now = new Date();
     const leaseExpiration = new Date(now.getTime() + 60000); // 60s lease
 
-    // 1. Find candidate pending events
+    // 1. Update outbox gauge metrics
+    try {
+      const totalPending = await (prisma as any).outboxEvent.count({ where: { publishedAt: null } });
+      outboxPendingCount.set(totalPending, { service: 'homemind-worker' });
+    } catch {}
+
+    // 2. Find candidate pending events
     const candidates = await (prisma as any).outboxEvent.findMany({
       where: {
         publishedAt: null,
@@ -89,15 +102,19 @@ export class OutboxDispatcher {
     });
 
     if (!candidates.length) {
+      outboxOldestEventAgeSeconds.set(0, { service: 'homemind-worker' });
       return 0;
     }
+
+    const oldestAgeSec = Math.max(0, Math.floor((now.getTime() - new Date(candidates[0].createdAt).getTime()) / 1000));
+    outboxOldestEventAgeSeconds.set(oldestAgeSec, { service: 'homemind-worker' });
 
     let dispatchedCount = 0;
 
     for (const event of candidates) {
       if (!this.isRunning) break;
 
-      // 2. Claim event by extending nextAttemptAt
+      // 3. Claim event by extending nextAttemptAt
       const claimed = await (prisma as any).outboxEvent.updateMany({
         where: {
           id: event.id,
@@ -117,13 +134,20 @@ export class OutboxDispatcher {
         continue;
       }
 
-      // 3. Parse and route to BullMQ queue
+      // 4. Parse and route to BullMQ queue with OpenTelemetry span
+      const span = tracer.startSpan('outbox.dispatch_event', {
+        attributes: {
+          'outbox.event_id': event.id,
+          'outbox.event_type': event.eventType,
+        },
+      });
+
       try {
         const envelope: DomainEventEnvelope = JSON.parse(event.payload);
         const success = await this.routeAndPublish(event.eventType, envelope);
 
         if (success) {
-          // 4. Mark publishedAt
+          // Mark publishedAt
           await (prisma as any).outboxEvent.update({
             where: { id: event.id },
             data: {
@@ -132,8 +156,13 @@ export class OutboxDispatcher {
             },
           });
           dispatchedCount++;
+          span.end();
         } else {
           // Queue offline or failed to enqueue
+          outboxDispatchFailuresTotal.inc({ service: 'homemind-worker', event_type: event.eventType });
+          span.recordException(new Error('Queue unavailable or enqueue failed'));
+          span.end();
+
           const nextAttempts = event.attempts + 1;
           const backoffDelay = Math.min(Math.pow(2, nextAttempts) * 1000, 60000);
           await (prisma as any).outboxEvent.update({
@@ -146,6 +175,10 @@ export class OutboxDispatcher {
           });
         }
       } catch (err: any) {
+        outboxDispatchFailuresTotal.inc({ service: 'homemind-worker', event_type: event.eventType });
+        span.recordException(err);
+        span.end();
+
         const nextAttempts = event.attempts + 1;
         const backoffDelay = Math.min(Math.pow(2, nextAttempts) * 1000, 60000);
         await (prisma as any).outboxEvent.update({
@@ -167,6 +200,13 @@ export class OutboxDispatcher {
       return false;
     }
 
+    const correlationMeta = {
+      traceId: envelope.traceId,
+      spanId: envelope.spanId,
+      requestId: envelope.requestId,
+      eventId: envelope.eventId,
+    };
+
     // Determine target queues based on event type
     switch (eventType) {
       case EventType.TRANSACTION_CREATED: {
@@ -180,6 +220,7 @@ export class OutboxDispatcher {
             jobId: envelope.eventId,
             occurredAt: envelope.occurredAt,
             householdId: envelope.householdId,
+            ...correlationMeta,
             payload: envelope.data,
           }, { jobId: envelope.eventId });
         }
@@ -191,6 +232,7 @@ export class OutboxDispatcher {
             jobId: `analytics-${envelope.eventId}`,
             occurredAt: envelope.occurredAt,
             householdId: envelope.householdId,
+            ...correlationMeta,
             payload: envelope.data,
           });
         }
@@ -207,6 +249,7 @@ export class OutboxDispatcher {
             jobId: `analytics-${envelope.eventId}`,
             occurredAt: envelope.occurredAt,
             householdId: envelope.householdId,
+            ...correlationMeta,
             payload: envelope.data,
           });
         }
@@ -222,6 +265,7 @@ export class OutboxDispatcher {
             jobId: `notif-${envelope.eventId}`,
             occurredAt: envelope.occurredAt,
             householdId: envelope.householdId,
+            ...correlationMeta,
             payload: {
               householdId: envelope.householdId,
               channel: 'IN_APP',

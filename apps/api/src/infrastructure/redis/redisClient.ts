@@ -77,6 +77,14 @@ export class RedisService {
     }
   }
 
+  public getClient(): Redis | null {
+    return this.client;
+  }
+
+  public isRedisConnected(): boolean {
+    return this.isConnected && this.client !== null;
+  }
+
   /**
    * Helper to build consistent namespaced Redis keys
    * Format: homemind:v1:{namespace}:{...parts}
@@ -90,14 +98,19 @@ export class RedisService {
    * Get cached object safely. Falls back to memory cache if Redis is down.
    */
   public async get<T>(key: string): Promise<T | null> {
+    const { redisCacheHitsTotal, redisCacheMissesTotal, redisErrorsTotal } = await import('@homemind/observability');
+
     if (this.client && this.isConnected) {
       try {
         const raw = await this.client.get(key);
         if (raw) {
+          redisCacheHitsTotal.inc({ service: 'homemind-api', domain: 'cache' });
           return JSON.parse(raw) as T;
         }
+        redisCacheMissesTotal.inc({ service: 'homemind-api', domain: 'cache' });
         return null;
-      } catch (err) {
+      } catch (err: any) {
+        redisErrorsTotal.inc({ service: 'homemind-api', operation: 'get' });
         console.warn(`[Redis] Failed GET for key ${key}, checking fallback.`);
       }
     }
@@ -107,15 +120,18 @@ export class RedisService {
     if (item) {
       if (Date.now() > item.expiresAt) {
         this.memoryCache.delete(key);
+        redisCacheMissesTotal.inc({ service: 'homemind-api', domain: 'memory_fallback' });
         return null;
       }
       try {
+        redisCacheHitsTotal.inc({ service: 'homemind-api', domain: 'memory_fallback' });
         return JSON.parse(item.value) as T;
       } catch {
         return null;
       }
     }
 
+    redisCacheMissesTotal.inc({ service: 'homemind-api', domain: 'memory_fallback' });
     return null;
   }
 

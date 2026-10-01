@@ -1,6 +1,14 @@
 import { Worker, Job } from 'bullmq';
 import { prisma } from '@homemind/database';
 import { QUEUE_NAMES, AICategorizationJobPayload } from '@homemind/shared';
+import {
+  tracer,
+  bullmqJobsStartedTotal,
+  bullmqJobsCompletedTotal,
+  bullmqJobsFailedTotal,
+  bullmqJobDurationSeconds,
+  aiJobsFailedTotal,
+} from '@homemind/observability';
 import Redis from 'ioredis';
 import { workerConfig } from '../config';
 
@@ -21,6 +29,26 @@ export class AIWorker {
     this.worker = new Worker(
       QUEUE_NAMES.AI,
       async (job: Job<any>) => {
+        const jobStartTime = Date.now();
+        const labels = { service: 'homemind-worker', queue: QUEUE_NAMES.AI, job_name: job.name };
+        bullmqJobsStartedTotal.inc(labels);
+
+        const traceContext = job.data.traceId
+          ? {
+              traceId: job.data.traceId,
+              spanId: job.data.spanId || '0000000000000000',
+              traceFlags: 1,
+            }
+          : undefined;
+
+        const span = tracer.startSpan('worker.ai_categorization', {
+          parent: traceContext,
+          attributes: {
+            'bullmq.job_id': job.id,
+            'bullmq.queue': QUEUE_NAMES.AI,
+          },
+        });
+
         const payload: AICategorizationJobPayload = job.data.payload || job.data;
         console.log(`[AIWorker] Processing AI categorization for transaction ${payload.transactionId || job.data.jobId}`);
 
@@ -34,12 +62,13 @@ export class AIWorker {
 
           if (!transaction) {
             console.log(`[AIWorker] Transaction ${transactionId} not found, skipping.`);
+            span.end();
             return;
           }
 
           // Rule-based heuristic or AI call simulation
-          // If transaction already has a category and it's not 'Other', keep it
           if (transaction.category && transaction.category !== 'Other' && transaction.category !== 'Uncategorized') {
+            span.end();
             return;
           }
 
@@ -69,9 +98,18 @@ export class AIWorker {
             });
             console.log(`[AIWorker] Updated transaction ${transaction.id} with category "${suggestedCategory}".`);
           }
+
+          span.end();
+          const durationSec = (Date.now() - jobStartTime) / 1000;
+          bullmqJobsCompletedTotal.inc(labels);
+          bullmqJobDurationSeconds.observe(durationSec, labels);
         } catch (err: any) {
           // AI categorization must fail safely: transaction must remain saved!
           console.warn(`[AIWorker] AI categorization fallback triggered for job ${job.id}: ${err.message}`);
+          span.recordException(err);
+          span.end();
+          bullmqJobsFailedTotal.inc({ ...labels, error_type: 'processing_error' });
+          aiJobsFailedTotal.inc({ service: 'homemind-worker', operation: 'categorization', reason: err.message || 'unknown' });
         }
       },
       {
