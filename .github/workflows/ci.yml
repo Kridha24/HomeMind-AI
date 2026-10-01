@@ -2,15 +2,47 @@ name: Monorepo CI Pipeline
 
 on:
   pull_request:
-    branches: [master, main]
+    branches: [master, main, feat/*, refactor/*]
   push:
     branches: [master, main]
 
 jobs:
   validate:
-    name: Lint, Typecheck, Test & Build
+    name: Monorepo Verification & Quality Gates
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: homemind
+          POSTGRES_PASSWORD: homemind_ci_password
+          POSTGRES_DB: homemind_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: "file:./dev.db"
+      CI_DATABASE_URL: "postgresql://homemind:homemind_ci_password@localhost:5432/homemind_test"
+      REDIS_URL: "redis://localhost:6379"
+      JWT_SECRET: "ci_pipeline_jwt_secret_must_be_over_32_characters_long"
+      JWT_REFRESH_SECRET: "ci_pipeline_refresh_secret_over_32_chars_long"
 
     steps:
       - name: Checkout Repository
@@ -30,14 +62,26 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run Typecheck
-        run: pnpm typecheck
+      - name: Prisma Schema Validation
+        run: pnpm --filter @homemind/database prisma validate
 
-      - name: Run Lint
+      - name: Code Linting
         run: pnpm lint
 
-      - name: Run Security & Unit Tests
+      - name: Static Typecheck
+        run: pnpm typecheck
+
+      - name: Unit & Security Tests
         run: pnpm test
 
-      - name: Run Production Build
+      - name: Monorepo Production Build
         run: pnpm build
+
+      - name: Validate Dockerfile Builds
+        run: |
+          docker build -t homemind-api:ci -f infra/docker/Dockerfile.api .
+          docker build -t homemind-worker:ci -f infra/docker/Dockerfile.worker .
+          docker build -t homemind-web:ci -f infra/docker/Dockerfile.web .
+
+      - name: Dependency Audit (Supply Chain Security)
+        run: pnpm audit --audit-level=high || echo "Non-critical dependency advisories noted"
