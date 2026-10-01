@@ -12,12 +12,20 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@homemind/config": "workspace:*",
+    "@homemind/database": "workspace:*",
+    "@homemind/observability": "workspace:*",
     "@homemind/shared": "workspace:*",
-    "@homemind/observability": "workspace:*"
+    "@prisma/client": "^5.10.2",
+    "bullmq": "^6.3.10",
+    "dotenv": "^16.4.5",
+    "ioredis": "^6.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
+    "prisma": "^5.10.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
 }
+
