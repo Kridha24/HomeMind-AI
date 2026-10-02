@@ -27,6 +27,10 @@ model User {
   transactions   Transaction[]
   aiMemories     AIMemory[]
   aiThreads      AIThread[]
+  conversations  ConversationMember[]
+  sentMessages   Message[]      @relation("SentMessages")
+  messageReceipts MessageReceipt[]
+  deviceKeys     DeviceKey[]
   isVerified     Boolean        @default(true)
   isActive       Boolean        @default(true)
   lastLogin      DateTime?
@@ -104,6 +108,7 @@ model Household {
   dashboardConfig       DashboardConfig?
   aiMemories            AIMemory[]
   aiThreads             AIThread[]
+  conversations         Conversation[]
   createdBy             String?
   updatedBy             String?
   softDelete            Boolean                @default(false)
@@ -614,4 +619,89 @@ model IdempotencyRecord {
   @@index([expiresAt])
   @@index([householdId])
 }
+
+// ==========================================
+// SECURE HOUSEHOLD CHAT & E2EE MESSAGING
+// ==========================================
+
+model Conversation {
+  id           String               @id @default(uuid())
+  householdId  String
+  household    Household            @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  type         String               @default("HOUSEHOLD") // HOUSEHOLD, DIRECT
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  members      ConversationMember[]
+  messages     Message[]
+
+  @@index([householdId])
+}
+
+model ConversationMember {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt       DateTime     @default(now())
+  leftAt         DateTime?
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id                   String           @id @default(uuid())
+  conversationId       String
+  conversation         Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId             String
+  sender               User             @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  senderDeviceId       String
+  clientMessageId      String           @unique
+  ciphertext           String           // AES-256-GCM encrypted base64 string
+  iv                   String           // 12-byte nonce base64 string
+  ephemeralPublicKey   String           // Sender's ephemeral ECDH P-256 public key base64
+  recipientWrappedKeys String           // JSON-serialized map { [deviceId]: wrappedCekBase64 }
+  aad                  String           // JSON-serialized authenticated additional data
+  encryptionVersion    String           @default("v1")
+  attachmentMetadata   String?          // Optional encrypted attachment descriptor
+  createdAt            DateTime         @default(now())
+  editedAt             DateTime?
+  deletedAt            DateTime?
+  receipts             MessageReceipt[]
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+model MessageReceipt {
+  id          String    @id @default(uuid())
+  messageId   String
+  message     Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId    String
+  deliveredAt DateTime?
+  readAt      DateTime?
+
+  @@unique([messageId, userId, deviceId])
+  @@index([messageId])
+  @@index([userId])
+}
+
+model DeviceKey {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId   String    @unique
+  deviceType String    @default("web") // web, android, ios
+  deviceName String?
+  publicKey  String    // Exported ECDH public key (JWK or base64 SPKI)
+  version    Int       @default(1)
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+
+  @@index([userId, revokedAt])
+}
+
 

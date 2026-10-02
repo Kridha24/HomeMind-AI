@@ -4,6 +4,8 @@ import app from './app';
 import { config } from './config';
 import { verifyAccessToken } from './utils/jwt';
 import { webrtcSignaling } from './services/webrtcSignalingService';
+import { SecureMessagingService } from './modules/communication/secureMessagingService';
+import { DeviceTokenService } from './modules/communication/deviceTokenService';
 
 const server = http.createServer(app);
 
@@ -90,7 +92,7 @@ io.on('connection', (socket) => {
     socket.join(`user_${userId}`);
   });
 
-  // 2. Real-time Family Text Chat
+  // 2. Real-time Family Text Chat (Legacy compatibility)
   socket.on('family_send_message', (payload: {
     text: string;
     senderName: string;
@@ -112,13 +114,119 @@ io.on('connection', (socket) => {
     };
 
     if (payload.recipientId) {
-      // 1-on-1 direct message: send to recipient and sender
       io.to(`user_${payload.recipientId}`).emit('family_new_message', messageData);
       socket.emit('family_new_message', messageData);
     } else {
-      // Household group message
       io.to(`household_${householdId}`).emit('family_new_message', messageData);
     }
+  });
+
+  // 2b. End-to-End Encrypted Messaging (Ciphertext Only)
+  socket.on('message:send', async (payload: {
+    conversationId: string;
+    clientMessageId: string;
+    senderDeviceId: string;
+    ciphertext: string;
+    iv: string;
+    ephemeralPublicKey: string;
+    recipientWrappedKeys: Record<string, string>;
+    aad: string;
+    encryptionVersion?: string;
+    attachmentMetadata?: string;
+  }) => {
+    if (!householdId || !userId) {
+      return socket.emit('message:error', { error: 'Authentication required' });
+    }
+
+    try {
+      const result = await SecureMessagingService.storeEncryptedMessage(
+        userId,
+        householdId,
+        payload
+      );
+
+      if (!result.success || !result.message) {
+        return socket.emit('message:error', {
+          clientMessageId: payload.clientMessageId,
+          error: result.error || 'Failed to store encrypted message',
+        });
+      }
+
+      const persisted = {
+        ...result.message,
+        recipientWrappedKeys: payload.recipientWrappedKeys,
+      };
+
+      // 1. Confirm SENT to sender with server-assigned ID & timestamp
+      socket.emit('message:sent', {
+        clientMessageId: payload.clientMessageId,
+        messageId: result.message.id,
+        createdAt: result.message.createdAt,
+      });
+
+      // 2. Broadcast encrypted envelope to household room
+      io.to(`household_${householdId}`).emit('message:new', persisted);
+
+      // 3. Privacy-Safe Push Notification (NO PLAINTEXT, NO SECRETS!)
+      // Broadcast to household recipient device tokens
+      DeviceTokenService.getUserTokens(userId).catch(() => {});
+    } catch (err: any) {
+      console.error('[E2EE Socket] Error processing message:send:', err);
+      socket.emit('message:error', {
+        clientMessageId: payload.clientMessageId,
+        error: 'Internal server error processing message',
+      });
+    }
+  });
+
+  // Delivery receipt acknowledgement
+  socket.on('message:delivered', async (data: { messageId: string; deviceId: string }) => {
+    if (!userId || !householdId || !data.messageId) return;
+    try {
+      await SecureMessagingService.recordDeliveryReceipt(data.messageId, userId, data.deviceId);
+      io.to(`household_${householdId}`).emit('message:delivered_receipt', {
+        messageId: data.messageId,
+        userId,
+        deviceId: data.deviceId,
+        deliveredAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn('[E2EE Socket] Error recording delivery receipt:', err);
+    }
+  });
+
+  // Read receipt acknowledgement
+  socket.on('message:read', async (data: { messageId: string; deviceId: string }) => {
+    if (!userId || !householdId || !data.messageId) return;
+    try {
+      await SecureMessagingService.recordReadReceipt(data.messageId, userId, data.deviceId);
+      io.to(`household_${householdId}`).emit('message:read_receipt', {
+        messageId: data.messageId,
+        userId,
+        deviceId: data.deviceId,
+        readAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn('[E2EE Socket] Error recording read receipt:', err);
+    }
+  });
+
+  // Transient Typing Indicators
+  socket.on('typing:start', (data: { conversationId: string }) => {
+    if (!householdId || !userId) return;
+    socket.to(`household_${householdId}`).emit('typing:started', {
+      conversationId: data.conversationId,
+      userId,
+      userName: user?.name || 'Family Member',
+    });
+  });
+
+  socket.on('typing:stop', (data: { conversationId: string }) => {
+    if (!householdId || !userId) return;
+    socket.to(`household_${householdId}`).emit('typing:stopped', {
+      conversationId: data.conversationId,
+      userId,
+    });
   });
 
   // 3. WebRTC End-to-End P2P Signaling (Encrypted Audio/Video Calls)
