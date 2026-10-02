@@ -50,13 +50,21 @@ export interface Bill {
 
 export interface GroceryItem {
   id: string;
+  householdId?: string;
   name: string;
   category: string;
   quantity: number;
   unit: string;
   minThreshold: number;
-  expiryDate?: string;
-  barcode?: string;
+  expiryDate?: string | null;
+  purchaseDate?: string | null;
+  barcode?: string | null;
+  dailyConsumption?: number;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+  softDelete?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Appliance {

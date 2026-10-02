@@ -57,7 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
     { name: 'Expenses', path: '/expenses', icon: CreditCard, accent: 'emerald' },
     { name: 'Income', path: '/income', icon: Wallet, accent: 'emerald' },
     { name: 'Bills', path: '/bills', icon: FileText, accent: 'amber' },
-    { name: 'Groceries', path: '/inventory', icon: ShoppingBag, accent: 'emerald' },
+    { name: 'Groceries', path: '/groceries', icon: ShoppingBag, accent: 'emerald' },
     { name: 'Tasks', path: '/tasks', icon: CheckSquare, accent: 'purple' },
   ];
 
@@ -163,7 +163,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                 icon={item.icon}
                 label={item.name}
                 href={item.path}
-                active={location.pathname === item.path}
+                active={location.pathname === item.path || (item.path === '/groceries' && location.pathname === '/inventory')}
                 accent={item.accent}
                 badge={item.badge}
                 isCollapsed={isCollapsed}

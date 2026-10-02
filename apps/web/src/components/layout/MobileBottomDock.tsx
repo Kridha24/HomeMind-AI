@@ -35,7 +35,7 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
     { label: 'Home', path: '/', icon: LayoutDashboard },
     { label: 'Expenses', path: '/expenses', icon: CreditCard },
     // Center is '+' Hub
-    { label: 'Pantry', path: '/inventory', icon: ShoppingBag },
+    { label: 'Groceries', path: '/groceries', icon: ShoppingBag },
     { label: 'Tasks', path: '/tasks', icon: CheckSquare },
   ];
 
@@ -169,7 +169,7 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
 
           {/* Last 2 Tabs */}
           {navItems.slice(2, 4).map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname === item.path || (item.path === '/groceries' && location.pathname === '/inventory');
             const Icon = item.icon;
 
             return (

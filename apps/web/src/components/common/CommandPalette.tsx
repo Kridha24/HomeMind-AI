@@ -6,6 +6,7 @@ import {
   CreditCard,
   FileText,
   ShoppingBag,
+  ShoppingCart,
   Tv,
   Pill,
   CheckSquare,
@@ -97,11 +98,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'act-grocery',
-      title: 'Add Pantry / Grocery Item',
+      title: 'Add Grocery Item',
       category: 'Actions',
       shortcut: 'G',
       icon: ShoppingBag,
-      keywords: ['food', 'milk', 'vegetables', 'fridge', 'pantry'],
+      keywords: ['grocery', 'food', 'milk', 'vegetables', 'fridge', 'pantry', 'add item'],
       action: () => {
         onClose();
         onOpenGroceryModal();
@@ -275,15 +276,37 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
     },
     {
-      id: 'nav-inventory',
-      title: 'Pantry & Food Inventory',
+      id: 'nav-groceries',
+      title: 'Go to Groceries',
       category: 'Navigation',
       shortcut: '4',
       icon: ShoppingBag,
-      keywords: ['groceries', 'fridge', 'expiry', 'items'],
+      keywords: ['groceries', 'fridge', 'expiry', 'items', 'pantry', 'shopping'],
       action: () => {
         onClose();
-        navigate('/inventory');
+        navigate('/groceries');
+      },
+    },
+    {
+      id: 'nav-groceries-pending',
+      title: 'Show Pending Groceries',
+      category: 'Navigation',
+      icon: ShoppingCart,
+      keywords: ['pending groceries', 'need to buy', 'shopping list', 'groceries to buy'],
+      action: () => {
+        onClose();
+        navigate('/groceries?status=pending');
+      },
+    },
+    {
+      id: 'act-shopping-mode',
+      title: 'Shopping Mode',
+      category: 'Actions',
+      icon: ShoppingCart,
+      keywords: ['shopping mode', 'in store', 'shop', 'market mode'],
+      action: () => {
+        onClose();
+        navigate('/groceries?mode=shopping');
       },
     },
     {

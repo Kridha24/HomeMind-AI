@@ -26,6 +26,7 @@ import { Income } from './pages/Income';
 import { Expenses } from './pages/Expenses';
 import { Bills } from './pages/Bills';
 import { Inventory } from './pages/Inventory';
+import { Groceries } from './pages/Groceries';
 import { PantryVision } from './pages/PantryVision';
 import { Appliances } from './pages/Appliances';
 import { Medicines } from './pages/Medicines';
@@ -267,6 +268,7 @@ function AppShell() {
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/transactions" element={<Expenses />} />
             <Route path="/bills" element={<Bills />} />
+            <Route path="/groceries" element={<Groceries />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/pantry-vision" element={<PantryVision />} />
             <Route path="/appliances" element={<Appliances />} />

@@ -1,8 +1,8 @@
 import React from 'react';
 import { GroceriesWorkspace } from '../features/groceries/GroceriesWorkspace';
 
-export const Inventory: React.FC = () => {
+export const Groceries: React.FC = () => {
   return <GroceriesWorkspace />;
 };
 
-export default Inventory;
+export default Groceries;
