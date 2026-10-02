@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 || true",
-    "test": "node src/__tests__/settings.test.mjs && node src/__tests__/bills.test.mjs && node src/__tests__/groceries.test.mjs && node src/__tests__/tasks.test.mjs && node src/__tests__/household.test.mjs",
+    "test": "node src/__tests__/settings.test.mjs && node src/__tests__/bills.test.mjs && node src/__tests__/groceries.test.mjs && node src/__tests__/tasks.test.mjs && node src/__tests__/household.test.mjs && node src/__tests__/calling.test.mjs",
     "preview": "vite preview",
     "cap:sync": "cap sync",
     "cap:open": "cap open android",

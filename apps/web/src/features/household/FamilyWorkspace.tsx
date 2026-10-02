@@ -87,6 +87,8 @@ export const FamilyWorkspace: React.FC = () => {
     }
   }, [searchParams, setSearchParams]);
 
+  const [incomingCallId, setIncomingCallId] = useState<string | undefined>(undefined);
+
   // WebRTC Incoming Call Socket Listener & Online Members
   useEffect(() => {
     const socket = socketService.getSocket();
@@ -99,6 +101,7 @@ export const FamilyWorkspace: React.FC = () => {
     };
 
     const handleIncomingCall = (data: {
+      callId?: string;
       callerId: string;
       callerName: string;
       callerAvatar?: string;
@@ -112,6 +115,7 @@ export const FamilyWorkspace: React.FC = () => {
       });
       setCallType(data.callType || 'video');
       setIncomingSignalData(data.signalData);
+      setIncomingCallId(data.callId);
       setIsIncomingCall(true);
       setShowCallModal(true);
     };
@@ -130,6 +134,7 @@ export const FamilyWorkspace: React.FC = () => {
     setCallType(type);
     setIsIncomingCall(false);
     setIncomingSignalData(null);
+    setIncomingCallId(undefined);
     setShowCallModal(true);
   };
 
@@ -400,6 +405,7 @@ export const FamilyWorkspace: React.FC = () => {
           callType={callType}
           isIncoming={isIncomingCall}
           incomingSignal={incomingSignalData}
+          callId={incomingCallId}
         />
       )}
     </div>

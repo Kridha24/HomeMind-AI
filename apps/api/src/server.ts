@@ -3,6 +3,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import app from './app';
 import { config } from './config';
 import { verifyAccessToken } from './utils/jwt';
+import { webrtcSignaling } from './services/webrtcSignalingService';
 
 const server = http.createServer(app);
 
@@ -123,89 +124,73 @@ io.on('connection', (socket) => {
   // 3. WebRTC End-to-End P2P Signaling (Encrypted Audio/Video Calls)
   
   // Call Initiation
-  socket.on('webrtc_call_user', (data: {
+  socket.on('webrtc_call_user', async (data: {
+    callId?: string;
     targetUserId: string;
     signalData: any;
     callType: 'audio' | 'video';
     callerName: string;
     callerAvatar?: string;
   }) => {
-    if (!userId) return;
-    console.log(`[WebRTC] Call from ${userId} (${data.callerName}) to ${data.targetUserId} [${data.callType}]`);
-    io.to(`user_${data.targetUserId}`).emit('webrtc_incoming_call', {
-      callerId: userId,
-      callerName: data.callerName,
-      callerAvatar: data.callerAvatar,
-      callType: data.callType,
-      signalData: data.signalData,
-    });
+    if (!userId || !householdId) return;
+    await webrtcSignaling.handleCallUser(io, userId, householdId, data);
   });
 
   // Call Answered
   socket.on('webrtc_answer_call', (data: {
+    callId: string;
     targetUserId: string;
     signalData: any;
   }) => {
     if (!userId) return;
-    console.log(`[WebRTC] Call answered by ${userId} for ${data.targetUserId}`);
-    io.to(`user_${data.targetUserId}`).emit('webrtc_call_accepted', {
-      signalData: data.signalData,
-      fromUserId: userId,
-    });
+    webrtcSignaling.handleAnswerCall(io, userId, data);
   });
 
   // ICE Candidates Relay
   socket.on('webrtc_ice_candidate', (data: {
+    callId?: string;
     targetUserId: string;
     candidate: any;
   }) => {
     if (!userId) return;
-    io.to(`user_${data.targetUserId}`).emit('webrtc_ice_candidate', {
-      candidate: data.candidate,
-      fromUserId: userId,
-    });
+    webrtcSignaling.handleIceCandidate(io, userId, data);
   });
 
   // Call Ended
   socket.on('webrtc_end_call', (data: {
+    callId?: string;
     targetUserId: string;
   }) => {
     if (!userId) return;
-    console.log(`[WebRTC] Call ended by ${userId} with ${data.targetUserId}`);
-    io.to(`user_${data.targetUserId}`).emit('webrtc_call_ended', {
-      fromUserId: userId,
-    });
+    webrtcSignaling.handleEndCall(io, userId, data);
   });
 
   // Call Rejected
   socket.on('webrtc_reject_call', (data: {
+    callId?: string;
     targetUserId: string;
     reason?: string;
   }) => {
     if (!userId) return;
-    console.log(`[WebRTC] Call rejected by ${userId}`);
-    io.to(`user_${data.targetUserId}`).emit('webrtc_call_rejected', {
-      fromUserId: userId,
-      reason: data.reason || 'declined',
-    });
+    webrtcSignaling.handleRejectCall(io, userId, data);
   });
 
   // Media state toggle (mic mute, camera off)
   socket.on('webrtc_toggle_media', (data: {
+    callId?: string;
     targetUserId: string;
     isAudioMuted?: boolean;
     isVideoOff?: boolean;
   }) => {
     if (!userId) return;
-    io.to(`user_${data.targetUserId}`).emit('webrtc_media_state', {
-      fromUserId: userId,
-      isAudioMuted: data.isAudioMuted,
-      isVideoOff: data.isVideoOff,
-    });
+    webrtcSignaling.handleToggleMedia(io, userId, data);
   });
 
   socket.on('disconnect', () => {
     console.log(`[Socket.IO] Client disconnected: ${socket.id}`);
+    if (userId) {
+      webrtcSignaling.handleDisconnect(io, userId);
+    }
     if (userId && householdId && onlineHouseholdUsers[householdId]) {
       onlineHouseholdUsers[householdId].delete(userId);
       io.to(`household_${householdId}`).emit('household_online_members', Array.from(onlineHouseholdUsers[householdId]));
