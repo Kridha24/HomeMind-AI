@@ -1,4 +1,24 @@
 export interface DashboardSummaryData {
+  // Legacy / Direct Root Accessors (100% backward compatibility)
+  isNewUser: boolean;
+  monthlyIncome: number;
+  monthlyExpenses: number;
+  monthlySavings: number;
+  overallIncome: number;
+  overallExpenses: number;
+  overallSavings: number;
+  upcomingBillsTotal: number;
+  summary: {
+    totalExpense: number;
+    totalIncome: number;
+    savings: number;
+    overallSavings: number;
+    savingsRate: number;
+    sustainabilityScore: number;
+  };
+  recent5History: any[];
+
+  // Modular Phase 2/3 Metrics Object
   metrics: {
     monthlyExpenses: number;
     monthlyIncome: number;
@@ -11,6 +31,7 @@ export interface DashboardSummaryData {
     recordCount: number;
     healthScore: number;
   };
+
   upcomingBills: any[];
   pendingTasks: any[];
   expiringGroceries: any[];

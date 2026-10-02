@@ -68,6 +68,13 @@ export const UpcomingBillsCard: React.FC<UpcomingBillsCardProps> = ({
     };
   };
 
+  const effectiveTotalDue =
+    totalDue > 0
+      ? totalDue
+      : bills
+          .filter((b) => b.status !== 'PAID')
+          .reduce((acc, curr) => acc + (curr.amount || 0), 0);
+
   return (
     <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 md:p-6 shadow-sm flex flex-col justify-between space-y-4">
       <div>
@@ -88,7 +95,7 @@ export const UpcomingBillsCard: React.FC<UpcomingBillsCardProps> = ({
           </div>
           <div className="text-right flex-shrink-0">
             <span className="text-base sm:text-xl font-extrabold text-red-600 dark:text-red-400 font-mono block">
-              -{format(totalDue)}
+              -{format(effectiveTotalDue)}
             </span>
             <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
               Total Due

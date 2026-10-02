@@ -119,19 +119,29 @@ export const Dashboard: React.FC = () => {
   const daysRemaining = Math.max(0, daysInMonth - currentDay);
   const dateRangeStr = `${monthShort} 1 – ${monthShort} ${daysInMonth}, ${year}`;
 
-  const monthlyIncome = summary?.monthlyIncome || 0;
-  const monthlyExpenses = summary?.monthlyExpenses || 0;
-  const overallExpenses = summary?.overallExpenses || 0;
-  const monthlySavings =
-    summary?.monthlySavings !== undefined
-      ? summary.monthlySavings
-      : monthlyIncome - monthlyExpenses;
+  const monthlyIncome = summary?.monthlyIncome ?? summary?.metrics?.monthlyIncome ?? 0;
+  const monthlyExpenses = summary?.monthlyExpenses ?? summary?.metrics?.monthlyExpenses ?? 0;
+  const overallExpenses = summary?.overallExpenses ?? summary?.metrics?.allTimeExpenses ?? 0;
+  const overallIncome = summary?.overallIncome ?? summary?.metrics?.allTimeIncome ?? 0;
   const overallSavings =
     summary?.overallSavings !== undefined
       ? summary.overallSavings
-      : summary?.summary?.overallSavings || 0;
-  const upcomingBillsTotal = summary?.upcomingBillsTotal || 0;
+      : summary?.metrics?.netBalance !== undefined
+      ? summary.metrics.netBalance
+      : summary?.summary?.overallSavings ?? (overallIncome - overallExpenses);
+  const monthlySavings =
+    summary?.monthlySavings !== undefined
+      ? summary.monthlySavings
+      : summary?.metrics?.savingsRate !== undefined
+      ? monthlyIncome - monthlyExpenses
+      : monthlyIncome - monthlyExpenses;
   const upcomingBills = summary?.upcomingBills || [];
+  const upcomingBillsTotal =
+    summary?.upcomingBillsTotal !== undefined && summary.upcomingBillsTotal > 0
+      ? summary.upcomingBillsTotal
+      : upcomingBills
+          .filter((b: any) => b.status !== 'PAID')
+          .reduce((acc: number, b: any) => acc + (b.amount || 0), 0);
   const pendingTasks = summary?.pendingTasks || [];
   const recentHistory = summary?.recent5History || [];
   const incomesList = Array.isArray(incomeData) ? incomeData : [];
