@@ -214,7 +214,7 @@ export const Income: React.FC = () => {
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="text-xs bg-panel border border-primary/80 rounded-xl px-2.5 py-1.5 text-primary focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium cursor-pointer"
+                  className="text-xs appearance-none bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium cursor-pointer transition-all"
                 >
                   <option value="ALL">All Months ({incomes.length})</option>
                   {availableMonths.map(([key, label]) => (

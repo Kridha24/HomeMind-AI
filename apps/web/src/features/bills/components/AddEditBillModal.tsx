@@ -184,7 +184,7 @@ export const AddEditBillModal: React.FC<AddEditBillModalProps> = ({
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-secondary/50 dark:bg-slate-900/60 border border-primary/80 rounded-xl px-3 py-2 text-xs text-primary font-medium focus:outline-none focus:border-amber-500 cursor-pointer"
+                className="w-full appearance-none bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 cursor-pointer transition-all"
               >
                 <option value="Rent">Rent</option>
                 <option value="Electricity">Electricity</option>
