@@ -31,7 +31,7 @@ export const TodayOverview: React.FC<TodayOverviewProps> = ({
   };
 
   const handleBillClick = () => {
-    navigate('/bills');
+    navigate('/bills?filter=due-soon');
   };
 
   const handleTransactionClick = () => {

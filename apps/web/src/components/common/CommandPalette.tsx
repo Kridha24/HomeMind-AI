@@ -23,6 +23,9 @@ import {
   Bell,
   Camera,
   Wallet,
+  Smartphone,
+  Clock,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface CommandPaletteProps {
@@ -144,7 +147,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     // ── AI & System ──
     {
       id: 'sys-ai',
-      title: 'Ask HomeMind AI Assistant',
+      title: 'Ask HomeMind.AI Assistant',
       category: 'AI & System',
       shortcut: '⌘J',
       icon: Sparkles,
@@ -193,15 +196,37 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
     },
     {
+      id: 'act-uncategorized',
+      title: 'Filter Uncategorized Transactions',
+      category: 'Actions',
+      icon: CreditCard,
+      keywords: ['review', 'categorize', 'pending', 'unknown'],
+      action: () => {
+        onClose();
+        navigate('/expenses?category=Uncategorized');
+      },
+    },
+    {
       id: 'nav-expenses',
-      title: 'Expenses & Ledger',
+      title: 'Expenses & Transactions',
       category: 'Navigation',
       shortcut: '2',
       icon: CreditCard,
-      keywords: ['transactions', 'spendings', 'history'],
+      keywords: ['transactions', 'spendings', 'history', 'ledger', 'activity'],
       action: () => {
         onClose();
         navigate('/expenses');
+      },
+    },
+    {
+      id: 'nav-sms',
+      title: 'Bank & UPI Auto-Detected SMS',
+      category: 'Navigation',
+      icon: Smartphone,
+      keywords: ['sms', 'upi', 'bank', 'auto-detected', 'detection'],
+      action: () => {
+        onClose();
+        navigate('/expenses?tab=sms');
       },
     },
     {
@@ -217,14 +242,36 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'nav-bills',
-      title: 'Bills & Utilities',
+      title: 'Bills & Recurring Payments',
       category: 'Navigation',
       shortcut: '3',
       icon: FileText,
-      keywords: ['recurring', 'subscriptions', 'due dates'],
+      keywords: ['bills', 'recurring', 'subscriptions', 'due dates', 'rent', 'utilities'],
       action: () => {
         onClose();
         navigate('/bills');
+      },
+    },
+    {
+      id: 'nav-bills-due-soon',
+      title: 'Show Bills Due Soon',
+      category: 'Navigation',
+      icon: Clock,
+      keywords: ['bills due soon', 'upcoming bills', 'due this week'],
+      action: () => {
+        onClose();
+        navigate('/bills?filter=due-soon');
+      },
+    },
+    {
+      id: 'nav-bills-overdue',
+      title: 'Show Overdue Bills',
+      category: 'Navigation',
+      icon: AlertTriangle,
+      keywords: ['overdue bills', 'unpaid bills', 'late bills'],
+      action: () => {
+        onClose();
+        navigate('/bills?filter=overdue');
       },
     },
     {
