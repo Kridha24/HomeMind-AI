@@ -19,6 +19,7 @@ interface SettingState {
   aiOcr: boolean;
   isLoading: boolean;
   sidebarCollapsed: boolean;
+  reducedMotion: boolean;
   
   // Actions
   setCountry: (countryCode: string) => void;
@@ -28,6 +29,7 @@ interface SettingState {
   setTimeZone: (tz: string) => void;
   setDateFormat: (df: string) => void;
   setUnitSystem: (unit: 'Metric' | 'Imperial') => void;
+  setReducedMotion: (reduced: boolean) => void;
   saveSettings: () => Promise<void>;
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
@@ -53,6 +55,12 @@ export const useSettingStore = create<SettingState>((set, get) => ({
   aiOcr: true,
   isLoading: false,
   sidebarCollapsed: false,
+  reducedMotion: localStorage.getItem('hm_reducedMotion') === 'true',
+
+  setReducedMotion: (reduced: boolean) => {
+    localStorage.setItem('hm_reducedMotion', String(reduced));
+    set({ reducedMotion: reduced });
+  },
 
   setLanguage: (lang: string) => {
     localStorage.setItem('hm_language', lang);
