@@ -33,12 +33,19 @@ export interface Expense {
 
 export interface Bill {
   id: string;
+  householdId?: string;
   title: string;
   amount: number;
   dueDate: string;
   category: string;
   status: 'PAID' | 'UNPAID' | 'OVERDUE';
-  provider?: string;
+  provider?: string | null;
+  paidAt?: string | null;
+  notes?: string | null;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface GroceryItem {
