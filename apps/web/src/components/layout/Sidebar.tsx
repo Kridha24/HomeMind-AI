@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   CreditCard,
@@ -113,21 +113,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
       >
         {/* Top: Brand Logo + Mobile Close */}
         <div className="flex items-center justify-between px-2 pb-2.5 border-b border-slate-100 dark:border-slate-800/80 flex-shrink-0">
-          <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/25 flex-shrink-0">
+          <Link
+            to="/"
+            onClick={onClose}
+            aria-label="Go to Dashboard"
+            className="flex items-center gap-2.5 overflow-hidden group cursor-pointer p-1 rounded-xl hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/25 flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             {!isCollapsed && (
               <div className="min-w-0">
-                <span className="font-black text-sm text-slate-900 dark:text-white block leading-none tracking-tight">
-                  HomeMind
+                <span className="font-black text-sm text-slate-900 dark:text-white block leading-none tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  HomeMind.AI
                 </span>
                 <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block mt-0.5">
                   AI OS
                 </span>
               </div>
             )}
-          </div>
+          </Link>
 
           {onClose && (
             <button
