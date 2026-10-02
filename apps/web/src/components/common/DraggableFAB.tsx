@@ -81,7 +81,7 @@ export const DraggableFAB: React.FC<DraggableFABProps> = ({ onClick, onDismiss }
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         className={`relative flex items-center justify-center bg-gradient-to-tr from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.3)] shadow-blue-500/40 border border-blue-400/30 w-14 h-14 cursor-grab active:cursor-grabbing ${isDragging ? '' : 'hover:scale-105 active:scale-95'} group`}
-        title="Ask HomeMind AI Assistant"
+        title="Ask HomeMind.AI Assistant"
       >
         <Bot className={`w-6 h-6 text-white ${isDragging ? '' : 'group-hover:rotate-12 transition-transform'}`} />
         <Sparkles className="w-3 h-3 text-blue-200 absolute top-2 right-2 animate-pulse" />

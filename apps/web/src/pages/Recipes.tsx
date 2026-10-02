@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { UtensilsCrossed, Sparkles, Clock, Flame, Leaf, Award } from 'lucide-react';
+import { UtensilsCrossed, Sparkles, Clock, Flame, Leaf, Award, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import apiClient from '../services/apiClient';
+import { useSettingStore } from '../stores/useSettingStore';
 
 export const Recipes: React.FC = () => {
   const [recipes, setRecipes] = useState<any[]>([]);
+  const { aiRecipes } = useSettingStore();
 
   useEffect(() => {
-    fetchRecipes();
-  }, []);
+    if (aiRecipes) {
+      fetchRecipes();
+    }
+  }, [aiRecipes]);
 
   const fetchRecipes = async () => {
     try {
@@ -48,6 +53,18 @@ export const Recipes: React.FC = () => {
         </h1>
         <p className="text-xs text-muted">Personalized recipes matched directly against your available grocery inventory</p>
       </div>
+
+      {!aiRecipes && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-xs font-semibold">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>AI Smart Recipes are currently disabled in Settings.</span>
+          </div>
+          <Link to="/settings" className="px-3 py-1.5 rounded-xl bg-amber-500 text-white text-xs font-bold hover:bg-amber-600">
+            Open Settings
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {recipes.map((r, i) => (

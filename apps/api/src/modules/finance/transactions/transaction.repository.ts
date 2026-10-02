@@ -172,12 +172,79 @@ export class TransactionRepository {
     });
   }
 
+  public static async syncLegacyRecords(householdId: string) {
+    try {
+      const expensesWithoutTx = await prisma.expense.findMany({
+        where: { householdId, transaction: null, softDelete: false },
+        take: 200,
+      });
+
+      for (const exp of expensesWithoutTx) {
+        try {
+          await prisma.transaction.create({
+            data: {
+              householdId: exp.householdId,
+              userId: exp.userId,
+              amount: exp.amount,
+              currency: 'INR',
+              type: 'DEBIT',
+              merchant: exp.title,
+              category: exp.category,
+              paymentMethod: 'MANUAL',
+              source: 'MANUAL',
+              status: 'CONFIRMED',
+              occurredAt: exp.date,
+              expenseId: exp.id,
+              softDelete: exp.softDelete,
+            },
+          });
+        } catch {
+          // ignore unique collision if concurrent
+        }
+      }
+
+      const incomesWithoutTx = await prisma.income.findMany({
+        where: { householdId, transaction: null, softDelete: false },
+        take: 200,
+      });
+
+      for (const inc of incomesWithoutTx) {
+        try {
+          await prisma.transaction.create({
+            data: {
+              householdId: inc.householdId,
+              userId: inc.createdBy || inc.householdId,
+              amount: inc.amount,
+              currency: 'INR',
+              type: 'CREDIT',
+              merchant: inc.title,
+              category: inc.source,
+              paymentMethod: 'MANUAL',
+              source: 'MANUAL',
+              status: 'CONFIRMED',
+              occurredAt: inc.date,
+              incomeId: inc.id,
+              softDelete: inc.softDelete,
+            },
+          });
+        } catch {
+          // ignore unique collision
+        }
+      }
+    } catch (err: any) {
+      console.warn('[TransactionRepository.syncLegacyRecords] Sync notice:', err.message);
+    }
+  }
+
   public static async findMany(
     householdId: string,
     userId: string,
     role: string,
     query: GetTransactionsQuery
   ) {
+    // Keep legacy records unified
+    await this.syncLegacyRecords(householdId);
+
     const isMember = role === 'MEMBER';
     const where: any = {
       householdId,
@@ -188,31 +255,63 @@ export class TransactionRepository {
       where.userId = userId;
     }
 
-    if (query.status) {
+    if (query.status && query.status !== 'ALL') {
       where.status = query.status;
     }
 
-    if (query.type) {
+    if (query.type && query.type !== 'ALL') {
       where.type = query.type;
     }
 
-    if (query.search) {
+    if (query.category && query.category !== 'ALL') {
+      where.category = query.category;
+    }
+
+    if (query.source && query.source !== 'ALL') {
+      where.source = query.source;
+    }
+
+    if (query.paymentMethod && query.paymentMethod !== 'ALL') {
+      where.paymentMethod = query.paymentMethod;
+    }
+
+    if (query.startDate || query.endDate) {
+      where.occurredAt = {};
+      if (query.startDate) where.occurredAt.gte = new Date(query.startDate);
+      if (query.endDate) where.occurredAt.lte = new Date(query.endDate);
+    }
+
+    if (query.minAmount !== undefined || query.maxAmount !== undefined) {
+      where.amount = {};
+      if (query.minAmount !== undefined) where.amount.gte = Number(query.minAmount);
+      if (query.maxAmount !== undefined) where.amount.lte = Number(query.maxAmount);
+    }
+
+    if (query.search && query.search.trim()) {
+      const term = query.search.trim();
       where.OR = [
-        { merchant: { contains: query.search } },
-        { category: { contains: query.search } },
-        { bankName: { contains: query.search } },
-        { reference: { contains: query.search } },
+        { merchant: { contains: term } },
+        { category: { contains: term } },
+        { bankName: { contains: term } },
+        { reference: { contains: term } },
       ];
     }
 
     const limit = Math.min(query.limit || 50, 100);
     const offset = query.offset || 0;
 
+    const sortBy = query.sortBy || 'occurredAt';
+    const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc';
+    const orderBy: any = {};
+    if (sortBy === 'amount') orderBy.amount = sortOrder;
+    else if (sortBy === 'merchant') orderBy.merchant = sortOrder;
+    else orderBy.occurredAt = sortOrder;
+
     const [total, transactions] = await Promise.all([
       prisma.transaction.count({ where }),
       prisma.transaction.findMany({
         where,
-        orderBy: { occurredAt: 'desc' },
+        orderBy,
         take: limit,
         skip: offset,
         include: {
@@ -229,14 +328,53 @@ export class TransactionRepository {
   }
 
   public static async update(id: string, data: any) {
-    return prisma.transaction.update({
+    const updateData: any = {};
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.category !== undefined) updateData.category = data.category;
+    if (data.merchant !== undefined) updateData.merchant = data.merchant;
+    if (data.amount !== undefined) updateData.amount = data.amount;
+    if (data.occurredAt !== undefined) updateData.occurredAt = new Date(data.occurredAt);
+
+    const tx = await prisma.transaction.update({
       where: { id },
-      data,
+      data: updateData,
       include: { expense: true, income: true },
     });
+
+    // Mirror updates to linked Expense or Income
+    if (tx.expenseId) {
+      const expUpdate: any = {};
+      if (data.category !== undefined) expUpdate.category = data.category;
+      if (data.merchant !== undefined) expUpdate.title = data.merchant;
+      if (data.amount !== undefined) expUpdate.amount = data.amount;
+      if (data.occurredAt !== undefined) expUpdate.date = new Date(data.occurredAt);
+      if (Object.keys(expUpdate).length > 0) {
+        await prisma.expense.update({ where: { id: tx.expenseId }, data: expUpdate }).catch(() => {});
+      }
+    }
+
+    if (tx.incomeId) {
+      const incUpdate: any = {};
+      if (data.category !== undefined) incUpdate.source = data.category;
+      if (data.merchant !== undefined) incUpdate.title = data.merchant;
+      if (data.amount !== undefined) incUpdate.amount = data.amount;
+      if (data.occurredAt !== undefined) incUpdate.date = new Date(data.occurredAt);
+      if (Object.keys(incUpdate).length > 0) {
+        await prisma.income.update({ where: { id: tx.incomeId }, data: incUpdate }).catch(() => {});
+      }
+    }
+
+    return tx;
   }
 
   public static async softDelete(id: string) {
+    const tx = await prisma.transaction.findUnique({ where: { id } });
+    if (tx?.expenseId) {
+      await prisma.expense.update({ where: { id: tx.expenseId }, data: { softDelete: true } }).catch(() => {});
+    }
+    if (tx?.incomeId) {
+      await prisma.income.update({ where: { id: tx.incomeId }, data: { softDelete: true } }).catch(() => {});
+    }
     return prisma.transaction.update({
       where: { id },
       data: { softDelete: true },
@@ -244,13 +382,32 @@ export class TransactionRepository {
   }
 
   public static async getStats(householdId: string, userId: string, role: string) {
+    await this.syncLegacyRecords(householdId);
+
     const isMember = role === 'MEMBER';
     const where: any = { householdId, softDelete: false };
     if (isMember) {
       where.userId = userId;
     }
 
-    const [allTxns, debitAggregate, creditAggregate] = await Promise.all([
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const monthWhere = {
+      ...where,
+      occurredAt: { gte: startOfMonth, lte: endOfMonth },
+    };
+
+    const [
+      allTxns,
+      debitAggregate,
+      creditAggregate,
+      monthDebitAggregate,
+      monthCreditAggregate,
+      largestExpenseTx,
+      categoryGroups,
+    ] = await Promise.all([
       prisma.transaction.groupBy({
         by: ['status'],
         where,
@@ -263,6 +420,25 @@ export class TransactionRepository {
       prisma.transaction.aggregate({
         where: { ...where, type: 'CREDIT', status: 'CONFIRMED' },
         _sum: { amount: true },
+      }),
+      prisma.transaction.aggregate({
+        where: { ...monthWhere, type: 'DEBIT', status: 'CONFIRMED' },
+        _sum: { amount: true },
+      }),
+      prisma.transaction.aggregate({
+        where: { ...monthWhere, type: 'CREDIT', status: 'CONFIRMED' },
+        _sum: { amount: true },
+      }),
+      prisma.transaction.findFirst({
+        where: { ...monthWhere, type: 'DEBIT', status: 'CONFIRMED' },
+        orderBy: { amount: 'desc' },
+        select: { amount: true, merchant: true },
+      }),
+      prisma.transaction.groupBy({
+        by: ['category'],
+        where: { ...monthWhere, type: 'DEBIT', status: 'CONFIRMED' },
+        _sum: { amount: true },
+        _count: { _all: true },
       }),
     ]);
 
@@ -278,6 +454,38 @@ export class TransactionRepository {
       else if (group.status === 'IGNORED') ignoredCount = group._count._all;
     }
 
+    const thisMonthSpent = monthDebitAggregate._sum.amount || 0;
+    const thisMonthIncome = monthCreditAggregate._sum.amount || 0;
+    const netCashFlow = thisMonthIncome - thisMonthSpent;
+
+    let largestExpense = largestExpenseTx
+      ? { amount: largestExpenseTx.amount, merchant: largestExpenseTx.merchant || 'Expense' }
+      : null;
+
+    if (!largestExpense) {
+      const allTimeLargest = await prisma.transaction.findFirst({
+        where: { ...where, type: 'DEBIT', status: 'CONFIRMED' },
+        orderBy: { amount: 'desc' },
+        select: { amount: true, merchant: true },
+      });
+      if (allTimeLargest) {
+        largestExpense = { amount: allTimeLargest.amount, merchant: allTimeLargest.merchant || 'Expense' };
+      }
+    }
+
+    const categoryBreakdown = categoryGroups
+      .map((g) => {
+        const catAmount = g._sum.amount || 0;
+        const percentage = thisMonthSpent > 0 ? Math.round((catAmount / thisMonthSpent) * 100) : 0;
+        return {
+          category: g.category || 'Other',
+          amount: catAmount,
+          count: g._count._all,
+          percentage,
+        };
+      })
+      .sort((a, b) => b.amount - a.amount);
+
     return {
       totalCount,
       confirmedCount,
@@ -285,6 +493,11 @@ export class TransactionRepository {
       ignoredCount,
       totalDebitSum: debitAggregate._sum.amount || 0,
       totalCreditSum: creditAggregate._sum.amount || 0,
+      thisMonthSpent,
+      thisMonthIncome,
+      netCashFlow,
+      largestExpense,
+      categoryBreakdown,
     };
   }
 }

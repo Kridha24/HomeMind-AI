@@ -59,7 +59,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
         {
           id: (Date.now() + 1).toString(),
           sender: 'bot',
-          text: 'HomeMind AI is temporarily unable to retrieve your data. Please check your connection and try again.',
+          text: 'HomeMind.AI is temporarily unable to retrieve your data. Please check your connection and try again.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -133,7 +133,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-sm text-white">HomeMind AI Chatbot</h3>
+                <h3 className="font-bold text-sm text-white">HomeMind.AI Chatbot</h3>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               </div>
               <span className="text-[10px] text-muted">Live Household Database Assistant</span>
@@ -168,7 +168,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
                 <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto text-blue-400">
                   <Bot className="w-5 h-5" />
                 </div>
-                <h4 className="font-bold text-xs text-white">Namaste! Main aapka HomeMind AI assistant hoon.</h4>
+                <h4 className="font-bold text-xs text-white">Namaste! Main aapka HomeMind.AI assistant hoon.</h4>
                 <p className="text-[11px] text-muted leading-relaxed">
                   Aapke household expenses, bills, tasks, aur pantry ka live data dekh kar main turant answer kar sakta hoon.
                 </p>

@@ -125,6 +125,11 @@ export class TransactionCategorizer {
     paymentMethod?: string | null,
     type?: string | null
   ): string {
+    // Respect user AI settings: if automated categorization is turned off, return standard envelope
+    if (typeof window !== 'undefined' && localStorage.getItem('hm_ai_predictions') === 'false') {
+      return type === 'CREDIT' ? 'Income' : 'Other';
+    }
+
     if (type === 'CREDIT') {
       if (merchant) {
         const clean = merchant.toUpperCase().replace(/[^A-Z0-9]/g, '');

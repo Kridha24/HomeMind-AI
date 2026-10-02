@@ -41,7 +41,7 @@ export const AssistantHeader: React.FC<AssistantHeaderProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="font-extrabold text-sm text-white tracking-tight leading-none">
-              HomeMind AI
+              HomeMind.AI
             </h2>
             <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded-full font-bold">
               {isStreaming ? 'Thinking...' : 'Ready'}

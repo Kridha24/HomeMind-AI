@@ -9,7 +9,7 @@ export const UserManual: React.FC = () => {
           HomeMind User Manual
           <BookOpen className="w-6 h-6 text-indigo-400" />
         </h1>
-        <p className="text-sm text-muted mt-2">Welcome to HomeMind AI! This guide will help you understand how to use the platform to manage your household easily.</p>
+        <p className="text-sm text-muted mt-2">Welcome to HomeMind.AI! This guide will help you understand how to use the platform to manage your household easily.</p>
       </div>
 
       <div className="space-y-6">
@@ -35,7 +35,7 @@ export const UserManual: React.FC = () => {
             <h2 className="text-lg font-bold text-primary">2. Privacy & Family Workspace</h2>
           </div>
           <div className="space-y-3 text-sm text-secondary leading-relaxed">
-            <p><strong>Strict Privacy:</strong> HomeMind respects your privacy. If you are a <span className="text-emerald-400 font-bold">MEMBER</span>, you will only see your own personal Income, Expenses, and Bills. You cannot see other members' personal financial data.</p>
+            <p><strong>Strict Privacy:</strong> HomeMind.AI respects your privacy. If you are a <span className="text-emerald-400 font-bold">MEMBER</span>, you will only see your own personal Income, Expenses, and Bills. You cannot see other members' personal financial data.</p>
             <p><strong>Roles:</strong> The <span className="text-indigo-400 font-bold">OWNER</span> and <span className="text-indigo-400 font-bold">CO-OWNER</span> can see all data in the household. The OWNER can go to the <strong>Family Workspace</strong> page to promote any member to a CO-OWNER.</p>
             <p><strong>Aggregate View:</strong> Even if you are a MEMBER, you can visit the Family Workspace to see the "Total Family Financial Overview" which shows the combined household totals without revealing personal details.</p>
             <p><strong>Joining/Inviting:</strong> In the Family Workspace, you can copy your Invite Code to share with family, or you can enter another family's Invite Code to join their household.</p>
@@ -74,10 +74,10 @@ export const UserManual: React.FC = () => {
             <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
               <Bot className="w-5 h-5 text-blue-400" />
             </div>
-            <h2 className="text-lg font-bold text-primary">5. HomeMind AI Assistant</h2>
+            <h2 className="text-lg font-bold text-primary">5. HomeMind.AI Assistant</h2>
           </div>
           <p className="text-sm text-secondary leading-relaxed">
-            Click the <span className="bg-blue-600 px-2 py-0.5 rounded text-white text-xs inline-flex items-center gap-1"><Bot className="w-3 h-3"/> Ask HomeMind AI</span> button in the bottom right corner at any time. The AI can answer questions about your spending, summarize your tasks, or even automatically add an expense if you ask it to!
+            Click the <span className="bg-blue-600 px-2 py-0.5 rounded text-white text-xs inline-flex items-center gap-1"><Bot className="w-3 h-3"/> Ask HomeMind.AI</span> button in the bottom right corner at any time. The AI can answer questions about your spending, summarize your tasks, or even automatically add an expense if you ask it to!
           </p>
         </div>
       </div>
@@ -85,7 +85,7 @@ export const UserManual: React.FC = () => {
       <div className="text-center mt-10">
         <p className="text-xs text-muted flex items-center justify-center gap-2">
           <Sparkles className="w-4 h-4 text-indigo-500" />
-          Thank you for choosing HomeMind AI to manage your home.
+          Thank you for choosing HomeMind.AI to manage your home.
         </p>
       </div>
     </div>

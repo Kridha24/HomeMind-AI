@@ -164,7 +164,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="space-y-1">
               <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Step 1 — Profile</span>
               <h3 className="text-xl font-bold text-white tracking-tight">What should we call you?</h3>
-              <p className="text-xs text-muted">Your name across HomeMind AI and family updates.</p>
+              <p className="text-xs text-muted">Your name across HomeMind.AI and family updates.</p>
             </div>
 
             <div>

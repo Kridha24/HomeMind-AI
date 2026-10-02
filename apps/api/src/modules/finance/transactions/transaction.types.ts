@@ -25,14 +25,33 @@ export interface UpdateTransactionDto {
   status?: 'CONFIRMED' | 'NEEDS_REVIEW' | 'IGNORED';
   category?: string;
   merchant?: string;
+  notes?: string;
+  amount?: number;
+  occurredAt?: string | Date;
 }
 
 export interface GetTransactionsQuery {
   status?: string;
   type?: string;
   search?: string;
+  category?: string;
+  source?: string;
+  paymentMethod?: string;
+  startDate?: string;
+  endDate?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  sortBy?: 'occurredAt' | 'amount' | 'merchant';
+  sortOrder?: 'asc' | 'desc';
   limit?: number;
   offset?: number;
+}
+
+export interface CategoryBreakdownItem {
+  category: string;
+  amount: number;
+  count: number;
+  percentage: number;
 }
 
 export interface TransactionStatsResult {
@@ -42,4 +61,12 @@ export interface TransactionStatsResult {
   ignoredCount: number;
   totalDebitSum: number;
   totalCreditSum: number;
+  thisMonthSpent: number;
+  thisMonthIncome: number;
+  netCashFlow: number;
+  largestExpense: {
+    amount: number;
+    merchant: string;
+  } | null;
+  categoryBreakdown: CategoryBreakdownItem[];
 }

@@ -99,7 +99,7 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
               {mode === 'NEW_USER' ? 'Sign Up with Google' : 'Sign In with Google'}
             </h2>
             <p className="text-xs text-muted mt-1">
-              You'll be redirected to Google to authorize HomeMind AI
+              You'll be redirected to Google to authorize HomeMind.AI
             </p>
           </div>
         </div>

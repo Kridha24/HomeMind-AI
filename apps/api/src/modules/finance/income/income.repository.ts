@@ -41,6 +41,23 @@ export class IncomeRepository {
         },
       });
 
+      await tx.transaction.create({
+        data: {
+          householdId,
+          userId,
+          amount: roundedAmount,
+          currency: 'INR',
+          type: 'CREDIT',
+          merchant: dto.title,
+          category: dto.source,
+          paymentMethod: 'MANUAL',
+          source: 'MANUAL',
+          status: 'CONFIRMED',
+          occurredAt: incomeDate,
+          incomeId: income.id,
+        },
+      });
+
       await OutboxService.recordEvent(tx, {
         eventType: EventType.INCOME_CREATED,
         aggregateType: 'Income',
@@ -78,6 +95,19 @@ export class IncomeRepository {
         data,
       });
 
+      // Mirror to linked Transaction if exists
+      const txUpdate: any = {};
+      if (dto.title !== undefined) txUpdate.merchant = dto.title;
+      if (dto.amount !== undefined) txUpdate.amount = roundMoney(Number(dto.amount));
+      if (dto.source !== undefined) txUpdate.category = dto.source;
+      if (dto.date !== undefined) txUpdate.occurredAt = new Date(dto.date);
+      if (Object.keys(txUpdate).length > 0) {
+        await tx.transaction.updateMany({
+          where: { incomeId: id },
+          data: txUpdate,
+        });
+      }
+
       await OutboxService.recordEvent(tx, {
         eventType: EventType.INCOME_UPDATED,
         aggregateType: 'Income',
@@ -98,6 +128,12 @@ export class IncomeRepository {
 
   public static async deleteAtomic(id: string, householdId: string) {
     return prisma.$transaction(async (tx) => {
+      // Soft-delete linked transaction if present
+      await tx.transaction.updateMany({
+        where: { incomeId: id },
+        data: { softDelete: true },
+      });
+
       const deleted = await tx.income.delete({
         where: { id },
       });

@@ -855,6 +855,13 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response) =>
 
     const { name, age, email, phoneNumber, avatar, country, currency } = req.body;
 
+    const currentUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!currentUser) return res.status(404).json({ error: 'User not found' });
+
+    if (email && email !== currentUser.email && currentUser.provider === 'GOOGLE') {
+      return res.status(400).json({ error: 'Email address cannot be changed on Google-authenticated accounts' });
+    }
+
     if (phoneNumber) {
       const conflict = await prisma.user.findFirst({
         where: { phoneNumber, NOT: { id: userId } }
@@ -1081,5 +1088,133 @@ export const getMe = async (req: AuthenticatedRequest, res: Response) => {
   } catch (err: any) {
     console.error('[Auth] Error:', err.message);
     res.status(500).json({ error: 'An error occurred. Please try again.' });
+  }
+};
+
+/**
+ * 9. Get Detailed Active Sessions for User
+ */
+export const getActiveSessions = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthenticated' });
+
+    const sessions = await prisma.refreshToken.findMany({
+      where: { userId, expiresAt: { gt: new Date() } },
+      select: {
+        id: true,
+        device: true,
+        ipAddress: true,
+        userAgent: true,
+        createdAt: true,
+        expiresAt: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json({ sessions, count: sessions.length });
+  } catch (err: any) {
+    console.error('[getActiveSessions] Error:', err.message);
+    res.status(500).json({ error: 'Failed to retrieve active sessions.' });
+  }
+};
+
+/**
+ * 10. Revoke a Specific Device Session
+ */
+export const revokeSession = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const { sessionId } = req.params;
+    if (!userId) return res.status(401).json({ error: 'Unauthenticated' });
+    if (!sessionId) return res.status(400).json({ error: 'Session ID is required' });
+
+    const deleted = await prisma.refreshToken.deleteMany({
+      where: { id: sessionId, userId }
+    });
+
+    if (deleted.count === 0) {
+      return res.status(404).json({ error: 'Session not found or already revoked' });
+    }
+
+    res.json({ success: true, message: 'Session revoked successfully' });
+  } catch (err: any) {
+    console.error('[revokeSession] Error:', err.message);
+    res.status(500).json({ error: 'Failed to revoke session.' });
+  }
+};
+
+/**
+ * 11. Delete Account (Deactivate User & Safely Clean Credentials)
+ */
+export const deleteAccount = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const householdId = req.user?.householdId;
+    if (!userId || !householdId) return res.status(401).json({ error: 'Unauthenticated' });
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId, softDelete: false }
+    });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Handle household ownership transfer if user is OWNER and other members exist
+    if (user.role === 'OWNER') {
+      const otherMembers = await prisma.user.findMany({
+        where: { householdId, id: { not: userId }, softDelete: false },
+        orderBy: { createdAt: 'asc' }
+      });
+
+      if (otherMembers.length > 0) {
+        // Promote first active admin or member to OWNER so household remains operational
+        const successor = otherMembers.find((m) => m.role === 'ADMIN') || otherMembers[0];
+        await prisma.user.update({
+          where: { id: successor.id },
+          data: { role: 'OWNER' }
+        });
+      } else {
+        // No other members in household: soft-delete the household
+        await prisma.household.update({
+          where: { id: householdId },
+          data: { softDelete: true }
+        });
+      }
+    }
+
+    // Revoke all refresh tokens
+    await prisma.refreshToken.deleteMany({ where: { userId } });
+
+    // Anonymize personal AI memories
+    await prisma.aIMemory.deleteMany({ where: { userId } });
+
+    // Soft delete the user and clear sensitive identifiers
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        softDelete: true,
+        isActive: false,
+        name: 'Deleted User',
+        email: null,
+        phoneNumber: null,
+        googleId: null,
+        passwordHash: null
+      }
+    });
+
+    // Record audit log
+    await prisma.auditLog.create({
+      data: {
+        householdId,
+        action: 'DELETE_ACCOUNT',
+        entity: 'User',
+        details: `User ${userId} deactivated their account and revoked all active credentials.`,
+        performedBy: userId
+      }
+    });
+
+    res.json({ success: true, message: 'Account successfully deactivated and deleted.' });
+  } catch (err: any) {
+    console.error('[deleteAccount] Error:', err.message);
+    res.status(500).json({ error: 'Failed to delete account. Please try again.' });
   }
 };

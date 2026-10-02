@@ -205,20 +205,14 @@ export const PreferencesSettings: React.FC = () => {
           {/* Currency */}
           <SettingsRow
             label="Operating Currency"
-            description="HomeMind.AI natively handles INR (₹) banking and SMS feeds; multi-currency options adapt dashboard display"
-            icon={<Coins className="w-5 h-5" />}
+            description="HomeMind.AI financial engine and SMS parser operate natively in Indian Rupees (INR). Fixed to INR to prevent ledger distortion."
+            icon={<Coins className="w-5 h-5 text-amber-500" />}
           >
-            <div className="w-48 sm:w-60">
-              <SettingsSelect
-                value={currency || 'INR'}
-                onChange={handleCurrencyChange}
-                disabled={saving}
-                options={Object.values(SUPPORTED_CURRENCIES).map((c) => ({
-                  value: c.code,
-                  label: `${c.code} (${c.symbol})`
-                }))}
-                ariaLabel="Select currency"
-              />
+            <div className="w-48 sm:w-60 flex items-center justify-end">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
+                <span>INR (₹)</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Native Base</span>
+              </span>
             </div>
           </SettingsRow>
 

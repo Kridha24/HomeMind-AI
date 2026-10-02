@@ -42,7 +42,9 @@ export const updateSettings = async (req: AuthenticatedRequest, res: Response) =
       theme,
       language,
       pushNotifications,
-      emailAlerts
+      emailAlerts,
+      aiMemoryEnabled,
+      proactiveAI
     } = req.body;
 
     let settings = await prisma.setting.findFirst({
@@ -61,7 +63,9 @@ export const updateSettings = async (req: AuthenticatedRequest, res: Response) =
           theme: theme ?? settings.theme,
           language: language ?? settings.language,
           pushNotifications: pushNotifications ?? settings.pushNotifications,
-          emailAlerts: emailAlerts ?? settings.emailAlerts
+          emailAlerts: emailAlerts ?? settings.emailAlerts,
+          aiMemoryEnabled: aiMemoryEnabled ?? settings.aiMemoryEnabled,
+          proactiveAI: proactiveAI ?? settings.proactiveAI
         }
       });
     } else {
@@ -76,7 +80,9 @@ export const updateSettings = async (req: AuthenticatedRequest, res: Response) =
           theme: theme || 'dark',
           language: language || 'English',
           pushNotifications: pushNotifications ?? true,
-          emailAlerts: emailAlerts ?? true
+          emailAlerts: emailAlerts ?? true,
+          aiMemoryEnabled: aiMemoryEnabled ?? true,
+          proactiveAI: proactiveAI ?? true
         }
       });
     }

@@ -36,9 +36,9 @@ export const updateMemberRole = async (req: AuthenticatedRequest, res: Response)
       return res.status(400).json({ error: 'Household context missing' });
     }
 
-    // Only ADMIN or HEAD can change member roles.
-    if (requesterRole !== 'ADMIN' && requesterRole !== 'HEAD') {
-      return res.status(403).json({ error: 'Only household admins can update member roles' });
+    // Only OWNER, CO-OWNER, ADMIN or HEAD can change member roles.
+    if (requesterRole !== 'OWNER' && requesterRole !== 'CO-OWNER' && requesterRole !== 'ADMIN' && requesterRole !== 'HEAD') {
+      return res.status(403).json({ error: 'Only household owners and admins can update member roles' });
     }
 
     const allowedRoles = ['ADMIN', 'MEMBER', 'GUEST'];
@@ -69,6 +69,212 @@ export const updateMemberRole = async (req: AuthenticatedRequest, res: Response)
   } catch (err: any) {
     console.error('[updateMemberRole] Error:', err.message);
     res.status(500).json({ error: 'Failed to update member role.' });
+  }
+};
+
+export const removeHouseholdMember = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { userId: targetUserId } = req.params;
+    const requesterId = req.user?.userId;
+    const householdId = req.user?.householdId;
+    const requesterRole = req.user?.role;
+
+    if (!householdId || !requesterId) {
+      return res.status(400).json({ error: 'Household context missing' });
+    }
+
+    if (requesterRole !== 'OWNER' && requesterRole !== 'CO-OWNER' && requesterRole !== 'ADMIN' && requesterRole !== 'HEAD') {
+      return res.status(403).json({ error: 'Only household owners and admins can remove members' });
+    }
+
+    if (targetUserId === requesterId) {
+      return res.status(400).json({ error: 'You cannot remove yourself. Please use Leave Household instead.' });
+    }
+
+    const targetUser = await prisma.user.findFirst({
+      where: { id: targetUserId, householdId, softDelete: false }
+    });
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Member not found in this household' });
+    }
+
+    // Admins cannot remove Owners
+    if (targetUser.role === 'OWNER' && requesterRole !== 'OWNER') {
+      return res.status(403).json({ error: 'Only household owners can remove an owner' });
+    }
+
+    // Create a new individual household for the removed user so they are not left orphan
+    const personalHousehold = await prisma.household.create({
+      data: {
+        name: `${targetUser.name}'s Household`,
+        inviteCode: 'HM-' + Math.random().toString(36).substring(2, 8).toUpperCase()
+      }
+    });
+
+    await prisma.setting.create({
+      data: {
+        householdId: personalHousehold.id,
+        country: 'IN',
+        currency: 'INR',
+        theme: 'dark'
+      }
+    });
+
+    await prisma.user.update({
+      where: { id: targetUserId },
+      data: {
+        householdId: personalHousehold.id,
+        role: 'OWNER'
+      }
+    });
+
+    // Invalidate removed user's refresh tokens for security
+    await prisma.refreshToken.deleteMany({ where: { userId: targetUserId } });
+
+    await prisma.auditLog.create({
+      data: {
+        householdId,
+        action: 'REMOVE_MEMBER',
+        entity: 'User',
+        details: `Member ${targetUser.name} (${targetUserId}) removed from household by ${requesterId}`,
+        performedBy: requesterId
+      }
+    });
+
+    res.json({ success: true, message: `Member ${targetUser.name} removed successfully.` });
+  } catch (err: any) {
+    console.error('[removeHouseholdMember] Error:', err.message);
+    res.status(500).json({ error: 'Failed to remove household member.' });
+  }
+};
+
+export const leaveHousehold = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const householdId = req.user?.householdId;
+    const role = req.user?.role;
+
+    if (!userId || !householdId) {
+      return res.status(400).json({ error: 'Household context missing' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId, softDelete: false } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // If user is OWNER, check if there are other owners
+    if (role === 'OWNER') {
+      const otherOwners = await prisma.user.count({
+        where: { householdId, role: 'OWNER', id: { not: userId }, softDelete: false }
+      });
+      const otherMembers = await prisma.user.count({
+        where: { householdId, id: { not: userId }, softDelete: false }
+      });
+
+      if (otherOwners === 0 && otherMembers > 0) {
+        return res.status(400).json({
+          error: 'As the sole owner of a household with other members, you must transfer ownership to another member before leaving.'
+        });
+      }
+    }
+
+    // Create a new separate personal household for the leaving user
+    const personalHousehold = await prisma.household.create({
+      data: {
+        name: `${user.name}'s Household`,
+        inviteCode: 'HM-' + Math.random().toString(36).substring(2, 8).toUpperCase()
+      }
+    });
+
+    await prisma.setting.create({
+      data: {
+        householdId: personalHousehold.id,
+        country: 'IN',
+        currency: 'INR',
+        theme: 'dark'
+      }
+    });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        householdId: personalHousehold.id,
+        role: 'OWNER'
+      }
+    });
+
+    // Revoke refresh tokens so user gets fresh session token on next exchange
+    await prisma.refreshToken.deleteMany({ where: { userId } });
+
+    res.json({
+      success: true,
+      message: 'Successfully left household.',
+      household: personalHousehold
+    });
+  } catch (err: any) {
+    console.error('[leaveHousehold] Error:', err.message);
+    res.status(500).json({ error: 'Failed to leave household.' });
+  }
+};
+
+export const deleteHousehold = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId;
+    const householdId = req.user?.householdId;
+    const requesterRole = req.user?.role;
+
+    if (!userId || !householdId) {
+      return res.status(400).json({ error: 'Household context missing' });
+    }
+
+    if (requesterRole !== 'OWNER') {
+      return res.status(403).json({ error: 'Only household owners can delete the household' });
+    }
+
+    if (id !== householdId) {
+      return res.status(400).json({ error: 'Cannot delete a household you are not currently operating in' });
+    }
+
+    // Soft delete the household
+    await prisma.household.update({
+      where: { id: householdId },
+      data: { softDelete: true }
+    });
+
+    // Create a clean new private household for the user
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const newHousehold = await prisma.household.create({
+      data: {
+        name: `${user?.name || 'Personal'}'s Residence`,
+        inviteCode: 'HM-' + Math.random().toString(36).substring(2, 8).toUpperCase()
+      }
+    });
+
+    await prisma.setting.create({
+      data: {
+        householdId: newHousehold.id,
+        country: 'IN',
+        currency: 'INR',
+        theme: 'dark'
+      }
+    });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        householdId: newHousehold.id,
+        role: 'OWNER'
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Household deleted successfully.',
+      household: newHousehold
+    });
+  } catch (err: any) {
+    console.error('[deleteHousehold] Error:', err.message);
+    res.status(500).json({ error: 'Failed to delete household.' });
   }
 };
 
@@ -151,9 +357,9 @@ export const updateHouseholdName = async (req: AuthenticatedRequest, res: Respon
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
     if (!name || name.trim().length === 0) return res.status(400).json({ error: 'Name is required' });
 
-    // Only ADMIN or HEAD can rename the household.
-    if (requesterRole !== 'ADMIN' && requesterRole !== 'HEAD') {
-      return res.status(403).json({ error: 'Only household admins can rename the household' });
+    // Only OWNER, CO-OWNER, ADMIN or HEAD can rename the household.
+    if (requesterRole !== 'OWNER' && requesterRole !== 'CO-OWNER' && requesterRole !== 'ADMIN' && requesterRole !== 'HEAD') {
+      return res.status(403).json({ error: 'Only household owners and admins can rename the household' });
     }
 
     const updated = await prisma.household.update({

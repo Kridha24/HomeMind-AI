@@ -117,7 +117,8 @@ export const NotificationSettings: React.FC = () => {
       <SettingsCard
         id="notification-channels"
         title="Alert Channels"
-        description="Choose how HomeMind.AI delivers real-time household notifications to you."
+        description="Delivery channels configured for your account (Synced across devices)."
+        badge="Account Synced"
       >
         <div className="divide-y divide-slate-100 dark:divide-slate-800">
           <SettingsRow
@@ -152,7 +153,8 @@ export const NotificationSettings: React.FC = () => {
       <SettingsCard
         id="finance-notifications"
         title="Finance & Payments"
-        description="Stay on top of family spending, detected SMS transactions, and upcoming due dates."
+        description="Filter spending alerts and due date notices on this device."
+        badge="This Device Only"
       >
         <div className="divide-y divide-slate-100 dark:divide-slate-800">
           <SettingsRow
@@ -189,7 +191,8 @@ export const NotificationSettings: React.FC = () => {
       <SettingsCard
         id="household-notifications"
         title="Household & Chores"
-        description="Keep family members synchronized on shared responsibilities."
+        description="Filter family task and activity alerts on this device."
+        badge="This Device Only"
       >
         <div className="divide-y divide-slate-100 dark:divide-slate-800">
           <SettingsRow
@@ -231,7 +234,8 @@ export const NotificationSettings: React.FC = () => {
       <SettingsCard
         id="security-ai-notifications"
         title="Security & AI Intelligence"
-        description="Critical account security triggers and proactive household insights."
+        description="Filter security notices and copilot recommendation alerts on this device."
+        badge="This Device Only"
       >
         <div className="divide-y divide-slate-100 dark:divide-slate-800">
           <SettingsRow

@@ -255,8 +255,13 @@ export const ProfileSettings: React.FC = () => {
               icon={Mail}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={user?.provider === 'GOOGLE'}
               placeholder="name@example.com"
-              helpText="Used for session notifications and receipt reports"
+              helpText={
+                user?.provider === 'GOOGLE'
+                  ? 'Identity managed by Google OAuth (Cryptographically tied)'
+                  : 'Used for session notifications and receipt reports'
+              }
             />
 
             <SettingsInput
@@ -265,8 +270,13 @@ export const ProfileSettings: React.FC = () => {
               icon={Phone}
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
+              disabled={user?.provider === 'PHONE'}
               placeholder="+91 98765 43210"
-              helpText="Used for SMS OTP authentication and family communications"
+              helpText={
+                user?.provider === 'PHONE'
+                  ? 'Identity verified via Mobile SMS OTP'
+                  : 'Used for SMS OTP authentication and family communications'
+              }
             />
 
             <div className="sm:col-span-2">

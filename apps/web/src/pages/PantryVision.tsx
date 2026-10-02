@@ -1,8 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { Camera, Upload, Sparkles, Check, RefreshCw, ShoppingBag, Image as ImageIcon } from 'lucide-react';
+import { Camera, Upload, Sparkles, Check, RefreshCw, ShoppingBag, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import apiClient from '../services/apiClient';
+import { useSettingStore } from '../stores/useSettingStore';
 
 export const PantryVision: React.FC = () => {
+  const { aiOcr } = useSettingStore();
   const [loading, setLoading] = useState(false);
   const [scanResult, setScanResult] = useState<any>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -11,6 +14,7 @@ export const PantryVision: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const triggerFileInput = (type: 'shelf' | 'receipt') => {
+    if (!aiOcr) return;
     setActiveScanType(type);
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -80,6 +84,18 @@ export const PantryVision: React.FC = () => {
           Upload a photo of your fridge, pantry, or store receipt to automatically add items.
         </p>
       </div>
+
+      {!aiOcr && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-xs font-semibold">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>Smart Receipt and Pantry OCR Digitization is disabled in Settings.</span>
+          </div>
+          <Link to="/settings" className="px-3 py-1.5 rounded-xl bg-amber-500 text-white text-xs font-bold hover:bg-amber-600">
+            Open Settings
+          </Link>
+        </div>
+      )}
 
       {/* Hidden File Input */}
       <input

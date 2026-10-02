@@ -21,7 +21,7 @@ import { SettingsStatusBadge } from '../primitives/SettingsStatusBadge';
 import { AutomaticSmsSettingsSection } from '../../sms/AutomaticSmsSettingsSection';
 
 export const PrivacySettings: React.FC = () => {
-  const { user, household, logout } = useAuthStore();
+  const { user, household, logout, updateHousehold } = useAuthStore();
   const [downloading, setDownloading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -74,7 +74,10 @@ export const PrivacySettings: React.FC = () => {
   const handleLeaveHousehold = async () => {
     setActionLoading(true);
     try {
-      await apiClient.post('/family/leave');
+      const res = await apiClient.post('/family/leave');
+      if (res.data?.household) {
+        updateHousehold(res.data.household);
+      }
       window.location.reload();
     } catch (err: any) {
       setFeedback({
@@ -90,7 +93,10 @@ export const PrivacySettings: React.FC = () => {
   const handleDeleteHousehold = async () => {
     setActionLoading(true);
     try {
-      await apiClient.delete(`/family/${household?.id}`);
+      const res = await apiClient.delete(`/family/${household?.id}`);
+      if (res.data?.household) {
+        updateHousehold(res.data.household);
+      }
       window.location.reload();
     } catch (err: any) {
       setFeedback({

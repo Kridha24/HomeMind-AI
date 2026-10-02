@@ -23,6 +23,7 @@ export const AutomaticSmsSettingsSection: React.FC = () => {
   const [enabled, setEnabled] = useState(SmsSyncManager.isTrackingEnabled());
   const [autoImport, setAutoImport] = useState(SmsSyncManager.isAutoImportEnabled());
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const [permissionState, setPermissionState] = useState<'ALLOWED' | 'DENIED' | 'NOT_REQUESTED' | 'WEB_UNAVAILABLE'>('NOT_REQUESTED');
   const [lastScanTime, setLastScanTime] = useState<number>(SmsSyncManager.getLastScanTimestamp());
   const [detectedCount, setDetectedCount] = useState<number>(0);
   const [needsReviewCount, setNeedsReviewCount] = useState<number>(0);
@@ -34,8 +35,20 @@ export const AutomaticSmsSettingsSection: React.FC = () => {
 
   const checkPermissionAndStats = async () => {
     try {
-      const perm = await SmsPluginBridge.getPermissionStatus();
-      setPermissionGranted(perm.granted);
+      if (!SmsPluginBridge.isNative()) {
+        setPermissionState('WEB_UNAVAILABLE');
+        setPermissionGranted(false);
+      } else {
+        const perm = await SmsPluginBridge.getPermissionStatus();
+        setPermissionGranted(perm.granted);
+        if (perm.granted) {
+          setPermissionState('ALLOWED');
+        } else if (perm.status === 'DENIED') {
+          setPermissionState('DENIED');
+        } else {
+          setPermissionState('NOT_REQUESTED');
+        }
+      }
 
       const res = await apiClient.get('/transactions/stats');
       if (res.data?.stats) {
@@ -168,13 +181,21 @@ export const AutomaticSmsSettingsSection: React.FC = () => {
         <div className="p-3 rounded-2xl bg-surface-elevated border border-primary/10">
           <span className="text-[10px] uppercase font-bold text-muted block">SMS Permission</span>
           <div className="flex items-center gap-1.5 mt-1 font-bold text-xs text-primary">
-            {permissionGranted ? (
+            {permissionState === 'WEB_UNAVAILABLE' ? (
+              <span className="text-slate-400 flex items-center gap-1 text-[11px]">
+                Android-Only
+              </span>
+            ) : permissionState === 'ALLOWED' ? (
               <span className="text-emerald-500 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Granted
+                <CheckCircle2 className="w-3.5 h-3.5" /> Allowed
+              </span>
+            ) : permissionState === 'DENIED' ? (
+              <span className="text-rose-500 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5" /> Denied
               </span>
             ) : (
               <span className="text-amber-500 flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5" /> Not Granted
+                <AlertCircle className="w-3.5 h-3.5" /> Not Requested
               </span>
             )}
           </div>

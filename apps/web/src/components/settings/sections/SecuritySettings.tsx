@@ -30,6 +30,7 @@ interface SessionData {
 
 export const SecuritySettings: React.FC = () => {
   const { user, logout } = useAuthStore();
+  const [realSessions, setRealSessions] = useState<any[]>([]);
   const [activeSessionsCount, setActiveSessionsCount] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [revoking, setRevoking] = useState(false);
@@ -70,14 +71,34 @@ export const SecuritySettings: React.FC = () => {
   const fetchSessionInfo = async () => {
     setLoading(true);
     try {
-      const res = await apiClient.get('/auth/me');
-      if (res.data?.activeSessionsCount !== undefined) {
-        setActiveSessionsCount(res.data.activeSessionsCount);
+      const [meRes, sessRes] = await Promise.all([
+        apiClient.get('/auth/me'),
+        apiClient.get('/auth/sessions').catch(() => ({ data: { sessions: [] } })),
+      ]);
+      if (meRes.data?.activeSessionsCount !== undefined) {
+        setActiveSessionsCount(meRes.data.activeSessionsCount);
+      }
+      if (sessRes.data?.sessions) {
+        setRealSessions(sessRes.data.sessions);
       }
     } catch (err: any) {
       console.warn('Could not refresh session telemetry:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRevokeSingleSession = async (sessionId: string) => {
+    try {
+      await apiClient.delete(`/auth/sessions/${sessionId}`);
+      setActionMessage({ type: 'success', text: 'Device session revoked successfully.' });
+      fetchSessionInfo();
+      setTimeout(() => setActionMessage(null), 3000);
+    } catch (err: any) {
+      setActionMessage({
+        type: 'error',
+        text: err?.response?.data?.error || 'Failed to revoke session.',
+      });
     }
   };
 
@@ -208,12 +229,16 @@ export const SecuritySettings: React.FC = () => {
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                   {user?.provider === 'GOOGLE'
                     ? `Authenticated via ${user.email}`
-                    : 'Google Identity integration ready'}
+                    : 'Google Identity integration available'}
                 </p>
               </div>
             </div>
             <div>
-              <SettingsStatusBadge label="Connected" variant="active" icon={CheckCircle2} />
+              <SettingsStatusBadge
+                label={user?.provider === 'GOOGLE' ? 'Connected' : 'Available'}
+                variant={user?.provider === 'GOOGLE' ? 'active' : 'neutral'}
+                icon={user?.provider === 'GOOGLE' ? CheckCircle2 : undefined}
+              />
             </div>
           </div>
 
@@ -265,9 +290,9 @@ export const SecuritySettings: React.FC = () => {
             </div>
             <div>
               <SettingsStatusBadge
-                label={user?.isVerified || user?.email ? 'Verified' : 'Pending'}
-                variant={user?.isVerified || user?.email ? 'active' : 'pending'}
-                icon={user?.isVerified || user?.email ? CheckCircle2 : undefined}
+                label={user?.isVerified ? 'Verified' : 'Pending'}
+                variant={user?.isVerified ? 'active' : 'pending'}
+                icon={user?.isVerified ? CheckCircle2 : undefined}
               />
             </div>
           </div>
@@ -278,7 +303,7 @@ export const SecuritySettings: React.FC = () => {
       <SettingsCard
         id="active-sessions"
         title="Active Sessions & Devices"
-        description="Devices currently authenticated with active refresh token sessions."
+        description="Devices currently authenticated with active refresh token sessions. Device metadata is derived from client user agent."
         badge={`${activeSessionsCount} Active`}
         action={
           <button
@@ -311,7 +336,7 @@ export const SecuritySettings: React.FC = () => {
                 <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                   <span className="flex items-center gap-1">
                     <Globe className="w-3 h-3 text-slate-400" />
-                    Punjab, India
+                    Active Client Session
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3 text-slate-400" />
@@ -327,6 +352,37 @@ export const SecuritySettings: React.FC = () => {
               </span>
             </div>
           </div>
+
+          {/* Real Other Sessions List */}
+          {realSessions.filter((s: any) => s.id !== localStorage.getItem('currentSessionId')).map((s: any) => (
+            <div
+              key={s.id}
+              className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 flex-shrink-0">
+                  <Laptop className="w-4 h-4" />
+                </div>
+                <div>
+                  <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {s.device || 'Authenticated Client'}
+                  </h5>
+                  <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                    <span>IP: {s.ipAddress || '127.0.0.1'}</span>
+                    <span>•</span>
+                    <span>Created: {new Date(s.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleRevokeSingleSession(s.id)}
+                className="px-2.5 py-1 rounded-lg text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 self-end sm:self-auto transition-colors"
+              >
+                Revoke
+              </button>
+            </div>
+          ))}
 
           {/* Revoke All Action if multiple sessions exist */}
           <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800">

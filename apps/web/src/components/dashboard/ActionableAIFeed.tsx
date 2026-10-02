@@ -28,7 +28,7 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
   onOpenExpenseModal,
 }) => {
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
-  const { format, currencySymbol } = useSettingStore();
+  const { format, currencySymbol, aiSuggestions, aiRecipes } = useSettingStore();
   const navigate = useNavigate();
 
   const firstBill = upcomingBills[0];
@@ -86,7 +86,17 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
     },
   ];
 
-  const activeCards = defaultCards.filter((c) => !dismissedIds.includes(c.id));
+  let candidateCards = defaultCards;
+  if (!aiSuggestions) {
+    // If proactive AI suggestions are turned off, only keep required bill reminders
+    candidateCards = candidateCards.filter((c) => c.type === 'BILL');
+  }
+  if (!aiRecipes) {
+    // If AI recipes are turned off, filter out recipe cards
+    candidateCards = candidateCards.filter((c) => c.type !== 'RECIPE');
+  }
+
+  const activeCards = candidateCards.filter((c) => !dismissedIds.includes(c.id));
 
   const handleDismiss = (id: string) => {
     setDismissedIds((prev) => [...prev, id]);

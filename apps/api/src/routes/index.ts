@@ -52,6 +52,9 @@ router.use(validateSession);
 router.get('/auth/me', authController.getMe);
 router.put('/auth/profile', authController.updateProfile);
 router.post('/auth/logout-all', authController.logoutAllDevices);
+router.get('/auth/sessions', authController.getActiveSessions);
+router.delete('/auth/sessions/:sessionId', authController.revokeSession);
+router.delete('/auth/account', authController.deleteAccount);
 
 // Household Settings & Currency Engine
 // Only ADMIN/HEAD can change settings; GUESTs cannot.
@@ -98,12 +101,14 @@ router.put('/tasks/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), ta
 router.put('/tasks/:id/status', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), taskController.updateTaskStatus);
 router.delete('/tasks/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), taskController.deleteTask);
 
-// Family Members Workspace
+// Family Members Workspace & Danger Zone
 router.get('/family/members', familyController.getHouseholdMembers);
 router.get('/family/aggregate', familyController.getAggregateData);
-router.put('/family/name', authorize(['OWNER', 'ADMIN', 'HEAD']), familyController.updateHouseholdName);
-// Role update: ADMIN/HEAD only (familyController enforces this too as defense-in-depth)
-router.put('/family/members/:userId/role', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), familyController.updateMemberRole);
+router.put('/family/name', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'HEAD']), familyController.updateHouseholdName);
+router.put('/family/members/:userId/role', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'HEAD']), familyController.updateMemberRole);
+router.delete('/family/members/:userId', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'HEAD']), familyController.removeHouseholdMember);
+router.post('/family/leave', familyController.leaveHousehold);
+router.delete('/family/:id', authorize(['OWNER']), familyController.deleteHousehold);
 router.post('/family/join', familyController.joinHouseholdWithCode);
 
 // ==========================================

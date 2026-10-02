@@ -121,7 +121,7 @@ export const NewUserOnboardingModal: React.FC<NewUserOnboardingModalProps> = ({
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-xl font-extrabold text-primary tracking-tight">Complete Household Setup</h2>
-          <p className="text-xs text-muted">Verify your profile & mobile number to activate HomeMind AI.</p>
+          <p className="text-xs text-muted">Verify your profile & mobile number to activate HomeMind.AI.</p>
         </div>
 
         {error && (

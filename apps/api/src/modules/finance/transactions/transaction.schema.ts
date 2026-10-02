@@ -27,4 +27,7 @@ export const updateTransactionSchema = z.object({
   status: z.enum(['CONFIRMED', 'NEEDS_REVIEW', 'IGNORED']).optional(),
   category: z.string().min(1).max(50).optional(),
   merchant: z.string().min(1).max(100).optional(),
+  notes: z.string().max(500).optional().nullable(),
+  amount: z.number().positive().optional(),
+  occurredAt: z.union([z.string(), z.date()]).optional(),
 });

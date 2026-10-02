@@ -124,7 +124,7 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
               className="w-full min-h-[44px] bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold py-3 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Ask HomeMind AI Assistant</span>
+              <span>Ask HomeMind.AI Assistant</span>
             </button>
           </div>
         </div>

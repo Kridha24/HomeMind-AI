@@ -32,9 +32,13 @@ export const exportMonthlyReport = async (req: AuthenticatedRequest, res: Respon
     const totalIncome = incomes.reduce((acc, curr) => acc + curr.amount, 0);
     const savings = totalIncome - totalExpenses;
 
+    const setting = await prisma.setting.findFirst({ where: { householdId, softDelete: false } });
+    const currencySymbol = setting?.currency === 'USD' ? '$' : '₹';
+
     const pdfBuffer = await generateMonthlyPDFReport({
       householdName: household?.name || 'HomeMind Household',
       month: currentMonthStr,
+      currencySymbol,
       totalExpenses,
       totalIncome,
       savings,
@@ -60,7 +64,7 @@ export const exportMonthlyReport = async (req: AuthenticatedRequest, res: Respon
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="HomeMind_Monthly_Report_${now.toISOString().split('T')[0]}.pdf"`
+      `attachment; filename="HomeMind.AI_Household_Export.pdf"`
     );
     res.send(pdfBuffer);
   } catch (err: any) {
