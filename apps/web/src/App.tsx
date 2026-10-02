@@ -99,8 +99,56 @@ function AppShell() {
 
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === 'dark' || theme === 'glass') root.classList.add('dark');
-    else root.classList.remove('dark');
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const applyTheme = () => {
+      let isDark = false;
+      if (theme === 'dark' || theme === 'glass') {
+        isDark = true;
+      } else if (theme === 'light') {
+        isDark = false;
+      } else if (theme === 'system') {
+        isDark = mediaQuery.matches;
+      }
+
+      if (isDark) {
+        root.classList.add('dark');
+        root.style.colorScheme = 'dark';
+      } else {
+        root.classList.remove('dark');
+        root.style.colorScheme = 'light';
+      }
+    };
+
+    applyTheme();
+
+    const handler = (e: MediaQueryListEvent) => {
+      if (theme === 'system') {
+        if (e.matches) {
+          root.classList.add('dark');
+          root.style.colorScheme = 'dark';
+        } else {
+          root.classList.remove('dark');
+          root.style.colorScheme = 'light';
+        }
+      }
+    };
+
+    mediaQuery.addEventListener('change', handler);
+
+    if (localStorage.getItem('hm_reducedMotion') === 'true') {
+      root.classList.add('reduce-motion');
+    } else {
+      root.classList.remove('reduce-motion');
+    }
+
+    if (localStorage.getItem('hm_compactMode') === 'true') {
+      root.classList.add('compact-mode');
+    } else {
+      root.classList.remove('compact-mode');
+    }
+
+    return () => mediaQuery.removeEventListener('change', handler);
   }, [theme]);
 
   // Global Keyboard Listener for Cmd+K / Ctrl+K
@@ -217,6 +265,7 @@ function AppShell() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/income" element={<Income />} />
             <Route path="/expenses" element={<Expenses />} />
+            <Route path="/transactions" element={<Expenses />} />
             <Route path="/bills" element={<Bills />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/pantry-vision" element={<PantryVision />} />

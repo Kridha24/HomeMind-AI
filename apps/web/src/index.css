@@ -7,22 +7,89 @@
     --bg-background: 248 250 252;       /* slate-50 crisp bright canvas */
     --bg-panel: 255 255 255;            /* pure white clean surface */
     --bg-secondary: 241 245 249;        /* slate-100 refined element background */
+    --bg-surface: 255 255 255;          /* card surface */
+    --bg-surface-elevated: 241 245 249; /* dropdown / menu / elevated */
+    --bg-surface-input: 248 250 252;    /* input background */
     --text-primary: 15 23 42;           /* slate-900 deep high-contrast ink */
     --text-secondary: 51 65 85;         /* slate-700 crisp readable text */
     --text-muted: 100 116 139;          /* slate-500 clear subtle labels */
     --border-primary: 226 232 240;      /* slate-200 razor-sharp border */
     --border-secondary: 203 213 225;    /* slate-300 distinct boundary */
+    --border-input: 226 232 240;        /* slate-200 input border */
+    --ring-focus: 59 130 246;           /* blue-500 focus ring */
+    color-scheme: light;
   }
 
   .dark {
     --bg-background: 2 6 23;            /* slate-950 deep OLED dark */
     --bg-panel: 15 23 42;               /* slate-900 elevated surface */
     --bg-secondary: 30 41 59;           /* slate-800 interactive elements */
+    --bg-surface: 15 23 42;             /* slate-900 card surface */
+    --bg-surface-elevated: 30 41 59;    /* slate-800 dropdown / menu / elevated */
+    --bg-surface-input: 30 41 59;       /* slate-800 input / search background */
     --text-primary: 241 245 249;        /* slate-100 bright crisp text */
     --text-secondary: 148 163 184;      /* slate-400 secondary info */
     --text-muted: 100 116 139;          /* slate-500 subtle captions */
     --border-primary: 30 41 59;         /* slate-800 dark border */
     --border-secondary: 51 65 85;       /* slate-700 accent border */
+    --border-input: 51 65 85;           /* slate-700 input border */
+    --ring-focus: 59 130 246;           /* blue-500 focus ring */
+    color-scheme: dark;
+  }
+
+  /* Universal form control base styles */
+  input,
+  select,
+  textarea {
+    color-scheme: inherit;
+    color: rgb(var(--text-primary));
+  }
+
+  /* Dropdown option styles for light and dark */
+  select option {
+    background-color: #ffffff;
+    color: #0f172a;
+  }
+
+  .dark select option {
+    background-color: #0f172a;
+    color: #f1f5f9;
+  }
+
+  /* Date / Time input calendar picker icon in dark mode */
+  .dark input[type="date"]::-webkit-calendar-picker-indicator,
+  .dark input[type="time"]::-webkit-calendar-picker-indicator,
+  .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.85);
+    cursor: pointer;
+  }
+
+  /* Theme-aware autofill styling */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus {
+    -webkit-text-fill-color: rgb(var(--text-primary));
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark textarea:-webkit-autofill,
+  .dark textarea:-webkit-autofill:hover,
+  .dark textarea:-webkit-autofill:focus,
+  .dark select:-webkit-autofill,
+  .dark select:-webkit-autofill:hover,
+  .dark select:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px #1e293b inset;
+    -webkit-text-fill-color: #f1f5f9;
+    caret-color: #f1f5f9;
   }
 }
 
@@ -104,6 +171,29 @@
     animation: none !important;
     transform: none !important;
   }
+}
+
+/* User reduced-motion preference toggle */
+.reduce-motion,
+.reduce-motion * {
+  animation: none !important;
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* Compact layout density toggle */
+.compact-mode .p-6 {
+  padding: 1rem !important;
+}
+.compact-mode .p-5 {
+  padding: 0.875rem !important;
+}
+.compact-mode .gap-6 {
+  gap: 1rem !important;
+}
+.compact-mode .space-y-6 > * + * {
+  margin-top: 1rem !important;
 }
 
 /* Mobile Safe Area Inset Support */

@@ -11,6 +11,9 @@ export default {
         background: 'rgb(var(--bg-background) / <alpha-value>)',
         panel: 'rgb(var(--bg-panel) / <alpha-value>)',
         secondary: 'rgb(var(--bg-secondary) / <alpha-value>)',
+        surface: 'rgb(var(--bg-surface) / <alpha-value>)',
+        'surface-elevated': 'rgb(var(--bg-surface-elevated) / <alpha-value>)',
+        'surface-input': 'rgb(var(--bg-surface-input) / <alpha-value>)',
         primary: 'rgb(var(--border-primary) / <alpha-value>)', // using this for border
         brand: {
           50: '#f0f7ff',
@@ -34,6 +37,7 @@ export default {
       borderColor: {
         primary: 'rgb(var(--border-primary) / <alpha-value>)',
         secondary: 'rgb(var(--border-secondary) / <alpha-value>)',
+        input: 'rgb(var(--border-input) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['Inter', 'SF Pro Display', '-apple-system', 'sans-serif'],

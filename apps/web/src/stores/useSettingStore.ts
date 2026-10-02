@@ -9,7 +9,7 @@ interface SettingState {
   timeZone: string;
   dateFormat: string;
   unitSystem: 'Metric' | 'Imperial';
-  theme: 'dark' | 'light' | 'glass';
+  theme: 'dark' | 'light' | 'glass' | 'system';
   language: string;
   pushNotifications: boolean;
   emailAlerts: boolean;
@@ -20,16 +20,18 @@ interface SettingState {
   isLoading: boolean;
   sidebarCollapsed: boolean;
   reducedMotion: boolean;
+  compactMode: boolean;
   
   // Actions
   setCountry: (countryCode: string) => void;
   setCurrency: (currencyCode: string) => void;
-  setTheme: (theme: 'dark' | 'light' | 'glass') => void;
+  setTheme: (theme: 'dark' | 'light' | 'glass' | 'system') => void;
   setLanguage: (lang: string) => void;
   setTimeZone: (tz: string) => void;
   setDateFormat: (df: string) => void;
   setUnitSystem: (unit: 'Metric' | 'Imperial') => void;
   setReducedMotion: (reduced: boolean) => void;
+  setCompactMode: (compact: boolean) => void;
   saveSettings: () => Promise<void>;
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
@@ -45,21 +47,27 @@ export const useSettingStore = create<SettingState>((set, get) => ({
   timeZone: localStorage.getItem('hm_timeZone') || 'America/New_York',
   dateFormat: localStorage.getItem('hm_dateFormat') || 'MM/DD/YYYY',
   unitSystem: (localStorage.getItem('hm_unitSystem') as 'Metric' | 'Imperial') || 'Imperial',
-  theme: (localStorage.getItem('hm_theme') as 'dark' | 'light' | 'glass') || 'dark',
+  theme: (localStorage.getItem('hm_theme') as 'dark' | 'light' | 'glass' | 'system') || 'dark',
   language: localStorage.getItem('hm_language') || 'English',
   pushNotifications: true,
   emailAlerts: true,
-  aiSuggestions: true,
-  aiPredictions: true,
-  aiRecipes: true,
-  aiOcr: true,
+  aiSuggestions: localStorage.getItem('hm_ai_suggestions') !== 'false',
+  aiPredictions: localStorage.getItem('hm_ai_predictions') !== 'false',
+  aiRecipes: localStorage.getItem('hm_ai_recipes') !== 'false',
+  aiOcr: localStorage.getItem('hm_ai_ocr') !== 'false',
   isLoading: false,
   sidebarCollapsed: false,
   reducedMotion: localStorage.getItem('hm_reducedMotion') === 'true',
+  compactMode: localStorage.getItem('hm_compactMode') === 'true',
 
   setReducedMotion: (reduced: boolean) => {
     localStorage.setItem('hm_reducedMotion', String(reduced));
     set({ reducedMotion: reduced });
+  },
+
+  setCompactMode: (compact: boolean) => {
+    localStorage.setItem('hm_compactMode', String(compact));
+    set({ compactMode: compact });
   },
 
   setLanguage: (lang: string) => {
@@ -142,7 +150,7 @@ export const useSettingStore = create<SettingState>((set, get) => ({
     });
   },
 
-  setTheme: (theme: 'dark' | 'light' | 'glass') => {
+  setTheme: (theme: 'dark' | 'light' | 'glass' | 'system') => {
     localStorage.setItem('hm_theme', theme);
     set({ theme });
   },
@@ -156,9 +164,25 @@ export const useSettingStore = create<SettingState>((set, get) => ({
     if (newSettings.theme) {
       localStorage.setItem('hm_theme', newSettings.theme);
     }
+    if (newSettings.aiSuggestions !== undefined) {
+      localStorage.setItem('hm_ai_suggestions', String(newSettings.aiSuggestions));
+    }
+    if (newSettings.aiPredictions !== undefined) {
+      localStorage.setItem('hm_ai_predictions', String(newSettings.aiPredictions));
+    }
+    if (newSettings.aiRecipes !== undefined) {
+      localStorage.setItem('hm_ai_recipes', String(newSettings.aiRecipes));
+    }
+    if (newSettings.aiOcr !== undefined) {
+      localStorage.setItem('hm_ai_ocr', String(newSettings.aiOcr));
+    }
+
     set((state) => ({ ...state, ...newSettings }));
     try {
-      await apiClient.put('/settings', newSettings);
+      await apiClient.put('/settings', {
+        ...newSettings,
+        ...(newSettings.aiSuggestions !== undefined ? { proactiveAI: newSettings.aiSuggestions } : {}),
+      });
     } catch (e) {
       console.warn('Failed to persist settings on server:', e);
     }
@@ -177,6 +201,9 @@ export const useSettingStore = create<SettingState>((set, get) => ({
         localStorage.setItem('hm_currencySymbol', symbol);
         localStorage.setItem('hm_theme', savedTheme);
 
+        const aiSuggestionsSaved = s.proactiveAI !== undefined ? s.proactiveAI : localStorage.getItem('hm_ai_suggestions') !== 'false';
+        localStorage.setItem('hm_ai_suggestions', String(aiSuggestionsSaved));
+
         set({
           country: s.country || 'US',
           currency: s.currency || 'USD',
@@ -188,6 +215,10 @@ export const useSettingStore = create<SettingState>((set, get) => ({
           language: s.language || 'English',
           pushNotifications: s.pushNotifications ?? true,
           emailAlerts: s.emailAlerts ?? true,
+          aiSuggestions: aiSuggestionsSaved,
+          aiPredictions: localStorage.getItem('hm_ai_predictions') !== 'false',
+          aiRecipes: localStorage.getItem('hm_ai_recipes') !== 'false',
+          aiOcr: localStorage.getItem('hm_ai_ocr') !== 'false',
           isLoading: false,
         });
       }

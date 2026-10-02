@@ -16,7 +16,7 @@ import { SettingsRow } from '../primitives/SettingsRow';
 import { SettingsToggle } from '../primitives/SettingsToggle';
 
 interface ThemeOption {
-  id: 'dark' | 'light' | 'glass';
+  id: 'dark' | 'light' | 'glass' | 'system';
   title: string;
   description: string;
   previewBg: string;
@@ -28,14 +28,14 @@ interface ThemeOption {
 
 const THEMES: ThemeOption[] = [
   {
-    id: 'light',
-    title: 'Pure Studio (Light)',
-    description: 'Crisp radiant surface aesthetic tailored for daytime clarity and clean readability',
-    previewBg: 'bg-slate-100',
-    previewCard: 'bg-white border-slate-200 shadow-2xs',
+    id: 'system',
+    title: 'Adaptive (System)',
+    description: 'Automatically synchronizes with your device light or dark appearance preferences',
+    previewBg: 'bg-gradient-to-r from-slate-200 to-slate-900',
+    previewCard: 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 shadow-2xs',
     previewAccent: 'bg-blue-600',
-    textColor: 'text-slate-900',
-    icon: <Sun className="w-4 h-4 text-amber-500" />,
+    textColor: 'text-slate-900 dark:text-slate-100',
+    icon: <Monitor className="w-4 h-4 text-blue-500" />,
   },
   {
     id: 'dark',
@@ -48,8 +48,18 @@ const THEMES: ThemeOption[] = [
     icon: <Moon className="w-4 h-4 text-blue-400" />,
   },
   {
+    id: 'light',
+    title: 'Pure Studio (Light)',
+    description: 'Crisp radiant surface aesthetic tailored for daytime clarity and clean readability',
+    previewBg: 'bg-slate-100',
+    previewCard: 'bg-white border-slate-200 shadow-2xs',
+    previewAccent: 'bg-blue-600',
+    textColor: 'text-slate-900',
+    icon: <Sun className="w-4 h-4 text-amber-500" />,
+  },
+  {
     id: 'glass',
-    title: 'Aurora Glass (System)',
+    title: 'Aurora Glass',
     description: 'Dynamic translucent styling with backdrop blur and ambient lighting cues',
     previewBg: 'bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900',
     previewCard: 'bg-white/10 backdrop-blur-md border-white/15',
@@ -80,9 +90,9 @@ export const AppearanceSettings: React.FC = () => {
     setTimeout(() => setFeedback(null), 3000);
   };
 
-  const handleThemeSelect = (selectedTheme: 'dark' | 'light' | 'glass') => {
+  const handleThemeSelect = (selectedTheme: 'dark' | 'light' | 'glass' | 'system') => {
     setTheme(selectedTheme);
-    document.documentElement.classList.remove('theme-dark', 'theme-light', 'theme-glass');
+    document.documentElement.classList.remove('theme-dark', 'theme-light', 'theme-glass', 'theme-system');
     document.documentElement.classList.add(`theme-${selectedTheme}`);
     showNotification(`Theme updated to ${THEMES.find((t) => t.id === selectedTheme)?.title}`);
   };
