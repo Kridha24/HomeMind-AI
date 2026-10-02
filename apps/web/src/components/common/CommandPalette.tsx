@@ -27,6 +27,8 @@ import {
   Smartphone,
   Clock,
   AlertTriangle,
+  Calendar,
+  UserCheck,
 } from 'lucide-react';
 
 interface CommandPaletteProps {
@@ -110,11 +112,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'act-task',
-      title: 'Create Household Task / Chore',
+      title: 'Add Task',
       category: 'Actions',
       shortcut: 'T',
       icon: CheckSquare,
-      keywords: ['chore', 'todo', 'clean', 'assign'],
+      keywords: ['add task', 'chore', 'todo', 'clean', 'assign', 'create task'],
       action: () => {
         onClose();
         onOpenTaskModal();
@@ -333,13 +335,46 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'nav-tasks',
-      title: 'Tasks & Chores Board',
+      title: 'Go to Tasks',
       category: 'Navigation',
       icon: CheckSquare,
-      keywords: ['kanban', 'chores', 'family tasks'],
+      keywords: ['tasks', 'chores', 'family tasks', 'household tasks'],
       action: () => {
         onClose();
         navigate('/tasks');
+      },
+    },
+    {
+      id: 'act-tasks-today',
+      title: 'Show Tasks Due Today',
+      category: 'Actions',
+      icon: Calendar,
+      keywords: ['tasks today', 'due today', 'today chores'],
+      action: () => {
+        onClose();
+        navigate('/tasks?view=today');
+      },
+    },
+    {
+      id: 'act-tasks-overdue',
+      title: 'Show Overdue Tasks',
+      category: 'Actions',
+      icon: AlertTriangle,
+      keywords: ['overdue tasks', 'late chores', 'urgent tasks'],
+      action: () => {
+        onClose();
+        navigate('/tasks?view=today&priority=urgent');
+      },
+    },
+    {
+      id: 'act-tasks-assigned-me',
+      title: 'Show Assigned to Me',
+      category: 'Actions',
+      icon: UserCheck,
+      keywords: ['my tasks', 'assigned to me', 'my chores'],
+      action: () => {
+        onClose();
+        navigate('/tasks?view=assigned-me');
       },
     },
     {
