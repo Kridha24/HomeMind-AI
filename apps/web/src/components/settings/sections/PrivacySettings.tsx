@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
-import { 
-  ShieldCheck, 
-  Download, 
-  MessageSquare, 
-  FileText, 
-  Database, 
-  AlertTriangle, 
-  CheckCircle2, 
+import {
+  ShieldCheck,
+  Download,
+  MessageSquare,
+  FileText,
+  Database,
+  AlertTriangle,
+  CheckCircle2,
   Loader2,
   Trash2,
   LogOut,
-  Info
+  Info,
 } from 'lucide-react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import apiClient from '../../../services/apiClient';
-import { SettingsSection } from '../primitives/SettingsSection';
-import { DangerZone } from '../primitives/DangerZone';
+import { SettingsCard } from '../primitives/SettingsCard';
+import { DangerZoneCard } from '../primitives/DangerZoneCard';
 import { ConfirmationModal } from '../primitives/ConfirmationModal';
+import { SettingsStatusBadge } from '../primitives/SettingsStatusBadge';
 import { AutomaticSmsSettingsSection } from '../../sms/AutomaticSmsSettingsSection';
 
 export const PrivacySettings: React.FC = () => {
@@ -28,10 +29,15 @@ export const PrivacySettings: React.FC = () => {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showDeleteHouseholdModal, setShowDeleteHouseholdModal] = useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   // Android & Platform detection
-  const isCapacitorNative = typeof window !== 'undefined' && !!(window as any).Capacitor?.isNativePlatform?.();
-  const isAndroid = typeof navigator !== 'undefined' && (/Android/i.test(navigator.userAgent) || (window as any).Capacitor?.getPlatform?.() === 'android');
+  const isCapacitorNative =
+    typeof window !== 'undefined' && !!(window as any).Capacitor?.isNativePlatform?.();
+  const isAndroid =
+    typeof navigator !== 'undefined' &&
+    (/Android/i.test(navigator.userAgent) ||
+      (window as any).Capacitor?.getPlatform?.() === 'android');
 
   const handleExportData = async () => {
     setDownloading(true);
@@ -40,12 +46,15 @@ export const PrivacySettings: React.FC = () => {
       const res = await apiClient.get('/reports/monthly/pdf', {
         responseType: 'blob',
       });
-      
+
       const blob = new Blob([res.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `HomeMind_${household?.name || 'Household'}_Export.pdf`);
+      link.setAttribute(
+        'download',
+        `HomeMind.AI_${household?.name || 'Household'}_Export.pdf`
+      );
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -53,12 +62,61 @@ export const PrivacySettings: React.FC = () => {
 
       setFeedback({ type: 'success', text: 'Household ledger PDF exported successfully.' });
     } catch (err: any) {
-      setFeedback({ 
-        type: 'error', 
-        text: err.response?.data?.error || 'Failed to generate export file. Please try again.' 
+      setFeedback({
+        type: 'error',
+        text: err.response?.data?.error || 'Failed to generate export file. Please try again.',
       });
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handleLeaveHousehold = async () => {
+    setActionLoading(true);
+    try {
+      await apiClient.post('/family/leave');
+      window.location.reload();
+    } catch (err: any) {
+      setFeedback({
+        type: 'error',
+        text: err.response?.data?.error || 'Failed to leave household.',
+      });
+      setShowLeaveModal(false);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteHousehold = async () => {
+    setActionLoading(true);
+    try {
+      await apiClient.delete(`/family/${household?.id}`);
+      window.location.reload();
+    } catch (err: any) {
+      setFeedback({
+        type: 'error',
+        text: err.response?.data?.error || 'Failed to delete household.',
+      });
+      setShowDeleteHouseholdModal(false);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setActionLoading(true);
+    try {
+      await apiClient.delete('/auth/account');
+      logout();
+      window.location.href = '/login';
+    } catch (err: any) {
+      setFeedback({
+        type: 'error',
+        text: err.response?.data?.error || 'Failed to delete account.',
+      });
+      setShowDeleteAccountModal(false);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -66,51 +124,67 @@ export const PrivacySettings: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Toast Alert */}
       {feedback && (
-        <div 
+        <div
           role="status"
-          className={`p-4 rounded-xl flex items-center gap-3 border text-sm animate-in fade-in duration-200 ${
+          className={`p-3.5 rounded-2xl flex items-center justify-between border text-xs font-semibold animate-in fade-in duration-200 ${
             feedback.type === 'success'
-              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-              : 'bg-red-500/10 border-red-500/20 text-red-400'
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+              : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
           }`}
         >
-          {feedback.type === 'success' ? (
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-          ) : (
-            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-          )}
-          <span className="font-medium">{feedback.text}</span>
+          <div className="flex items-center gap-2">
+            {feedback.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-rose-500" />
+            )}
+            <span>{feedback.text}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFeedback(null)}
+            className="text-xs opacity-60 hover:opacity-100"
+          >
+            ✕
+          </button>
         </div>
       )}
 
-      {/* SMS Transaction Access Status */}
-      <SettingsSection
-        title="SMS Transaction Parsing"
-        description="Local on-device financial message scanner status and privacy boundary"
+      {/* 1. SMS Transaction Parsing & Privacy */}
+      <SettingsCard
+        id="sms-privacy"
+        title="SMS Transaction Detection & Privacy"
+        description="Local on-device financial message scanner status and confidentiality boundaries."
         badge={
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-            isAndroid 
-              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-              : 'bg-slate-800 text-slate-400 border border-slate-700'
-          }`}>
-            <MessageSquare className="w-3.5 h-3.5" />
-            {isAndroid ? (isCapacitorNative ? 'Native Android Engine Active' : 'Android Browser Detected') : 'Web Client (Relay Mode)'}
-          </span>
+          <SettingsStatusBadge
+            label={
+              isAndroid
+                ? isCapacitorNative
+                  ? 'Native Android Engine'
+                  : 'Android Browser'
+                : 'Web Client Mode'
+            }
+            variant={isAndroid ? 'active' : 'neutral'}
+            icon={MessageSquare}
+          />
         }
       >
         <div className="space-y-3">
-          <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800 space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-white font-medium">Financial SMS Filter Status:</span>
-              <span className="font-semibold text-emerald-400">
-                {isAndroid ? 'Local Parser Ready' : 'Operating in Web Client Mode'}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 space-y-2">
+            <div className="flex items-center justify-between text-xs sm:text-sm">
+              <span className="text-slate-800 dark:text-slate-200 font-bold">
+                Financial Message Filter Status:
+              </span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                {isAndroid ? 'Local On-Device Engine Ready' : 'Operating in Web Relay Mode'}
               </span>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              HomeMind processes eligible financial SMS for transaction tracking. 
-              Only verified bank and UPI debit/credit notifications are evaluated. 
-              Personal chats, 2FA security codes, OTP messages, and non-financial texts are never stored, logged, or transmitted.
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              HomeMind.AI processes eligible financial SMS for transaction tracking. Only verified bank
+              and UPI debit/credit notifications are evaluated. Personal messages, 2FA security codes,
+              login OTPs, and non-financial texts are never stored, logged, or transmitted.
             </p>
           </div>
 
@@ -118,199 +192,154 @@ export const PrivacySettings: React.FC = () => {
             <AutomaticSmsSettingsSection />
           </div>
         </div>
-      </SettingsSection>
+      </SettingsCard>
 
-      {/* Financial Data Governance */}
-      <SettingsSection
-        title="Data Retention & Security Policy"
-        description="How your household records are partitioned and isolated"
+      {/* 2. Data Export & Portable Ledger */}
+      <SettingsCard
+        id="data-export"
+        title="Data Portability & Export"
+        description="Download a comprehensive cryptographic ledger export of your household finances and activity."
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-          <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800 space-y-1.5">
-            <div className="flex items-center gap-2 text-white font-medium">
-              <Database className="w-4 h-4 text-indigo-400" />
-              Tenant Isolation
-            </div>
-            <p className="text-slate-400">
-              Your household data is partitioned strictly with cryptographic tenant IDs. No other household can inspect or query your ledger.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800 space-y-1.5">
-            <div className="flex items-center gap-2 text-white font-medium">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              Encryption in Transit
-            </div>
-            <p className="text-slate-400">
-              All client-to-server traffic is forced over TLS 1.3 encryption. Refresh tokens are hashed using bcrypt before storage.
-            </p>
-          </div>
-        </div>
-      </SettingsSection>
-
-      {/* Export Data */}
-      <SettingsSection
-        title="Export Ledger & Records"
-        description="Download a compiled snapshot of your household financial records, bills, and grocery inventory"
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-slate-900/40 border border-slate-800 gap-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 flex-shrink-0 mt-0.5">
-              <FileText className="w-5 h-5" />
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+              <Download className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-white">Monthly Household Statement (PDF)</h4>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Formatted financial breakdown containing transactions, recurring bills, and current inventory.
+              <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white block">
+                Export Household Financial Report (PDF)
+              </span>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Generates a clean monthly breakdown of all expenses, income, and bills for{' '}
+                {household?.name || 'this household'}.
               </p>
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={handleExportData}
-            disabled={downloading}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 transition active:scale-[0.98] disabled:opacity-50 flex-shrink-0"
-          >
-            {downloading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                Export Ledger
-              </>
-            )}
-          </button>
-        </div>
-      </SettingsSection>
-
-      {/* Danger Zone */}
-      <DangerZone
-        title="Household Danger Zone"
-        description="Destructive actions affecting your household membership or stored ledger"
-      >
-        <div className="divide-y divide-red-950/40">
-          {/* Leave Household */}
-          <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 first:pt-0">
-            <div>
-              <h4 className="text-sm font-semibold text-white">Leave Household</h4>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Relinquish access to this household's expenses and tasks. You can rejoin using an invite code.
-              </p>
-            </div>
+          <div>
             <button
               type="button"
-              onClick={() => setShowLeaveModal(true)}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-red-300 hover:text-white bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition active:scale-[0.98] flex-shrink-0"
+              onClick={handleExportData}
+              disabled={downloading}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-500/20 disabled:opacity-50 transition-all flex-shrink-0"
             >
-              <LogOut className="w-3.5 h-3.5" />
-              Leave Household
+              {downloading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Generating PDF...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download PDF</span>
+                </>
+              )}
             </button>
           </div>
+        </div>
+      </SettingsCard>
 
-          {/* Delete Household */}
+      {/* 3. Danger Zone */}
+      <DangerZoneCard
+        title="Danger Zone"
+        description="Irreversible actions that permanently modify or delete account resources."
+      >
+        {/* Leave Household */}
+        <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+              Leave Household
+            </h4>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Revoke your access to {household?.name || 'this household'}. You will need a new invite to rejoin.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowLeaveModal(true)}
+            className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-colors self-start sm:self-center flex-shrink-0"
+          >
+            Leave Household
+          </button>
+        </div>
+
+        {/* Delete Household (Owner Only) */}
+        {isOwner && (
           <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <h4 className="text-sm font-semibold text-white">Delete Entire Household</h4>
-                {!isOwner && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
-                    OWNER ONLY
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Permanently purge this household, all connected members, expense ledgers, and inventory records.
+            <div className="space-y-0.5">
+              <h4 className="text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300">
+                Delete Household Workspace
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Permanently purge {household?.name || 'this household'} along with all shared expenses, bills, and grocery data.
               </p>
             </div>
             <button
               type="button"
               onClick={() => setShowDeleteHouseholdModal(true)}
-              disabled={!isOwner}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-600 border border-red-500/30 transition active:scale-[0.98] flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-sm shadow-rose-500/20 transition-colors self-start sm:self-center flex-shrink-0"
             >
-              <Trash2 className="w-3.5 h-3.5" />
               Delete Household
             </button>
           </div>
+        )}
 
-          {/* Delete Account */}
-          <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 last:pb-0">
-            <div>
-              <h4 className="text-sm font-semibold text-white">Delete User Account</h4>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Revoke all active tokens, detach phone/email credentials, and deactivate your account profile.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowDeleteAccountModal(true)}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-600 border border-red-500/30 transition active:scale-[0.98] flex-shrink-0"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Delete Account
-            </button>
+        {/* Delete Account */}
+        <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <h4 className="text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300">
+              Delete HomeMind.AI Account
+            </h4>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Permanently delete your user profile, active sessions, and personal identity across HomeMind.AI.
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setShowDeleteAccountModal(true)}
+            className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 border border-rose-500/30 transition-colors self-start sm:self-center flex-shrink-0"
+          >
+            Delete Account
+          </button>
         </div>
-      </DangerZone>
+      </DangerZoneCard>
 
-      {/* Confirmation Modals */}
+      {/* Confirmation Modals with Typed Confirmation for destructive actions */}
       <ConfirmationModal
         isOpen={showLeaveModal}
         onClose={() => setShowLeaveModal(false)}
-        onConfirm={() => {
-          setShowLeaveModal(false);
-          setFeedback({
-            type: 'error',
-            text: 'To switch households, paste a new invite code in Household Settings > Join Household.'
-          });
-        }}
-        title="Leave Household"
-        description="Are you sure you want to disconnect from this household workspace? You will lose access to shared bills and task lists."
-        confirmText="Leave"
+        onConfirm={handleLeaveHousehold}
+        title="Leave Household Workspace?"
+        description={`Are you sure you want to leave ${household?.name || 'this household'}? You will lose access to shared family finances and tasks.`}
+        confirmText="Leave Household"
         confirmVariant="danger"
+        loading={actionLoading}
       />
 
       <ConfirmationModal
         isOpen={showDeleteHouseholdModal}
         onClose={() => setShowDeleteHouseholdModal(false)}
-        onConfirm={() => {
-          setShowDeleteHouseholdModal(false);
-          setFeedback({
-            type: 'error',
-            text: 'Household purge is locked by tenant retention policy. Please contact system support for automated archive.'
-          });
-        }}
-        title="Delete Entire Household"
-        description={`This action cannot be undone. All recorded ledgers for "${household?.name || 'this household'}" will be scheduled for purge.`}
-        confirmText="Permanently Delete"
+        onConfirm={handleDeleteHousehold}
+        title="Permanently Delete Household?"
+        description={`This action cannot be undone. All expense history, groceries, and tasks for ${household?.name} will be permanently destroyed.`}
+        confirmText="Delete Workspace"
         confirmVariant="danger"
         requiredConfirmationText="DELETE"
+        loading={actionLoading}
       />
 
       <ConfirmationModal
         isOpen={showDeleteAccountModal}
         onClose={() => setShowDeleteAccountModal(false)}
-        onConfirm={() => {
-          setShowDeleteAccountModal(false);
-          setFeedback({
-            type: 'error',
-            text: 'Account deactivation requires active session verification. Logging out all devices...'
-          });
-          setTimeout(() => {
-            logout();
-            window.location.href = '/login';
-          }, 1500);
-        }}
-        title="Delete User Account"
-        description="This will deactivate your identity profile across HomeMind and immediately log you out on all devices."
-        confirmText="Deactivate Account"
+        onConfirm={handleDeleteAccount}
+        title="Permanently Delete Your Account?"
+        description="This will deactivate your identity profile across HomeMind.AI and immediately log you out on all devices."
+        confirmText="Delete My Account"
         confirmVariant="danger"
         requiredConfirmationText="DELETE"
+        loading={actionLoading}
       />
     </div>
   );
 };
+
+export default PrivacySettings;

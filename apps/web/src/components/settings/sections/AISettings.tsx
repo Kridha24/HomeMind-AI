@@ -1,40 +1,45 @@
 import React, { useState } from 'react';
-import { 
-  Sparkles, 
-  BrainCircuit, 
-  Receipt, 
-  TrendingUp, 
-  ChefHat, 
-  ShieldCheck, 
-  Lock, 
-  CheckCircle2, 
+import {
+  Sparkles,
+  Receipt,
+  TrendingUp,
+  ChefHat,
+  ShieldCheck,
+  Lock,
+  CheckCircle2,
   AlertTriangle,
-  Cpu
+  Cpu,
+  BrainCircuit,
+  ExternalLink,
 } from 'lucide-react';
 import { useSettingStore } from '../../../stores/useSettingStore';
-import { SettingsSection } from '../primitives/SettingsSection';
+import { SettingsCard } from '../primitives/SettingsCard';
 import { SettingsRow } from '../primitives/SettingsRow';
 import { SettingsToggle } from '../primitives/SettingsToggle';
+import { SettingsStatusBadge } from '../primitives/SettingsStatusBadge';
 
 export const AISettings: React.FC = () => {
-  const { 
-    aiSuggestions, 
-    aiPredictions, 
-    aiRecipes, 
-    aiOcr, 
-    updateSettings, 
-    saveSettings 
+  const {
+    aiSuggestions,
+    aiPredictions,
+    aiRecipes,
+    aiOcr,
+    updateSettings,
   } = useSettingStore();
 
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const handleToggle = async (key: 'aiSuggestions' | 'aiPredictions' | 'aiRecipes' | 'aiOcr', current: boolean, label: string) => {
+  const handleToggle = async (
+    key: 'aiSuggestions' | 'aiPredictions' | 'aiRecipes' | 'aiOcr',
+    current: boolean,
+    label: string
+  ) => {
     setSaving(true);
     setFeedback(null);
     try {
       await updateSettings({ [key]: !current });
-      setFeedback({ type: 'success', text: `${label} setting updated.` });
+      setFeedback({ type: 'success', text: `${label} preference updated.` });
       setTimeout(() => setFeedback(null), 3000);
     } catch {
       setFeedback({ type: 'error', text: `Failed to update ${label}.` });
@@ -45,131 +50,153 @@ export const AISettings: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Toast Feedback */}
       {feedback && (
-        <div 
+        <div
           role="status"
-          className={`p-4 rounded-xl flex items-center gap-3 border text-sm animate-in fade-in duration-200 ${
+          className={`p-3.5 rounded-2xl flex items-center justify-between border text-xs font-semibold animate-in fade-in duration-200 ${
             feedback.type === 'success'
-              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-              : 'bg-red-500/10 border-red-500/20 text-red-400'
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+              : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
           }`}
         >
-          {feedback.type === 'success' ? (
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-          ) : (
-            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-          )}
-          <span className="font-medium">{feedback.text}</span>
+          <div className="flex items-center gap-2">
+            {feedback.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-rose-500" />
+            )}
+            <span>{feedback.text}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFeedback(null)}
+            className="text-xs opacity-60 hover:opacity-100"
+          >
+            ✕
+          </button>
         </div>
       )}
 
-      {/* AI Privacy & Architecture Disclosure */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-950/40 via-purple-950/20 to-slate-900/50 border border-indigo-500/20 relative overflow-hidden">
+      {/* 1. Subtle Distinct AI Identity Banner */}
+      <section
+        aria-label="AI Privacy Architecture"
+        className="rounded-2xl sm:rounded-3xl bg-gradient-to-tr from-blue-600/10 via-indigo-600/10 to-violet-600/10 border border-blue-500/25 dark:border-blue-500/20 p-5 sm:p-6 relative overflow-hidden"
+      >
         <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 flex-shrink-0 mt-0.5">
-            <Lock className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-2xl bg-blue-600/15 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+            <Sparkles className="w-5 h-5" />
           </div>
-          <div className="space-y-1">
-            <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-              Privacy-First Household AI Architecture
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                End-to-End Filtered
-              </span>
-            </h4>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              HomeMind only sends the minimum required information to the configured AI provider for supported features.
+          <div className="space-y-1.5 flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
+                How HomeMind.AI uses AI
+              </h3>
+              <SettingsStatusBadge label="Privacy Guarded" variant="active" icon={ShieldCheck} />
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
+              Only the minimum information required for supported AI features is sent to configured AI services.
               Bank account numbers, OTP tokens, and confidential personal identifiers are scrubbed and anonymized before processing.
             </p>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Intelligence Modules */}
-      <SettingsSection
-        title="Copilot Capabilities"
-        description="Enable or disable specific machine learning and natural language assistants"
+      {/* 2. AI Intelligence Capabilities */}
+      <SettingsCard
+        id="copilot-capabilities"
+        title="Copilot Intelligence Modules"
+        description="Toggle predictive insights, machine learning categorization, and proactive suggestions."
       >
-        <div className="space-y-1">
-          {/* Smart Suggestions */}
+        <div className="divide-y divide-slate-100 dark:divide-slate-800">
           <SettingsRow
             label="Proactive AI Household Suggestions"
-            description="Analyzes grocery inventory trends and recurring routines to suggest restocks and budget optimizations"
-            icon={<Sparkles className="w-5 h-5 text-indigo-400" />}
+            description="Analyzes grocery inventory trends and routines to suggest restocks and budget optimizations"
+            icon={<Sparkles className="w-4 h-4 text-blue-500" />}
           >
             <SettingsToggle
               checked={aiSuggestions}
-              onChange={() => handleToggle('aiSuggestions', aiSuggestions, 'Proactive suggestions')}
+              onChange={() =>
+                handleToggle('aiSuggestions', aiSuggestions, 'Household suggestions')
+              }
               disabled={saving}
-              ariaLabel="Toggle proactive AI suggestions"
+              ariaLabel="Enable proactive household suggestions"
             />
           </SettingsRow>
 
-          {/* Transaction Categorization */}
           <SettingsRow
-            label="Automated Transaction Categorization & Predictions"
-            description="Automatically maps bank debits and UPI payments into groceries, dining, utilities, and lifestyle envelopes"
-            icon={<TrendingUp className="w-5 h-5 text-emerald-400" />}
+            label="Automated Financial Categorization"
+            description="Intelligently categorizes bank, UPI, and receipt items into household budgeting envelopes"
+            icon={<BrainCircuit className="w-4 h-4 text-indigo-500" />}
           >
             <SettingsToggle
               checked={aiPredictions}
-              onChange={() => handleToggle('aiPredictions', aiPredictions, 'Transaction predictions')}
+              onChange={() =>
+                handleToggle('aiPredictions', aiPredictions, 'Financial categorization')
+              }
               disabled={saving}
-              ariaLabel="Toggle transaction categorization"
+              ariaLabel="Enable automated financial categorization"
             />
           </SettingsRow>
 
-          {/* Receipt OCR */}
           <SettingsRow
-            label="Computer Vision & Receipt OCR"
-            description="Extracts items, taxes, merchant names, and totals directly from photographed bills and grocery slips"
-            icon={<Receipt className="w-5 h-5 text-amber-400" />}
+            label="Pantry Inventory Smart Recipes"
+            description="Recommends nutritious meal ideas based on perishable ingredients approaching expiry"
+            icon={<ChefHat className="w-4 h-4 text-amber-500" />}
+          >
+            <SettingsToggle
+              checked={aiRecipes}
+              onChange={() => handleToggle('aiRecipes', aiRecipes, 'Smart recipes')}
+              disabled={saving}
+              ariaLabel="Enable smart recipes"
+            />
+          </SettingsRow>
+
+          <SettingsRow
+            label="Smart Receipt OCR Digitization"
+            description="Extracts merchant, items, and tax amounts directly from uploaded bill photos"
+            icon={<Receipt className="w-4 h-4 text-emerald-500" />}
           >
             <SettingsToggle
               checked={aiOcr}
               onChange={() => handleToggle('aiOcr', aiOcr, 'Receipt OCR')}
               disabled={saving}
-              ariaLabel="Toggle receipt OCR"
-            />
-          </SettingsRow>
-
-          {/* Recipe & Meal Planning */}
-          <SettingsRow
-            label="Smart Pantry & Recipe Generation"
-            description="Synthesizes recipes using ingredients currently in stock in your pantry to minimize food waste"
-            icon={<ChefHat className="w-5 h-5 text-rose-400" />}
-          >
-            <SettingsToggle
-              checked={aiRecipes}
-              onChange={() => handleToggle('aiRecipes', aiRecipes, 'Recipe assistant')}
-              disabled={saving}
-              ariaLabel="Toggle recipe generation"
+              ariaLabel="Enable receipt OCR digitization"
             />
           </SettingsRow>
         </div>
-      </SettingsSection>
+      </SettingsCard>
 
-      {/* Provider Details */}
-      <SettingsSection
-        title="AI Engine Information"
-        description="Underlying runtime infrastructure powering HomeMind"
+      {/* 3. Runtime Model Infrastructure */}
+      <SettingsCard
+        id="ai-infrastructure"
+        title="AI Runtime Architecture"
+        description="Underlying enterprise model infrastructure powering HomeMind.AI natural language features."
       >
-        <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-400 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-slate-300 font-medium">
-              <Cpu className="w-4 h-4 text-indigo-400" />
-              Runtime Model:
-            </span>
-            <span className="font-mono text-slate-300">Gemini 1.5 Pro / Flash & Claude 3.5 Sonnet Engine</span>
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center flex-shrink-0">
+              <Cpu className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                  Google Gemini 2.5 Flash
+                </span>
+                <SettingsStatusBadge label="Enterprise Cloud" variant="admin" />
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Sub-300ms latency reasoning with zero training retention on customer data.
+              </p>
+            </div>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-slate-300 font-medium">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              Training Data Protection:
-            </span>
-            <span className="text-emerald-400 font-medium">Zero Data Retention (ZDR) Enabled</span>
+          <div>
+            <SettingsStatusBadge label="Active Runtime" variant="active" icon={CheckCircle2} />
           </div>
         </div>
-      </SettingsSection>
+      </SettingsCard>
     </div>
   );
 };
+
+export default AISettings;
