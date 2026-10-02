@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { prisma } from '../repositories/db';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { invalidateHouseholdDashboard } from '../infrastructure/redis/redisClient';
 
 export const getTasks = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -54,6 +55,8 @@ export const createTask = async (req: AuthenticatedRequest, res: Response) => {
       include: { assignee: true }
     });
 
+    await invalidateHouseholdDashboard(householdId).catch(() => {});
+
     res.status(201).json({ task });
   } catch (err: any) {
     console.error('[createTask] Error:', err.message);
@@ -95,6 +98,8 @@ export const updateTask = async (req: AuthenticatedRequest, res: Response) => {
       include: { assignee: true }
     });
 
+    await invalidateHouseholdDashboard(householdId).catch(() => {});
+
     res.json({ success: true, task: updated });
   } catch (err: any) {
     console.error('[updateTask] Error:', err.message);
@@ -118,6 +123,8 @@ export const updateTaskStatus = async (req: AuthenticatedRequest, res: Response)
       data: { status }
     });
 
+    await invalidateHouseholdDashboard(householdId).catch(() => {});
+
     res.json({ task });
   } catch (err: any) {
     console.error('[updateTaskStatus] Error:', err.message);
@@ -136,6 +143,9 @@ export const deleteTask = async (req: AuthenticatedRequest, res: Response) => {
     if (!existing) return res.status(404).json({ error: 'Task not found' });
 
     await prisma.task.delete({ where: { id } });
+
+    await invalidateHouseholdDashboard(householdId).catch(() => {});
+
     res.json({ success: true, id });
   } catch (err: any) {
     console.error('[deleteTask] Error:', err.message);

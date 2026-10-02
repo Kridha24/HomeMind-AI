@@ -12,7 +12,8 @@ export class DashboardService {
     if (!bypassCache) {
       try {
         const cached = await redis.get<DashboardSummaryData>(cacheKey);
-        if (cached) {
+        // Only return cache if it matches the current complete schema
+        if (cached && cached.overallExpenses !== undefined && cached.upcomingBillsTotal !== undefined) {
           return {
             ...cached,
             cached: true,
@@ -23,7 +24,7 @@ export class DashboardService {
       }
     }
 
-    // 2. Aggregate from PostgreSQL
+    // 2. Aggregate fresh data from database
     const freshData = await DashboardRepository.aggregateHouseholdData(householdId);
 
     // 3. Populate Redis Cache
