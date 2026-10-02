@@ -27,7 +27,7 @@ export const TodayOverview: React.FC<TodayOverviewProps> = ({
   const navigate = useNavigate();
 
   const handleTaskClick = () => {
-    navigate('/tasks');
+    navigate('/tasks?status=pending');
   };
 
   const handleBillClick = () => {
