@@ -21,6 +21,8 @@ export interface Household {
   members?: User[];
 }
 
+export type HouseholdMember = User;
+
 export interface Expense {
   id: string;
   title: string;
@@ -97,12 +99,22 @@ export interface Medicine {
 
 export interface Task {
   id: string;
+  householdId?: string;
   title: string;
   description?: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
   dueDate: string;
-  assignee?: User;
+  isRecurring?: boolean;
+  assigneeId?: string | null;
+  assignee?: User | null;
+  creatorId?: string;
+  creator?: { id: string; name: string; email?: string } | null;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+  softDelete?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SustainabilityMetric {
