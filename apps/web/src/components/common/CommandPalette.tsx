@@ -29,6 +29,7 @@ import {
   AlertTriangle,
   Calendar,
   UserCheck,
+  UserPlus,
 } from 'lucide-react';
 
 interface CommandPaletteProps {
@@ -379,13 +380,46 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'nav-family',
-      title: 'Family Workspace & Members',
+      title: 'Go to Family Workspace',
       category: 'Navigation',
       icon: Users,
-      keywords: ['invite', 'roles', 'permissions', 'housemates'],
+      keywords: ['family', 'workspace', 'household', 'members', 'roles', 'control center'],
       action: () => {
         onClose();
         navigate('/family');
+      },
+    },
+    {
+      id: 'act-invite-member',
+      title: 'Invite Household Member',
+      category: 'Actions',
+      icon: UserPlus,
+      keywords: ['invite', 'add member', 'invite code', 'share household'],
+      action: () => {
+        onClose();
+        navigate('/family?action=invite');
+      },
+    },
+    {
+      id: 'act-switch-household',
+      title: 'Switch Household',
+      category: 'Actions',
+      icon: Users,
+      keywords: ['switch', 'household', 'residence', 'change home', 'tenant'],
+      action: () => {
+        onClose();
+        navigate('/family?action=switch');
+      },
+    },
+    {
+      id: 'act-household-tasks',
+      title: 'View Household Tasks',
+      category: 'Navigation',
+      icon: CheckSquare,
+      keywords: ['tasks', 'chores', 'responsibilities', 'workload'],
+      action: () => {
+        onClose();
+        navigate('/tasks');
       },
     },
     {
