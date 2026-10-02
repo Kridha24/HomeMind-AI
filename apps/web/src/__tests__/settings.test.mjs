@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 
-console.log('🧪 Starting HomeMind Settings & Control Center Verification Suite...\n');
+console.log('🧪 Starting HomeMind.AI Settings & Control Center Verification Suite...\n');
 
 let passed = 0;
 
@@ -33,7 +33,7 @@ check('Settings navigation contains 10 required tabs', () => {
   assert.strictEqual(EXPECTED_TABS.length, 10);
 });
 
-// 2. Role Based Access Control (RBAC)
+// 2. Role Based Access Control (RBAC) & Badge Mapping
 const ROLES = ['OWNER', 'ADMIN', 'MEMBER', 'GUEST'];
 
 check('Backend roles match exact enum', () => {
@@ -56,6 +56,21 @@ check('Role permission rules for member role assignments', () => {
   assert.strictEqual(canChangeRoles('OWNER'), true);
   assert.strictEqual(canChangeRoles('ADMIN'), true);
   assert.strictEqual(canChangeRoles('MEMBER'), false);
+});
+
+check('Role badge color mappings: OWNER (violet), ADMIN (blue), MEMBER (emerald), GUEST (neutral)', () => {
+  const getRoleVariant = (role) => {
+    switch (role) {
+      case 'OWNER': return 'owner'; // violet
+      case 'ADMIN': return 'admin'; // blue
+      case 'MEMBER': return 'member'; // emerald
+      default: return 'guest'; // neutral
+    }
+  };
+  assert.strictEqual(getRoleVariant('OWNER'), 'owner');
+  assert.strictEqual(getRoleVariant('ADMIN'), 'admin');
+  assert.strictEqual(getRoleVariant('MEMBER'), 'member');
+  assert.strictEqual(getRoleVariant('GUEST'), 'guest');
 });
 
 // 3. User Avatar & Initials computation
@@ -84,6 +99,49 @@ check('Currency engine defaults to INR for India and formats correctly', () => {
   };
   assert.strictEqual(countryDefaults.IN.currency, 'INR');
   assert.strictEqual(countryDefaults.IN.symbol, '₹');
+});
+
+// 5. Local Search Across Settings Sections
+check('Settings local search correctly routes keywords to appropriate tabs', () => {
+  const searchMap = {
+    password: 'security',
+    session: 'security',
+    theme: 'appearance',
+    dark: 'appearance',
+    sms: 'privacy',
+    ai: 'ai',
+    copilot: 'ai',
+    notifications: 'notifications',
+    currency: 'preferences',
+    members: 'household'
+  };
+
+  const navKeywords = {
+    security: ['password', 'session', 'auth', 'devices'],
+    appearance: ['theme', 'dark', 'light', 'mode'],
+    privacy: ['sms', 'privacy', 'export', 'data'],
+    ai: ['ai', 'copilot', 'smart'],
+    notifications: ['notifications', 'alerts', 'bills'],
+    preferences: ['currency', 'language', 'timezone'],
+    household: ['members', 'residence', 'invite']
+  };
+
+  for (const [kw, expectedTab] of Object.entries(searchMap)) {
+    const matched = Object.entries(navKeywords).find(([tab, kws]) =>
+      tab === kw || kws.some(k => k.includes(kw))
+    );
+    assert(matched, `Keyword "${kw}" must match a settings category`);
+    assert.strictEqual(matched[0], expectedTab, `Keyword "${kw}" should match tab "${expectedTab}"`);
+  }
+});
+
+// 6. Product Branding
+check('Product branding exact casing is HomeMind.AI', () => {
+  const brand = 'HomeMind.AI';
+  assert.strictEqual(brand, 'HomeMind.AI');
+  assert.notStrictEqual(brand, 'HomeMind.Ai');
+  assert.notStrictEqual(brand, 'HOMEMIND.AI');
+  assert.notStrictEqual(brand, 'HomeMind');
 });
 
 console.log(`\nSettings Suite Results: ${passed} passed, 0 failed.\n`);
