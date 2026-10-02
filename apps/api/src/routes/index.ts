@@ -77,12 +77,22 @@ router.use('/expenses', expenseRoutes);
 router.use('/bills', billRoutes);
 
 
-// Grocery Inventory
+// Grocery Inventory & Shopping Workspace
 router.get('/inventory', inventoryController.getInventory);
 router.post('/inventory', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), inventoryController.createGroceryItem);
 router.put('/inventory/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), inventoryController.updateGroceryItem);
+router.put('/inventory/:id/purchase', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), inventoryController.togglePurchase);
 router.put('/inventory/:id/quantity', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), inventoryController.updateQuantity);
 router.delete('/inventory/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), inventoryController.deleteGroceryItem);
+
+// Groceries semantic endpoints (household-scoped)
+router.get('/groceries', inventoryController.getInventory);
+router.post('/groceries', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), inventoryController.createGroceryItem);
+router.put('/groceries/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), inventoryController.updateGroceryItem);
+router.put('/groceries/:id/purchase', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), inventoryController.togglePurchase);
+router.put('/groceries/:id/quantity', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'MEMBER']), inventoryController.updateQuantity);
+router.delete('/groceries/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), inventoryController.deleteGroceryItem);
+
 
 // Appliances Management
 router.get('/appliances', applianceController.getAppliances);

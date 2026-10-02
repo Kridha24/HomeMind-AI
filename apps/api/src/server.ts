@@ -217,6 +217,13 @@ export const emitHouseholdAlert = (householdId: string, alert: any) => {
   io.to(`household_${householdId}`).emit('new_notification', alert);
 };
 
+// Realtime bridge for groceries and household events
+import { realtimeEmitter } from './services/realtimeGateway';
+realtimeEmitter.on('grocery_updated', ({ householdId, payload }) => {
+  io.to(`household_${householdId}`).emit('grocery_updated', payload);
+});
+
+
 // Validate production secrets and environment hardening
 import { validateProductionSecrets } from './infrastructure/security';
 validateProductionSecrets();
