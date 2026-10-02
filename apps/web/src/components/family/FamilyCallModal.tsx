@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Maximize2,
   Volume2,
+  VolumeX,
   Sparkles,
   Users,
   Radio,
@@ -55,6 +56,7 @@ export const FamilyCallModal: React.FC<FamilyCallModalProps> = ({
   );
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(callType === 'audio');
+  const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
@@ -309,6 +311,14 @@ export const FamilyCallModal: React.FC<FamilyCallModalProps> = ({
     }
   };
 
+  // 7. Toggle Speaker / Audio Output
+  const toggleSpeaker = () => {
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.muted = !isSpeakerMuted;
+    }
+    setIsSpeakerMuted((prev) => !prev);
+  };
+
   // 7. Toggle Screen Share
   const toggleScreenShare = async () => {
     if (!peerConnectionRef.current) return;
@@ -428,15 +438,44 @@ export const FamilyCallModal: React.FC<FamilyCallModalProps> = ({
                 )}
               </div>
 
-              <div className="text-center space-y-1">
-                <h3 className="text-xl sm:text-2xl font-black text-white">{targetUser?.name || 'Family Member'}</h3>
-                <p className="text-xs text-slate-400 font-medium">
-                  {callStatus === 'connected'
-                    ? 'Connected • High Quality P2P Audio'
-                    : callStatus === 'incoming'
-                    ? `Incoming ${callType === 'video' ? 'Video' : 'Audio'} Call...`
-                    : 'Ringing family member...'}
-                </p>
+              <div className="text-center space-y-2.5">
+                <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  {targetUser?.name || 'Family Member'}
+                </h3>
+                <div>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-400 text-xs font-semibold">
+                    {callType === 'video' ? (
+                      <>
+                        <Video className="w-3.5 h-3.5" />
+                        <span>Video Call</span>
+                      </>
+                    ) : (
+                      <>
+                        <Phone className="w-3.5 h-3.5" />
+                        <span>Audio Call</span>
+                      </>
+                    )}
+                  </span>
+                </div>
+
+                <div className="pt-1">
+                  {callStatus === 'connected' ? (
+                    <span className="inline-flex items-center gap-2 text-xs font-medium text-emerald-400">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>Connected • {formatDuration(callDuration)}</span>
+                    </span>
+                  ) : callStatus === 'incoming' ? (
+                    <span className="inline-flex items-center gap-2 text-xs font-medium text-amber-400">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                      <span>Incoming {callType === 'video' ? 'Video' : 'Audio'} Call...</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-2 text-xs font-medium text-slate-300">
+                      <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
+                      <span>Connecting...</span>
+                    </span>
+                  )}
+                </div>
               </div>
 
               {errorMessage && (
@@ -448,7 +487,7 @@ export const FamilyCallModal: React.FC<FamilyCallModalProps> = ({
           )}
 
           {/* Local User PIP Video */}
-          <div className="absolute bottom-24 right-4 sm:right-6 w-32 h-44 sm:w-44 sm:h-60 rounded-2xl bg-slate-900 border-2 border-slate-700/80 overflow-hidden shadow-2xl z-20">
+          <div className="absolute bottom-6 right-4 sm:right-6 w-32 h-44 sm:w-44 sm:h-60 rounded-2xl bg-slate-900 border-2 border-slate-700/80 overflow-hidden shadow-2xl z-20">
             <video
               ref={localVideoRef}
               autoPlay
@@ -471,77 +510,134 @@ export const FamilyCallModal: React.FC<FamilyCallModalProps> = ({
         </div>
 
         {/* Bottom Call Controls Bar */}
-        <div className="p-4 sm:p-6 bg-slate-950/95 border-t border-slate-800/80 z-20 flex items-center justify-center gap-3 sm:gap-4">
+        <div className="p-4 sm:p-6 bg-slate-950/95 border-t border-slate-800/80 z-20 flex flex-col items-center justify-center gap-4">
           {callStatus === 'incoming' ? (
             /* Incoming Call Actions */
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-8">
               <button
                 onClick={handleEndCall}
-                className="w-14 h-14 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-600/35 active:scale-95 transition-all"
+                className="flex flex-col items-center gap-1.5 group"
                 title="Decline Call"
               >
-                <PhoneOff className="w-6 h-6" />
+                <div className="w-14 h-14 rounded-full bg-red-600 group-hover:bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-600/35 active:scale-95 transition-all">
+                  <PhoneOff className="w-6 h-6" />
+                </div>
+                <span className="text-[11px] font-semibold text-slate-400 group-hover:text-red-400">
+                  Decline
+                </span>
               </button>
+
               <button
                 onClick={handleAcceptCall}
-                className="w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-600/35 active:scale-95 transition-all animate-bounce"
+                className="flex flex-col items-center gap-1.5 group animate-bounce"
                 title="Accept Call"
               >
-                <Phone className="w-6 h-6" />
+                <div className="w-14 h-14 rounded-full bg-emerald-600 group-hover:bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-600/35 active:scale-95 transition-all">
+                  <Phone className="w-6 h-6" />
+                </div>
+                <span className="text-[11px] font-semibold text-slate-400 group-hover:text-emerald-400">
+                  Accept
+                </span>
               </button>
             </div>
           ) : (
             /* Connected / Calling Action Controls */
-            <>
-              {/* Mic Toggle */}
-              <button
-                onClick={toggleAudio}
-                className={`p-3.5 rounded-2xl border transition-all ${
-                  isAudioMuted
-                    ? 'bg-red-500/20 border-red-500/40 text-red-400'
-                    : 'bg-slate-800/80 border-slate-700 text-white hover:bg-slate-700'
-                }`}
-                title={isAudioMuted ? 'Unmute Mic' : 'Mute Mic'}
-              >
-                {isAudioMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-              </button>
+            <div className="w-full max-w-md flex flex-col items-center gap-4">
+              {/* Media Toggles: 🎤 Mic, 📹 Video, 🔊 Speaker, 🖥️ Screen Share */}
+              <div className="flex items-center justify-center gap-4 sm:gap-6">
+                {/* 🎤 Mic Toggle */}
+                <button
+                  onClick={toggleAudio}
+                  className="flex flex-col items-center gap-1 group"
+                  title={isAudioMuted ? 'Unmute Mic' : 'Mute Mic'}
+                >
+                  <div
+                    className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all ${
+                      isAudioMuted
+                        ? 'bg-red-500/20 border-red-500/40 text-red-400'
+                        : 'bg-slate-800/80 border-slate-700 text-white group-hover:bg-slate-700'
+                    }`}
+                  >
+                    {isAudioMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                  </div>
+                  <span className="text-[10px] font-medium text-slate-400">
+                    {isAudioMuted ? 'Unmute' : 'Mute'}
+                  </span>
+                </button>
 
-              {/* Video Toggle */}
-              <button
-                onClick={toggleVideo}
-                className={`p-3.5 rounded-2xl border transition-all ${
-                  isVideoOff
-                    ? 'bg-red-500/20 border-red-500/40 text-red-400'
-                    : 'bg-slate-800/80 border-slate-700 text-white hover:bg-slate-700'
-                }`}
-                title={isVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
-              >
-                {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
-              </button>
+                {/* 📹 Video Toggle */}
+                <button
+                  onClick={toggleVideo}
+                  className="flex flex-col items-center gap-1 group"
+                  title={isVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
+                >
+                  <div
+                    className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all ${
+                      isVideoOff
+                        ? 'bg-red-500/20 border-red-500/40 text-red-400'
+                        : 'bg-slate-800/80 border-slate-700 text-white group-hover:bg-slate-700'
+                    }`}
+                  >
+                    {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+                  </div>
+                  <span className="text-[10px] font-medium text-slate-400">
+                    {isVideoOff ? 'Start Video' : 'Stop Video'}
+                  </span>
+                </button>
 
-              {/* Screen Sharing Toggle */}
-              <button
-                onClick={toggleScreenShare}
-                className={`p-3.5 rounded-2xl border transition-all ${
-                  isScreenSharing
-                    ? 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/35'
-                    : 'bg-slate-800/80 border-slate-700 text-white hover:bg-slate-700'
-                }`}
-                title={isScreenSharing ? 'Stop Screen Share' : 'Share Screen'}
-              >
-                <Share2 className="w-5 h-5" />
-              </button>
+                {/* 🔊 Speaker Toggle */}
+                <button
+                  onClick={toggleSpeaker}
+                  className="flex flex-col items-center gap-1 group"
+                  title={isSpeakerMuted ? 'Unmute Speaker' : 'Mute Speaker'}
+                >
+                  <div
+                    className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all ${
+                      isSpeakerMuted
+                        ? 'bg-red-500/20 border-red-500/40 text-red-400'
+                        : 'bg-slate-800/80 border-slate-700 text-white group-hover:bg-slate-700'
+                    }`}
+                  >
+                    {isSpeakerMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                  </div>
+                  <span className="text-[10px] font-medium text-slate-400">
+                    {isSpeakerMuted ? 'Unmute' : 'Speaker'}
+                  </span>
+                </button>
 
-              {/* End Call Button */}
+                {/* 🖥️ Screen Share Toggle */}
+                <button
+                  onClick={toggleScreenShare}
+                  className="flex flex-col items-center gap-1 group"
+                  title={isScreenSharing ? 'Stop Screen Share' : 'Share Screen'}
+                >
+                  <div
+                    className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all ${
+                      isScreenSharing
+                        ? 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/35'
+                        : 'bg-slate-800/80 border-slate-700 text-white group-hover:bg-slate-700'
+                    }`}
+                  >
+                    <Share2 className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-medium text-slate-400">
+                    {isScreenSharing ? 'Sharing' : 'Share'}
+                  </span>
+                </button>
+              </div>
+
+              {/* 🔴 Prominent Centered End Call Button */}
               <button
                 onClick={handleEndCall}
-                className="px-6 py-3.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs flex items-center gap-2 shadow-xl shadow-red-600/35 active:scale-95 transition-all ml-2"
+                className="w-full max-w-xs py-3.5 px-6 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-xl shadow-red-600/35 active:scale-95 transition-all"
                 title="End Call"
               >
-                <PhoneOff className="w-5 h-5" />
-                <span className="hidden sm:inline">End Call</span>
+                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                  <PhoneOff className="w-3.5 h-3.5 text-white" />
+                </div>
+                <span>End Call</span>
               </button>
-            </>
+            </div>
           )}
         </div>
       </div>
