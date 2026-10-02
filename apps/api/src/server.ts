@@ -217,11 +217,15 @@ export const emitHouseholdAlert = (householdId: string, alert: any) => {
   io.to(`household_${householdId}`).emit('new_notification', alert);
 };
 
-// Realtime bridge for groceries and household events
+// Realtime bridge for groceries, tasks, and household events
 import { realtimeEmitter } from './services/realtimeGateway';
 realtimeEmitter.on('grocery_updated', ({ householdId, payload }) => {
   io.to(`household_${householdId}`).emit('grocery_updated', payload);
 });
+realtimeEmitter.on('task_updated', ({ householdId, payload }) => {
+  io.to(`household_${householdId}`).emit('task_updated', payload);
+});
+
 
 
 // Validate production secrets and environment hardening
