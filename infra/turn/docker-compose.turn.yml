@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  coturn:
+    image: coturn/coturn:4.6.3-alpine
+    container_name: homemind-turn
+    restart: unless-stopped
+    # Coturn works best with host networking to bind dynamic UDP relay port ranges.
+    # If bridge network is strictly required, expose the port range explicitly as below.
+    network_mode: "host"
+    environment:
+      - DETECT_EXTERNAL_IP=yes
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
+      - ./certs:/etc/coturn/certs:ro
+    # If host networking cannot be used (e.g. AWS ECS awsvpc or macOS docker desktop),
+    # uncomment ports mapping below:
+    # ports:
+    #   - "3478:3478/udp"
+    #   - "3478:3478/tcp"
+    #   - "5349:5349/udp"
+    #   - "5349:5349/tcp"
+    #   - "49152-65535:49152-65535/udp"
+    healthcheck:
+      test: ["CMD-SHELL", "turnutils_stunclient 127.0.0.1 3478 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

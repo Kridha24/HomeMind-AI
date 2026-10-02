@@ -41,4 +41,11 @@ export const config = {
   aiServiceSecret: process.env.AI_SERVICE_SECRET || '',
   googleClientId: process.env.GOOGLE_CLIENT_ID || '',
   databaseUrl: process.env.DATABASE_URL || '',
+  stunUrls: (process.env.STUN_URLS || process.env.WEBRTC_STUN_URLS || 'stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
+  turnUrl: process.env.TURN_URL || process.env.WEBRTC_TURN_URL || '',
+  turnSharedSecret: process.env.TURN_SHARED_SECRET || '',
+  turnCredentialTtlSeconds: parseInt(process.env.TURN_CREDENTIAL_TTL_SECONDS || '3600', 10),
 };

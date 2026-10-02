@@ -1,5 +1,6 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { prisma } from '../repositories/db';
+import { DeviceTokenService } from '../modules/communication/deviceTokenService';
 
 export interface CallSession {
   callId: string;
@@ -7,9 +8,11 @@ export interface CallSession {
   callerId: string;
   calleeId: string;
   callType: 'audio' | 'video';
-  status: 'calling' | 'connected' | 'ended';
+  status: 'calling' | 'connected' | 'ended' | 'expired';
   startedAt: number;
+  expiresAt: number;
   connectedAt?: number;
+  timeoutTimer?: NodeJS.Timeout;
 }
 
 export class WebRTCSignalingManager {
@@ -24,7 +27,7 @@ export class WebRTCSignalingManager {
     const callId = this.userToCallMap.get(userId);
     if (!callId) return false;
     const session = this.activeCalls.get(callId);
-    return Boolean(session && session.status !== 'ended');
+    return Boolean(session && session.status !== 'ended' && session.status !== 'expired');
   }
 
   /**
@@ -34,6 +37,25 @@ export class WebRTCSignalingManager {
     const callId = this.userToCallMap.get(userId);
     if (!callId) return undefined;
     return this.activeCalls.get(callId);
+  }
+
+  /**
+   * Get call session by callId
+   */
+  public getCallSession(callId: string): CallSession | undefined {
+    return this.activeCalls.get(callId);
+  }
+
+  /**
+   * Force expire a call (used for testing call timeout behavior)
+   */
+  public expireCallForTesting(callId: string): void {
+    const session = this.activeCalls.get(callId);
+    if (session) {
+      if (session.timeoutTimer) clearTimeout(session.timeoutTimer);
+      session.status = 'expired';
+      session.expiresAt = Date.now() - 1000;
+    }
   }
 
   /**
@@ -103,6 +125,28 @@ export class WebRTCSignalingManager {
 
     // 4. Generate unique unpredictable Call ID
     const callId = data.callId || `call_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const expiresAt = Date.now() + 45000; // 45 seconds call invitation window
+
+    // 5. Automatic Call Timeout Handler
+    const timeoutTimer = setTimeout(() => {
+      const active = this.activeCalls.get(callId);
+      if (active && active.status === 'calling') {
+        console.log(`[WebRTC] Call invitation timed out after 45s for [${callId}]`);
+        active.status = 'expired';
+        this.activeCalls.delete(callId);
+        this.userToCallMap.delete(callerId);
+        this.userToCallMap.delete(targetUserId);
+
+        io.to(`user_${callerId}`).emit('webrtc_call_ended', {
+          callId,
+          reason: 'Call invitation timed out',
+        });
+        io.to(`user_${targetUserId}`).emit('webrtc_call_ended', {
+          callId,
+          reason: 'Call invitation timed out',
+        });
+      }
+    }, 45000);
 
     const session: CallSession = {
       callId,
@@ -112,6 +156,8 @@ export class WebRTCSignalingManager {
       callType: callType || 'video',
       status: 'calling',
       startedAt: Date.now(),
+      expiresAt,
+      timeoutTimer,
     };
 
     this.activeCalls.set(callId, session);
@@ -120,7 +166,7 @@ export class WebRTCSignalingManager {
 
     console.log(`[WebRTC] Call initiated [${callId}]: ${callerId} -> ${targetUserId} (${callType})`);
 
-    // Relay incoming call to callee
+    // 6. Relay incoming call to callee via Socket.IO
     io.to(`user_${targetUserId}`).emit('webrtc_incoming_call', {
       callId,
       callerId,
@@ -129,6 +175,30 @@ export class WebRTCSignalingManager {
       callType,
       signalData,
     });
+
+    // 7. Dispatch High-Priority Android/iOS Call Notification
+    // Security Rule: NEVER send SDP, ICE candidates, JWT, or TURN credentials in push notification payload!
+    const sanitizedPushPayload = {
+      type: 'INCOMING_CALL',
+      callId,
+      callerId,
+      callerName,
+      callerAvatar,
+      callType,
+      householdId: callerHouseholdId,
+    };
+
+    DeviceTokenService.getUserTokens(targetUserId)
+      .then((tokens) => {
+        if (tokens.length > 0) {
+          console.log(
+            `[WebRTC Push] Dispatched high-priority call notification for [${callId}] to ${tokens.length} devices`
+          );
+        }
+      })
+      .catch((err) => {
+        console.warn('[WebRTC Push] Error dispatching device push notification:', err);
+      });
 
     return { success: true, callId };
   }
@@ -148,14 +218,34 @@ export class WebRTCSignalingManager {
     const { callId, targetUserId, signalData } = data;
     const session = this.activeCalls.get(callId);
 
-    if (!session || session.status === 'ended') {
-      console.warn(`[WebRTC] Rejecting answer: Call session ${callId} does not exist or has ended`);
+    if (!session || session.status === 'ended' || session.status === 'expired') {
+      console.warn(`[WebRTC] Rejecting answer: Call session ${callId} does not exist or has expired`);
+      return false;
+    }
+
+    if (Date.now() > session.expiresAt) {
+      console.warn(`[WebRTC] Rejecting answer: Call invitation ${callId} has expired past 45s window`);
+      if (session.timeoutTimer) clearTimeout(session.timeoutTimer);
+      session.status = 'expired';
+      this.activeCalls.delete(callId);
+      this.userToCallMap.delete(session.callerId);
+      this.userToCallMap.delete(session.calleeId);
+
+      io.to(`user_${responderId}`).emit('webrtc_call_error', {
+        error: 'Call invitation has expired',
+      });
       return false;
     }
 
     if (session.calleeId !== responderId || session.callerId !== targetUserId) {
       console.warn(`[WebRTC Security Alert] Forged answer rejected for call ${callId}`);
       return false;
+    }
+
+    // Cancel expiration timer upon answer
+    if (session.timeoutTimer) {
+      clearTimeout(session.timeoutTimer);
+      session.timeoutTimer = undefined;
     }
 
     session.status = 'connected';
@@ -234,6 +324,7 @@ export class WebRTCSignalingManager {
     if (activeCallId) {
       const session = this.activeCalls.get(activeCallId);
       if (session) {
+        if (session.timeoutTimer) clearTimeout(session.timeoutTimer);
         const durationSec = session.connectedAt ? Math.round((Date.now() - session.connectedAt) / 1000) : 0;
         console.log(`[WebRTC] Call ended [${activeCallId}], duration: ${durationSec}s`);
         this.activeCalls.delete(activeCallId);
@@ -266,6 +357,7 @@ export class WebRTCSignalingManager {
     if (activeCallId) {
       const session = this.activeCalls.get(activeCallId);
       if (session) {
+        if (session.timeoutTimer) clearTimeout(session.timeoutTimer);
         this.activeCalls.delete(activeCallId);
         this.userToCallMap.delete(session.callerId);
         this.userToCallMap.delete(session.calleeId);
@@ -313,6 +405,8 @@ export class WebRTCSignalingManager {
     const session = this.activeCalls.get(callId);
     if (!session) return;
 
+    if (session.timeoutTimer) clearTimeout(session.timeoutTimer);
+
     const targetUserId = session.callerId === userId ? session.calleeId : session.callerId;
 
     console.log(`[WebRTC] Peer ${userId} disconnected during call ${callId}`);
@@ -332,6 +426,9 @@ export class WebRTCSignalingManager {
    * Clear all active sessions (e.g. for testing)
    */
   public clearAll(): void {
+    for (const session of this.activeCalls.values()) {
+      if (session.timeoutTimer) clearTimeout(session.timeoutTimer);
+    }
     this.activeCalls.clear();
     this.userToCallMap.clear();
   }

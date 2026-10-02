@@ -6,6 +6,7 @@ import { expenseRoutes } from '../modules/finance/expenses';
 import { incomeRoutes } from '../modules/finance/income';
 import { billRoutes } from '../modules/bills';
 import { notificationRoutes } from '../modules/notifications';
+import { communicationRoutes } from '../modules/communication';
 import { transactionRoutes } from '../modules/finance/transactions';
 import * as inventoryController from '../controllers/inventoryController';
 import * as applianceController from '../controllers/applianceController';
@@ -146,8 +147,9 @@ router.get('/ai/forecasts', aiController.getAIForecasts);
 router.post('/ai/scan', aiController.scanReceiptOrPantry);
 router.post('/ai/chat', aiController.chatWithAI);
 
-// Notifications & Reports
+// Notifications, Reports & WebRTC Communication
 router.use('/notifications', notificationRoutes);
+router.use('/communication', communicationRoutes);
 
 router.get('/reports/monthly', reportController.exportMonthlyReport);
 router.get('/reports/monthly/pdf', reportController.exportMonthlyReport);

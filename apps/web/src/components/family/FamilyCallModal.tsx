@@ -16,6 +16,7 @@ import {
 import { Capacitor } from '@capacitor/core';
 import { socketService } from '../../services/socketService';
 import { useAuthStore } from '../../stores/useAuthStore';
+import apiClient from '../../services/apiClient';
 
 export type CallState =
   | 'IDLE'
@@ -42,39 +43,49 @@ interface FamilyCallModalProps {
   isIncoming?: boolean;
   incomingSignal?: any;
   callId?: string;
+  forceRelay?: boolean;
 }
 
 /**
- * Configure STUN and optional TURN servers from environment or defaults
+ * Cached ICE configuration to avoid redundant network roundtrips
  */
-const getIceServers = (): RTCIceServer[] => {
-  const servers: RTCIceServer[] = [
+let cachedIceServers: { servers: RTCIceServer[]; expiresAt: number } | null = null;
+
+export const fetchIceServers = async (): Promise<RTCIceServer[]> => {
+  const now = Date.now();
+  if (cachedIceServers && cachedIceServers.expiresAt > now + 60000) {
+    return cachedIceServers.servers;
+  }
+
+  const defaultStunServers: RTCIceServer[] = [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
   ];
 
-  // Optional custom STUN URLs
+  // Optional custom STUN URLs from client env
   const envStun = import.meta.env.VITE_WEBRTC_STUN_URLS;
   if (envStun) {
     envStun.split(',').forEach((url: string) => {
       const trimmed = url.trim();
-      if (trimmed) servers.push({ urls: trimmed });
+      if (trimmed) defaultStunServers.push({ urls: trimmed });
     });
   }
 
-  // Optional Production TURN server
-  const turnUrl = import.meta.env.VITE_WEBRTC_TURN_URL;
-  const turnUser = import.meta.env.VITE_WEBRTC_TURN_USERNAME;
-  const turnCred = import.meta.env.VITE_WEBRTC_TURN_CREDENTIAL;
-  if (turnUrl) {
-    servers.push({
-      urls: turnUrl,
-      username: turnUser || undefined,
-      credential: turnCred || undefined,
-    });
+  try {
+    const res = await apiClient.get('/communication/ice-config');
+    if (res.data && Array.isArray(res.data.iceServers)) {
+      const expiresAt = res.data.expiresAt ? new Date(res.data.expiresAt).getTime() : now + 3600000;
+      cachedIceServers = {
+        servers: res.data.iceServers,
+        expiresAt,
+      };
+      return res.data.iceServers;
+    }
+  } catch (err) {
+    console.warn('[WebRTC] Failed to fetch authenticated ICE configuration, falling back to STUN-only:', err);
   }
 
-  return servers;
+  return defaultStunServers;
 };
 
 export const FamilyCallModal: React.FC<FamilyCallModalProps> = ({
@@ -85,6 +96,7 @@ export const FamilyCallModal: React.FC<FamilyCallModalProps> = ({
   isIncoming = false,
   incomingSignal,
   callId,
+  forceRelay = false,
 }) => {
   const { user } = useAuthStore();
 
@@ -343,7 +355,12 @@ export const FamilyCallModal: React.FC<FamilyCallModalProps> = ({
       return;
     }
 
-    const pc = new RTCPeerConnection({ iceServers: getIceServers() });
+    const iceServers = await fetchIceServers();
+    const rtcConfig: RTCConfiguration = { iceServers };
+    if (forceRelay) {
+      rtcConfig.iceTransportPolicy = 'relay';
+    }
+    const pc = new RTCPeerConnection(rtcConfig);
     peerConnectionRef.current = pc;
     setupPeerConnection(pc, targetUserId);
 
@@ -381,7 +398,12 @@ export const FamilyCallModal: React.FC<FamilyCallModalProps> = ({
       return;
     }
 
-    const pc = new RTCPeerConnection({ iceServers: getIceServers() });
+    const iceServers = await fetchIceServers();
+    const rtcConfig: RTCConfiguration = { iceServers };
+    if (forceRelay) {
+      rtcConfig.iceTransportPolicy = 'relay';
+    }
+    const pc = new RTCPeerConnection(rtcConfig);
     peerConnectionRef.current = pc;
     setupPeerConnection(pc, targetUser.id);
 

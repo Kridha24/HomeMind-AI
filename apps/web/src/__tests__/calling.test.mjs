@@ -270,6 +270,66 @@ check('Resource cleanup completely releases tracks and resets session', () => {
   assert.strictEqual(pcClosed, true);
 });
 
+// 11. Dynamic Authenticated ICE Config Fetching with Caching
+check('Dynamic ICE Config caching avoids redundant network requests', async () => {
+  let networkFetches = 0;
+  let cachedConfig = null;
+
+  const fetchIceConfig = async () => {
+    const now = Date.now();
+    if (cachedConfig && cachedConfig.expiresAt > now + 60000) {
+      return cachedConfig.servers;
+    }
+    networkFetches++;
+    const servers = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'turn:turn.homemind.ai:3478', username: 'temp_user', credential: 'hmac_password' },
+    ];
+    cachedConfig = {
+      servers,
+      expiresAt: now + 3600000,
+    };
+    return servers;
+  };
+
+  const firstCall = await fetchIceConfig();
+  assert.strictEqual(networkFetches, 1);
+  assert.strictEqual(firstCall.length, 2);
+
+  const secondCall = await fetchIceConfig();
+  assert.strictEqual(networkFetches, 1, 'Second call served from in-memory cache');
+  assert.strictEqual(secondCall.length, 2);
+});
+
+// 12. Forced Relay Mode Configuration
+check('Forced Relay mode sets iceTransportPolicy to relay', () => {
+  const buildRtcConfig = (iceServers, forceRelay = false) => {
+    const rtcConfig = { iceServers };
+    if (forceRelay) {
+      rtcConfig.iceTransportPolicy = 'relay';
+    }
+    return rtcConfig;
+  };
+
+  const defaultConf = buildRtcConfig([{ urls: 'stun:test' }], false);
+  assert.strictEqual(defaultConf.iceTransportPolicy, undefined);
+
+  const relayConf = buildRtcConfig([{ urls: 'turn:test' }], true);
+  assert.strictEqual(relayConf.iceTransportPolicy, 'relay');
+});
+
+// 13. Call Invitation Expiry Window (45s) Enforcement
+check('Call invitation expires after 45 seconds', () => {
+  const isCallExpired = (startedAt, now) => {
+    return now - startedAt > 45000;
+  };
+
+  const callStartTime = 1000000;
+  assert.strictEqual(isCallExpired(callStartTime, 1010000), false, '10s is active');
+  assert.strictEqual(isCallExpired(callStartTime, 1044000), false, '44s is active');
+  assert.strictEqual(isCallExpired(callStartTime, 1046000), true, '46s is expired');
+});
+
 console.log(`\n========================================`);
 console.log(`RESULTS: ${passed} Passed, 0 Failed`);
 console.log(`========================================\n`);

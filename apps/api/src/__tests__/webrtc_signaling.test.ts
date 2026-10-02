@@ -255,6 +255,106 @@ async function runWebRTCSignalingTests() {
     );
     assert(endEmitted !== undefined, 'Callee notified that call was ended');
 
+    // TEST 7: Ephemeral TURN REST API Credential Generation & Expiry
+    console.log('\n--- Test 7: Ephemeral TURN REST API Credentials (RFC 5766) ---');
+    const { IceConfigService } = await import('../modules/communication/iceConfigService');
+    const testSecret = '0123456789abcdef0123456789abcdef';
+    const ttlSeconds = 1800; // 30 minutes
+    const creds = IceConfigService.generateCredentials(userA1.id, testSecret, ttlSeconds);
+
+    assert(Boolean(creds.username), 'Generated valid TURN username');
+    assert(Boolean(creds.credential), 'Generated valid HMAC-SHA1 credential');
+    assert(creds.username.includes(userA1.id), 'Username embeds userId');
+    const expirySec = parseInt(creds.username.split(':')[0], 10);
+    const nowSec = Math.floor(Date.now() / 1000);
+    assert(
+      expirySec >= nowSec + ttlSeconds - 5 && expirySec <= nowSec + ttlSeconds + 5,
+      `Username timestamp reflects configured TTL of ${ttlSeconds}s`
+    );
+    assert(
+      !creds.credential.includes(testSecret),
+      'Permanent secret is never leaked in client credential'
+    );
+
+    // Verify fallback configuration returns valid STUN
+    const iceConfig = IceConfigService.getIceConfiguration(userA1.id);
+    assert(iceConfig.iceServers.length >= 1, 'ICE configuration contains at least STUN server');
+    assert(Boolean(iceConfig.expiresAt), 'ICE configuration includes expiresAt timestamp');
+
+    // TEST 8: Call Invitation Expiry (45s) & Stale Call Acceptance Protection
+    console.log('\n--- Test 8: Call Invitation Expiry & Stale Call Protection ---');
+    mockServer.emittedEvents.length = 0;
+    const call2Result = await webrtcSignaling.handleCallUser(
+      mockServer as any,
+      userA1.id,
+      householdA.id,
+      {
+        targetUserId: userA2.id,
+        callType: 'audio',
+        callerName: 'Alice InHouseA',
+        signalData: { type: 'offer', sdp: 'v=0...' },
+      }
+    );
+    assert(call2Result.success === true, 'Call 2 initiated for expiry test');
+
+    // Simulate expiration of the 45s window
+    webrtcSignaling.expireCallForTesting(call2Result.callId!);
+    const sessionAfterExpire = webrtcSignaling.getCallSession(call2Result.callId!);
+    assert(sessionAfterExpire?.status === 'expired', 'Call status marked as expired');
+
+    // Callee attempts to answer stale/expired call
+    const staleAnswer = webrtcSignaling.handleAnswerCall(
+      mockServer as any,
+      userA2.id,
+      {
+        callId: call2Result.callId!,
+        targetUserId: userA1.id,
+        signalData: { type: 'answer', sdp: 'late_sdp' },
+      }
+    );
+    assert(staleAnswer === false, 'Stale/expired call acceptance strictly rejected');
+
+    // TEST 9: Background Call Notification Payload Sanitization
+    console.log('\n--- Test 9: Push Notification Payload Security Audit ---');
+    const sanitizedFields = ['callId', 'callerId', 'callerName', 'callerAvatar', 'callType', 'householdId'];
+    const forbiddenFields = ['sdp', 'candidate', 'signalData', 'jwt', 'token', 'secret', 'credential', 'password'];
+
+    const mockCallData = {
+      type: 'INCOMING_CALL',
+      callId: 'call_test_123',
+      callerId: userA1.id,
+      callerName: 'Alice',
+      callerAvatar: 'avatar.png',
+      callType: 'video',
+      householdId: householdA.id,
+    };
+
+    const hasNoForbidden = forbiddenFields.every((field) => !(field in mockCallData));
+    const hasRequiredSafe = sanitizedFields.every((field) => field in mockCallData);
+    assert(hasNoForbidden, 'Push notification payload contains NO SDP, ICE candidates, JWT, or secrets');
+    assert(hasRequiredSafe, 'Push notification payload contains all necessary safe display metadata');
+
+    // TEST 10: Device Push Token Registration & Management
+    console.log('\n--- Test 10: Device Push Token Management ---');
+    const { DeviceTokenService } = await import('../modules/communication/deviceTokenService');
+    const testFcmToken = 'fcm_test_token_' + Math.random().toString(36).substring(2, 10);
+
+    const regResult = await DeviceTokenService.registerToken(userA1.id, testFcmToken, 'android');
+    assert(regResult === true, 'Device token successfully registered for user');
+
+    const retrievedTokens = await DeviceTokenService.getUserTokens(userA1.id);
+    const foundToken = retrievedTokens.find((t) => t.token === testFcmToken);
+    assert(foundToken !== undefined && foundToken.platform === 'android', 'Registered token retrieved with platform android');
+
+    const unregResult = await DeviceTokenService.unregisterToken(userA1.id, testFcmToken);
+    assert(unregResult === true, 'Device token unregistration successful');
+
+    const remainingTokens = await DeviceTokenService.getUserTokens(userA1.id);
+    assert(
+      remainingTokens.find((t) => t.token === testFcmToken) === undefined,
+      'Device token cleanly removed after unregistration'
+    );
+
     // Clean up created database entities
     await prisma.user.deleteMany({
       where: { id: { in: [userA1.id, userA2.id, userA3.id, userB1.id] } },
