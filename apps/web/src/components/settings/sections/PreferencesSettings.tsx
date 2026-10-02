@@ -14,7 +14,7 @@ import {
 import { useSettingStore } from '../../../stores/useSettingStore';
 import { SUPPORTED_CURRENCIES } from '../../../utils/currency';
 import { SUPPORTED_LANGUAGES, useI18n } from '../../../utils/i18n';
-import { SettingsSection } from '../primitives/SettingsSection';
+import { SettingsCard } from '../primitives/SettingsCard';
 import { SettingsRow } from '../primitives/SettingsRow';
 import { SettingsSelect } from '../primitives/SettingsSelect';
 
@@ -177,7 +177,7 @@ export const PreferencesSettings: React.FC = () => {
       )}
 
       {/* Regional & Localization */}
-      <SettingsSection
+      <SettingsCard
         title="Regional & Localization"
         description="Configure your spoken language, standard currency, and timezone"
       >
@@ -205,7 +205,7 @@ export const PreferencesSettings: React.FC = () => {
           {/* Currency */}
           <SettingsRow
             label="Operating Currency"
-            description="HomeMind natively handles INR (₹) banking and SMS feeds; multi-currency options adapt dashboard display"
+            description="HomeMind.AI natively handles INR (₹) banking and SMS feeds; multi-currency options adapt dashboard display"
             icon={<Coins className="w-5 h-5" />}
           >
             <div className="w-48 sm:w-60">
@@ -239,10 +239,10 @@ export const PreferencesSettings: React.FC = () => {
             </div>
           </SettingsRow>
         </div>
-      </SettingsSection>
+      </SettingsCard>
 
       {/* Formatting & Conventions */}
-      <SettingsSection
+      <SettingsCard
         title="Formatting & Standards"
         description="Customize how dates, numeric values, and units of measurement are represented"
       >
@@ -343,7 +343,7 @@ export const PreferencesSettings: React.FC = () => {
             </div>
           </SettingsRow>
         </div>
-      </SettingsSection>
+      </SettingsCard>
     </div>
   );
 };

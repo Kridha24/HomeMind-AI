@@ -1,50 +1,47 @@
 import React, { useState } from 'react';
-import { 
-  Bell, 
-  Mail, 
-  CreditCard, 
-  CalendarClock, 
-  CheckSquare, 
-  Home, 
-  ShieldAlert, 
+import {
+  Bell,
+  Mail,
+  CreditCard,
+  CalendarClock,
+  CheckSquare,
+  Home,
+  ShieldAlert,
   Sparkles,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Receipt,
+  Clock,
 } from 'lucide-react';
 import { useSettingStore } from '../../../stores/useSettingStore';
-import { SettingsSection } from '../primitives/SettingsSection';
+import { SettingsCard } from '../primitives/SettingsCard';
 import { SettingsRow } from '../primitives/SettingsRow';
 import { SettingsToggle } from '../primitives/SettingsToggle';
 
 export const NotificationSettings: React.FC = () => {
-  const { 
-    pushNotifications, 
-    emailAlerts, 
-    updateSettings, 
-    saveSettings 
-  } = useSettingStore();
+  const { pushNotifications, emailAlerts, updateSettings } = useSettingStore();
 
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Granular category preferences stored with persistence
-  const [txnAlerts, setTxnAlerts] = useState(() => 
-    localStorage.getItem('hm_notif_txn') !== 'false'
+  const [txnAlerts, setTxnAlerts] = useState(
+    () => localStorage.getItem('hm_notif_txn') !== 'false'
   );
-  const [billReminders, setBillReminders] = useState(() => 
-    localStorage.getItem('hm_notif_bills') !== 'false'
+  const [billReminders, setBillReminders] = useState(
+    () => localStorage.getItem('hm_notif_bills') !== 'false'
   );
-  const [taskReminders, setTaskReminders] = useState(() => 
-    localStorage.getItem('hm_notif_tasks') !== 'false'
+  const [taskReminders, setTaskReminders] = useState(
+    () => localStorage.getItem('hm_notif_tasks') !== 'false'
   );
-  const [householdActivity, setHouseholdActivity] = useState(() => 
-    localStorage.getItem('hm_notif_household') !== 'false'
+  const [householdActivity, setHouseholdActivity] = useState(
+    () => localStorage.getItem('hm_notif_household') !== 'false'
   );
-  const [securityAlerts, setSecurityAlerts] = useState(() => 
-    localStorage.getItem('hm_notif_security') !== 'false'
+  const [securityAlerts, setSecurityAlerts] = useState(
+    () => localStorage.getItem('hm_notif_security') !== 'false'
   );
-  const [aiInsights, setAiInsights] = useState(() => 
-    localStorage.getItem('hm_notif_ai') !== 'false'
+  const [aiInsights, setAiInsights] = useState(
+    () => localStorage.getItem('hm_notif_ai') !== 'false'
   );
 
   const handleTogglePush = async (checked: boolean) => {
@@ -88,137 +85,191 @@ export const NotificationSettings: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Toast Feedback */}
       {feedback && (
-        <div 
+        <div
           role="status"
-          className={`p-4 rounded-xl flex items-center gap-3 border text-sm animate-in fade-in duration-200 ${
+          className={`p-3.5 rounded-2xl flex items-center justify-between border text-xs font-semibold animate-in fade-in duration-200 ${
             feedback.type === 'success'
-              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-              : 'bg-red-500/10 border-red-500/20 text-red-400'
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+              : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
           }`}
         >
-          {feedback.type === 'success' ? (
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-          ) : (
-            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-          )}
-          <span className="font-medium">{feedback.text}</span>
+          <div className="flex items-center gap-2">
+            {feedback.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-rose-500" />
+            )}
+            <span>{feedback.text}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFeedback(null)}
+            className="text-xs opacity-60 hover:opacity-100"
+          >
+            ✕
+          </button>
         </div>
       )}
 
-      {/* Delivery Channels */}
-      <SettingsSection
-        title="Delivery Channels"
-        description="Choose how HomeMind reaches you for important events"
+      {/* 1. Global Alert Channels */}
+      <SettingsCard
+        id="notification-channels"
+        title="Alert Channels"
+        description="Choose how HomeMind.AI delivers real-time household notifications to you."
       >
-        <div className="space-y-1">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800">
           <SettingsRow
-            label="In-App Push Notifications"
-            description="Receive real-time push alerts on your desktop browser and mobile device"
-            icon={<Bell className="w-5 h-5" />}
+            label="Push Notifications"
+            description="Instant banner alerts on mobile and desktop web browsers"
+            icon={Bell}
           >
             <SettingsToggle
               checked={pushNotifications}
               onChange={handleTogglePush}
               disabled={saving}
-              ariaLabel="Toggle push notifications"
+              ariaLabel="Enable push notifications"
             />
           </SettingsRow>
 
           <SettingsRow
-            label="Email Summaries & Urgent Alerts"
-            description="Send financial summaries, invoices, and high-severity security notifications to your email"
-            icon={<Mail className="w-5 h-5" />}
+            label="Email Summaries & Alerts"
+            description="Important family finance recaps and security sign-in receipts"
+            icon={Mail}
           >
             <SettingsToggle
               checked={emailAlerts}
               onChange={handleToggleEmail}
               disabled={saving}
-              ariaLabel="Toggle email alerts"
+              ariaLabel="Enable email alerts"
             />
           </SettingsRow>
         </div>
-      </SettingsSection>
+      </SettingsCard>
 
-      {/* Category Subscriptions */}
-      <SettingsSection
-        title="Notification Topics"
-        description="Fine-tune which categories trigger notifications across your active channels"
+      {/* 2. Finance Notifications */}
+      <SettingsCard
+        id="finance-notifications"
+        title="Finance & Payments"
+        description="Stay on top of family spending, detected SMS transactions, and upcoming due dates."
       >
-        <div className="space-y-1">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800">
           <SettingsRow
             label="Transaction Alerts"
-            description="Get notified when a new bank, UPI, or credit transaction is logged or auto-detected"
-            icon={<CreditCard className="w-5 h-5" />}
+            description="Instant alert when bank, credit card, or UPI transaction is recorded"
+            icon={CreditCard}
           >
             <SettingsToggle
               checked={txnAlerts}
-              onChange={() => handleCategoryToggle('hm_notif_txn', txnAlerts, setTxnAlerts, 'Transaction alert')}
-              ariaLabel="Toggle transaction alerts"
+              onChange={() =>
+                handleCategoryToggle('hm_notif_txn', txnAlerts, setTxnAlerts, 'Transaction')
+              }
+              ariaLabel="Enable transaction alerts"
             />
           </SettingsRow>
 
           <SettingsRow
-            label="Bill Due Reminders"
-            description="Advance warning before recurring utility, rent, subscription, or loan payments are due"
-            icon={<CalendarClock className="w-5 h-5" />}
+            label="Bill Due Date Reminders"
+            description="Advance notices 3 days and 24 hours prior to rent or utility deadlines"
+            icon={CalendarClock}
           >
             <SettingsToggle
               checked={billReminders}
-              onChange={() => handleCategoryToggle('hm_notif_bills', billReminders, setBillReminders, 'Bill reminder')}
-              ariaLabel="Toggle bill reminders"
-            />
-          </SettingsRow>
-
-          <SettingsRow
-            label="Task & Chore Assignments"
-            description="Reminders when a chore is assigned, due soon, or marked complete by family members"
-            icon={<CheckSquare className="w-5 h-5" />}
-          >
-            <SettingsToggle
-              checked={taskReminders}
-              onChange={() => handleCategoryToggle('hm_notif_tasks', taskReminders, setTaskReminders, 'Task reminder')}
-              ariaLabel="Toggle task notifications"
-            />
-          </SettingsRow>
-
-          <SettingsRow
-            label="Household Activity"
-            description="Updates when new members join, invitations are accepted, or roles are updated"
-            icon={<Home className="w-5 h-5" />}
-          >
-            <SettingsToggle
-              checked={householdActivity}
-              onChange={() => handleCategoryToggle('hm_notif_household', householdActivity, setHouseholdActivity, 'Household activity')}
-              ariaLabel="Toggle household activity notifications"
-            />
-          </SettingsRow>
-
-          <SettingsRow
-            label="Security & Session Alerts"
-            description="Instant notifications whenever a new login occurs or security credentials change"
-            icon={<ShieldAlert className="w-5 h-5" />}
-          >
-            <SettingsToggle
-              checked={securityAlerts}
-              onChange={() => handleCategoryToggle('hm_notif_security', securityAlerts, setSecurityAlerts, 'Security alert')}
-              ariaLabel="Toggle security alerts"
-            />
-          </SettingsRow>
-
-          <SettingsRow
-            label="AI Insights & Weekly Digests"
-            description="Personalized spend forecasts, grocery restock recommendations, and budget tips"
-            icon={<Sparkles className="w-5 h-5" />}
-          >
-            <SettingsToggle
-              checked={aiInsights}
-              onChange={() => handleCategoryToggle('hm_notif_ai', aiInsights, setAiInsights, 'AI insights')}
-              ariaLabel="Toggle AI insights"
+              onChange={() =>
+                handleCategoryToggle('hm_notif_bills', billReminders, setBillReminders, 'Bill reminder')
+              }
+              ariaLabel="Enable bill due date reminders"
             />
           </SettingsRow>
         </div>
-      </SettingsSection>
+      </SettingsCard>
+
+      {/* 3. Household & Chores Notifications */}
+      <SettingsCard
+        id="household-notifications"
+        title="Household & Chores"
+        description="Keep family members synchronized on shared responsibilities."
+      >
+        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          <SettingsRow
+            label="Task & Chore Reminders"
+            description="Alerts when pending tasks are assigned to you or marked completed"
+            icon={CheckSquare}
+          >
+            <SettingsToggle
+              checked={taskReminders}
+              onChange={() =>
+                handleCategoryToggle('hm_notif_tasks', taskReminders, setTaskReminders, 'Task')
+              }
+              ariaLabel="Enable task reminders"
+            />
+          </SettingsRow>
+
+          <SettingsRow
+            label="Member Activity"
+            description="Notifications when new family members join or change residence roles"
+            icon={Home}
+          >
+            <SettingsToggle
+              checked={householdActivity}
+              onChange={() =>
+                handleCategoryToggle(
+                  'hm_notif_household',
+                  householdActivity,
+                  setHouseholdActivity,
+                  'Household activity'
+                )
+              }
+              ariaLabel="Enable member activity alerts"
+            />
+          </SettingsRow>
+        </div>
+      </SettingsCard>
+
+      {/* 4. Security & AI Notifications */}
+      <SettingsCard
+        id="security-ai-notifications"
+        title="Security & AI Intelligence"
+        description="Critical account security triggers and proactive household insights."
+      >
+        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          <SettingsRow
+            label="New Sign-In & Security Alerts"
+            description="Immediate notification on logins from unverified devices or IP ranges"
+            icon={ShieldAlert}
+          >
+            <SettingsToggle
+              checked={securityAlerts}
+              onChange={() =>
+                handleCategoryToggle(
+                  'hm_notif_security',
+                  securityAlerts,
+                  setSecurityAlerts,
+                  'Security'
+                )
+              }
+              ariaLabel="Enable security alerts"
+            />
+          </SettingsRow>
+
+          <SettingsRow
+            label="AI Copilot Insights Ready"
+            description="Periodic smart recommendations regarding utility trends and pantry waste"
+            icon={Sparkles}
+          >
+            <SettingsToggle
+              checked={aiInsights}
+              onChange={() =>
+                handleCategoryToggle('hm_notif_ai', aiInsights, setAiInsights, 'AI copilot')
+              }
+              ariaLabel="Enable AI insights alerts"
+            />
+          </SettingsRow>
+        </div>
+      </SettingsCard>
     </div>
   );
 };
+
+export default NotificationSettings;
