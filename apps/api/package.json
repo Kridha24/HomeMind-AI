@@ -7,7 +7,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "prisma generate && tsc",
     "typecheck": "tsc --noEmit",
-    "test": "ts-node src/__tests__/security.test.ts && ts-node src/modules/finance/transactions/__tests__/parsers.test.ts && ts-node src/__tests__/phase2_async.test.ts && ts-node src/__tests__/phase3_runtime.test.ts",
+    "test": "ts-node src/__tests__/security.test.ts && ts-node src/modules/finance/transactions/__tests__/parsers.test.ts && ts-node src/__tests__/phase2_async.test.ts && ts-node src/__tests__/phase3_runtime.test.ts && ts-node src/__tests__/dashboard_restoration.test.ts",
 
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
