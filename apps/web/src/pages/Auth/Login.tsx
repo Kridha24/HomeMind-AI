@@ -290,7 +290,7 @@ export const Login: React.FC = () => {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-extrabold text-base tracking-tight text-primary block">HomeMind AI</span>
+              <span className="font-extrabold text-base tracking-tight text-primary block">HomeMind.AI</span>
               <span className="text-[11px] text-blue-400 font-semibold tracking-wider uppercase block leading-none">
                 Smart Home System
               </span>
@@ -327,7 +327,7 @@ export const Login: React.FC = () => {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-extrabold text-lg tracking-tight text-primary block">HomeMind AI</span>
+              <span className="font-extrabold text-lg tracking-tight text-primary block">HomeMind.AI</span>
               <span className="text-[11px] text-blue-400 font-semibold tracking-wider uppercase leading-none block">
                 Apna Ghar, Smarter
               </span>

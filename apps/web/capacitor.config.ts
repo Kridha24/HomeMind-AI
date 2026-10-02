@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.kridha.homemind',
-  appName: 'HomeMind AI',
+  appName: 'HomeMind.AI',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

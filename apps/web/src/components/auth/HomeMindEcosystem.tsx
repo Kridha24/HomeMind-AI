@@ -96,7 +96,7 @@ export const HomeMindEcosystem: React.FC = () => {
             </div>
             <div>
               <span className="text-xs font-extrabold text-white tracking-tight block">
-                HomeMind AI
+                HomeMind.AI
               </span>
               <span className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider block">
                 Intelligent Operating Core

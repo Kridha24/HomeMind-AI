@@ -38,7 +38,7 @@ export const AuthSuccessOverlay: React.FC<AuthSuccessOverlayProps> = ({
 
         <div className="space-y-1">
           <h3 className="text-xl font-extrabold text-white tracking-tight">
-            {phase === 'activating' && 'Activating HomeMind AI...'}
+            {phase === 'activating' && 'Activating HomeMind.AI...'}
             {phase === 'connecting' && 'Connecting Ecosystem...'}
             {phase === 'ready' && `Welcome Home${userName ? `, ${userName}` : ''}`}
           </h3>

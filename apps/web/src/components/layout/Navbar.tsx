@@ -95,7 +95,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <input
             type="text"
             readOnly
-            placeholder="Search HomeMind... (Expenses, bills, groceries, tasks)"
+            placeholder="Search HomeMind.AI... (Expenses, bills, groceries, tasks)"
             onFocus={() => {
               setSearchFocused(true);
               if (onOpenSearch) onOpenSearch();

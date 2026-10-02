@@ -130,7 +130,7 @@ export const DashboardGreeting: React.FC<DashboardGreetingProps> = ({
 
         <div className="hidden sm:flex items-center gap-1 text-[10px] text-slate-400">
           <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
-          <span>HomeMind Secure Tenant Guard</span>
+          <span>HomeMind.AI Secure Tenant Guard</span>
         </div>
       </div>
     </motion.section>

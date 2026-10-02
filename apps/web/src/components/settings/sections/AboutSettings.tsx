@@ -35,7 +35,7 @@ export const AboutSettings: React.FC = () => {
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 mb-3 shadow-lg shadow-indigo-500/10">
           <Layers className="w-7 h-7" />
         </div>
-        <h3 className="text-lg font-bold text-white tracking-tight">HomeMind AI</h3>
+        <h3 className="text-lg font-bold text-white tracking-tight">HomeMind.AI</h3>
         <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
           The intelligent household operating system. Seamless financial telemetry, automated inventory oversight, and proactive family coordination.
         </p>

@@ -23,7 +23,7 @@ export const EcosystemVisual: React.FC = () => {
             </div>
             <div>
               <span className="text-xs font-extrabold text-primary tracking-tight block leading-none">
-                HomeMind AI
+                HomeMind.AI
               </span>
               <span className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider block mt-0.5">
                 Central Nervous System
