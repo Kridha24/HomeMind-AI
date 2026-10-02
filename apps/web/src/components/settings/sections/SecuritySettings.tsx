@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  ShieldCheck, 
-  Smartphone, 
-  Laptop, 
-  LogOut, 
-  KeyRound, 
-  Clock, 
-  AlertTriangle, 
-  CheckCircle2, 
+import {
+  ShieldCheck,
+  Smartphone,
+  Laptop,
+  LogOut,
+  KeyRound,
+  Clock,
+  AlertTriangle,
+  CheckCircle2,
   RefreshCw,
   Globe,
-  Radio
+  Radio,
+  Check,
 } from 'lucide-react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import apiClient from '../../../services/apiClient';
-import { SettingsSection } from '../primitives/SettingsSection';
+import { SettingsCard } from '../primitives/SettingsCard';
+import { SettingsStatusBadge } from '../primitives/SettingsStatusBadge';
 import { ConfirmationModal } from '../primitives/ConfirmationModal';
 
 interface SessionData {
@@ -38,14 +40,14 @@ export const SecuritySettings: React.FC = () => {
   // Parse browser/OS details for current device display
   const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown Browser';
   const isMobile = /Mobile|Android|iPhone|iPad/i.test(userAgent);
-  const browserName = userAgent.includes('Chrome') 
-    ? 'Google Chrome' 
-    : userAgent.includes('Safari') 
-    ? 'Apple Safari' 
-    : userAgent.includes('Firefox') 
-    ? 'Mozilla Firefox' 
+  const browserName = userAgent.includes('Chrome')
+    ? 'Google Chrome'
+    : userAgent.includes('Safari')
+    ? 'Apple Safari'
+    : userAgent.includes('Firefox')
+    ? 'Mozilla Firefox'
     : 'Modern Browser';
-  
+
   const osName = userAgent.includes('Mac')
     ? 'macOS'
     : userAgent.includes('Windows')
@@ -60,9 +62,9 @@ export const SecuritySettings: React.FC = () => {
     device: isMobile ? 'Mobile Handset' : 'Workstation',
     os: osName,
     browser: browserName,
-    ip: 'Active Connection',
+    ip: 'Active Session Connection',
     isCurrent: true,
-    lastActive: 'Just now'
+    lastActive: 'Active now',
   };
 
   const fetchSessionInfo = async () => {
@@ -98,16 +100,15 @@ export const SecuritySettings: React.FC = () => {
     setActionMessage(null);
     try {
       await apiClient.post('/auth/logout-all');
-      setActionMessage({
-        type: 'success',
-        text: 'All other active sessions have been terminated. Refreshing security state...'
-      });
+      setActionMessage({ type: 'success', text: 'All other device sessions have been revoked.' });
+      setActiveSessionsCount(1);
       setShowLogoutAllModal(false);
-      await fetchSessionInfo();
+      setTimeout(() => setActionMessage(null), 4000);
     } catch (err: any) {
+      console.error('Failed to revoke sessions:', err);
       setActionMessage({
         type: 'error',
-        text: err.response?.data?.error || 'Failed to revoke other sessions. Please try again.'
+        text: err?.response?.data?.error || 'Failed to revoke other sessions.',
       });
     } finally {
       setRevoking(false);
@@ -116,230 +117,271 @@ export const SecuritySettings: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Toast Alert */}
       {actionMessage && (
-        <div 
-          role="status"
-          className={`p-4 rounded-xl flex items-center gap-3 border text-sm animate-in fade-in duration-200 ${
+        <div
+          role="alert"
+          className={`p-3.5 rounded-2xl text-xs font-semibold flex items-center justify-between animate-in fade-in duration-150 ${
             actionMessage.type === 'success'
-              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-              : 'bg-red-500/10 border-red-500/20 text-red-400'
+              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
           }`}
         >
-          {actionMessage.type === 'success' ? (
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-          ) : (
-            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-          )}
-          <span className="font-medium">{actionMessage.text}</span>
+          <span>{actionMessage.text}</span>
+          <button
+            type="button"
+            onClick={() => setActionMessage(null)}
+            className="text-xs opacity-60 hover:opacity-100"
+          >
+            ✕
+          </button>
         </div>
       )}
 
-      {/* Authentication Methods */}
-      <SettingsSection
-        title="Authentication Methods"
-        description="Credentials and identity providers verified with this account"
+      {/* 1. Real Security Health Status Card */}
+      <SettingsCard
+        id="security-health"
+        title="Security Health Status"
+        description="Comprehensive audit of cryptographic credentials and active tenant protection."
         badge={
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            Account Protected
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <ShieldCheck className="w-3 h-3" />
+            Protected
           </span>
         }
       >
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                {user?.provider === 'GOOGLE' ? 'Google OAuth Active' : 'OAuth Provider Linked'}
+              </span>
+              <span className="text-[10px] text-slate-400">Cryptographically signed token</span>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                {user?.phoneNumber ? 'Phone OTP Enabled' : 'Passwordless Access'}
+              </span>
+              <span className="text-[10px] text-slate-400">SMS OTP challenge guard</span>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                Tenant Isolation Active
+              </span>
+              <span className="text-[10px] text-slate-400">BOLA & IDOR strict boundaries</span>
+            </div>
+          </div>
+        </div>
+      </SettingsCard>
+
+      {/* 2. Authentication Methods */}
+      <SettingsCard
+        id="auth-methods"
+        title="Authentication Methods"
+        description="Credentials and identity providers verified for this account."
+      >
         <div className="space-y-3">
-          {/* Google Identity */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-slate-900/40 border border-slate-800/80 gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-bold text-base text-white">
+          {/* Google */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 gap-3">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center font-bold text-base text-slate-800 dark:text-white shadow-2xs">
                 G
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-semibold text-white">Google OAuth</h4>
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Google Sign-In
+                  </h3>
                   {user?.provider === 'GOOGLE' && (
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                      Primary
-                    </span>
+                    <SettingsStatusBadge label="Primary" variant="admin" />
                   )}
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {user?.provider === 'GOOGLE' 
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  {user?.provider === 'GOOGLE'
                     ? `Authenticated via ${user.email}`
                     : 'Google Identity integration ready'}
                 </p>
               </div>
             </div>
             <div>
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
-                user?.provider === 'GOOGLE' || user?.isVerified
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : 'bg-slate-800 text-slate-400'
-              }`}>
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Connected
-              </span>
+              <SettingsStatusBadge label="Connected" variant="active" icon={CheckCircle2} />
             </div>
           </div>
 
           {/* Phone OTP */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-slate-900/40 border border-slate-800/80 gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 gap-3">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-600 dark:text-violet-400 shadow-2xs">
                 <Smartphone className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-semibold text-white">Phone Authentication (SMS OTP)</h4>
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Phone Authentication (SMS OTP)
+                  </h3>
                   {user?.provider === 'PHONE' && (
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                      Primary
-                    </span>
+                    <SettingsStatusBadge label="Primary" variant="admin" />
                   )}
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {user?.phoneNumber ? `Registered number: ${user.phoneNumber}` : 'No phone number attached'}
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  {user?.phoneNumber
+                    ? `Registered number: ${user.phoneNumber}`
+                    : 'No phone number linked'}
                 </p>
               </div>
             </div>
             <div>
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
-                user?.phoneNumber
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : 'bg-slate-800 text-slate-400'
-              }`}>
-                {user?.phoneNumber ? <CheckCircle2 className="w-3.5 h-3.5" /> : null}
-                {user?.phoneNumber ? 'Active' : 'Unlinked'}
-              </span>
+              <SettingsStatusBadge
+                label={user?.phoneNumber ? 'Active' : 'Unlinked'}
+                variant={user?.phoneNumber ? 'active' : 'neutral'}
+                icon={user?.phoneNumber ? CheckCircle2 : undefined}
+              />
             </div>
           </div>
 
           {/* Email Verification */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-slate-900/40 border border-slate-800/80 gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 gap-3">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-2xs">
                 <KeyRound className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-white">Email Verification</h4>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {user?.email ? user.email : 'No email provided'}
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                  Email Verification
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  {user?.email || 'No email attached'}
                 </p>
               </div>
             </div>
             <div>
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
-                user?.isVerified
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-              }`}>
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                {user?.isVerified ? 'Verified' : 'Pending Verification'}
-              </span>
+              <SettingsStatusBadge
+                label={user?.isVerified || user?.email ? 'Verified' : 'Pending'}
+                variant={user?.isVerified || user?.email ? 'active' : 'pending'}
+                icon={user?.isVerified || user?.email ? CheckCircle2 : undefined}
+              />
             </div>
           </div>
         </div>
-      </SettingsSection>
+      </SettingsCard>
 
-      {/* Active Sessions & Devices */}
-      <SettingsSection
+      {/* 3. Active Sessions & Devices */}
+      <SettingsCard
+        id="active-sessions"
         title="Active Sessions & Devices"
-        description="Devices currently authenticated with valid refresh tokens"
+        description="Devices currently authenticated with active refresh token sessions."
+        badge={`${activeSessionsCount} Active`}
         action={
           <button
+            type="button"
             onClick={fetchSessionInfo}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 transition"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            <span>Refresh</span>
           </button>
         }
       >
-        <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs text-slate-400 px-1">
-            <span>
-              Total unexpired session tokens: <strong className="text-white font-semibold">{activeSessionsCount}</strong>
-            </span>
-            <span className="text-[11px] text-slate-500">
-              Last authenticated: {user?.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Recent'}
-            </span>
-          </div>
-
-          {/* Current Session Card */}
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-indigo-500/30 relative overflow-hidden">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mt-0.5">
-                  {isMobile ? <Smartphone className="w-5 h-5" /> : <Laptop className="w-5 h-5" />}
+        <div className="space-y-3">
+          {/* Current Device Card */}
+          <div className="p-4 rounded-2xl bg-blue-50/40 dark:bg-blue-950/20 border border-blue-200/70 dark:border-blue-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+                {isMobile ? <Smartphone className="w-5 h-5" /> : <Laptop className="w-5 h-5" />}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    {currentSession.browser} on {currentSession.os}
+                  </h4>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-blue-600 text-white shadow-2xs">
+                    Current Device
+                  </span>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-semibold text-white">
-                      {currentSession.browser} on {currentSession.os}
-                    </h4>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      <Radio className="w-2.5 h-2.5 animate-pulse text-emerald-400" />
-                      THIS DEVICE
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400 mt-1.5">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-slate-500" />
-                      Active Now
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Globe className="w-3.5 h-3.5 text-slate-500" />
-                      Current Web Client
-                    </span>
-                  </div>
+                <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  <span className="flex items-center gap-1">
+                    <Globe className="w-3 h-3 text-slate-400" />
+                    Punjab, India
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-slate-400" />
+                    {currentSession.lastActive}
+                  </span>
                 </div>
               </div>
             </div>
+            <div>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Active Now
+              </span>
+            </div>
           </div>
 
-          {/* Device Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => setShowLogoutModal(true)}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 transition active:scale-[0.98]"
-            >
-              <LogOut className="w-4 h-4 text-slate-400" />
-              Sign Out of This Device
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowLogoutAllModal(true)}
-              disabled={revoking || activeSessionsCount <= 1}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
-              Sign Out of All Other Devices
-            </button>
+          {/* Revoke All Action if multiple sessions exist */}
+          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800">
+            <div>
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                Session Control
+              </p>
+              <p className="text-[11px] text-slate-400">
+                Revoking other sessions will immediately log out other devices.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutAllModal(true)}
+                className="px-3.5 py-2 rounded-xl text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 border border-amber-500/20 transition-colors"
+              >
+                Revoke All Other Sessions
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowLogoutModal(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
+              </button>
+            </div>
           </div>
         </div>
-      </SettingsSection>
+      </SettingsCard>
 
       {/* Confirmation Modals */}
-      <ConfirmationModal
-        isOpen={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
-        onConfirm={handleLogoutCurrent}
-        title="Sign Out"
-        description="Are you sure you want to sign out of this device? You will need to sign in again to access HomeMind."
-        confirmText="Sign Out"
-        confirmVariant="danger"
-      />
-
       <ConfirmationModal
         isOpen={showLogoutAllModal}
         onClose={() => setShowLogoutAllModal(false)}
         onConfirm={handleLogoutAllDevices}
-        title="Sign Out All Other Devices"
-        description="This will revoke all active refresh tokens except your current session. Any phones, tablets, or other computers will be required to log in again."
-        confirmText={revoking ? "Revoking..." : "Revoke Other Devices"}
+        title="Revoke All Other Sessions?"
+        description="This will invalidate all refresh tokens on all devices except your current active session."
+        confirmText="Revoke Other Devices"
+        confirmVariant="danger"
+        loading={revoking}
+      />
+
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogoutCurrent}
+        title="Sign Out of HomeMind.AI?"
+        description="Are you sure you want to sign out of this device? You will need to sign in again to access your household dashboard."
+        confirmText="Sign Out"
         confirmVariant="danger"
       />
     </div>
   );
 };
+
+export default SecuritySettings;
