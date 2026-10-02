@@ -10,3 +10,10 @@ export const emitTaskUpdate = (householdId: string, payload: any) => {
   realtimeEmitter.emit('task_updated', { householdId, payload });
 };
 
+export const emitHouseholdUpdate = (householdId: string, payload: any) => {
+  realtimeEmitter.emit('household_updated', { householdId, payload });
+};
+
+export const emitMemberUpdate = (householdId: string, payload: any) => {
+  realtimeEmitter.emit('member_updated', { householdId, payload });
+};

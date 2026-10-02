@@ -1,6 +1,8 @@
 import { Response } from 'express';
 import { prisma } from '../repositories/db';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { emitHouseholdUpdate, emitMemberUpdate } from '../services/realtimeGateway';
+import { invalidateHouseholdDashboard } from '../infrastructure/redis/redisClient';
 
 export const getHouseholdMembers = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -12,12 +14,35 @@ export const getHouseholdMembers = async (req: AuthenticatedRequest, res: Respon
       include: {
         members: {
           where: { softDelete: false },
-          select: { id: true, name: true, email: true, phoneNumber: true, role: true, avatar: true, createdAt: true }
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phoneNumber: true,
+            role: true,
+            avatar: true,
+            createdAt: true,
+            lastLogin: true,
+          }
         }
       }
     });
 
-    res.json({ household });
+    if (!household) {
+      return res.status(404).json({ error: 'Household not found' });
+    }
+
+    res.json({
+      household: {
+        id: household.id,
+        name: household.name,
+        inviteCode: household.inviteCode,
+        createdAt: household.createdAt,
+        membersCount: household.members.length,
+        members: household.members,
+      },
+      members: household.members,
+    });
   } catch (err: any) {
     console.error('[getHouseholdMembers] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch household members.' });
@@ -59,16 +84,96 @@ export const updateMemberRole = async (req: AuthenticatedRequest, res: Response)
       return res.status(400).json({ error: 'You cannot change your own role' });
     }
 
+    // Only OWNER can modify another Admin
+    if (targetUser.role === 'ADMIN' && requesterRole !== 'OWNER') {
+      return res.status(403).json({ error: 'Only household owners can change an admin role' });
+    }
+
     const user = await prisma.user.update({
       where: { id: targetUserId },
       data: { role },
       select: { id: true, name: true, email: true, role: true }
     });
 
+    await prisma.auditLog.create({
+      data: {
+        householdId,
+        action: 'UPDATE_ROLE',
+        entity: 'User',
+        details: `Role for ${targetUser.name} changed from ${targetUser.role} to ${role}`,
+        performedBy: requesterId
+      }
+    });
+
+    emitMemberUpdate(householdId, { action: 'role_updated', member: user });
+    await invalidateHouseholdDashboard(householdId).catch(() => {});
+
     res.json({ user });
   } catch (err: any) {
     console.error('[updateMemberRole] Error:', err.message);
     res.status(500).json({ error: 'Failed to update member role.' });
+  }
+};
+
+export const transferOwnership = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const requesterId = req.user?.userId;
+    const householdId = req.user?.householdId;
+    const requesterRole = req.user?.role;
+    const { newOwnerId } = req.body;
+
+    if (!householdId || !requesterId) {
+      return res.status(400).json({ error: 'Household context missing' });
+    }
+
+    if (requesterRole !== 'OWNER') {
+      return res.status(403).json({ error: 'Only the current household owner can transfer ownership' });
+    }
+
+    if (!newOwnerId || newOwnerId === requesterId) {
+      return res.status(400).json({ error: 'Please specify a different active member to transfer ownership to' });
+    }
+
+    const targetUser = await prisma.user.findFirst({
+      where: { id: newOwnerId, householdId, softDelete: false }
+    });
+
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Target user not found in this household' });
+    }
+
+    // Atomically transfer ownership
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: newOwnerId },
+        data: { role: 'OWNER' }
+      }),
+      prisma.user.update({
+        where: { id: requesterId },
+        data: { role: 'ADMIN' }
+      }),
+      prisma.auditLog.create({
+        data: {
+          householdId,
+          action: 'OWNERSHIP_TRANSFERRED',
+          entity: 'Household',
+          details: `Ownership transferred to ${targetUser.name} (${newOwnerId})`,
+          performedBy: requesterId
+        }
+      })
+    ]);
+
+    emitMemberUpdate(householdId, { action: 'ownership_transferred', newOwnerId, previousOwnerId: requesterId });
+    await invalidateHouseholdDashboard(householdId).catch(() => {});
+
+    res.json({
+      success: true,
+      message: `Ownership successfully transferred to ${targetUser.name}.`,
+      newOwner: { id: targetUser.id, name: targetUser.name, role: 'OWNER' }
+    });
+  } catch (err: any) {
+    console.error('[transferOwnership] Error:', err.message);
+    res.status(500).json({ error: 'Failed to transfer household ownership.' });
   }
 };
 
@@ -136,10 +241,13 @@ export const removeHouseholdMember = async (req: AuthenticatedRequest, res: Resp
         householdId,
         action: 'REMOVE_MEMBER',
         entity: 'User',
-        details: `Member ${targetUser.name} (${targetUserId}) removed from household by ${requesterId}`,
+        details: `Member ${targetUser.name} removed from household`,
         performedBy: requesterId
       }
     });
+
+    emitMemberUpdate(householdId, { action: 'member_removed', removedUserId: targetUserId });
+    await invalidateHouseholdDashboard(householdId).catch(() => {});
 
     res.json({ success: true, message: `Member ${targetUser.name} removed successfully.` });
   } catch (err: any) {
@@ -205,6 +313,19 @@ export const leaveHousehold = async (req: AuthenticatedRequest, res: Response) =
     // Revoke refresh tokens so user gets fresh session token on next exchange
     await prisma.refreshToken.deleteMany({ where: { userId } });
 
+    await prisma.auditLog.create({
+      data: {
+        householdId,
+        action: 'MEMBER_LEFT',
+        entity: 'User',
+        details: `${user.name} left the household`,
+        performedBy: userId
+      }
+    });
+
+    emitMemberUpdate(householdId, { action: 'member_left', userId });
+    await invalidateHouseholdDashboard(householdId).catch(() => {});
+
     res.json({
       success: true,
       message: 'Successfully left household.',
@@ -267,6 +388,9 @@ export const deleteHousehold = async (req: AuthenticatedRequest, res: Response) 
       }
     });
 
+    emitHouseholdUpdate(householdId, { action: 'household_deleted', householdId });
+    await invalidateHouseholdDashboard(householdId).catch(() => {});
+
     res.json({
       success: true,
       message: 'Household deleted successfully.',
@@ -285,8 +409,14 @@ export const joinHouseholdWithCode = async (req: AuthenticatedRequest, res: Resp
     const currentHouseholdId = req.user?.householdId;
 
     if (!userId) return res.status(400).json({ error: 'User context missing' });
+    if (!inviteCode || typeof inviteCode !== 'string') {
+      return res.status(400).json({ error: 'Valid invitation code is required' });
+    }
 
-    const newHousehold = await prisma.household.findFirst({ where: { inviteCode, softDelete: false } });
+    const cleanCode = inviteCode.trim().toUpperCase();
+    const newHousehold = await prisma.household.findFirst({
+      where: { inviteCode: cleanCode, softDelete: false }
+    });
     if (!newHousehold) return res.status(404).json({ error: 'Invalid invitation code' });
 
     // Do not rejoin the same household.
@@ -294,9 +424,7 @@ export const joinHouseholdWithCode = async (req: AuthenticatedRequest, res: Resp
       return res.status(400).json({ error: 'You are already a member of this household' });
     }
 
-    // Move the user to the new household — only their own data.
-    // We intentionally do NOT bulk-migrate all their records to prevent data
-    // from the old household leaking into the new one. Only the user row itself moves.
+    // Move user to the new household
     await prisma.user.update({
       where: { id: userId },
       data: { householdId: newHousehold.id, role: 'MEMBER' }
@@ -307,10 +435,195 @@ export const joinHouseholdWithCode = async (req: AuthenticatedRequest, res: Resp
       select: { id: true, name: true, email: true, role: true, householdId: true }
     });
 
+    await prisma.auditLog.create({
+      data: {
+        householdId: newHousehold.id,
+        action: 'MEMBER_JOINED',
+        entity: 'User',
+        details: `${updatedUser?.name} joined the household using invite code`,
+        performedBy: userId
+      }
+    });
+
+    emitMemberUpdate(newHousehold.id, { action: 'member_joined', user: updatedUser });
+    if (currentHouseholdId) {
+      emitMemberUpdate(currentHouseholdId, { action: 'member_left', userId });
+      await invalidateHouseholdDashboard(currentHouseholdId).catch(() => {});
+    }
+    await invalidateHouseholdDashboard(newHousehold.id).catch(() => {});
+
     res.json({ user: updatedUser, household: newHousehold });
   } catch (err: any) {
     console.error('[joinHouseholdWithCode] Error:', err.message);
     res.status(500).json({ error: 'Failed to join household.' });
+  }
+};
+
+export const regenerateInviteCode = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const householdId = req.user?.householdId;
+    const requesterRole = req.user?.role;
+    const requesterId = req.user?.userId;
+
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    if (requesterRole !== 'OWNER' && requesterRole !== 'CO-OWNER' && requesterRole !== 'ADMIN' && requesterRole !== 'HEAD') {
+      return res.status(403).json({ error: 'Only household owners and admins can regenerate invite codes' });
+    }
+
+    const newCode = 'HM-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    const updated = await prisma.household.update({
+      where: { id: householdId },
+      data: { inviteCode: newCode }
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        householdId,
+        action: 'INVITE_CODE_REGENERATED',
+        entity: 'Household',
+        details: `Invite code regenerated to ${newCode}`,
+        performedBy: requesterId || 'system'
+      }
+    });
+
+    emitHouseholdUpdate(householdId, { action: 'code_regenerated', inviteCode: newCode });
+
+    res.json({
+      success: true,
+      message: 'Household invite code regenerated.',
+      inviteCode: updated.inviteCode
+    });
+  } catch (err: any) {
+    console.error('[regenerateInviteCode] Error:', err.message);
+    res.status(500).json({ error: 'Failed to regenerate invite code.' });
+  }
+};
+
+export const getHouseholdActivity = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const householdId = req.user?.householdId;
+    if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    const logs = await prisma.auditLog.findMany({
+      where: { householdId },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    });
+
+    // Lookup performer names
+    const performerIds = Array.from(new Set(logs.map((l) => l.performedBy).filter(Boolean)));
+    const performers = await prisma.user.findMany({
+      where: { id: { in: performerIds } },
+      select: { id: true, name: true, role: true }
+    });
+    const performerMap = new Map(performers.map((p) => [p.id, p.name]));
+
+    const activities = logs.map((log) => ({
+      id: log.id,
+      action: log.action,
+      entity: log.entity,
+      details: log.details,
+      performerName: performerMap.get(log.performedBy) || log.performedBy || 'Household System',
+      createdAt: log.createdAt,
+    }));
+
+    res.json({ activities });
+  } catch (err: any) {
+    console.error('[getHouseholdActivity] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch household activity.' });
+  }
+};
+
+export const getAvailableHouseholds = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const currentHouseholdId = req.user?.householdId;
+
+    if (!userId || !currentHouseholdId) {
+      return res.status(400).json({ error: 'User context missing' });
+    }
+
+    // Find current household and any households where this user is active or owns
+    const currentHousehold = await prisma.household.findFirst({
+      where: { id: currentHouseholdId, softDelete: false },
+      include: {
+        _count: {
+          select: { members: { where: { softDelete: false } } }
+        }
+      }
+    });
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true }
+    });
+
+    const households = [];
+    if (currentHousehold) {
+      households.push({
+        id: currentHousehold.id,
+        name: currentHousehold.name,
+        inviteCode: currentHousehold.inviteCode,
+        role: user?.role || 'MEMBER',
+        memberCount: currentHousehold._count.members,
+        isCurrent: true,
+      });
+    }
+
+    res.json({ households });
+  } catch (err: any) {
+    console.error('[getAvailableHouseholds] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch available households.' });
+  }
+};
+
+export const switchHousehold = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { householdId: targetHouseholdId } = req.body;
+    const userId = req.user?.userId;
+    const currentHouseholdId = req.user?.householdId;
+
+    if (!userId) return res.status(400).json({ error: 'User context missing' });
+    if (!targetHouseholdId) return res.status(400).json({ error: 'Target householdId is required' });
+
+    if (targetHouseholdId === currentHouseholdId) {
+      const current = await prisma.household.findFirst({ where: { id: currentHouseholdId } });
+      const currentU = await prisma.user.findUnique({ where: { id: userId } });
+      return res.json({ user: currentU, household: current });
+    }
+
+    const targetHousehold = await prisma.household.findFirst({
+      where: { id: targetHouseholdId, softDelete: false }
+    });
+
+    if (!targetHousehold) {
+      return res.status(404).json({ error: 'Household not found' });
+    }
+
+    // Update user's active household
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { householdId: targetHousehold.id }
+    });
+
+    emitMemberUpdate(targetHousehold.id, { action: 'member_joined', user: updatedUser });
+    if (currentHouseholdId) {
+      emitMemberUpdate(currentHouseholdId, { action: 'member_left', userId });
+      await invalidateHouseholdDashboard(currentHouseholdId).catch(() => {});
+    }
+    await invalidateHouseholdDashboard(targetHousehold.id).catch(() => {});
+
+    res.json({
+      success: true,
+      message: `Switched to ${targetHousehold.name}`,
+      user: updatedUser,
+      household: targetHousehold,
+    });
+  } catch (err: any) {
+    console.error('[switchHousehold] Error:', err.message);
+    res.status(500).json({ error: 'Failed to switch household.' });
   }
 };
 
@@ -352,6 +665,7 @@ export const updateHouseholdName = async (req: AuthenticatedRequest, res: Respon
   try {
     const householdId = req.user?.householdId;
     const requesterRole = req.user?.role;
+    const requesterId = req.user?.userId;
     const { name } = req.body;
 
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
@@ -366,6 +680,19 @@ export const updateHouseholdName = async (req: AuthenticatedRequest, res: Respon
       where: { id: householdId },
       data: { name: name.trim() }
     });
+
+    await prisma.auditLog.create({
+      data: {
+        householdId,
+        action: 'UPDATE_NAME',
+        entity: 'Household',
+        details: `Household renamed to "${name.trim()}"`,
+        performedBy: requesterId || 'system'
+      }
+    });
+
+    emitHouseholdUpdate(householdId, { action: 'name_updated', name: name.trim() });
+    await invalidateHouseholdDashboard(householdId).catch(() => {});
 
     res.json({ household: updated });
   } catch (err: any) {

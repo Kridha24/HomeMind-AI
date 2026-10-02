@@ -225,6 +225,12 @@ realtimeEmitter.on('grocery_updated', ({ householdId, payload }) => {
 realtimeEmitter.on('task_updated', ({ householdId, payload }) => {
   io.to(`household_${householdId}`).emit('task_updated', payload);
 });
+realtimeEmitter.on('household_updated', ({ householdId, payload }) => {
+  io.to(`household_${householdId}`).emit('household_updated', payload);
+});
+realtimeEmitter.on('member_updated', ({ householdId, payload }) => {
+  io.to(`household_${householdId}`).emit('member_updated', payload);
+});
 
 
 

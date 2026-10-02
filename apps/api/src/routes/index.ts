@@ -120,6 +120,11 @@ router.delete('/family/members/:userId', authorize(['OWNER', 'CO-OWNER', 'ADMIN'
 router.post('/family/leave', familyController.leaveHousehold);
 router.delete('/family/:id', authorize(['OWNER']), familyController.deleteHousehold);
 router.post('/family/join', familyController.joinHouseholdWithCode);
+router.post('/family/regenerate-code', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'HEAD']), familyController.regenerateInviteCode);
+router.post('/family/transfer-ownership', authorize(['OWNER']), familyController.transferOwnership);
+router.get('/family/activity', familyController.getHouseholdActivity);
+router.get('/family/households', familyController.getAvailableHouseholds);
+router.post('/family/switch', familyController.switchHousehold);
 
 // ==========================================
 // NEXT-GEN AI HOUSEHOLD AGENT ENDPOINTS
