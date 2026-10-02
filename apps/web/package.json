@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 || true",
-    "test": "echo 'web tests passed'",
+    "test": "node src/__tests__/settings.test.mjs",
     "preview": "vite preview",
     "cap:sync": "cap sync",
     "cap:open": "cap open android",
