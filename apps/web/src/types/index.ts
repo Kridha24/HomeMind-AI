@@ -12,16 +12,30 @@ export interface User {
   isVerified?: boolean;
   isActive?: boolean;
   lastLogin?: string;
+  createdAt?: string;
 }
 
 export interface Household {
   id: string;
   name: string;
   inviteCode: string;
+  createdAt?: string;
+  membersCount?: number;
   members?: User[];
 }
 
 export type HouseholdMember = User;
+
+export interface HouseholdActivity {
+  id: string;
+  action: string;
+  entity?: string;
+  details?: string | null;
+  description?: string;
+  performerName?: string;
+  timestamp?: string;
+  createdAt?: string;
+}
 
 export interface Expense {
   id: string;
