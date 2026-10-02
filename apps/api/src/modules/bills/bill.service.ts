@@ -1,6 +1,6 @@
 import { BillRepository } from './bill.repository';
 import { invalidateHouseholdDashboard } from '../../infrastructure/redis/redisClient';
-import { CreateBillDto, UpdateBillDto } from './bill.types';
+import { CreateBillDto, UpdateBillDto, MarkBillPaidDto } from './bill.types';
 
 export class BillService {
   public static async getBills(householdId: string, userId: string, role: string) {
@@ -40,13 +40,18 @@ export class BillService {
     return { success: true, id };
   }
 
-  public static async markBillPaid(id: string, householdId: string, userId: string) {
+  public static async markBillPaid(
+    id: string,
+    householdId: string,
+    userId: string,
+    payload?: MarkBillPaidDto
+  ) {
     const existing = await BillRepository.findById(id, householdId);
     if (!existing) {
       throw new Error('Bill not found');
     }
 
-    const result = await BillRepository.markPaidAtomic(id, householdId, userId);
+    const result = await BillRepository.markPaidAtomic(id, householdId, userId, payload);
     await invalidateHouseholdDashboard(householdId);
     return result.bill;
   }

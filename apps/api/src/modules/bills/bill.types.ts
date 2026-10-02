@@ -15,3 +15,11 @@ export interface UpdateBillDto {
   provider?: string | null;
   notes?: string | null;
 }
+
+export interface MarkBillPaidDto {
+  paidDate?: string | Date;
+  paymentMethod?: string;
+  notes?: string;
+  linkedTransactionId?: string;
+  amount?: number;
+}

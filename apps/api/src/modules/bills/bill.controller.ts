@@ -84,7 +84,7 @@ export class BillController {
         return res.status(400).json({ error: 'Household context missing' });
       }
 
-      const bill = await BillService.markBillPaid(id, householdId, userId);
+      const bill = await BillService.markBillPaid(id, householdId, userId, req.body);
       return res.json({ bill });
     } catch (err: any) {
       console.error('[BillController.markBillPaid] Error:', err.message);
