@@ -52,6 +52,8 @@ import { AddBillModal } from '../components/common/AddBillModal';
 import { AddGroceryModal } from '../components/common/AddGroceryModal';
 import { AddApplianceModal } from '../components/common/AddApplianceModal';
 import { AddTaskModal } from '../components/common/AddTaskModal';
+import { HouseholdHeader } from '../components/common/HouseholdHeader';
+import { InviteMemberModal } from '../features/household/components/InviteMemberModal';
 
 const COUNTRY_FLAGS: Record<string, string> = {
   IN: '🇮🇳',
@@ -124,6 +126,7 @@ export const Dashboard: React.FC = () => {
   const [showGroceryModal, setShowGroceryModal] = useState(false);
   const [showApplianceModal, setShowApplianceModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [actionCenterTab, setActionCenterTab] = useState<'bills' | 'tasks'>('tasks');
 
   const countryDefaults = COUNTRY_DEFAULTS[country] || COUNTRY_DEFAULTS['US'];
@@ -275,7 +278,13 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-5 md:space-y-6 animate-in fade-in duration-200 pb-12">
+    <div className="space-y-3 sm:space-y-4 animate-in fade-in duration-200 pb-12">
+      {/* 0. Compact Horizontal Household Header */}
+      <HouseholdHeader
+        memberCount={summary?.activeMembersCount || summary?.membersCount || 2}
+        onInviteClick={() => setShowInviteModal(true)}
+      />
+
       {/* 1. Contextual Personalized Greeting Hero & Bold Localized Date */}
       <DashboardGreeting
         user={user}
@@ -600,6 +609,12 @@ export const Dashboard: React.FC = () => {
         isOpen={showTaskModal}
         onClose={() => setShowTaskModal(false)}
         onSuccess={handleRefreshAll}
+      />
+      <InviteMemberModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        householdName={household?.name || 'Home Residence'}
+        inviteCode={household?.inviteCode || ''}
       />
     </div>
   );
