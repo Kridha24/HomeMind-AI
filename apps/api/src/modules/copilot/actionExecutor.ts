@@ -9,6 +9,11 @@ import {
   CopilotToolResult,
   ActionCardData,
 } from './copilot.types';
+import {
+  canViewHouseholdFinancials,
+  canViewOtherMemberFinancials,
+  canViewHouseholdAnalytics,
+} from '../../utils/permissions';
 
 export class ActionExecutor {
   /**
@@ -182,10 +187,13 @@ export class ActionExecutor {
             };
           }
 
-          const updated = await ExpenseService.updateExpense(targetId, householdId, {
-            amount,
-            title,
-          });
+          const updated = await ExpenseService.updateExpense(
+            targetId,
+            householdId,
+            { amount, title },
+            userId,
+            ctx.userRole
+          );
 
           await this.logAudit(householdId, userId, 'UPDATE', 'Expense', {
             id: targetId,
@@ -216,8 +224,12 @@ export class ActionExecutor {
         case 'deleteExpense': {
           let targetId = args.id;
           if (!targetId && args.amount) {
+            const queryWhere: any = { householdId, amount: parseFloat(args.amount), softDelete: false };
+            if (!canViewOtherMemberFinancials(ctx.userRole)) {
+              queryWhere.userId = userId;
+            }
             const match = await prisma.expense.findFirst({
-              where: { householdId, amount: parseFloat(args.amount), softDelete: false },
+              where: queryWhere,
               orderBy: { createdAt: 'desc' },
             });
             if (match) targetId = match.id;
@@ -231,7 +243,7 @@ export class ActionExecutor {
             };
           }
 
-          const deleted = await ExpenseService.deleteExpense(targetId, householdId);
+          const deleted = await ExpenseService.deleteExpense(targetId, householdId, userId, ctx.userRole);
           await this.logAudit(householdId, userId, 'DELETE', 'Expense', { id: targetId });
 
           return {
@@ -663,6 +675,91 @@ export class ActionExecutor {
         case 'getFinanceSummary': {
           const now = new Date();
           const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+          // 1. If querying specific member's income: e.g. "Rahul ki income kitni hai?" (Part 14)
+          if (args.targetMemberName) {
+            const targetUser = await prisma.user.findFirst({
+              where: {
+                householdId,
+                name: { contains: args.targetMemberName },
+                softDelete: false,
+              },
+            });
+
+            if (!targetUser) {
+              return {
+                tool: toolName,
+                success: false,
+                message: `Household member "${args.targetMemberName}" was not found.`,
+              };
+            }
+
+            const canView = canViewOtherMemberFinancials(ctx.userRole) || ctx.userId === targetUser.id;
+            if (!canView) {
+              return {
+                tool: toolName,
+                success: false,
+                message: `Privacy restriction: You do not have permission to view ${targetUser.name}'s financial information. Only Owner and Co-Owner can view member finances.`,
+              };
+            }
+
+            const [memberExpenses, memberIncomes] = await Promise.all([
+              prisma.expense.findMany({ where: { householdId, userId: targetUser.id, softDelete: false } }),
+              prisma.income.findMany({ where: { householdId, createdBy: targetUser.id, softDelete: false } }),
+            ]);
+
+            const memberMonthlyExpenses = memberExpenses
+              .filter((e) => new Date(e.date) >= startOfMonth)
+              .reduce((acc, curr) => acc + curr.amount, 0);
+
+            const memberMonthlyIncome = memberIncomes
+              .filter((i) => new Date(i.date) >= startOfMonth)
+              .reduce((acc, curr) => acc + curr.amount, 0);
+
+            return {
+              tool: toolName,
+              success: true,
+              message: `${targetUser.name}'s finances this month: Income ${currencySymbol}${memberMonthlyIncome.toLocaleString()}, Expenses ${currencySymbol}${memberMonthlyExpenses.toLocaleString()}, Net ${currencySymbol}${(memberMonthlyIncome - memberMonthlyExpenses).toLocaleString()}.`,
+              data: {
+                isTargetMember: true,
+                memberId: targetUser.id,
+                memberName: targetUser.name,
+                monthlyIncome: memberMonthlyIncome,
+                monthlyExpenses: memberMonthlyExpenses,
+                netSavings: memberMonthlyIncome - memberMonthlyExpenses,
+              },
+            };
+          }
+
+          // 2. Full household financial visibility check: Only OWNER and CO-OWNER
+          const isAuthorized = canViewHouseholdFinancials(ctx.userRole);
+          if (!isAuthorized) {
+            // Member/Guest querying general finances: restrict to personal finance only
+            const [personalExpenses, personalIncomes] = await Promise.all([
+              prisma.expense.findMany({ where: { householdId, userId: ctx.userId, softDelete: false } }),
+              prisma.income.findMany({ where: { householdId, createdBy: ctx.userId, softDelete: false } }),
+            ]);
+
+            const myMonthlyExpenses = personalExpenses
+              .filter((e) => new Date(e.date) >= startOfMonth)
+              .reduce((acc, curr) => acc + curr.amount, 0);
+
+            const myMonthlyIncome = personalIncomes
+              .filter((i) => new Date(i.date) >= startOfMonth)
+              .reduce((acc, curr) => acc + curr.amount, 0);
+
+            return {
+              tool: toolName,
+              success: true,
+              message: `Your personal finances this month: Income ${currencySymbol}${myMonthlyIncome.toLocaleString()}, Expenses ${currencySymbol}${myMonthlyExpenses.toLocaleString()}, Net Savings ${currencySymbol}${(myMonthlyIncome - myMonthlyExpenses).toLocaleString()}. (Household financial aggregates are private to Owner and Co-Owner).`,
+              data: {
+                isPersonal: true,
+                monthlyIncome: myMonthlyIncome,
+                monthlyExpenses: myMonthlyExpenses,
+                netSavings: myMonthlyIncome - myMonthlyExpenses,
+              },
+            };
+          }
 
           const [expenses, incomes, bills] = await Promise.all([
             prisma.expense.findMany({ where: { householdId, softDelete: false } }),

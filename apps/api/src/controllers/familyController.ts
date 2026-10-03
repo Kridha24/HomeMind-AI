@@ -3,6 +3,11 @@ import { prisma } from '../repositories/db';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { emitHouseholdUpdate, emitMemberUpdate } from '../services/realtimeGateway';
 import { invalidateHouseholdDashboard } from '../infrastructure/redis/redisClient';
+import {
+  canViewHouseholdFinancials,
+  canViewOtherMemberFinancials,
+  canPromoteCoOwner,
+} from '../utils/permissions';
 
 export const getHouseholdMembers = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -51,7 +56,7 @@ export const getHouseholdMembers = async (req: AuthenticatedRequest, res: Respon
 
 export const updateMemberRole = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { userId: targetUserId } = req.params;
+    const targetUserId = req.params.userId || req.params.targetUserId || req.params.memberId;
     const { role } = req.body;
     const requesterId = req.user?.userId;
     const householdId = req.user?.householdId;
@@ -66,7 +71,15 @@ export const updateMemberRole = async (req: AuthenticatedRequest, res: Response)
       return res.status(403).json({ error: 'Only household owners and admins can update member roles' });
     }
 
-    const allowedRoles = ['ADMIN', 'MEMBER', 'GUEST'];
+    // Only OWNER can promote someone to CO-OWNER (Part 1, 2, 7)
+    if (role === 'CO-OWNER' && !canPromoteCoOwner(requesterRole)) {
+      return res.status(403).json({ error: 'Only household owners can promote a member to co-owner' });
+    }
+
+    const allowedRoles = canPromoteCoOwner(requesterRole)
+      ? ['CO-OWNER', 'ADMIN', 'MEMBER', 'GUEST']
+      : ['ADMIN', 'MEMBER', 'GUEST'];
+
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ error: `Invalid role. Allowed: ${allowedRoles.join(', ')}` });
     }
@@ -84,9 +97,9 @@ export const updateMemberRole = async (req: AuthenticatedRequest, res: Response)
       return res.status(400).json({ error: 'You cannot change your own role' });
     }
 
-    // Only OWNER can modify another Admin
-    if (targetUser.role === 'ADMIN' && requesterRole !== 'OWNER') {
-      return res.status(403).json({ error: 'Only household owners can change an admin role' });
+    // Only OWNER can modify another Admin or Co-Owner
+    if ((targetUser.role === 'ADMIN' || targetUser.role === 'CO-OWNER') && requesterRole !== 'OWNER') {
+      return res.status(403).json({ error: 'Only household owners can change an admin or co-owner role' });
     }
 
     const user = await prisma.user.update({
@@ -105,7 +118,7 @@ export const updateMemberRole = async (req: AuthenticatedRequest, res: Response)
       }
     });
 
-    emitMemberUpdate(householdId, { action: 'role_updated', member: user });
+    emitMemberUpdate(householdId, { action: 'role_updated', userId: targetUserId, newRole: role, member: user });
     await invalidateHouseholdDashboard(householdId).catch(() => {});
 
     res.json({ user });
@@ -630,7 +643,13 @@ export const switchHousehold = async (req: AuthenticatedRequest, res: Response) 
 export const getAggregateData = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const householdId = req.user?.householdId;
+    const requesterRole = req.user?.role;
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    // Strict RBAC: Only OWNER and CO-OWNER can view household-wide aggregate financials
+    if (!canViewHouseholdFinancials(requesterRole)) {
+      return res.status(403).json({ error: 'Forbidden: Insufficient permissions to view household aggregate financials' });
+    }
 
     // Aggregate Total Income
     const incomeAgg = await prisma.income.aggregate({
@@ -658,6 +677,175 @@ export const getAggregateData = async (req: AuthenticatedRequest, res: Response)
   } catch (err: any) {
     console.error('[getAggregateData] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch aggregate data.' });
+  }
+};
+
+/**
+ * GET /api/v1/family/members/:memberId/overview
+ * Returns member collaboration overview (profile, tasks, and authorized member finance).
+ * If caller is OWNER or CO-OWNER, full finance details are attached.
+ * If caller is MEMBER/GUEST viewing another user, finance is strictly omitted.
+ */
+export const getMemberOverview = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const householdId = req.user?.householdId;
+    const requesterId = req.user?.userId;
+    const requesterRole = req.user?.role;
+    const { memberId } = req.params;
+
+    if (!householdId || !requesterId) {
+      return res.status(400).json({ error: 'Household context missing' });
+    }
+
+    // Verify target member is in the same household (IDOR protection)
+    const member = await prisma.user.findFirst({
+      where: { id: memberId, householdId, softDelete: false },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phoneNumber: true,
+        role: true,
+        avatar: true,
+        createdAt: true,
+        isActive: true,
+      },
+    });
+
+    if (!member) {
+      return res.status(404).json({ error: 'Member not found in this household' });
+    }
+
+    // Responsibilities (Active & Completed Tasks)
+    const [activeTasks, completedTasksCount] = await Promise.all([
+      prisma.task.findMany({
+        where: { householdId, assigneeId: memberId, softDelete: false, status: { in: ['PENDING', 'IN_PROGRESS'] } },
+        orderBy: { dueDate: 'asc' },
+        take: 10,
+      }),
+      prisma.task.count({
+        where: { householdId, assigneeId: memberId, softDelete: false, status: 'COMPLETED' },
+      }),
+    ]);
+
+    // Financial summary: OWNER, CO-OWNER, or viewing self only (Part 9, 10, 11, 12, 13)
+    const hasFinancialVisibility = canViewOtherMemberFinancials(requesterRole) || requesterId === memberId;
+
+    let finance: any = null;
+    if (hasFinancialVisibility) {
+      const [expenseAgg, incomeAgg, recentTransactions] = await Promise.all([
+        prisma.expense.aggregate({
+          where: { householdId, userId: memberId, softDelete: false },
+          _sum: { amount: true },
+        }),
+        prisma.income.aggregate({
+          where: { householdId, createdBy: memberId, softDelete: false },
+          _sum: { amount: true },
+        }),
+        prisma.transaction.findMany({
+          where: { householdId, userId: memberId, softDelete: false },
+          orderBy: { occurredAt: 'desc' },
+          take: 10,
+        }),
+      ]);
+
+      const incomeTotal = incomeAgg._sum.amount || 0;
+      const expenseTotal = expenseAgg._sum.amount || 0;
+      const netBalance = incomeTotal - expenseTotal;
+
+      finance = {
+        totalIncome: incomeTotal,
+        totalExpenses: expenseTotal,
+        incomeTotal,
+        expenseTotal,
+        netBalance,
+        recentTransactions,
+      };
+    }
+
+    // Recent member activity
+    const activity = await prisma.auditLog.findMany({
+      where: { householdId, performedBy: memberId },
+      orderBy: { createdAt: 'desc' },
+      take: 8,
+    });
+
+    return res.json({
+      profile: member,
+      responsibilities: {
+        activeTasksCount: activeTasks.length,
+        completedTasksCount,
+        activeTasks,
+      },
+      finance: hasFinancialVisibility ? finance : null,
+      activity,
+    });
+  } catch (err: any) {
+    console.error('[getMemberOverview] Error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch member overview.' });
+  }
+};
+
+/**
+ * GET /api/v1/family/members/:memberId/financial-summary
+ * Strict financial endpoint for member intelligence.
+ * Returns 403 Forbidden for MEMBER and GUEST (Part 3 & Part 41).
+ */
+export const getMemberFinancialSummary = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const householdId = req.user?.householdId;
+    const requesterId = req.user?.userId;
+    const requesterRole = req.user?.role;
+    const { memberId } = req.params;
+
+    if (!householdId || !requesterId) {
+      return res.status(400).json({ error: 'Household context missing' });
+    }
+
+    // Strict Authorization check (Part 3 & Part 41)
+    const isAllowed = canViewOtherMemberFinancials(requesterRole) || requesterId === memberId;
+    if (!isAllowed) {
+      return res.status(403).json({ error: 'Forbidden: Insufficient permissions to view member financials' });
+    }
+
+    // Verify member belongs to household
+    const member = await prisma.user.findFirst({
+      where: { id: memberId, householdId, softDelete: false },
+    });
+    if (!member) {
+      return res.status(404).json({ error: 'Member not found in this household' });
+    }
+
+    const [expenseAgg, incomeAgg, recentTransactions] = await Promise.all([
+      prisma.expense.aggregate({
+        where: { householdId, userId: memberId, softDelete: false },
+        _sum: { amount: true },
+      }),
+      prisma.income.aggregate({
+        where: { householdId, createdBy: memberId, softDelete: false },
+        _sum: { amount: true },
+      }),
+      prisma.transaction.findMany({
+        where: { householdId, userId: memberId, softDelete: false },
+        orderBy: { occurredAt: 'desc' },
+        take: 10,
+      }),
+    ]);
+
+    const incomeTotal = incomeAgg._sum.amount || 0;
+    const expenseTotal = expenseAgg._sum.amount || 0;
+    const netBalance = incomeTotal - expenseTotal;
+
+    return res.json({
+      memberId,
+      incomeTotal,
+      expenseTotal,
+      netBalance,
+      recentTransactions,
+    });
+  } catch (err: any) {
+    console.error('[getMemberFinancialSummary] Error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch member financial summary.' });
   }
 };
 

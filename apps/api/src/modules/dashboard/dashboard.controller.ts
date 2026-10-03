@@ -6,12 +6,15 @@ export class DashboardController {
   public static async getDashboardSummary(req: AuthenticatedRequest, res: Response) {
     try {
       const householdId = req.user?.householdId;
+      const userId = req.user?.userId || '';
+      const role = req.user?.role || 'MEMBER';
+
       if (!householdId) {
         return res.status(400).json({ error: 'Household context missing' });
       }
 
       const bypassCache = req.query.bypassCache === 'true';
-      const summary = await DashboardService.getSummary(householdId, bypassCache);
+      const summary = await DashboardService.getSummary(householdId, userId, role, bypassCache);
 
       if (summary.cached) {
         res.setHeader('X-Cache-Lookup', 'HIT');

@@ -1,3 +1,5 @@
+export * from '../../../utils/permissions';
+
 export type UserRole = 'OWNER' | 'CO-OWNER' | 'ADMIN' | 'HEAD' | 'MEMBER' | 'GUEST';
 
 /**

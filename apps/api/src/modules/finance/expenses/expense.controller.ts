@@ -41,16 +41,21 @@ export class ExpenseController {
   public static async updateExpense(req: AuthenticatedRequest, res: Response) {
     try {
       const householdId = req.user?.householdId;
+      const userId = req.user?.userId;
+      const role = req.user?.role || 'MEMBER';
       const { id } = req.params;
 
       if (!householdId) {
         return res.status(400).json({ error: 'Missing context' });
       }
 
-      const updated = await ExpenseService.updateExpense(id, householdId, req.body);
+      const updated = await ExpenseService.updateExpense(id, householdId, req.body, userId, role);
       return res.json(updated);
     } catch (err: any) {
       console.error('[ExpenseController.updateExpense] Error:', err.message);
+      if (err.message.includes('Forbidden')) {
+        return res.status(403).json({ error: err.message });
+      }
       const status = err.message.includes('not found') ? 404 : 400;
       return res.status(status).json({ error: err.message || 'Failed to update expense.' });
     }
@@ -59,17 +64,22 @@ export class ExpenseController {
   public static async deleteExpense(req: AuthenticatedRequest, res: Response) {
     try {
       const householdId = req.user?.householdId;
+      const userId = req.user?.userId;
+      const role = req.user?.role || 'MEMBER';
       const { id } = req.params;
 
       if (!householdId) {
         return res.status(400).json({ error: 'Missing context' });
       }
 
-      await ExpenseService.deleteExpense(id, householdId);
-      return res.json({ message: 'Expense deleted successfully.' });
+      const deleted = await ExpenseService.deleteExpense(id, householdId, userId, role);
+      return res.json(deleted);
     } catch (err: any) {
       console.error('[ExpenseController.deleteExpense] Error:', err.message);
-      const status = err.message.includes('not found') ? 404 : 500;
+      if (err.message.includes('Forbidden')) {
+        return res.status(403).json({ error: err.message });
+      }
+      const status = err.message.includes('not found') ? 404 : 400;
       return res.status(status).json({ error: err.message || 'Failed to delete expense.' });
     }
   }

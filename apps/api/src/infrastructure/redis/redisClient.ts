@@ -261,6 +261,7 @@ export const buildCacheKey = RedisService.buildCacheKey;
  * Called when financial or task domain events occur.
  */
 export async function invalidateHouseholdDashboard(householdId: string): Promise<void> {
-  const key = buildCacheKey('dashboard', householdId);
-  await redis.del(key);
+  const legacyKey = buildCacheKey('dashboard', householdId);
+  await redis.del(legacyKey);
+  await redis.invalidatePattern(`*homemind:v1:dashboard:${householdId}*`);
 }

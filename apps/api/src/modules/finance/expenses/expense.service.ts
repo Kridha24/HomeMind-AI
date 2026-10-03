@@ -1,11 +1,12 @@
 import { ExpenseRepository } from './expense.repository';
 import { invalidateHouseholdDashboard } from '../../../infrastructure/redis/redisClient';
 import { CreateExpenseDto, UpdateExpenseDto } from './expense.types';
+import { canViewHouseholdFinancials, canViewOtherMemberFinancials } from '../../../utils/permissions';
 
 export class ExpenseService {
   public static async getExpenses(householdId: string, userId: string, role: string) {
-    const isMember = role === 'MEMBER';
-    return ExpenseRepository.findMany(householdId, userId, isMember);
+    const isRestricted = !canViewHouseholdFinancials(role);
+    return ExpenseRepository.findMany(householdId, userId, isRestricted);
   }
 
   public static async createExpense(
@@ -28,11 +29,18 @@ export class ExpenseService {
   public static async updateExpense(
     id: string,
     householdId: string,
-    dto: UpdateExpenseDto
+    dto: UpdateExpenseDto,
+    userId?: string,
+    role?: string
   ) {
     const existing = await ExpenseRepository.findById(id, householdId);
     if (!existing) {
       throw new Error('Expense not found.');
+    }
+
+    // Role-based privacy enforcement (Part 35)
+    if (role && !canViewOtherMemberFinancials(role) && existing.userId !== userId) {
+      throw new Error('Forbidden: Cannot modify another member expense.');
     }
 
     const updated = await ExpenseRepository.updateAtomic(id, householdId, dto);
@@ -40,10 +48,20 @@ export class ExpenseService {
     return updated;
   }
 
-  public static async deleteExpense(id: string, householdId: string) {
+  public static async deleteExpense(
+    id: string,
+    householdId: string,
+    userId?: string,
+    role?: string
+  ) {
     const existing = await ExpenseRepository.findById(id, householdId);
     if (!existing) {
       throw new Error('Expense not found.');
+    }
+
+    // Role-based privacy enforcement (Part 35)
+    if (role && !canViewOtherMemberFinancials(role) && existing.userId !== userId) {
+      throw new Error('Forbidden: Cannot delete another member expense.');
     }
 
     const deleted = await ExpenseRepository.deleteAtomic(id, householdId);

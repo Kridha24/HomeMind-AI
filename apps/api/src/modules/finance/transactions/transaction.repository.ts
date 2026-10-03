@@ -2,6 +2,7 @@ import { prisma } from '../../../repositories/db';
 import { OutboxService } from '../../../infrastructure/outbox/outboxService';
 import { EventType } from '@homemind/shared';
 import { GetTransactionsQuery, ImportSmsTransactionDto } from './transaction.types';
+import { canViewOtherMemberFinancials } from '../../../utils/permissions';
 
 export class TransactionRepository {
   public static async findBySourceHash(sourceHash: string, householdId: string) {
@@ -245,13 +246,13 @@ export class TransactionRepository {
     // Keep legacy records unified
     await this.syncLegacyRecords(householdId);
 
-    const isMember = role === 'MEMBER';
+    const isRestricted = !canViewOtherMemberFinancials(role);
     const where: any = {
       householdId,
       softDelete: false,
     };
 
-    if (isMember) {
+    if (isRestricted) {
       where.userId = userId;
     }
 
@@ -384,9 +385,9 @@ export class TransactionRepository {
   public static async getStats(householdId: string, userId: string, role: string) {
     await this.syncLegacyRecords(householdId);
 
-    const isMember = role === 'MEMBER';
+    const isRestricted = !canViewOtherMemberFinancials(role);
     const where: any = { householdId, softDelete: false };
-    if (isMember) {
+    if (isRestricted) {
       where.userId = userId;
     }
 

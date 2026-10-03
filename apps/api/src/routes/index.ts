@@ -116,6 +116,8 @@ router.delete('/tasks/:id', authorize(['OWNER', 'CO-OWNER', 'ADMIN']), taskContr
 
 // Family Members Workspace & Danger Zone
 router.get('/family/members', familyController.getHouseholdMembers);
+router.get('/family/members/:memberId/overview', familyController.getMemberOverview);
+router.get('/family/members/:memberId/financial-summary', familyController.getMemberFinancialSummary);
 router.get('/family/aggregate', familyController.getAggregateData);
 router.put('/family/name', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'HEAD']), familyController.updateHouseholdName);
 router.put('/family/members/:userId/role', authorize(['OWNER', 'CO-OWNER', 'ADMIN', 'HEAD']), familyController.updateMemberRole);

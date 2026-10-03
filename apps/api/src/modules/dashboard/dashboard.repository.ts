@@ -247,4 +247,189 @@ export class DashboardRepository {
       generatedAt: new Date().toISOString(),
     };
   }
+
+  public static async aggregateMemberData(
+    householdId: string,
+    userId: string
+  ): Promise<DashboardSummaryData> {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    const groceryExpiryLimit = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
+
+    const [
+      personalMonthlyExpenses,
+      personalMonthlyIncomes,
+      personalAllTimeExpenses,
+      personalAllTimeIncomes,
+      upcomingBills,
+      pendingTasks,
+      myTasks,
+      flaggedGroceries,
+      recentNotifications,
+      latestPersonalExpenses,
+      latestPersonalIncomes,
+    ] = await Promise.all([
+      // 1. Personal monthly expenses
+      prisma.expense.aggregate({
+        where: { householdId, userId, softDelete: false, date: { gte: startOfMonth } },
+        _sum: { amount: true },
+      }),
+      // 2. Personal monthly incomes
+      prisma.income.aggregate({
+        where: { householdId, createdBy: userId, softDelete: false, date: { gte: startOfMonth } },
+        _sum: { amount: true },
+      }),
+      // 3. Personal all-time expenses
+      prisma.expense.aggregate({
+        where: { householdId, userId, softDelete: false },
+        _sum: { amount: true },
+        _count: { id: true },
+      }),
+      // 4. Personal all-time incomes
+      prisma.income.aggregate({
+        where: { householdId, createdBy: userId, softDelete: false },
+        _sum: { amount: true },
+      }),
+      // 5. Household upcoming bills
+      prisma.bill.findMany({
+        where: { householdId, softDelete: false, status: 'UNPAID' },
+        orderBy: { dueDate: 'asc' },
+        take: 10,
+      }),
+      // 6. Pending tasks (household)
+      prisma.task.findMany({
+        where: { householdId, softDelete: false, status: { in: ['PENDING', 'IN_PROGRESS'] } },
+        orderBy: { dueDate: 'asc' },
+        take: 10,
+      }),
+      // 7. My assigned tasks
+      prisma.task.findMany({
+        where: { householdId, assigneeId: userId, softDelete: false, status: { in: ['PENDING', 'IN_PROGRESS'] } },
+        orderBy: { dueDate: 'asc' },
+        take: 10,
+      }),
+      // 8. Shared groceries
+      prisma.groceryItem.findMany({
+        where: {
+          householdId,
+          softDelete: false,
+          OR: [
+            { expiryDate: { lte: groceryExpiryLimit } },
+            { quantity: { lte: 2 } },
+          ],
+        },
+        take: 10,
+      }),
+      // 9. Notifications
+      prisma.notification.findMany({
+        where: { householdId, softDelete: false },
+        orderBy: { createdAt: 'desc' },
+        take: 8,
+      }),
+      // 10. Latest personal expenses (never other members')
+      prisma.expense.findMany({
+        where: { householdId, userId, softDelete: false },
+        orderBy: { date: 'desc' },
+        take: 5,
+        include: { user: { select: { name: true } } },
+      }),
+      // 11. Latest personal incomes (never other members')
+      prisma.income.findMany({
+        where: { householdId, createdBy: userId, softDelete: false },
+        orderBy: { date: 'desc' },
+        take: 5,
+      }),
+    ]);
+
+    const expiringGroceries = flaggedGroceries
+      .filter((g) => g.expiryDate && new Date(g.expiryDate) <= groceryExpiryLimit)
+      .slice(0, 5);
+    const lowStockGroceries = flaggedGroceries
+      .filter((g) => g.quantity <= 2)
+      .slice(0, 5);
+
+    const personalExp = roundMoney(personalMonthlyExpenses._sum.amount || 0);
+    const personalInc = roundMoney(personalMonthlyIncomes._sum.amount || 0);
+    const personalAllExp = roundMoney(personalAllTimeExpenses._sum.amount || 0);
+    const personalAllInc = roundMoney(personalAllTimeIncomes._sum.amount || 0);
+    const personalSavings = roundMoney(personalInc - personalExp);
+    const upcomingBillsTotal = roundMoney(
+      upcomingBills.reduce((acc, curr) => acc + (curr.amount || 0), 0)
+    );
+
+    // Personal combined history
+    const personalHistory = [
+      ...latestPersonalExpenses.map((e) => ({
+        id: e.id,
+        title: e.title,
+        amount: e.amount,
+        type: 'EXPENSE',
+        category: e.category,
+        date: e.date,
+        userName: (e as any).user?.name || 'You',
+      })),
+      ...latestPersonalIncomes.map((i) => ({
+        id: i.id,
+        title: i.title,
+        amount: i.amount,
+        type: 'INCOME',
+        category: i.source,
+        date: i.date,
+        userName: 'You',
+      })),
+    ]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+
+    return {
+      isNewUser: personalAllTimeExpenses._count.id === 0 && upcomingBills.length === 0 && pendingTasks.length === 0,
+      isRoleRestricted: true,
+      monthlyIncome: personalInc,
+      monthlyExpenses: personalExp,
+      monthlySavings: personalSavings,
+      overallIncome: personalAllInc,
+      overallExpenses: personalAllExp,
+      overallSavings: roundMoney(personalAllInc - personalAllExp),
+      upcomingBillsTotal,
+      summary: {
+        totalExpense: personalExp,
+        totalIncome: personalInc,
+        savings: personalSavings,
+        overallSavings: roundMoney(personalAllInc - personalAllExp),
+        savingsRate: personalInc > 0 ? Math.max(0, Math.round((personalSavings / personalInc) * 100)) : 0,
+        sustainabilityScore: 85,
+      },
+      recent5History: personalHistory,
+      metrics: {
+        monthlyExpenses: personalExp,
+        monthlyIncome: personalInc,
+        allTimeExpenses: personalAllExp,
+        allTimeIncome: personalAllInc,
+        netBalance: roundMoney(personalAllInc - personalAllExp),
+        savingsRate: personalInc > 0 ? Math.max(0, Math.round((personalSavings / personalInc) * 100)) : 0,
+        monthlyBudgetLimit: 0,
+        budgetUtilizationPercent: 0,
+        recordCount: personalAllTimeExpenses._count.id || 0,
+        healthScore: 85,
+      },
+      myTasks,
+      mySummary: {
+        personalMonthlyExpense: personalExp,
+        personalMonthlyIncome: personalInc,
+        personalSavings,
+        assignedTasksCount: myTasks.length,
+      },
+      upcomingBills,
+      pendingTasks,
+      expiringGroceries,
+      lowStockGroceries,
+      upcomingApplianceServices: [],
+      expiringMedicines: [],
+      recentNotifications,
+      aiRecommendations: [],
+      latestExpenses: latestPersonalExpenses,
+      latestIncomes: latestPersonalIncomes,
+      generatedAt: new Date().toISOString(),
+    };
+  }
 }

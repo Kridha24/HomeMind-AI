@@ -2,11 +2,18 @@ import { Response } from 'express';
 import { prisma } from '../repositories/db';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { generateMonthlyPDFReport } from '../services/reportGenerator';
+import { canViewHouseholdFinancials } from '../utils/permissions';
 
 export const exportMonthlyReport = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const householdId = req.user?.householdId;
+    const role = req.user?.role;
     if (!householdId) return res.status(400).json({ error: 'Household context missing' });
+
+    // Strict RBAC: Only OWNER and CO-OWNER can export financial reports (Part 17)
+    if (!canViewHouseholdFinancials(role)) {
+      return res.status(403).json({ error: 'Forbidden: Only household owners and co-owners can export financial reports.' });
+    }
 
     const now = new Date();
     const currentMonthStr = now.toLocaleString('default', { month: 'long', year: 'numeric' });

@@ -44,4 +44,14 @@ export interface DashboardSummaryData {
   latestIncomes: any[];
   cached?: boolean;
   generatedAt: string;
+
+  // Role-Aware Privacy Fields
+  isRoleRestricted?: boolean;
+  myTasks?: any[];
+  mySummary?: {
+    personalMonthlyExpense: number;
+    personalMonthlyIncome: number;
+    personalSavings: number;
+    assignedTasksCount: number;
+  };
 }

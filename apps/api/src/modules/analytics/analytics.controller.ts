@@ -2,18 +2,24 @@ import { Response } from 'express';
 import { AuthenticatedRequest } from '../../middleware/auth';
 import { AnalyticsService } from './analytics.service';
 import { AnalyticsPeriod } from './analytics.types';
+import { canViewHouseholdAnalytics } from '../../utils/permissions';
 
 export class AnalyticsController {
   /**
    * GET /api/v1/analytics/household
    * Core production household intelligence analytics endpoint
-   * Query params: period (month | 3m | 6m | year | all | custom), startDate, endDate
+   * Restricted: Only OWNER and CO-OWNER have access to household finance analytics (Part 16)
    */
   public static async getHouseholdAnalytics(req: AuthenticatedRequest, res: Response) {
     try {
       const householdId = req.user?.householdId;
+      const role = req.user?.role;
       if (!householdId) {
         return res.status(400).json({ error: 'Household context missing from session' });
+      }
+
+      if (!canViewHouseholdAnalytics(role)) {
+        return res.status(403).json({ error: 'Forbidden: Only household owners and co-owners have access to household finance analytics.' });
       }
 
       const { period, startDate, endDate } = req.query;
