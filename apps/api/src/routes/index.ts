@@ -8,6 +8,7 @@ import { billRoutes } from '../modules/bills';
 import { notificationRoutes } from '../modules/notifications';
 import { communicationRoutes } from '../modules/communication';
 import { analyticsRoutes } from '../modules/analytics';
+import { copilotRouter } from '../modules/copilot';
 import { transactionRoutes } from '../modules/finance/transactions';
 import * as inventoryController from '../controllers/inventoryController';
 import * as applianceController from '../controllers/applianceController';
@@ -152,6 +153,7 @@ router.post('/ai/chat', aiController.chatWithAI);
 router.use('/notifications', notificationRoutes);
 router.use('/communication', communicationRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/copilot', copilotRouter);
 
 router.get('/reports/monthly', reportController.exportMonthlyReport);
 router.get('/reports/monthly/pdf', reportController.exportMonthlyReport);

@@ -1,6 +1,7 @@
 import { ContextManager, HouseholdAIContext } from './context/contextManager';
 import { ToolExecutor, ToolResult } from './tools/executor';
 import { prisma } from '../../repositories/db';
+import { CopilotService } from '../../modules/copilot/copilot.service';
 
 export interface AssistantChatResponse {
   threadId?: string;
@@ -12,6 +13,12 @@ export interface AssistantChatResponse {
     prompt: string;
   };
   suggestions: string[];
+  cards?: any[];
+  clarificationRequired?: {
+    question: string;
+    options: Array<{ label: string; actionPayload: string }>;
+  };
+  invalidatedDomains?: string[];
 }
 
 export class AIOrchestrator {
@@ -23,7 +30,44 @@ export class AIOrchestrator {
   }): Promise<AssistantChatResponse> {
     const { householdId, userId, message, threadId } = params;
 
-    // 1. Fetch live household context
+    // First attempt action extraction via HomeMind Copilot Action Engine
+    const copilotRes = await CopilotService.processMessage({
+      householdId,
+      userId,
+      message,
+      threadId,
+    });
+
+    // If an action was recognized, or confirmation/clarification is needed, return Copilot response
+    if (
+      copilotRes.actionsExecuted.length > 0 ||
+      copilotRes.pendingConfirmation ||
+      copilotRes.clarificationRequired
+    ) {
+      return {
+        threadId: copilotRes.threadId,
+        answer: copilotRes.answer,
+        toolCallsExecuted: copilotRes.actionsExecuted.map((a) => ({
+          tool: a.tool,
+          success: a.success,
+          message: a.message,
+          data: a.data,
+        })),
+        pendingConfirmation: copilotRes.pendingConfirmation
+          ? {
+              tool: copilotRes.pendingConfirmation.tool,
+              args: copilotRes.pendingConfirmation.args,
+              prompt: copilotRes.pendingConfirmation.prompt,
+            }
+          : undefined,
+        suggestions: copilotRes.suggestions,
+        cards: copilotRes.cards,
+        clarificationRequired: copilotRes.clarificationRequired,
+        invalidatedDomains: copilotRes.invalidatedDomains,
+      };
+    }
+
+    // 1. Fetch live household context for general planning/conversation
     const ctx = await ContextManager.getHouseholdContext(householdId, userId);
     const execCtx = {
       householdId,

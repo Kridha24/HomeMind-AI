@@ -17,9 +17,11 @@ import {
   Copy,
   ShieldAlert,
 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import apiClient from '../services/apiClient';
 import { useAuthStore } from '../stores/useAuthStore';
 import { MemoryModal } from '../components/assistant/MemoryModal';
+import { ActionCard, ActionCardData } from '../components/assistant/ActionCard';
 
 interface ToolCall {
   tool: string;
@@ -38,6 +40,11 @@ interface Message {
   sender: 'user' | 'assistant';
   text: string;
   toolCalls?: ToolCall[];
+  cards?: ActionCardData[];
+  clarificationRequired?: {
+    question: string;
+    options: Array<{ label: string; actionPayload: string }>;
+  };
   pendingConfirmation?: PendingConfirmation;
   suggestions?: string[];
   createdAt?: string;
@@ -45,6 +52,7 @@ interface Message {
 
 export const Assistant: React.FC = () => {
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -94,19 +102,30 @@ export const Assistant: React.FC = () => {
     setLoading(true);
 
     try {
+      const idempotencyKey = `copilot-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       const res = await apiClient.post('/assistant/chat', {
         message: query.trim(),
         threadId,
+        idempotencyKey,
       });
 
       if (res.data.threadId) {
         setThreadId(res.data.threadId);
       }
 
+      // Live React Query cache invalidation across affected domains
+      if (res.data.invalidatedDomains && Array.isArray(res.data.invalidatedDomains)) {
+        for (const domain of res.data.invalidatedDomains) {
+          queryClient.invalidateQueries({ queryKey: [domain] });
+        }
+      }
+
       const assistantMessage: Message = {
         sender: 'assistant',
         text: res.data.answer || 'I evaluated your request against your live household database.',
         toolCalls: res.data.toolCallsExecuted || [],
+        cards: res.data.cards || [],
+        clarificationRequired: res.data.clarificationRequired,
         pendingConfirmation: res.data.pendingConfirmation,
         suggestions: res.data.suggestions || [],
         createdAt: new Date().toISOString(),
@@ -137,13 +156,24 @@ export const Assistant: React.FC = () => {
   // Execute Confirmed High-Risk Action
   const handleConfirmAction = async (tool: string, args: any) => {
     try {
-      const res = await apiClient.post('/assistant/actions/execute', { tool, args });
+      const res = await apiClient.post('/copilot/confirm', { tool, args });
+      // Invalidate queries across domains
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['income'] });
+      queryClient.invalidateQueries({ queryKey: ['finance'] });
+      queryClient.invalidateQueries({ queryKey: ['bills'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['groceries'] });
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+
       setMessages((prev) => [
         ...prev,
         {
           sender: 'assistant',
           text: res.data.message || 'Action executed successfully.',
           toolCalls: [{ tool, success: res.data.success, message: res.data.message }],
+          cards: res.data.card ? [res.data.card] : [],
         },
       ]);
     } catch (e) {
@@ -225,10 +255,12 @@ export const Assistant: React.FC = () => {
   };
 
   const quickActions = [
-    { label: 'Plan my day', icon: Calendar, prompt: 'Plan my day with upcoming tasks and schedule' },
-    { label: 'Show my tasks', icon: CheckSquare, prompt: 'What are my pending tasks?' },
-    { label: "What's on my calendar?", icon: Calendar, prompt: 'What is on my calendar and schedule today?' },
-    { label: 'Check my spending', icon: DollarSign, prompt: 'How much did I spend this month?' },
+    { label: '450 mess expense add karo', icon: DollarSign, prompt: '450 mess expense add karo' },
+    { label: '4000 income add karo', icon: DollarSign, prompt: '4000 income me add kar do, bhaiya se liya tha' },
+    { label: 'Kal cylinder lene ka task bana do', icon: CheckSquare, prompt: 'Kal cylinder lene ka task bana do' },
+    { label: 'Milk aur bread grocery me add karo', icon: ShoppingBag, prompt: 'milk bread aur eggs grocery me add kar do' },
+    { label: 'PG rent paid mark kar do', icon: Calendar, prompt: 'PG rent paid mark kar do' },
+    { label: 'Is month kitna kharcha hua?', icon: DollarSign, prompt: 'Is month kitna kharcha hua?' },
   ];
 
   return (
@@ -361,6 +393,39 @@ export const Assistant: React.FC = () => {
                     }`}
                   >
                     <div className="space-y-1">{renderMarkdown(m.text)}</div>
+ 
+                    {/* Render Rich Action Cards */}
+                    {m.cards && m.cards.length > 0 && (
+                      <div className="space-y-2 mt-2">
+                        {m.cards.map((card, cIdx) => (
+                          <ActionCard
+                            key={cIdx}
+                            card={card}
+                            onSelectOption={(payload) => handleSendMessage(payload)}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Clarification Options */}
+                    {m.clarificationRequired && (
+                      <div className="mt-3 p-3 rounded-2xl bg-purple-500/10 border border-purple-500/30 space-y-2">
+                        <div className="text-[11px] font-bold text-purple-300">
+                          {m.clarificationRequired.question}
+                        </div>
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {m.clarificationRequired.options.map((opt, oIdx) => (
+                            <button
+                              key={oIdx}
+                              onClick={() => handleSendMessage(opt.actionPayload)}
+                              className="px-3 py-1.5 rounded-xl bg-purple-600/40 hover:bg-purple-600/60 border border-purple-400/40 text-white font-bold text-[11px] transition-all active:scale-95 shadow-sm"
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Action Confirmation Card (For High-Risk Actions) */}
                     {m.sender === 'assistant' && m.pendingConfirmation && (
