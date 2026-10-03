@@ -45,30 +45,25 @@ import apiClient from './services/apiClient';
 
 // ─── Protected Route ─────────────────────────────────────────────────────────
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
-  const [verified, setVerified] = useState<boolean | null>(null);
+  const { authStatus, isAuthenticated } = useAuthStore();
+  const location = useLocation();
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setVerified(false);
-      return;
-    }
-    apiClient
-      .get('/auth/me')
-      .then(() => setVerified(true))
-      .catch(() => {
-        setVerified(true);
-      });
-  }, [isAuthenticated]);
-
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (verified === null) {
+  if (authStatus === 'AUTH_LOADING') {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background gap-3">
+        <div className="w-9 h-9 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs text-muted font-medium tracking-wide">Securing session…</p>
       </div>
     );
   }
+
+  if (authStatus === 'UNAUTHENTICATED' || !isAuthenticated) {
+    const currentPath = location.pathname + location.search;
+    const isSafe = currentPath.startsWith('/') && !currentPath.startsWith('//') && !currentPath.includes(':') && currentPath !== '/login';
+    const redirectParam = isSafe ? `?redirect=${encodeURIComponent(currentPath)}` : '';
+    return <Navigate to={`/login${redirectParam}`} replace />;
+  }
+
   return <>{children}</>;
 };
 
@@ -265,6 +260,7 @@ function AppShell() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/income" element={<Income />} />
+            <Route path="/finance" element={<Navigate to="/income" replace />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/transactions" element={<Expenses />} />
             <Route path="/bills" element={<Bills />} />
@@ -278,7 +274,7 @@ function AppShell() {
             <Route path="/sustainability" element={<Sustainability />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/reports" element={<Reports />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile" element={<Navigate to="/settings?tab=profile" replace />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/manual" element={<UserManual />} />
             <Route path="*" element={<Navigate to="/" replace />} />

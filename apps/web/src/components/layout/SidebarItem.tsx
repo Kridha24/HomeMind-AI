@@ -2,12 +2,23 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 
+export type SidebarAccent =
+  | 'indigo'
+  | 'emerald'
+  | 'teal'
+  | 'amber'
+  | 'rose'
+  | 'sky'
+  | 'purple'
+  | 'violet'
+  | 'neutral';
+
 export interface SidebarItemProps {
   icon: React.ElementType;
   label: string;
   href: string;
   active?: boolean;
-  accent?: 'blue' | 'emerald' | 'amber' | 'purple' | 'cyan' | 'neutral';
+  accent?: SidebarAccent;
   badge?: string;
   isCollapsed?: boolean;
   onHover?: (e: React.MouseEvent<HTMLElement>) => void;
@@ -15,13 +26,61 @@ export interface SidebarItemProps {
   onClick?: () => void;
 }
 
-const accentHoverMap: Record<string, string> = {
-  blue: 'hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-500/10',
-  emerald: 'hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-500/10',
-  amber: 'hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/10',
-  purple: 'hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-500/10',
-  cyan: 'hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-cyan-500/10',
-  neutral: 'hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800',
+const accentTileMap: Record<SidebarAccent, { tile: string; activeBg: string; activeText: string; indicator: string }> = {
+  indigo: {
+    tile: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-500/20',
+    activeBg: 'bg-indigo-500/10 dark:bg-indigo-500/15 border-indigo-500/20 text-indigo-900 dark:text-indigo-200',
+    activeText: 'text-indigo-600 dark:text-indigo-400',
+    indicator: 'bg-indigo-600 dark:bg-indigo-400',
+  },
+  emerald: {
+    tile: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/20',
+    activeBg: 'bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500/20 text-emerald-900 dark:text-emerald-200',
+    activeText: 'text-emerald-600 dark:text-emerald-400',
+    indicator: 'bg-emerald-600 dark:bg-emerald-400',
+  },
+  teal: {
+    tile: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 group-hover:bg-teal-500/20',
+    activeBg: 'bg-teal-500/10 dark:bg-teal-500/15 border-teal-500/20 text-teal-900 dark:text-teal-200',
+    activeText: 'text-teal-600 dark:text-teal-400',
+    indicator: 'bg-teal-600 dark:bg-teal-400',
+  },
+  amber: {
+    tile: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500/20',
+    activeBg: 'bg-amber-500/10 dark:bg-amber-500/15 border-amber-500/20 text-amber-900 dark:text-amber-200',
+    activeText: 'text-amber-600 dark:text-amber-400',
+    indicator: 'bg-amber-600 dark:bg-amber-400',
+  },
+  rose: {
+    tile: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500/20',
+    activeBg: 'bg-rose-500/10 dark:bg-rose-500/15 border-rose-500/20 text-rose-900 dark:text-rose-200',
+    activeText: 'text-rose-600 dark:text-rose-400',
+    indicator: 'bg-rose-600 dark:bg-rose-400',
+  },
+  sky: {
+    tile: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 group-hover:bg-sky-500/20',
+    activeBg: 'bg-sky-500/10 dark:bg-sky-500/15 border-sky-500/20 text-sky-900 dark:text-sky-200',
+    activeText: 'text-sky-600 dark:text-sky-400',
+    indicator: 'bg-sky-600 dark:bg-sky-400',
+  },
+  purple: {
+    tile: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:bg-purple-500/20',
+    activeBg: 'bg-purple-500/10 dark:bg-purple-500/15 border-purple-500/20 text-purple-900 dark:text-purple-200',
+    activeText: 'text-purple-600 dark:text-purple-400',
+    indicator: 'bg-purple-600 dark:bg-purple-400',
+  },
+  violet: {
+    tile: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 group-hover:bg-violet-500/20',
+    activeBg: 'bg-violet-500/10 dark:bg-violet-500/15 border-violet-500/20 text-violet-900 dark:text-violet-200',
+    activeText: 'text-violet-600 dark:text-violet-400',
+    indicator: 'bg-violet-600 dark:bg-violet-400',
+  },
+  neutral: {
+    tile: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 group-hover:bg-slate-500/20',
+    activeBg: 'bg-slate-500/10 dark:bg-slate-500/15 border-slate-500/20 text-slate-900 dark:text-slate-200',
+    activeText: 'text-slate-700 dark:text-slate-300',
+    indicator: 'bg-slate-600 dark:bg-slate-400',
+  },
 };
 
 export const SidebarItem: React.FC<SidebarItemProps> = ({
@@ -29,15 +88,15 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
   label,
   href,
   active = false,
-  accent = 'blue',
+  accent = 'indigo',
   badge,
-  isCollapsed = true,
+  isCollapsed = false,
   onHover,
   onLeave,
   onClick,
 }) => {
   const shouldReduceMotion = useReducedMotion();
-  const hoverClass = accentHoverMap[accent] || accentHoverMap.neutral;
+  const theme = accentTileMap[accent] || accentTileMap.indigo;
 
   return (
     <NavLink
@@ -46,49 +105,55 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
       onClick={onClick}
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
-      className="group relative flex items-center w-full px-2 py-1 outline-none"
+      className="group relative flex items-center w-full px-1.5 py-0.5 outline-none select-none"
     >
       <div
-        className={`relative flex items-center w-full rounded-xl transition-all duration-180 ease-out ${
-          isCollapsed ? 'justify-center p-1.5' : 'gap-3 px-3 py-2'
+        className={`relative flex items-center w-full rounded-xl transition-all duration-150 ease-out border ${
+          isCollapsed ? 'justify-center p-1.5' : 'gap-2.5 px-2.5 py-1.5'
         } ${
           active
-            ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/25 shadow-2xs'
-            : `text-slate-500 dark:text-slate-400 font-medium ${hoverClass}`
-        } ${shouldReduceMotion ? '' : 'group-hover:scale-[1.04] group-hover:translate-x-[2px]'}`}
+            ? `${theme.activeBg} font-semibold shadow-xs`
+            : 'border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 font-medium'
+        }`}
       >
-        {/* Active Pill Indicator (3px blue/violet vertical pill on the left) */}
+        {/* Subtle left indicator */}
         {active && (
           <motion.div
-            layoutId={shouldReduceMotion ? undefined : 'sidebarActivePill'}
-            className="absolute -left-2 w-[3px] h-6 rounded-r-full bg-blue-600 dark:bg-blue-400 shadow-[0_0_8px_#3b82f6]"
+            layoutId={shouldReduceMotion ? undefined : 'sidebarActiveIndicator'}
+            className={`absolute left-0 w-1 h-4 rounded-r-full ${theme.indicator}`}
             transition={
               shouldReduceMotion
                 ? { duration: 0 }
-                : { type: 'spring', stiffness: 400, damping: 30 }
+                : { type: 'spring', stiffness: 500, damping: 35 }
             }
           />
         )}
 
-        {/* Icon */}
+        {/* Colorful Icon Container */}
         <div
-          className={`flex items-center justify-center rounded-lg transition-colors ${
-            active
-              ? 'text-blue-600 dark:text-blue-400'
-              : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200'
+          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105 flex-shrink-0 ${
+            active ? theme.tile : `${theme.tile} opacity-85 group-hover:opacity-100`
           }`}
         >
-          <Icon className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+          <Icon className="w-4 h-4" />
         </div>
 
         {/* Expanded Label */}
         {!isCollapsed && (
-          <span className="text-xs truncate flex-1 tracking-tight">{label}</span>
+          <span
+            className={`text-xs truncate flex-1 tracking-tight ${
+              active
+                ? 'font-bold text-slate-900 dark:text-white'
+                : 'text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white'
+            }`}
+          >
+            {label}
+          </span>
         )}
 
         {/* Badge when expanded */}
         {!isCollapsed && badge && (
-          <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-blue-500/20 text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+          <span className="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 uppercase tracking-wider">
             {badge}
           </span>
         )}
@@ -96,3 +161,5 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
     </NavLink>
   );
 };
+
+export default SidebarItem;

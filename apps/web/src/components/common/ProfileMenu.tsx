@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { LogOut, Shield, Smartphone, ChevronDown, Phone, User as UserIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { LogOut, Shield, Smartphone, ChevronDown, Phone, User as UserIcon, Settings as SettingsIcon } from 'lucide-react';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { VerifyPhoneModal } from './VerifyPhoneModal';
 import apiClient from '../../services/apiClient';
 import { getUserFullName, getUserInitials } from '../dashboard/utils/dashboardUtils';
 
 export const ProfileMenu: React.FC = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const { user, household, logout } = useAuthStore();
@@ -138,19 +140,54 @@ export const ProfileMenu: React.FC = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Navigation & Action Links */}
           <div className="space-y-1">
             <button
-              onClick={handleLogout}
+              onClick={() => {
+                navigate('/settings?tab=profile');
+                setIsOpen(false);
+              }}
               className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl flex items-center gap-2 transition-colors"
             >
-              <LogOut className="w-3.5 h-3.5 text-slate-400" /> Log Out Current Device
+              <UserIcon className="w-3.5 h-3.5 text-blue-500" />
+              <span>My Account & Profile</span>
+            </button>
+            <button
+              onClick={() => {
+                navigate('/settings?tab=household');
+                setIsOpen(false);
+              }}
+              className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl flex items-center gap-2 transition-colors"
+            >
+              <Shield className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Household Settings</span>
+            </button>
+            <button
+              onClick={() => {
+                navigate('/settings');
+                setIsOpen(false);
+              }}
+              className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl flex items-center gap-2 transition-colors"
+            >
+              <SettingsIcon className="w-3.5 h-3.5 text-slate-400" />
+              <span>App Settings</span>
+            </button>
+
+            <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+
+            <button
+              onClick={handleLogout}
+              className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl flex items-center gap-2 transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5 text-slate-400" />
+              <span>Sign Out</span>
             </button>
             <button
               onClick={handleLogoutAllDevices}
               className="w-full text-left px-3 py-2 text-xs font-medium text-rose-500 hover:bg-rose-500/10 rounded-xl flex items-center gap-2 transition-colors"
             >
-              <Smartphone className="w-3.5 h-3.5 text-rose-500" /> Revoke All Active Devices
+              <Smartphone className="w-3.5 h-3.5 text-rose-500" />
+              <span>Revoke All Active Devices</span>
             </button>
           </div>
         </div>
