@@ -40,6 +40,33 @@ interface SettingState {
   format: (amount: number) => string;
 }
 
+function applyThemeToDOM(theme: 'dark' | 'light' | 'glass' | 'system') {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  const isDark =
+    theme === 'dark' ||
+    theme === 'glass' ||
+    (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  if (isDark) {
+    root.classList.add('dark');
+    root.style.colorScheme = 'dark';
+  } else {
+    root.classList.remove('dark');
+    root.style.colorScheme = 'light';
+  }
+}
+
+function applyLangToDOM(lang: string) {
+  if (typeof document === 'undefined') return;
+  const norm = lang === 'hi' || lang.toLowerCase().startsWith('hindi') ? 'hi' : 'en';
+  document.documentElement.lang = norm;
+}
+
+const initialTheme = (typeof window !== 'undefined' ? localStorage.getItem('hm_theme') : 'dark') as any || 'dark';
+if (typeof window !== 'undefined') applyThemeToDOM(initialTheme);
+const initialLang = (typeof window !== 'undefined' ? localStorage.getItem('hm_language') : 'en') || 'en';
+if (typeof window !== 'undefined') applyLangToDOM(initialLang);
+
 export const useSettingStore = create<SettingState>((set, get) => ({
   country: localStorage.getItem('hm_country') || 'US',
   currency: localStorage.getItem('hm_currency') || 'USD',
@@ -47,8 +74,8 @@ export const useSettingStore = create<SettingState>((set, get) => ({
   timeZone: localStorage.getItem('hm_timeZone') || 'America/New_York',
   dateFormat: localStorage.getItem('hm_dateFormat') || 'MM/DD/YYYY',
   unitSystem: (localStorage.getItem('hm_unitSystem') as 'Metric' | 'Imperial') || 'Imperial',
-  theme: (localStorage.getItem('hm_theme') as 'dark' | 'light' | 'glass' | 'system') || 'dark',
-  language: localStorage.getItem('hm_language') || 'English',
+  theme: initialTheme,
+  language: initialLang,
   pushNotifications: true,
   emailAlerts: true,
   aiSuggestions: localStorage.getItem('hm_ai_suggestions') !== 'false',
@@ -71,8 +98,10 @@ export const useSettingStore = create<SettingState>((set, get) => ({
   },
 
   setLanguage: (lang: string) => {
-    localStorage.setItem('hm_language', lang);
-    set({ language: lang });
+    const norm = lang === 'hi' || lang.toLowerCase().startsWith('hindi') ? 'hi' : 'en';
+    localStorage.setItem('hm_language', norm);
+    applyLangToDOM(norm);
+    set({ language: norm });
   },
 
   setTimeZone: (tz: string) => {
@@ -152,6 +181,7 @@ export const useSettingStore = create<SettingState>((set, get) => ({
 
   setTheme: (theme: 'dark' | 'light' | 'glass' | 'system') => {
     localStorage.setItem('hm_theme', theme);
+    applyThemeToDOM(theme);
     set({ theme });
   },
 
@@ -163,6 +193,13 @@ export const useSettingStore = create<SettingState>((set, get) => ({
   updateSettings: async (newSettings: Partial<SettingState>) => {
     if (newSettings.theme) {
       localStorage.setItem('hm_theme', newSettings.theme);
+      applyThemeToDOM(newSettings.theme);
+    }
+    if (newSettings.language) {
+      const norm = newSettings.language === 'hi' || newSettings.language.toLowerCase().startsWith('hindi') ? 'hi' : 'en';
+      newSettings.language = norm;
+      localStorage.setItem('hm_language', norm);
+      applyLangToDOM(norm);
     }
     if (newSettings.aiSuggestions !== undefined) {
       localStorage.setItem('hm_ai_suggestions', String(newSettings.aiSuggestions));
@@ -196,10 +233,14 @@ export const useSettingStore = create<SettingState>((set, get) => ({
         const s = res.data;
         const symbol = SUPPORTED_CURRENCIES[s.currency]?.symbol || '$';
         const savedTheme = (localStorage.getItem('hm_theme') as 'dark' | 'light' | 'glass') || s.theme || 'dark';
+        const savedLang = localStorage.getItem('hm_language') || (s.language ? (s.language === 'hi' || s.language.toLowerCase().startsWith('hindi') ? 'hi' : 'en') : 'en');
 
         localStorage.setItem('hm_currency', s.currency || 'USD');
         localStorage.setItem('hm_currencySymbol', symbol);
         localStorage.setItem('hm_theme', savedTheme);
+        localStorage.setItem('hm_language', savedLang);
+        applyThemeToDOM(savedTheme);
+        applyLangToDOM(savedLang);
 
         const aiSuggestionsSaved = s.proactiveAI !== undefined ? s.proactiveAI : localStorage.getItem('hm_ai_suggestions') !== 'false';
         localStorage.setItem('hm_ai_suggestions', String(aiSuggestionsSaved));
@@ -212,7 +253,7 @@ export const useSettingStore = create<SettingState>((set, get) => ({
           dateFormat: s.dateFormat || 'MM/DD/YYYY',
           unitSystem: s.unitSystem || 'Imperial',
           theme: savedTheme,
-          language: s.language || 'English',
+          language: savedLang,
           pushNotifications: s.pushNotifications ?? true,
           emailAlerts: s.emailAlerts ?? true,
           aiSuggestions: aiSuggestionsSaved,

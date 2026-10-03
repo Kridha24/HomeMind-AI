@@ -73,6 +73,7 @@ export const AppearanceSettings: React.FC = () => {
   const {
     theme,
     setTheme,
+    updateSettings,
     reducedMotion,
     setReducedMotion,
     sidebarCollapsed,
@@ -90,10 +91,13 @@ export const AppearanceSettings: React.FC = () => {
     setTimeout(() => setFeedback(null), 3000);
   };
 
-  const handleThemeSelect = (selectedTheme: 'dark' | 'light' | 'glass' | 'system') => {
+  const handleThemeSelect = async (selectedTheme: 'dark' | 'light' | 'glass' | 'system') => {
     setTheme(selectedTheme);
-    document.documentElement.classList.remove('theme-dark', 'theme-light', 'theme-glass', 'theme-system');
-    document.documentElement.classList.add(`theme-${selectedTheme}`);
+    try {
+      await updateSettings({ theme: selectedTheme });
+    } catch (e) {
+      console.warn('Failed to sync theme to backend', e);
+    }
     showNotification(`Theme updated to ${THEMES.find((t) => t.id === selectedTheme)?.title}`);
   };
 
