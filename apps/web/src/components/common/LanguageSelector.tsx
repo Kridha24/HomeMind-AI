@@ -27,8 +27,8 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ compact = fa
   const handleSelectLanguage = (langKey: string) => {
     const langObj = supportedLanguages[langKey];
     if (langObj) {
-      setLanguage(langObj.name);
-      localStorage.setItem('hm_language', langObj.name);
+      setLanguage(langObj.code);
+      localStorage.setItem('hm_language', langObj.code);
     }
     setIsOpen(false);
   };

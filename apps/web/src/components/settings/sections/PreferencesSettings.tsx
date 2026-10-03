@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useSettingStore } from '../../../stores/useSettingStore';
 import { SUPPORTED_CURRENCIES } from '../../../utils/currency';
-import { SUPPORTED_LANGUAGES, useI18n } from '../../../utils/i18n';
+import { SUPPORTED_LANGUAGES, normalizeLanguage, useI18n } from '../../../utils/i18n';
 import { SettingsCard } from '../primitives/SettingsCard';
 import { SettingsRow } from '../primitives/SettingsRow';
 import { SettingsSelect } from '../primitives/SettingsSelect';
@@ -190,7 +190,7 @@ export const PreferencesSettings: React.FC = () => {
           >
             <div className="w-48 sm:w-60">
               <SettingsSelect
-                value={language.toLowerCase().startsWith('hi') ? 'hi' : language.toLowerCase().includes('hinglish') ? 'hinglish' : language}
+                value={normalizeLanguage(language)}
                 onChange={handleLanguageChange}
                 disabled={saving}
                 options={Object.entries(SUPPORTED_LANGUAGES).map(([code, def]) => ({

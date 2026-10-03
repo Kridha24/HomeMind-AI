@@ -7,21 +7,23 @@ export interface LanguageDef {
   flag: string;
 }
 
+/**
+ * ONLY supported languages with real translations (Part 29)
+ */
 export const SUPPORTED_LANGUAGES: Record<string, LanguageDef> = {
   en: { code: 'en', name: 'English', nativeName: 'English (US)', flag: '🇺🇸' },
   hi: { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
-  hinglish: { code: 'hinglish', name: 'Hinglish', nativeName: 'Hinglish (Conversational)', flag: '🇮🇳' },
-  es: { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
-  fr: { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
-  de: { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
-  ja: { code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵' },
-  ar: { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇦🇪' },
 };
 
 export const TRANSLATIONS: Record<string, Record<string, string>> = {
   // English (Default)
   en: {
-    // Nav
+    // Nav Sections
+    'nav.core': 'Core',
+    'nav.householdGroup': 'Household',
+    'nav.insightsGroup': 'Insights',
+
+    // Nav Links
     'nav.dashboard': 'Dashboard',
     'nav.expenses': 'Expenses & Ledger',
     'nav.bills': 'Bills & Utilities',
@@ -39,16 +41,26 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'nav.profile': 'Your Profile',
     'nav.settings': 'App Settings',
 
-    // Dashboard
+    // Greetings & Times
+    'dash.goodMorning': 'Good morning',
+    'dash.goodAfternoon': 'Good afternoon',
+    'dash.goodEvening': 'Good evening',
     'dash.welcome': 'Welcome',
     'dash.household': 'Home Residence',
     'dash.daysLeft': 'Days Left in',
-    'dash.addIncome': 'Add Income',
-    'dash.addExpense': 'Add Expense',
-    'dash.addBill': 'Add Bill',
-    'dash.addGrocery': 'Add Grocery',
-    'dash.addTask': 'Add Task',
-    'dash.quickMenu': 'for Quick Menu',
+    'dash.today': 'Today',
+    'dash.todayOverview': 'Today At A Glance',
+    'dash.tasksPending': 'Tasks Pending',
+    'dash.billsDueSoon': 'Bills Due Soon',
+    'dash.todayTransactions': 'Transactions Today',
+
+    // Financial Cards
+    'dash.financialSnapshot': 'Household Financial Snapshot',
+    'dash.monthlyIncome': 'Monthly Income',
+    'dash.monthlyExpenses': 'Monthly Expenses',
+    'dash.overallExpenses': 'All-Time Spend',
+    'dash.netBalance': 'Net Balance',
+    'dash.billsDue': 'Bills Due',
     'dash.income': 'Income',
     'dash.spent': 'Spent',
     'dash.allTimeSpend': 'All-time Spend',
@@ -60,6 +72,26 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'dash.recentTransactions': 'Recent Transactions',
     'dash.latestEntries': 'Latest Entries',
     'dash.noTransactions': 'No transactions recorded yet.',
+
+    // Member Specific Dashboard
+    'dash.myTasks': 'My Assigned Tasks',
+    'dash.myTasksDesc': 'Chores and tasks specifically assigned to you',
+    'dash.sharedGroceries': 'Shared Groceries',
+    'dash.sharedGroceriesDesc': 'Pantry and household grocery shopping list',
+    'dash.allowedBills': 'Upcoming Household Responsibilities',
+    'dash.safeHouseholdActivity': 'Recent Household Activity',
+    'dash.personalFinance': 'My Personal Transactions',
+    'dash.noPersonalTransactions': 'No personal transactions recorded for your account.',
+    'dash.rolePrivateNotice': 'Household-wide financial analytics are restricted to Owner & Co-Owner.',
+
+    // Quick Actions
+    'dash.quickActions': 'Quick Actions',
+    'dash.addIncome': 'Add Income',
+    'dash.addExpense': 'Add Expense',
+    'dash.addBill': 'Add Bill',
+    'dash.addGrocery': 'Add Grocery',
+    'dash.addTask': 'Add Task',
+    'dash.quickMenu': 'for Quick Menu',
 
     // Vitals
     'vitals.title': 'Home Health Score',
@@ -77,17 +109,34 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'ai.quickActions': 'Quick Actions',
     'ai.copilot': 'AI Copilot',
 
+    // Member Drawer
+    'member.profile': 'Profile',
+    'member.responsibilities': 'Responsibilities',
+    'member.finance': 'Finance',
+    'member.activity': 'Activity',
+    'member.activeTasks': 'Active Tasks',
+    'member.completedTasks': 'Completed Tasks',
+    'member.recentActivity': 'Recent Activity',
+    'member.financialOverview': 'Financial Overview',
+    'member.privateNotice': 'Financial information is private and restricted to Owner and Co-Owner.',
+
     // Common
     'common.save': 'Save',
     'common.saveChanges': 'Save Changes',
     'common.search': 'Search expenses, groceries, chores (or press ⌘K)...',
     'common.notifications': 'Notifications',
     'common.verified': 'Verified',
+    'common.all': 'All',
   },
 
   // Hindi (हिन्दी)
   hi: {
-    // Nav
+    // Nav Sections
+    'nav.core': 'मुख्य (Core)',
+    'nav.householdGroup': 'घर और परिवार',
+    'nav.insightsGroup': 'विश्लेषण और रिपोर्ट',
+
+    // Nav Links
     'nav.dashboard': 'डैशबोर्ड',
     'nav.expenses': 'खर्च और हिसाब (Expenses)',
     'nav.bills': 'बिल और किराया (Bills)',
@@ -105,16 +154,26 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'nav.profile': 'आपकी प्रोफाइल (Profile)',
     'nav.settings': 'सेटिंग्स (Settings)',
 
-    // Dashboard
+    // Greetings & Times
+    'dash.goodMorning': 'सुप्रभात',
+    'dash.goodAfternoon': 'शुभ दोपहर',
+    'dash.goodEvening': 'शुभ संध्या',
     'dash.welcome': 'नमस्ते',
     'dash.household': 'घर',
-    'dash.daysLeft': 'दिन बचे हैं',
-    'dash.addIncome': '+ कमाई जोड़ें',
-    'dash.addExpense': '+ खर्च जोड़ें',
-    'dash.addBill': '+ बिल जोड़ें',
-    'dash.addGrocery': '+ राशन जोड़ें',
-    'dash.addTask': '+ काम जोड़ें',
-    'dash.quickMenu': 'क्विक मेन्यू के लिए',
+    'dash.daysLeft': 'दिन शेष',
+    'dash.today': 'आज',
+    'dash.todayOverview': 'आज की स्थिति',
+    'dash.tasksPending': 'लंबित काम',
+    'dash.billsDueSoon': 'निकटतम बिल',
+    'dash.todayTransactions': 'आज के लेन-देन',
+
+    // Financial Cards
+    'dash.financialSnapshot': 'घर का वित्तीय सारांश',
+    'dash.monthlyIncome': 'मासिक आय',
+    'dash.monthlyExpenses': 'मासिक खर्च',
+    'dash.overallExpenses': 'कुल खर्च',
+    'dash.netBalance': 'शुद्ध बचत (Net Balance)',
+    'dash.billsDue': 'देय बिल',
     'dash.income': 'कुल कमाई',
     'dash.spent': 'इस महीने का खर्च',
     'dash.allTimeSpend': 'कुल खर्च',
@@ -126,6 +185,26 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'dash.recentTransactions': 'हाल के लेन-देन (Transactions)',
     'dash.latestEntries': 'नवीनतम प्रविष्टियां',
     'dash.noTransactions': 'अभी तक कोई लेन-देन दर्ज नहीं है।',
+
+    // Member Specific Dashboard
+    'dash.myTasks': 'मेरे सौंपे गए काम',
+    'dash.myTasksDesc': 'विशेष रूप से आपको सौंपे गए घरेलू कार्य',
+    'dash.sharedGroceries': 'सांझा राशन सूची',
+    'dash.sharedGroceriesDesc': 'रसोई और दैनिक राशन की खरीदारी सूची',
+    'dash.allowedBills': 'आगामी घरेलू दायित्व व बिल',
+    'dash.safeHouseholdActivity': 'घर की हालिया गतिविधियां',
+    'dash.personalFinance': 'मेरा व्यक्तिगत हिसाब-किताब',
+    'dash.noPersonalTransactions': 'आपके खाते से कोई व्यक्तिगत लेन-देन दर्ज नहीं है।',
+    'dash.rolePrivateNotice': 'घर का समग्र वित्तीय विवरण केवल ओनर और को-ओनर के लिए उपलब्ध है।',
+
+    // Quick Actions
+    'dash.quickActions': 'त्वरित क्रियाएं',
+    'dash.addIncome': '+ कमाई जोड़ें',
+    'dash.addExpense': '+ खर्च जोड़ें',
+    'dash.addBill': '+ बिल जोड़ें',
+    'dash.addGrocery': '+ राशन जोड़ें',
+    'dash.addTask': '+ काम जोड़ें',
+    'dash.quickMenu': 'क्विक मेन्यू के लिए',
 
     // Vitals
     'vitals.title': 'घर का हेल्थ स्कोर',
@@ -143,294 +222,108 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'ai.quickActions': 'त्वरित कार्रवाई',
     'ai.copilot': 'AI सहायक',
 
+    // Member Drawer
+    'member.profile': 'प्रोफाइल',
+    'member.responsibilities': 'ज़िम्मेदारियां',
+    'member.finance': 'वित्तीय विवरण',
+    'member.activity': 'गतिविधि',
+    'member.activeTasks': 'सक्रिय कार्य',
+    'member.completedTasks': 'पूरे हुए कार्य',
+    'member.recentActivity': 'हाल की गतिविधियां',
+    'member.financialOverview': 'वित्तीय अवलोकन',
+    'member.privateNotice': 'वित्तीय विवरण गोपनीय हैं और केवल ओनर और को-ओनर को ही दिखाई देते हैं।',
+
     // Common
     'common.save': 'सहेजें',
     'common.saveChanges': 'बदलाव सहेजें',
     'common.search': 'खर्च, राशन, बिल खोजें (या ⌘K दबाएं)...',
     'common.notifications': 'सूचनाएं',
     'common.verified': 'सत्यापित',
-  },
-
-  // Hinglish (Easy Conversational Hindi + English)
-  hinglish: {
-    // Nav
-    'nav.dashboard': 'Dashboard',
-    'nav.expenses': 'Kharcha & Expenses',
-    'nav.bills': 'Bills & Room Rent',
-    'nav.inventory': 'Grocery & Ration',
-    'nav.tasks': 'Ghar Ke Chores/Tasks',
-    'nav.family': 'Family Members',
-    'nav.income': 'Monthly Kamai/Income',
-    'nav.pantryVision': 'Photo & Bill Scanner',
-    'nav.appliances': 'Home Appliances',
-    'nav.medicines': 'Medicines Tracker',
-    'nav.sustainability': 'Power & Eco Score',
-    'nav.analytics': 'Monthly Insights',
-    'nav.reports': 'PDF Download Reports',
-    'nav.manual': 'User Manual',
-    'nav.profile': 'Apna Profile',
-    'nav.settings': 'Settings',
-
-    // Dashboard
-    'dash.welcome': 'Welcome',
-    'dash.household': 'Home Residence',
-    'dash.daysLeft': 'Days bache hain',
-    'dash.addIncome': '+ Income Add Karein',
-    'dash.addExpense': '+ Kharcha Log Karein',
-    'dash.addBill': '+ Bill Add Karein',
-    'dash.addGrocery': '+ Grocery Add Karein',
-    'dash.addTask': '+ Task Assign Karein',
-    'dash.quickMenu': 'Quick Menu ke liye',
-    'dash.income': 'Monthly Income',
-    'dash.spent': 'Total Spend',
-    'dash.allTimeSpend': 'Ab tak ka Total Kharcha',
-    'dash.saved': 'Total Bachat/Savings',
-    'dash.totalBalance': 'Current Balance',
-    'dash.upcomingBills': 'Aane Wale Bills & Room Rent',
-    'dash.upcomingBillsDesc': 'Room rent, mess fees, Wi-Fi aur electricity bills due date ke sath track karein.',
-    'dash.totalBillsDue': 'Total Due Bills',
-    'dash.recentTransactions': 'Recent Transactions History',
-    'dash.latestEntries': 'Latest Entries',
-    'dash.noTransactions': 'Abhi tak koi transaction record nahi hui.',
-
-    // Vitals
-    'vitals.title': 'Home Health Score',
-    'vitals.status': 'Live Status',
-    'vitals.subtitle': 'Ghar ki savings, kitchen food aur daily tasks ka 1-second view',
-    'vitals.great': 'Sab Control Mein Hai 👍',
-    'vitals.attention': 'Dhyan Dene Ki Zaroorat Hai ⚠️',
-    'vitals.budget': '1. Paisa Saved (Budget)',
-    'vitals.food': '2. Kitchen Food Freshness',
-    'vitals.chores': '3. Nipat Gaye Ghar Ke Kaam',
-    'vitals.score': 'Score',
-
-    // AI
-    'ai.suggestions': 'Smart AI Recommendations',
-    'ai.quickActions': 'Quick Actions',
-    'ai.copilot': 'AI Copilot',
-
-    // Common
-    'common.save': 'Save',
-    'common.saveChanges': 'Changes Save Karein',
-    'common.search': 'Kharcha, bills, ration search karein (ya ⌘K)...',
-    'common.notifications': 'Notifications',
-    'common.verified': 'Verified',
-  },
-
-  // Spanish (Español)
-  es: {
-    'nav.dashboard': 'Panel Principal',
-    'nav.expenses': 'Gastos y Cuentas',
-    'nav.bills': 'Facturas y Servicios',
-    'nav.inventory': 'Despensa y Compras',
-    'nav.tasks': 'Tareas del Hogar',
-    'nav.family': 'Familia',
-    'nav.income': 'Ingresos y Ganancias',
-    'nav.pantryVision': 'Escáner de Recibos (OCR)',
-    'nav.appliances': 'Electrodomésticos',
-    'nav.medicines': 'Medicamentos',
-    'nav.sustainability': 'Puntuación Ecológica',
-    'nav.analytics': 'Análisis y Tendencias',
-    'nav.reports': 'Informes PDF',
-    'nav.manual': 'Manual de Usuario',
-    'nav.profile': 'Tu Perfil',
-    'nav.settings': 'Ajustes',
-
-    'dash.welcome': 'Bienvenido',
-    'dash.household': 'Hogar',
-    'dash.daysLeft': 'Días restantes en',
-    'dash.addIncome': '+ Ingreso',
-    'dash.addExpense': '+ Gasto',
-    'dash.addBill': '+ Factura',
-    'dash.addGrocery': '+ Despensa',
-    'dash.addTask': '+ Tarea',
-    'dash.quickMenu': 'para Menú Rápido',
-    'dash.income': 'Ingresos',
-    'dash.spent': 'Gastado',
-    'dash.allTimeSpend': 'Gasto Total Histórico',
-    'dash.saved': 'Ahorros',
-    'dash.totalBalance': 'Balance Total',
-    'dash.upcomingBills': 'Próximas Facturas y Alquiler',
-    'dash.upcomingBillsDesc': 'Control de alquiler, wifi, luz y servicios debidos este mes.',
-    'dash.totalBillsDue': 'Facturas por Pagar',
-    'dash.recentTransactions': 'Transacciones Recientes',
-    'dash.latestEntries': 'Últimas Entradas',
-    'dash.noTransactions': 'Aún no hay transacciones registradas.',
-
-    'vitals.title': 'Salud del Hogar',
-    'vitals.status': 'Estado en Vivo',
-    'vitals.subtitle': 'Vista rápida de tus ahorros, comida y tareas domésticas',
-    'vitals.great': 'Todo Excelente 👍',
-    'vitals.attention': 'Atención Requerida ⚠️',
-    'vitals.budget': '1. Dinero Ahorrado (Presupuesto)',
-    'vitals.food': '2. Frescura de la Comida',
-    'vitals.chores': '3. Tareas Realizadas',
-    'vitals.score': 'Puntos',
-
-    'ai.suggestions': 'Sugerencias Inteligentes',
-    'ai.quickActions': 'Acciones Rápidas',
-    'ai.copilot': 'Copiloto IA',
-
-    'common.save': 'Guardar',
-    'common.saveChanges': 'Guardar Cambios',
-    'common.search': 'Buscar gastos, comida, tareas (o ⌘K)...',
-    'common.notifications': 'Notificaciones',
-    'common.verified': 'Verificado',
-  },
-
-  // French (Français)
-  fr: {
-    'nav.dashboard': 'Tableau de Bord',
-    'nav.expenses': 'Dépenses',
-    'nav.bills': 'Factures & Loyer',
-    'nav.inventory': 'Épicerie & Frigo',
-    'nav.tasks': 'Tâches Ménagères',
-    'nav.family': 'Espace Famille',
-    'nav.income': 'Revenus',
-    'nav.pantryVision': 'Scanner Reçus & Frigo',
-    'nav.appliances': 'Appareils',
-    'nav.medicines': 'Médicaments',
-    'nav.sustainability': 'Score Écologique',
-    'nav.analytics': 'Analyses',
-    'nav.reports': 'Rapports PDF',
-    'nav.manual': 'Manuel',
-    'nav.profile': 'Profil',
-    'nav.settings': 'Paramètres',
-
-    'dash.welcome': 'Bienvenue',
-    'dash.household': 'Résidence',
-    'dash.daysLeft': 'Jours restants en',
-    'dash.addIncome': '+ Revenu',
-    'dash.addExpense': '+ Dépense',
-    'dash.addBill': '+ Facture',
-    'dash.addGrocery': '+ Épicerie',
-    'dash.addTask': '+ Tâche',
-    'dash.quickMenu': 'pour Menu Rapide',
-    'dash.income': 'Revenus',
-    'dash.spent': 'Dépensé',
-    'dash.allTimeSpend': 'Dépenses Totales',
-    'dash.saved': 'Épargne',
-    'dash.totalBalance': 'Solde Total',
-    'dash.upcomingBills': 'Factures & Loyers à Venir',
-    'dash.upcomingBillsDesc': 'Suivi des loyers, wifi, électricité et charges dues.',
-    'dash.totalBillsDue': 'Total Dû',
-    'dash.recentTransactions': 'Transactions Récentes',
-    'dash.latestEntries': 'Dernières Entrées',
-    'dash.noTransactions': 'Aucune transaction enregistrée.',
-
-    'vitals.title': 'Score Santé du Foyer',
-    'vitals.status': 'Statut en Direct',
-    'vitals.subtitle': 'Aperçu en 1 seconde de votre épargne, cuisine et tâches',
-    'vitals.great': 'Tout Va Bien 👍',
-    'vitals.attention': 'Attention Requise ⚠️',
-    'vitals.budget': '1. Épargne & Budget',
-    'vitals.food': '2. Fraîcheur des Aliments',
-    'vitals.chores': '3. Tâches Complétées',
-    'vitals.score': 'Score',
-
-    'ai.suggestions': 'Suggestions Intelligentes IA',
-    'ai.quickActions': 'Actions Rapides',
-    'ai.copilot': 'Assistant IA',
-
-    'common.save': 'Enregistrer',
-    'common.saveChanges': 'Enregistrer les Modifications',
-    'common.search': 'Rechercher dépenses, courses, tâches (ou ⌘K)...',
-    'common.notifications': 'Notifications',
-    'common.verified': 'Vérifié',
-  },
-
-  // German (Deutsch)
-  de: {
-    'nav.dashboard': 'Übersicht',
-    'nav.expenses': 'Ausgaben',
-    'nav.bills': 'Rechnungen & Miete',
-    'nav.inventory': 'Vorräte & Einkäufe',
-    'nav.tasks': 'Haushaltsaufgaben',
-    'nav.family': 'Familie',
-    'nav.income': 'Einnahmen',
-    'nav.pantryVision': 'Beleg- & Vorratsscanner',
-    'nav.appliances': 'Haushaltsgeräte',
-    'nav.medicines': 'Medikamente',
-    'nav.sustainability': 'Nachhaltigkeit',
-    'nav.analytics': 'Analysen',
-    'nav.reports': 'PDF-Berichte',
-    'nav.manual': 'Handbuch',
-    'nav.profile': 'Profil',
-    'nav.settings': 'Einstellungen',
-
-    'dash.welcome': 'Willkommen',
-    'dash.household': 'Haushalt',
-    'dash.daysLeft': 'Tage verbleibend im',
-    'dash.addIncome': '+ Einnahme',
-    'dash.addExpense': '+ Ausgabe',
-    'dash.addBill': '+ Rechnung',
-    'dash.addGrocery': '+ Vorrat',
-    'dash.addTask': '+ Aufgabe',
-    'dash.quickMenu': 'für Schnellmenü',
-    'dash.income': 'Einnahmen',
-    'dash.spent': 'Ausgegeben',
-    'dash.allTimeSpend': 'Gesamtausgaben',
-    'dash.saved': 'Ersparnisse',
-    'dash.totalBalance': 'Gesamtsaldo',
-    'dash.upcomingBills': 'Anstehende Rechnungen & Miete',
-    'dash.upcomingBillsDesc': 'Miete, Strom, Internet und fällige Zahlungen im Blick behalten.',
-    'dash.totalBillsDue': 'Fällige Rechnungen',
-    'dash.recentTransactions': 'Letzte Transaktionen',
-    'dash.latestEntries': 'Neueste Einträge',
-    'dash.noTransactions': 'Noch keine Transaktionen vorhanden.',
-
-    'vitals.title': 'Haushalts-Gesundheitswert',
-    'vitals.status': 'Live-Status',
-    'vitals.subtitle': '1-Sekunden-Überblick über Finanzen, Küche und Aufgaben',
-    'vitals.great': 'Alles Bestens 👍',
-    'vitals.attention': 'Aufmerksamkeit Erforderlich ⚠️',
-    'vitals.budget': '1. Gespartes Geld (Budget)',
-    'vitals.food': '2. Frische der Lebensmittel',
-    'vitals.chores': '3. Erledigte Aufgaben',
-    'vitals.score': 'Punkte',
-
-    'ai.suggestions': 'Smarte KI-Empfehlungen',
-    'ai.quickActions': 'Schnellaktionen',
-    'ai.copilot': 'KI-Assistent',
-
-    'common.save': 'Speichern',
-    'common.saveChanges': 'Änderungen Speichern',
-    'common.search': 'Ausgaben, Einkäufe suchen (oder ⌘K)...',
-    'common.notifications': 'Benachrichtigungen',
-    'common.verified': 'Verifiziert',
+    'common.all': 'सभी',
   },
 };
 
 /**
- * React hook to get translated text easily
+ * Normalizes language string to supported code ('en' | 'hi')
+ */
+export function normalizeLanguage(lang?: string | null): 'en' | 'hi' {
+  if (!lang) return 'en';
+  const clean = lang.toLowerCase().trim();
+  if (clean === 'hi' || clean.startsWith('hindi') || clean.includes('हिन्दी')) {
+    return 'hi';
+  }
+  return 'en';
+}
+
+/**
+ * Locale-aware date formatting (Part 30)
+ * Example:
+ * English: Friday, 3 October 2026
+ * Hindi: शनिवार, 3 अक्तूबर 2026
+ */
+export function formatLocalizedDate(
+  dateInput: Date | string = new Date(),
+  lang: string = 'en',
+  options?: Intl.DateTimeFormatOptions
+): string {
+  try {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    if (isNaN(date.getTime())) return '';
+    const normLang = normalizeLanguage(lang);
+    const locale = normLang === 'hi' ? 'hi-IN' : 'en-US';
+
+    const defaultOptions: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    };
+
+    return new Intl.DateTimeFormat(locale, options || defaultOptions).format(date);
+  } catch {
+    return String(dateInput);
+  }
+}
+
+/**
+ * Locale-aware month formatting
+ */
+export function formatLocalizedMonth(
+  dateInput: Date | string = new Date(),
+  lang: string = 'en'
+): string {
+  try {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    const normLang = normalizeLanguage(lang);
+    const locale = normLang === 'hi' ? 'hi-IN' : 'en-US';
+    return new Intl.DateTimeFormat(locale, { month: 'long' }).format(date);
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * React hook to get translated text easily with reactive store subscription
  */
 export function useI18n() {
-  const language = useSettingStore((s) => s.language) || 'en';
-
-  // Normalize language key: 'English' -> 'en', 'Hindi' -> 'hi', 'Hinglish' -> 'hinglish', etc.
-  const normalizedLang =
-    language.toLowerCase().startsWith('hi') && !language.toLowerCase().includes('hinglish')
-      ? 'hi'
-      : language.toLowerCase().includes('hinglish')
-      ? 'hinglish'
-      : language.toLowerCase().startsWith('es')
-      ? 'es'
-      : language.toLowerCase().startsWith('fr')
-      ? 'fr'
-      : language.toLowerCase().startsWith('de')
-      ? 'de'
-      : language.toLowerCase().startsWith('ja')
-      ? 'ja'
-      : language.toLowerCase().startsWith('ar')
-      ? 'ar'
-      : 'en';
+  const rawLanguage = useSettingStore((s) => s.language) || 'en';
+  const language = normalizeLanguage(rawLanguage);
 
   const t = (key: string, defaultText?: string): string => {
-    const langDict = TRANSLATIONS[normalizedLang] || TRANSLATIONS['en'];
-    return langDict[key] || TRANSLATIONS['en'][key] || defaultText || key;
+    const langDict = TRANSLATIONS[language] || TRANSLATIONS.en;
+    return langDict[key] || TRANSLATIONS.en[key] || defaultText || key;
   };
 
-  const currentLangDef = SUPPORTED_LANGUAGES[normalizedLang] || SUPPORTED_LANGUAGES['en'];
+  const currentLangDef = SUPPORTED_LANGUAGES[language] || SUPPORTED_LANGUAGES.en;
 
-  return { t, language: normalizedLang, currentLangDef, supportedLanguages: SUPPORTED_LANGUAGES };
+  return {
+    t,
+    language,
+    currentLangDef,
+    supportedLanguages: SUPPORTED_LANGUAGES,
+    formatDate: (date: Date | string, options?: Intl.DateTimeFormatOptions) =>
+      formatLocalizedDate(date, language, options),
+    formatMonth: (date: Date | string) =>
+      formatLocalizedMonth(date, language),
+  };
 }

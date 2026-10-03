@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSettingStore } from '../../stores/useSettingStore';
+import { useI18n } from '../../utils/i18n';
 import { SidebarItem } from './SidebarItem';
 import { SidebarTooltip } from './SidebarTooltip';
 
@@ -33,6 +34,7 @@ interface SidebarProps {
 }
 
 interface NavItem {
+  key: string;
   name: string;
   path: string;
   icon: React.ElementType;
@@ -43,6 +45,7 @@ interface NavItem {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   const { household } = useAuthStore();
   const { sidebarCollapsed, toggleSidebar } = useSettingStore();
+  const { t } = useI18n();
   const location = useLocation();
 
   const [hoveredItem, setHoveredItem] = useState<{
@@ -51,30 +54,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
     top: number;
   } | null>(null);
 
-  // Grouped Navigation Items (Using only existing routes)
+  // Grouped Navigation Items (Using localized strings)
   const coreItems: NavItem[] = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard, accent: 'blue' },
-    { name: 'Expenses', path: '/expenses', icon: CreditCard, accent: 'emerald' },
-    { name: 'Income', path: '/income', icon: Wallet, accent: 'emerald' },
-    { name: 'Bills', path: '/bills', icon: FileText, accent: 'amber' },
-    { name: 'Groceries', path: '/groceries', icon: ShoppingBag, accent: 'emerald' },
-    { name: 'Tasks', path: '/tasks', icon: CheckSquare, accent: 'purple' },
+    { key: 'nav.dashboard', name: t('nav.dashboard', 'Dashboard'), path: '/', icon: LayoutDashboard, accent: 'blue' },
+    { key: 'nav.expenses', name: t('nav.expenses', 'Expenses'), path: '/expenses', icon: CreditCard, accent: 'emerald' },
+    { key: 'nav.income', name: t('nav.income', 'Income'), path: '/income', icon: Wallet, accent: 'emerald' },
+    { key: 'nav.bills', name: t('nav.bills', 'Bills'), path: '/bills', icon: FileText, accent: 'amber' },
+    { key: 'nav.inventory', name: t('nav.inventory', 'Groceries'), path: '/groceries', icon: ShoppingBag, accent: 'emerald' },
+    { key: 'nav.tasks', name: t('nav.tasks', 'Tasks'), path: '/tasks', icon: CheckSquare, accent: 'purple' },
   ];
 
   const householdItems: NavItem[] = [
-    { name: 'Family Workspace', path: '/family', icon: Users, accent: 'cyan' },
-    { name: 'User Manual', path: '/manual', icon: BookOpen, accent: 'amber' },
-    { name: 'Medicines', path: '/medicines', icon: Pill, accent: 'purple' },
-    { name: 'Appliances', path: '/appliances', icon: Tv, accent: 'cyan' },
-    { name: 'Sustainability', path: '/sustainability', icon: Leaf, accent: 'emerald', badge: 'ECO' },
+    { key: 'nav.family', name: t('nav.family', 'Family Workspace'), path: '/family', icon: Users, accent: 'cyan' },
+    { key: 'nav.manual', name: t('nav.manual', 'User Manual'), path: '/manual', icon: BookOpen, accent: 'amber' },
+    { key: 'nav.medicines', name: t('nav.medicines', 'Medicines'), path: '/medicines', icon: Pill, accent: 'purple' },
+    { key: 'nav.appliances', name: t('nav.appliances', 'Appliances'), path: '/appliances', icon: Tv, accent: 'cyan' },
+    { key: 'nav.sustainability', name: t('nav.sustainability', 'Sustainability'), path: '/sustainability', icon: Leaf, accent: 'emerald', badge: 'ECO' },
   ];
 
   const insightItems: NavItem[] = [
-    { name: 'Analytics', path: '/analytics', icon: BarChart3, accent: 'blue' },
-    { name: 'Vision OCR', path: '/pantry-vision', icon: Camera, accent: 'purple', badge: 'AI' },
-    { name: 'Reports', path: '/reports', icon: FileSpreadsheet, accent: 'neutral' },
-    { name: 'Settings', path: '/settings', icon: SettingsIcon, accent: 'neutral' },
-    { name: 'Profile', path: '/profile', icon: User, accent: 'blue' },
+    { key: 'nav.analytics', name: t('nav.analytics', 'Analytics'), path: '/analytics', icon: BarChart3, accent: 'blue' },
+    { key: 'nav.pantryVision', name: t('nav.pantryVision', 'Vision OCR'), path: '/pantry-vision', icon: Camera, accent: 'purple', badge: 'AI' },
+    { key: 'nav.reports', name: t('nav.reports', 'Reports'), path: '/reports', icon: FileSpreadsheet, accent: 'neutral' },
+    { key: 'nav.settings', name: t('nav.settings', 'Settings'), path: '/settings', icon: SettingsIcon, accent: 'neutral' },
+    { key: 'nav.profile', name: t('nav.profile', 'Profile'), path: '/profile', icon: User, accent: 'blue' },
   ];
 
   const handleHover = (e: React.MouseEvent<HTMLElement>, item: NavItem) => {
@@ -147,14 +150,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
 
         {/* Scrollable Navigation Groups */}
         <nav
-          className="flex-1 overflow-y-auto no-scrollbar py-2 space-y-3"
+          className="flex-1 overflow-y-auto no-scrollbar py-1 space-y-2"
           aria-label="Navigation Sections"
         >
           {/* Section 1: CORE */}
           <div className="space-y-0.5">
             {!isCollapsed && (
-              <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block pb-1">
-                Core
+              <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block pb-0.5">
+                {t('nav.core', 'Core')}
               </span>
             )}
             {coreItems.map((item) => (
@@ -178,10 +181,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
           </div>
 
           {/* Section 2: HOUSEHOLD */}
-          <div className="space-y-0.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="space-y-0.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
             {!isCollapsed && (
-              <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block pb-1">
-                Household
+              <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block pb-0.5">
+                {t('nav.householdGroup', 'Household')}
               </span>
             )}
             {householdItems.map((item) => (
@@ -205,10 +208,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
           </div>
 
           {/* Section 3: INSIGHTS & UTILITIES */}
-          <div className="space-y-0.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="space-y-0.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
             {!isCollapsed && (
-              <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block pb-1">
-                Insights
+              <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block pb-0.5">
+                {t('nav.insightsGroup', 'Insights')}
               </span>
             )}
             {insightItems.map((item) => (
