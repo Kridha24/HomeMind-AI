@@ -4,6 +4,9 @@ import { toast } from '../utils/toast';
 import { HouseholdMember } from '../../../types';
 import { ROLE_CONFIGS, getRoleConfig } from '../utils/householdFormatters';
 
+import { useAuthStore } from '../../../stores/useAuthStore';
+import { canPromoteCoOwner } from '../../../utils/permissions';
+
 interface ChangeRoleModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -19,6 +22,7 @@ export const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
   onConfirm,
   isLoading = false,
 }) => {
+  const { user } = useAuthStore();
   const [selectedRole, setSelectedRole] = useState<string>('MEMBER');
 
   React.useEffect(() => {
@@ -29,8 +33,12 @@ export const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
 
   if (!isOpen || !member) return null;
 
-  // Available selectable roles (Owners must be transferred via ownership transfer)
-  const selectableRoles = ['ADMIN', 'MEMBER', 'GUEST'];
+  // Available selectable roles: Only OWNER can promote or demote CO-OWNER
+  const isOwner = canPromoteCoOwner(user?.role);
+  const selectableRoles = isOwner
+    ? ['CO-OWNER', 'ADMIN', 'MEMBER', 'GUEST']
+    : ['ADMIN', 'MEMBER', 'GUEST'];
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

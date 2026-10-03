@@ -119,31 +119,53 @@ export function useHousehold() {
     const handleMemberUpdate = () => {
       queryClient.invalidateQueries({ queryKey: ['householdMembers', householdId] });
       queryClient.invalidateQueries({ queryKey: ['householdActivity', householdId] });
-      queryClient.invalidateQueries({ queryKey: ['dashboardSummary', householdId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+    };
+
+    const handleRoleUpdated = (payload?: any) => {
+      const targetUserId = payload?.member?.id || payload?.memberId;
+      if (targetUserId && targetUserId === userId) {
+        const newRole = payload?.newRole || payload?.member?.role;
+        if (newRole) {
+          updateUser({ role: newRole as any });
+        }
+        // Invalidate and remove sensitive financial caches immediately on role change/downgrade
+        queryClient.removeQueries({ queryKey: ['dashboardSummary'] });
+        queryClient.removeQueries({ queryKey: ['dashboardIncomes'] });
+        queryClient.removeQueries({ queryKey: ['householdAnalytics'] });
+        queryClient.removeQueries({ queryKey: ['expenses'] });
+        queryClient.removeQueries({ queryKey: ['incomes'] });
+        queryClient.removeQueries({ queryKey: ['family'] });
+        queryClient.removeQueries({ queryKey: ['memberOverview'] });
+      }
+      invalidateAll();
     };
 
     const handleHouseholdUpdate = () => {
       queryClient.invalidateQueries({ queryKey: ['householdMembers', householdId] });
       queryClient.invalidateQueries({ queryKey: ['availableHouseholds', userId] });
-      queryClient.invalidateQueries({ queryKey: ['dashboardSummary', householdId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
     };
 
     socket.on('member_updated', handleMemberUpdate);
+    socket.on('role_updated', handleRoleUpdated);
     socket.on('household_updated', handleHouseholdUpdate);
 
     return () => {
       socket.off('member_updated', handleMemberUpdate);
+      socket.off('role_updated', handleRoleUpdated);
       socket.off('household_updated', handleHouseholdUpdate);
     };
-  }, [householdId, userId, queryClient]);
+  }, [householdId, userId, queryClient, updateUser]);
 
   // Invalidate all household scoped caches
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ['householdMembers', householdId] });
     queryClient.invalidateQueries({ queryKey: ['householdActivity', householdId] });
     queryClient.invalidateQueries({ queryKey: ['availableHouseholds', userId] });
-    queryClient.invalidateQueries({ queryKey: ['dashboardSummary', householdId] });
+    queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
     queryClient.invalidateQueries({ queryKey: ['dashboard', householdId] });
+    queryClient.invalidateQueries({ queryKey: ['memberOverview'] });
   };
 
   // 6. Mutations
@@ -165,7 +187,15 @@ export function useHousehold() {
       const res = await apiClient.put(`/family/members/${memberId}/role`, { role: newRole });
       return res.data?.user;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      if (variables.memberId === userId) {
+        updateUser({ role: variables.newRole as any });
+        queryClient.removeQueries({ queryKey: ['dashboardSummary'] });
+        queryClient.removeQueries({ queryKey: ['dashboardIncomes'] });
+        queryClient.removeQueries({ queryKey: ['householdAnalytics'] });
+        queryClient.removeQueries({ queryKey: ['expenses'] });
+        queryClient.removeQueries({ queryKey: ['incomes'] });
+      }
       invalidateAll();
     },
   });

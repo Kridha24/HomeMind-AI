@@ -4,7 +4,7 @@ export interface User {
   phoneNumber?: string;
   name: string;
   age?: number;
-  role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST';
+  role: 'OWNER' | 'CO-OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST';
   householdId?: string;
   avatar?: string;
   avatarUrl?: string;

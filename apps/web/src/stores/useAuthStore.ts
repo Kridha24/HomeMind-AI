@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { User, Household } from '../types';
+import { queryClient } from '../queryClient';
 
 interface AuthState {
   user: User | null;
@@ -47,6 +48,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     localStorage.removeItem('household');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    try {
+      queryClient.clear();
+    } catch {}
     set({ user: null, household: null, accessToken: null, isAuthenticated: false });
   },
 }));
