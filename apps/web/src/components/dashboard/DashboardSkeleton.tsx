@@ -1,6 +1,10 @@
 import React from 'react';
 
-export const DashboardSkeleton: React.FC = () => {
+interface DashboardSkeletonProps {
+  showFinancials?: boolean;
+}
+
+export const DashboardSkeleton: React.FC<DashboardSkeletonProps> = ({ showFinancials = false }) => {
   return (
     <div
       className="space-y-4 sm:space-y-6 md:space-y-8 animate-pulse pb-12"
@@ -31,24 +35,26 @@ export const DashboardSkeleton: React.FC = () => {
         ))}
       </div>
 
-      {/* 5 Financial Cards skeleton */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div
-            key={i}
-            className={`rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-3 ${
-              i === 5 ? 'col-span-2 sm:col-span-1' : ''
-            }`}
-          >
-            <div className="flex justify-between items-center">
-              <div className="h-3 w-16 bg-slate-200/80 dark:bg-slate-800 rounded-md" />
-              <div className="h-7 w-7 bg-slate-100 dark:bg-slate-850 rounded-xl" />
+      {/* 5 Financial Cards skeleton — ONLY for authorized Owner/Co-Owner (Part 46) */}
+      {showFinancials && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={i}
+              className={`rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-3 ${
+                i === 5 ? 'col-span-2 sm:col-span-1' : ''
+              }`}
+            >
+              <div className="flex justify-between items-center">
+                <div className="h-3 w-16 bg-slate-200/80 dark:bg-slate-800 rounded-md" />
+                <div className="h-7 w-7 bg-slate-100 dark:bg-slate-850 rounded-xl" />
+              </div>
+              <div className="h-7 w-28 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 h-3 w-24 bg-slate-100 dark:bg-slate-850 rounded" />
             </div>
-            <div className="h-7 w-28 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 h-3 w-24 bg-slate-100 dark:bg-slate-850 rounded" />
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Today at a glance skeleton */}
       <div className="h-28 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4" />

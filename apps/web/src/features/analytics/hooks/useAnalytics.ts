@@ -7,9 +7,10 @@ interface UseAnalyticsOptions {
   period: AnalyticsPeriod;
   startDate?: string;
   endDate?: string;
+  enabled?: boolean;
 }
 
-export function useAnalytics({ period, startDate, endDate }: UseAnalyticsOptions) {
+export function useAnalytics({ period, startDate, endDate, enabled = true }: UseAnalyticsOptions) {
   const { household } = useAuthStore();
   const householdId = household?.id;
 
@@ -25,7 +26,7 @@ export function useAnalytics({ period, startDate, endDate }: UseAnalyticsOptions
       });
       return res.data;
     },
-    enabled: !!householdId,
+    enabled: !!householdId && enabled,
     staleTime: 30 * 1000,
     retry: 2,
   });

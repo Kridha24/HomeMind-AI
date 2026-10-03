@@ -14,8 +14,13 @@ import { AnalyticsInsight } from './components/AnalyticsInsight';
 import { AnalyticsSkeleton } from './components/AnalyticsSkeleton';
 import { AnalyticsErrorState } from './components/AnalyticsErrorState';
 import { AnalyticsEmptyState } from './components/AnalyticsEmptyState';
+import { useAuthStore } from '../../stores/useAuthStore';
+import { canViewHouseholdAnalytics } from '../../utils/permissions';
+import { ShieldAlert } from 'lucide-react';
 
 export const AnalyticsWorkspace: React.FC = () => {
+  const { user } = useAuthStore();
+  const isAuthorized = canViewHouseholdAnalytics(user?.role);
   const [period, setPeriod] = useState<AnalyticsPeriod>('month');
   const [customDates, setCustomDates] = useState<{
     startDate?: string;
@@ -26,7 +31,9 @@ export const AnalyticsWorkspace: React.FC = () => {
     period,
     startDate: customDates.startDate,
     endDate: customDates.endDate,
+    enabled: isAuthorized,
   });
+
 
   const handlePeriodChange = (newPeriod: AnalyticsPeriod) => {
     setPeriod(newPeriod);
@@ -35,6 +42,22 @@ export const AnalyticsWorkspace: React.FC = () => {
   const handleDateChange = (start?: string, end?: string) => {
     setCustomDates({ startDate: start, endDate: end });
   };
+
+  if (!isAuthorized) {
+    return (
+      <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
+        <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 space-y-2">
+          <div className="flex items-center gap-2 font-bold text-sm">
+            <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            <span>Household Analytics Restricted</span>
+          </div>
+          <p className="text-xs leading-relaxed">
+            Household financial trends, expense category breakdowns, and income metrics are restricted to household Owners and Co-Owners.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <AnalyticsSkeleton />;

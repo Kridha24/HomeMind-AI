@@ -7,6 +7,7 @@ import {
   Landmark,
 } from 'lucide-react';
 import { FinancialSummaryCard } from './FinancialSummaryCard';
+import { useI18n } from '../../utils/i18n';
 
 interface FinancialSummaryGridProps {
   monthlyIncome: number;
@@ -27,67 +28,69 @@ export const FinancialSummaryGrid: React.FC<FinancialSummaryGridProps> = ({
   format,
   dateRangeStr,
 }) => {
+  const { t } = useI18n();
+
   return (
     <section aria-label="Financial Snapshot">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
         {/* 1. Monthly Income */}
         <FinancialSummaryCard
-          title="Income"
+          title={t('dash.income', 'Income')}
           period={dateRangeStr}
           value={monthlyIncome}
           formattedValue={`+${format(monthlyIncome)}`}
           icon={Wallet}
-          contextLine="Earned this month"
+          contextLine={t('dash.monthlyIncome', 'Earned this month')}
           accent="emerald"
           delay={0}
         />
 
         {/* 2. Monthly Expenses */}
         <FinancialSummaryCard
-          title="Spent"
+          title={t('dash.spent', 'Spent')}
           period={dateRangeStr}
           value={monthlyExpenses}
           formattedValue={`-${format(monthlyExpenses)}`}
           icon={CreditCard}
-          contextLine="This month's total"
+          contextLine={t('dash.monthlyExpenses', "This month's total")}
           accent="rose"
-          delay={40}
+          delay={30}
         />
 
         {/* 3. All-Time Spend */}
         <FinancialSummaryCard
-          title="All-Time Spend"
+          title={t('dash.allTimeSpend', 'All-Time Spend')}
           period="Cumulative"
           value={overallExpenses}
           formattedValue={`-${format(overallExpenses)}`}
           icon={BadgeDollarSign}
-          contextLine="All expenses logged"
+          contextLine="All logged expenses"
           accent="rose"
-          delay={80}
+          delay={60}
         />
 
         {/* 4. Saved This Month */}
         <FinancialSummaryCard
-          title="Saved"
+          title={t('dash.saved', 'Saved')}
           period="Net Month"
           value={monthlySavings}
           formattedValue={monthlySavings >= 0 ? `+${format(monthlySavings)}` : format(monthlySavings)}
           icon={PiggyBank}
-          contextLine={monthlySavings >= 0 ? 'Remaining surplus' : 'Current month deficit'}
+          contextLine={monthlySavings >= 0 ? 'Monthly surplus' : 'Monthly deficit'}
           accent={monthlySavings >= 0 ? 'teal' : 'rose'}
-          delay={120}
+          delay={90}
         />
 
         {/* 5. Total Balance */}
         <FinancialSummaryCard
-          title="Total Balance"
-          period="Household Reserves"
+          title={t('dash.totalBalance', 'Total Balance')}
+          period="Household Net"
           value={overallSavings}
           formattedValue={overallSavings >= 0 ? `+${format(overallSavings)}` : format(overallSavings)}
           icon={Landmark}
-          contextLine="Net household assets"
+          contextLine="Cumulative net balance"
           accent={overallSavings >= 0 ? 'violet' : 'rose'}
-          delay={160}
+          delay={120}
           isFullWidthOnMobile
         />
       </div>

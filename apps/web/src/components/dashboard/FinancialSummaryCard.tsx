@@ -63,7 +63,7 @@ export const FinancialSummaryCard: React.FC<FinancialSummaryCardProps> = ({
         ease: 'easeOut',
       }}
       whileHover={shouldReduceMotion ? undefined : { y: -3 }}
-      className={`group rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${styles.borderHover} p-3.5 sm:p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-2 sm:space-y-3 ${
+      className={`group rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${styles.borderHover} p-3 sm:p-3.5 min-h-[118px] sm:h-[132px] shadow-2xs hover:shadow-sm transition-all duration-200 flex flex-col justify-between ${
         isFullWidthOnMobile ? 'col-span-2 sm:col-span-1' : ''
       }`}
     >

@@ -3,12 +3,17 @@ import { FileSpreadsheet, Download, FileText, Sparkles, CheckCircle2, RefreshCw,
 import apiClient from '../services/apiClient';
 import { EmptyState } from '../components/common/EmptyState';
 import { useSettingStore } from '../stores/useSettingStore';
+import { useAuthStore } from '../stores/useAuthStore';
+import { canViewHouseholdFinancials } from '../utils/permissions';
 
 export const Reports: React.FC = () => {
+  const { user } = useAuthStore();
+  const isOwnerOrCoOwner = canViewHouseholdFinancials(user?.role);
   const [reports, setReports] = useState<any[]>([]);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState('');
   const { currencySymbol } = useSettingStore();
+
 
   const handleGeneratePDF = async () => {
     setDownloading(true);
@@ -54,6 +59,31 @@ export const Reports: React.FC = () => {
       setDownloading(false);
     }
   };
+
+  if (!isOwnerOrCoOwner) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-200">
+        <div className="glass-panel p-6 border-primary/80 shadow-sm space-y-1">
+          <h1 className="text-2xl font-extrabold text-primary flex items-center gap-2">
+            <FileSpreadsheet className="w-6 h-6 text-emerald-500" /> Monthly PDF Reports
+          </h1>
+          <p className="text-xs text-secondary">
+            Household financial statements and monthly export summaries.
+          </p>
+        </div>
+
+        <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 space-y-2">
+          <div className="flex items-center gap-2 font-bold text-sm">
+            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            <span>Access Restricted</span>
+          </div>
+          <p className="text-xs leading-relaxed">
+            Financial statements and monthly reports contain sensitive household financial totals. In accordance with HomeMind.AI privacy policies, only household Owners and Co-Owners have permission to generate or export reports.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
