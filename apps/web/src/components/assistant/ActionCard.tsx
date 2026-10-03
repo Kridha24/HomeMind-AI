@@ -44,7 +44,7 @@ export const ActionCard: React.FC<ActionCardProps> = ({ card, onSelectOption }) 
               <span>✓ Expense Added</span>
             </div>
             {card.formattedAmount && (
-              <span className="font-mono font-black text-white text-sm">
+              <span className="font-mono font-black text-slate-900 dark:text-white text-sm">
                 {card.formattedAmount}
               </span>
             )}
@@ -73,7 +73,7 @@ export const ActionCard: React.FC<ActionCardProps> = ({ card, onSelectOption }) 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-cyan-400 font-bold">
               <Wallet className="w-4 h-4 text-cyan-400" />
-              <span>✓ Income Recorded</span>
+              <span>✓ Income Added</span>
             </div>
             {card.formattedAmount && (
               <span className="font-mono font-black text-cyan-300 text-sm">
@@ -91,7 +91,7 @@ export const ActionCard: React.FC<ActionCardProps> = ({ card, onSelectOption }) 
                 onClick={() => navigate(card.linkUrl!)}
                 className="text-[11px] font-bold text-cyan-300 hover:text-cyan-200 flex items-center gap-1 hover:underline"
               >
-                <span>{card.linkText || 'View Finance'}</span>
+                <span>{card.linkText || 'View Income'}</span>
                 <ArrowUpRight className="w-3 h-3" />
               </button>
             </div>
@@ -145,11 +145,11 @@ export const ActionCard: React.FC<ActionCardProps> = ({ card, onSelectOption }) 
               <span className="text-[11px] font-mono text-muted">{card.date}</span>
             )}
           </div>
-          <div className="text-white font-medium text-xs">
+          <div className="text-slate-900 dark:text-white font-medium text-xs">
             {card.title}
           </div>
           {card.subtitle && (
-            <div className="text-[11px] text-blue-300">
+            <div className="text-[11px] text-blue-600 dark:text-blue-300">
               {card.subtitle}
             </div>
           )}
@@ -212,7 +212,7 @@ export const ActionCard: React.FC<ActionCardProps> = ({ card, onSelectOption }) 
             <HelpCircle className="w-4 h-4 text-purple-400" />
             <span>Clarification Needed</span>
           </div>
-          <p className="text-white text-xs leading-relaxed">
+          <p className="text-slate-900 dark:text-white text-xs leading-relaxed font-medium">
             {card.title}
           </p>
           {card.options && card.options.length > 0 && (
@@ -221,7 +221,7 @@ export const ActionCard: React.FC<ActionCardProps> = ({ card, onSelectOption }) 
                 <button
                   key={idx}
                   onClick={() => onSelectOption && onSelectOption(opt.actionPayload || opt.label)}
-                  className="px-3 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 text-purple-200 font-bold text-[11px] transition-all active:scale-95 shadow-sm"
+                  className="px-3 py-1.5 rounded-xl bg-purple-100 dark:bg-purple-600/30 hover:bg-purple-200 dark:hover:bg-purple-600/50 border border-purple-300 dark:border-purple-500/40 text-purple-800 dark:text-purple-200 font-bold text-[11px] transition-all active:scale-95 shadow-sm"
                 >
                   {opt.label}
                 </button>

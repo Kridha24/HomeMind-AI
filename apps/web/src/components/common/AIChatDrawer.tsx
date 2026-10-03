@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, X, Send, Bot, User, RefreshCw, Trash2, ArrowRight } from 'lucide-react';
+import { Sparkles, X, Send, Bot, User, RefreshCw, Trash2, ArrowRight, ShieldAlert } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../services/apiClient';
+import { ActionCard, ActionCardData } from '../assistant/ActionCard';
 
 interface AIChatDrawerProps {
   isOpen: boolean;
@@ -11,14 +13,28 @@ interface ChatMessage {
   id: string;
   sender: 'user' | 'bot';
   text: string;
+  cards?: ActionCardData[];
+  toolCalls?: Array<{ tool: string; success: boolean; message: string }>;
+  pendingConfirmation?: {
+    tool: string;
+    args: any;
+    prompt: string;
+    confirmationId?: string;
+  };
+  clarificationRequired?: {
+    question: string;
+    options: Array<{ label: string; actionPayload: string }>;
+  };
   suggestions?: string[];
   timestamp: string;
 }
 
 export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) => {
+  const queryClient = useQueryClient();
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [threadId, setThreadId] = useState<string | undefined>(undefined);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll on new messages
@@ -43,23 +59,91 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
     if (!queryText) setInput('');
     setLoading(true);
 
+    const idempotencyKey = `copilot-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
     try {
-      const res = await apiClient.post('/ai/chat', { query: text.trim() });
+      const res = await apiClient.post('/copilot/action', {
+        message: text.trim(),
+        threadId,
+        idempotencyKey,
+      });
+
+      if (res.data.threadId) {
+        setThreadId(res.data.threadId);
+      }
+
+      // Live React Query cache invalidation across affected domains
+      if (res.data.invalidatedDomains && Array.isArray(res.data.invalidatedDomains)) {
+        for (const domain of res.data.invalidatedDomains) {
+          queryClient.invalidateQueries({ queryKey: [domain] });
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardIncomes'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardGroceries'] });
+
       const botMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         sender: 'bot',
-        text: res.data.answer || 'I could not process your query at this moment.',
+        text: res.data.answer || 'I evaluated your request against your live household database.',
+        cards: res.data.cards || [],
+        toolCalls: res.data.actionsExecuted || [],
+        pendingConfirmation: res.data.pendingConfirmation,
+        clarificationRequired: res.data.clarificationRequired,
         suggestions: res.data.suggestions || [],
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, botMsg]);
-    } catch (err) {
+    } catch (err: any) {
+      console.error('[AIChatDrawer] Error:', err);
       setMessages((prev) => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
           sender: 'bot',
-          text: 'HomeMind.AI is temporarily unable to retrieve your data. Please check your connection and try again.',
+          text: err.response?.data?.error || 'AI Copilot is temporarily unavailable. Please check your connection and try again.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmAction = async (tool: string, args: any, confirmationId?: string) => {
+    setLoading(true);
+    try {
+      const res = await apiClient.post('/copilot/confirm', { tool, args, confirmationId });
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['income'] });
+      queryClient.invalidateQueries({ queryKey: ['finance'] });
+      queryClient.invalidateQueries({ queryKey: ['bills'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['groceries'] });
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardIncomes'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardGroceries'] });
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          sender: 'bot',
+          text: res.data.message || 'Action executed successfully.',
+          toolCalls: [{ tool, success: res.data.success, message: res.data.message }],
+          cards: res.data.card ? [res.data.card] : [],
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+    } catch (e: any) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          sender: 'bot',
+          text: e.response?.data?.error || 'Could not complete the confirmed action.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -70,6 +154,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
 
   const handleClear = () => {
     setMessages([]);
+    setThreadId(undefined);
   };
 
   const formatMarkdown = (content: string) => {
@@ -77,7 +162,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
     return lines.map((line, idx) => {
       if (line.startsWith('### ')) {
         return (
-          <h4 key={idx} className="text-xs font-extrabold text-white mt-1.5 mb-0.5">
+          <h4 key={idx} className="text-xs font-extrabold text-primary mt-1.5 mb-0.5">
             {line.replace('### ', '')}
           </h4>
         );
@@ -105,20 +190,21 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
     const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i} className="font-bold text-white">{part.slice(2, -2)}</strong>;
+        return <strong key={i} className="font-bold text-primary">{part.slice(2, -2)}</strong>;
       }
       if (part.startsWith('*') && part.endsWith('*')) {
-        return <em key={i} className="italic text-blue-300">{part.slice(1, -1)}</em>;
+        return <em key={i} className="italic text-blue-600 dark:text-blue-300">{part.slice(1, -1)}</em>;
       }
       return part;
     });
   };
 
   const quickStarters = [
-    'Mera total monthly expense kitna hai?',
-    'Mera room rent & mess bill kitna baki hai?',
-    'Pantry mein konse grocery items kam hain?',
-    'Pending household tasks kya hain?',
+    '4000 income me add kar do, bhaiya se liya tha',
+    '450 mess me kharch hua',
+    'kal cylinder lene ka task bana do',
+    'milk aur bread grocery me add kar do',
+    'is month kitna kharcha hua?',
   ];
 
   return (
@@ -133,10 +219,10 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-sm text-white">HomeMind.AI Chatbot</h3>
+                <h3 className="font-bold text-sm text-primary">HomeMind.AI Copilot</h3>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               </div>
-              <span className="text-[10px] text-muted">Live Household Database Assistant</span>
+              <span className="text-[10px] text-muted">Action-Aware Autonomous Assistant</span>
             </div>
           </div>
 
@@ -144,7 +230,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
             {messages.length > 0 && (
               <button
                 onClick={handleClear}
-                className="p-1.5 rounded-lg text-muted hover:text-rose-400 hover:bg-secondary transition-colors"
+                className="p-1.5 rounded-lg text-muted hover:text-rose-500 hover:bg-secondary transition-colors"
                 title="Clear Chat"
               >
                 <Trash2 className="w-4 h-4" />
@@ -152,7 +238,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
             )}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-muted hover:text-white hover:bg-secondary transition-colors"
+              className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-secondary transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -165,18 +251,18 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
           {messages.length === 0 && (
             <div className="space-y-4 py-4 animate-in fade-in duration-150">
               <div className="p-4 rounded-2xl bg-panel/70 border border-primary text-center space-y-2">
-                <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto text-blue-400">
+                <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto text-blue-500">
                   <Bot className="w-5 h-5" />
                 </div>
-                <h4 className="font-bold text-xs text-white">Namaste! Main aapka HomeMind.AI assistant hoon.</h4>
+                <h4 className="font-bold text-xs text-primary">Namaste! Main aapka HomeMind.AI Action Copilot hoon.</h4>
                 <p className="text-[11px] text-muted leading-relaxed">
-                  Aapke household expenses, bills, tasks, aur pantry ka live data dekh kar main turant answer kar sakta hoon.
+                  Aap natural language mein bol kar directly income, expense, task, bills ya groceries add ya manage kar sakte hain.
                 </p>
               </div>
 
               <div className="space-y-1.5">
                 <span className="text-[10px] font-bold text-muted uppercase tracking-wider block px-1">
-                  Suggested Queries
+                  Try Action Commands
                 </span>
                 <div className="space-y-1.5">
                   {quickStarters.map((q, idx) => (
@@ -184,7 +270,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
                       key={idx}
                       onClick={() => handleSend(q)}
                       disabled={loading}
-                      className="w-full p-2.5 rounded-xl bg-panel/60 hover:bg-secondary border border-primary text-left text-xs font-medium text-secondary hover:text-white transition-all flex items-center justify-between group disabled:opacity-50"
+                      className="w-full p-2.5 rounded-xl bg-panel hover:bg-secondary border border-primary text-left text-xs font-medium text-secondary hover:text-primary transition-all flex items-center justify-between group disabled:opacity-50"
                     >
                       <span className="truncate">{q}</span>
                       <ArrowRight className="w-3.5 h-3.5 text-muted group-hover:text-blue-400 transition-colors shrink-0 ml-2" />
@@ -207,7 +293,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
                 </div>
               )}
 
-              <div className="max-w-[85%] space-y-1.5">
+              <div className="max-w-[88%] space-y-2">
                 <div
                   className={`p-3 rounded-2xl text-xs leading-relaxed ${
                     m.sender === 'user'
@@ -221,6 +307,66 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
                   </span>
                 </div>
 
+                {/* Action Cards (Income, Expense, Task, Grocery, Bill) */}
+                {m.cards && m.cards.length > 0 && (
+                  <div className="space-y-2">
+                    {m.cards.map((card, cIdx) => (
+                      <ActionCard
+                        key={cIdx}
+                        card={card}
+                        onSelectOption={(payload) => handleSend(payload)}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Clarification Required Pill Options */}
+                {m.clarificationRequired && (
+                  <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/50 text-xs space-y-2 mt-2">
+                    <p className="text-primary text-xs font-semibold">
+                      {m.clarificationRequired.question}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {m.clarificationRequired.options.map((opt, oIdx) => (
+                        <button
+                          key={oIdx}
+                          onClick={() => handleSend(opt.actionPayload || opt.label)}
+                          className="px-3 py-1.5 rounded-xl bg-indigo-100 dark:bg-indigo-600/30 hover:bg-indigo-200 dark:hover:bg-indigo-600/50 border border-indigo-300 dark:border-indigo-500/40 text-indigo-800 dark:text-indigo-200 font-bold text-[11px] transition-all active:scale-95 shadow-sm"
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* High-Risk Pending Confirmation Banner */}
+                {m.pendingConfirmation && (
+                  <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 text-xs space-y-2.5 mt-2">
+                    <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-bold">
+                      <ShieldAlert className="w-4 h-4 text-rose-500" />
+                      <span>Confirmation Required</span>
+                    </div>
+                    <p className="text-primary text-xs leading-relaxed font-medium">
+                      {m.pendingConfirmation.prompt}
+                    </p>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        onClick={() =>
+                          handleConfirmAction(
+                            m.pendingConfirmation!.tool,
+                            m.pendingConfirmation!.args,
+                            m.pendingConfirmation!.confirmationId
+                          )
+                        }
+                        className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] transition-all shadow-sm active:scale-95"
+                      >
+                        Confirm Action
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Follow up suggestions */}
                 {m.sender === 'bot' && m.suggestions && m.suggestions.length > 0 && (
                   <div className="flex flex-wrap gap-1 pt-1">
@@ -228,7 +374,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
                       <button
                         key={sIdx}
                         onClick={() => handleSend(sug)}
-                        className="text-[10px] bg-panel/80 hover:bg-blue-600/15 border border-primary hover:border-blue-500/30 text-blue-300 px-2 py-1 rounded-lg text-left transition-all"
+                        className="text-[10px] bg-panel hover:bg-blue-600/10 border border-primary hover:border-blue-500/40 text-blue-600 dark:text-blue-300 px-2 py-1 rounded-lg text-left transition-all"
                       >
                         {sug}
                       </button>
@@ -246,9 +392,9 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
           ))}
 
           {loading && (
-            <div className="flex items-center gap-2 text-xs text-blue-400 font-medium py-1.5 px-3 rounded-xl bg-blue-500/10 border border-blue-500/20 max-w-max animate-pulse">
+            <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 font-medium py-1.5 px-3 rounded-xl bg-blue-500/10 border border-blue-500/20 max-w-max animate-pulse">
               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              <span>Fetching live household data...</span>
+              <span>Executing action across household database...</span>
             </div>
           )}
 
@@ -261,21 +407,21 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
             e.preventDefault();
             handleSend();
           }}
-          className="p-3 border-t border-primary bg-panel/60"
+          className="p-3 border-t border-primary bg-panel/90 backdrop-blur"
         >
-          <div className="flex items-center gap-2 bg-panel border border-primary focus-within:border-blue-500/50 rounded-xl p-1.5 transition-colors">
+          <div className="flex items-center gap-2 bg-surface-input border border-input focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 rounded-xl p-1.5 transition-all shadow-inner">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}
-              placeholder="Ask anything about expenses, bills, tasks..."
-              className="flex-1 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none px-2 py-1"
+              placeholder="e.g. 4000 income me add kar do, bhaiya se liya tha"
+              className="flex-1 bg-transparent text-xs text-primary placeholder:text-muted focus:outline-none px-2 py-1 font-medium"
             />
             <button
               type="submit"
               disabled={!input.trim() || loading}
-              className="bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white p-1.5 rounded-lg transition-all shadow"
+              className="bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white p-1.5 rounded-lg transition-all shadow shrink-0"
             >
               <Send className="w-3.5 h-3.5" />
             </button>
@@ -285,3 +431,5 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
     </div>
   );
 };
+
+export default AIChatDrawer;
