@@ -39,8 +39,14 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
     try {
       googleUser = await verifyGoogleIdToken(rawToken);
     } catch (err: any) {
-      console.warn('[Google Auth] Token verification failed:', err.message);
-      return res.status(401).json({ error: 'Invalid Google session. Please sign in with your Google account again.' });
+      const code = err.code || 'GOOGLE_TOKEN_INVALID';
+      const statusCode = err.statusCode || 401;
+      console.warn(`[AUTH:GOOGLE] ${code}:`, err.message);
+      return res.status(statusCode).json({
+        error: 'Invalid Google session. Please sign in with your Google account again.',
+        code,
+        details: config.nodeEnv === 'development' ? err.message : undefined,
+      });
     }
 
     let user = await prisma.user.findFirst({
@@ -98,6 +104,7 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
         include: { household: true }
       });
     } else {
+      console.log('[AUTH:GOOGLE] existing user resolved: YES');
       household = user.household;
       user = await prisma.user.update({
         where: { id: user.id },
@@ -141,6 +148,8 @@ export const googleLogin = async (req: AuthenticatedRequest, res: Response) => {
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       }
     });
+
+    console.log('[AUTH] session created: PASS');
 
     res.json({
       isNewRegistration,

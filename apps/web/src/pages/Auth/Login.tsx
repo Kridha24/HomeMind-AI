@@ -55,45 +55,66 @@ export const Login: React.FC = () => {
   // Show "session expired" banner if redirected here from genuine refresh failure
   const sessionExpired = !dismissSessionExpired && searchParams.get('sessionExpired') === 'true';
 
-  const initTokenClient = () => {
-    if (!window.google?.accounts?.oauth2 || !GOOGLE_CLIENT_ID) return null;
-    try {
-      tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: 'openid email profile',
-        ux_mode: 'popup',
-        callback: async (tokenResponse: any) => {
-          if (tokenResponse?.error) {
-            if (tokenResponse.error === 'popup_closed_by_user' || tokenResponse.error === 'access_denied') {
+  const initGoogleClients = () => {
+    if (!GOOGLE_CLIENT_ID) return;
+
+    // 1. Primary: Google Identity Services (GIS) OIDC ID Token Client
+    if (window.google?.accounts?.id) {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: async (response: any) => {
+            if (response?.credential) {
+              await submitGoogleToken(response.credential);
+            }
+          },
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          context: 'signin',
+        });
+      } catch (err) {
+        console.warn('[Google GIS] ID client init error:', err);
+      }
+    }
+
+    // 2. Fallback: OAuth2 Token Client Popup
+    if (window.google?.accounts?.oauth2) {
+      try {
+        tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'openid email profile',
+          ux_mode: 'popup',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse?.error) {
+              if (tokenResponse.error === 'popup_closed_by_user' || tokenResponse.error === 'access_denied') {
+                setLoadingGoogle(false);
+                setLoadingState('idle');
+                return;
+              }
+              setError('Google sign-in was cancelled or failed. Please try again.');
               setLoadingGoogle(false);
               setLoadingState('idle');
               return;
             }
-            setError('Google sign-in was cancelled or failed. Please try again.');
+            const accessToken = tokenResponse?.access_token;
+            if (!accessToken) {
+              setError('Google did not return an account token. Please try again.');
+              setLoadingGoogle(false);
+              setLoadingState('idle');
+              return;
+            }
+            await submitGoogleToken(accessToken);
+          },
+          error_callback: (err: any) => {
+            console.error('[Google GIS Error Callback]', err);
             setLoadingGoogle(false);
             setLoadingState('idle');
-            return;
-          }
-          const accessToken = tokenResponse?.access_token;
-          if (!accessToken) {
-            setError('Google did not return an account token. Please try again.');
-            setLoadingGoogle(false);
-            setLoadingState('idle');
-            return;
-          }
-          await submitGoogleToken(accessToken);
-        },
-        error_callback: (err: any) => {
-          console.error('[Google GIS Error Callback]', err);
-          setLoadingGoogle(false);
-          setLoadingState('idle');
-          setError(err?.message || 'Google account picker could not be opened. Check popup blocker or authorized origins.');
-        },
-      });
-      return tokenClientRef.current;
-    } catch (e) {
-      console.warn('[Google] OAuth client init failed:', e);
-      return null;
+            setError(err?.message || 'Google account picker could not be opened. Check popup blocker or authorized origins.');
+          },
+        });
+      } catch (e) {
+        console.warn('[Google] OAuth client init failed:', e);
+      }
     }
   };
 
@@ -102,8 +123,8 @@ export const Login: React.FC = () => {
     if (Capacitor.isNativePlatform()) return;
     if (!GOOGLE_CLIENT_ID) return;
 
-    if (window.google?.accounts?.oauth2) {
-      initTokenClient();
+    if (window.google?.accounts?.id || window.google?.accounts?.oauth2) {
+      initGoogleClients();
       return;
     }
 
@@ -114,14 +135,14 @@ export const Login: React.FC = () => {
       script.async = true;
       script.defer = true;
       script.onload = () => {
-        initTokenClient();
+        initGoogleClients();
       };
       document.head.appendChild(script);
     } else {
       // Script already in DOM, poll briefly for window.google
       const interval = setInterval(() => {
-        if (window.google?.accounts?.oauth2) {
-          initTokenClient();
+        if (window.google?.accounts?.id || window.google?.accounts?.oauth2) {
+          initGoogleClients();
           clearInterval(interval);
         }
       }, 100);
@@ -144,12 +165,23 @@ export const Login: React.FC = () => {
         setLoadingState('idle');
       }, 300);
     } catch (err: any) {
+      const code = err.response?.data?.code;
       const msg = err.response?.data?.error;
-      setError(
-        msg === 'Invalid Google session. Please sign in with your Google account again.'
-          ? 'Google could not verify this account. Try again or use phone/email login.'
-          : msg || 'Google sign-in failed. Check your connection and try again.'
-      );
+      console.warn(`[AUTH:GOOGLE] Sign-in failed with code ${code}:`, err.response?.data?.details || msg);
+
+      if (code === 'GOOGLE_AUDIENCE_MISMATCH') {
+        setError('Google sign-in configuration error: OAuth Client ID mismatch between client and server.');
+      } else if (code === 'GOOGLE_ACCOUNT_UNVERIFIED') {
+        setError('Your Google account does not have a verified email address. Please verify your email with Google.');
+      } else if (code === 'AUTH_SERVER_UNAVAILABLE') {
+        setError('Google authentication service is temporarily unavailable. Check your connection and try again.');
+      } else {
+        setError(
+          msg === 'Invalid Google session. Please sign in with your Google account again.'
+            ? 'Google could not verify this account. Try again or use phone/email login.'
+            : msg || 'Google sign-in failed. Check your connection and try again.'
+        );
+      }
       setLoadingState('idle');
     } finally {
       setLoadingGoogle(false);
@@ -224,22 +256,49 @@ export const Login: React.FC = () => {
     }
 
     // Web flow using Google Identity Services (GIS)
-    let client = tokenClientRef.current;
-    if (!client) {
-      client = initTokenClient();
+    if (!tokenClientRef.current) {
+      initGoogleClients();
     }
-    if (!client) {
-      setError('Google is still loading. Wait a second and try again.');
-      return;
-    }
+
     setLoadingGoogle(true);
     setLoadingState('connecting');
-    try {
-      client.requestAccessToken({ prompt: 'select_account' });
-    } catch {
-      setLoadingGoogle(false);
-      setLoadingState('idle');
-      setError('Could not open Google account picker. Allow popups for this site and try again.');
+
+    // 1. Try Google Identity Services ID Token Prompt
+    let promptTriggered = false;
+    if (window.google?.accounts?.id) {
+      try {
+        window.google.accounts.id.prompt((notification: any) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            console.log('[Google GIS] One Tap not displayed, opening popup account picker');
+            if (tokenClientRef.current) {
+              tokenClientRef.current.requestAccessToken({ prompt: 'select_account' });
+            } else {
+              setLoadingGoogle(false);
+              setLoadingState('idle');
+            }
+          }
+        });
+        promptTriggered = true;
+      } catch (err) {
+        console.warn('[Google GIS] Prompt exception, trying popup:', err);
+      }
+    }
+
+    // 2. If ID prompt not available or fails, use OAuth2 popup
+    if (!promptTriggered) {
+      if (tokenClientRef.current) {
+        try {
+          tokenClientRef.current.requestAccessToken({ prompt: 'select_account' });
+        } catch {
+          setLoadingGoogle(false);
+          setLoadingState('idle');
+          setError('Could not open Google account picker. Allow popups for this site and try again.');
+        }
+      } else {
+        setLoadingGoogle(false);
+        setLoadingState('idle');
+        setError('Google sign-in is still initializing. Please wait a moment and try again.');
+      }
     }
   };
 

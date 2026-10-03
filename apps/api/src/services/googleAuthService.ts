@@ -1,11 +1,17 @@
+import { OAuth2Client } from 'google-auth-library';
+import { config } from '../config';
+
 /**
  * Google OAuth Authentication Service
  *
- * Verifies Google tokens cryptographically via Google's official endpoints:
- * 1. Google OAuth2 UserInfo API (https://www.googleapis.com/oauth2/v3/userinfo)
- * 2. Google TokenInfo API (https://oauth2.googleapis.com/tokeninfo)
+ * Cryptographically verifies Google OIDC ID tokens using official Google certificates
+ * via google-auth-library, checking:
+ * 1. Cryptographic signature against Google's public keys
+ * 2. Issuer (accounts.google.com or https://accounts.google.com)
+ * 3. Audience (matches config.googleClientId)
+ * 4. Expiration time (exp claim)
  *
- * Supports both standard OIDC ID Tokens (JWT) and OAuth2 Access Tokens.
+ * Also supports OAuth2 access_token fallback with tokeninfo validation.
  */
 
 export interface VerifiedGoogleUser {
@@ -16,85 +22,141 @@ export interface VerifiedGoogleUser {
   emailVerified: boolean;
 }
 
-function toUser(payload: {
-  sub?: string;
-  user_id?: string;
-  email?: string;
-  name?: string;
-  given_name?: string;
-  picture?: string;
-  email_verified?: boolean | string;
-  verified_email?: boolean | string;
-}): VerifiedGoogleUser {
-  const id = payload.sub || payload.user_id;
-  if (!id || !payload.email) {
-    throw new Error('Google token payload missing essential user claims (sub/user_id, email)');
+export type GoogleAuthErrorCode =
+  | 'GOOGLE_CREDENTIAL_MISSING'
+  | 'GOOGLE_TOKEN_INVALID'
+  | 'GOOGLE_AUDIENCE_MISMATCH'
+  | 'GOOGLE_TOKEN_EXPIRED'
+  | 'GOOGLE_ACCOUNT_UNVERIFIED'
+  | 'AUTH_SERVER_UNAVAILABLE';
+
+export class GoogleAuthError extends Error {
+  code: GoogleAuthErrorCode;
+  statusCode: number;
+
+  constructor(code: GoogleAuthErrorCode, message: string, statusCode = 401) {
+    super(message);
+    this.name = 'GoogleAuthError';
+    this.code = code;
+    this.statusCode = statusCode;
   }
-  return {
-    googleId: id,
-    email: payload.email,
-    name: payload.name || payload.given_name || payload.email.split('@')[0],
-    avatar:
-      payload.picture ||
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(payload.name || payload.email.split('@')[0])}&background=3b82f6&color=fff`,
-    emailVerified:
-      payload.email_verified === 'true' ||
-      payload.email_verified === true ||
-      payload.verified_email === 'true' ||
-      payload.verified_email === true,
-  };
 }
 
+// Global OAuth2 Client configured with the backend's Google Client ID
+const oauth2Client = new OAuth2Client(config.googleClientId);
+
 export async function verifyGoogleIdToken(rawToken: string): Promise<VerifiedGoogleUser> {
-  if (!rawToken || typeof rawToken !== 'string') {
-    throw new Error('Google authentication token is required');
+  if (!rawToken || typeof rawToken !== 'string' || !rawToken.trim()) {
+    throw new GoogleAuthError('GOOGLE_CREDENTIAL_MISSING', 'Google authentication token is required');
   }
 
   const token = rawToken.trim();
+  console.log('[AUTH:GOOGLE] credential received: YES');
 
-  // 1. If it's a 3-part JWT, try the OIDC id_token endpoint first
   const isJwt = token.split('.').length === 3;
+
+  // 1. Primary Flow: OIDC ID Token Verification via google-auth-library
   if (isJwt) {
     try {
-      const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(token)}`);
-      if (res.ok) {
-        const payload = await res.json();
-        return toUser(payload);
+      const ticket = await oauth2Client.verifyIdToken({
+        idToken: token,
+        audience: config.googleClientId ? [config.googleClientId] : undefined,
+      });
+
+      console.log('[AUTH:GOOGLE] token verification: PASS');
+      console.log('[AUTH:GOOGLE] audience match: PASS');
+
+      const payload = ticket.getPayload();
+      if (!payload || !payload.sub || !payload.email) {
+        throw new GoogleAuthError('GOOGLE_TOKEN_INVALID', 'Google token payload is missing essential claims');
       }
+
+      if (payload.email_verified === false) {
+        throw new GoogleAuthError('GOOGLE_ACCOUNT_UNVERIFIED', 'Google account email is not verified');
+      }
+
+      return {
+        googleId: payload.sub,
+        email: payload.email,
+        name: payload.name || payload.given_name || payload.email.split('@')[0],
+        avatar:
+          payload.picture ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(payload.name || payload.email.split('@')[0])}&background=3b82f6&color=fff`,
+        emailVerified: payload.email_verified === true,
+      };
     } catch (err: any) {
-      console.warn('[Google Auth] JWT tokeninfo check error, falling back to userinfo:', err.message);
+      if (err instanceof GoogleAuthError) throw err;
+      const errMsg = err?.message || '';
+      console.warn('[AUTH:GOOGLE] ID token verification failure:', errMsg);
+
+      if (errMsg.includes('Wrong recipient') || errMsg.includes('audience')) {
+        throw new GoogleAuthError('GOOGLE_AUDIENCE_MISMATCH', 'Google token audience mismatch');
+      }
+      if (errMsg.includes('expired') || errMsg.includes('Token used too late')) {
+        throw new GoogleAuthError('GOOGLE_TOKEN_EXPIRED', 'Google token has expired');
+      }
+      if (errMsg.includes('ENOTFOUND') || errMsg.includes('ETIMEDOUT') || errMsg.includes('ECONNREFUSED')) {
+        throw new GoogleAuthError('AUTH_SERVER_UNAVAILABLE', 'Google authentication service unreachable', 503);
+      }
+      // If verification failed because of token format, fallback to access token check below
     }
   }
 
-  // 2. Direct validation against Google OAuth2 UserInfo endpoint with Bearer token
+  // 2. Fallback Flow: OAuth2 Access Token Verification via TokenInfo
   try {
+    const tokenInfo = await oauth2Client.getTokenInfo(token);
+    const aud = tokenInfo.aud || (tokenInfo as any).azp;
+
+    if (config.googleClientId && aud && aud !== config.googleClientId) {
+      console.warn('[AUTH:GOOGLE] Token audience mismatch detected');
+      throw new GoogleAuthError('GOOGLE_AUDIENCE_MISMATCH', 'Google token audience mismatch');
+    }
+
+    if (tokenInfo.expiry_date && tokenInfo.expiry_date < Date.now()) {
+      throw new GoogleAuthError('GOOGLE_TOKEN_EXPIRED', 'Google access token has expired');
+    }
+
+    if (!tokenInfo.email) {
+      throw new GoogleAuthError('GOOGLE_TOKEN_INVALID', 'Google access token missing email claim');
+    }
+
+    if (tokenInfo.email_verified === false) {
+      throw new GoogleAuthError('GOOGLE_ACCOUNT_UNVERIFIED', 'Google account email is not verified');
+    }
+
+    console.log('[AUTH:GOOGLE] token verification: PASS');
+    console.log('[AUTH:GOOGLE] audience match: PASS');
+
+    // Fetch user profile from Google UserInfo endpoint
     const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
       headers: { Authorization: `Bearer ${token}` },
     });
+
+    let profile: any = {};
     if (userRes.ok) {
-      const profile = await userRes.json();
-      return toUser(profile);
+      profile = await userRes.json();
     }
-  } catch (err: any) {
-    console.warn('[Google Auth] Userinfo verification error:', err.message);
-  }
 
-  // 3. Fallback: query access_token tokeninfo
-  try {
-    const infoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(token)}`);
-    if (infoRes.ok) {
-      const info = await infoRes.json();
-      return toUser({
-        sub: info.sub || info.user_id,
-        email: info.email,
-        name: info.name,
-        picture: info.picture,
-        email_verified: info.email_verified ?? info.verified_email,
-      });
+    const sub = tokenInfo.sub || tokenInfo.user_id || profile.sub;
+    if (!sub) {
+      throw new GoogleAuthError('GOOGLE_TOKEN_INVALID', 'Unable to resolve Google user ID');
     }
-  } catch (err: any) {
-    console.warn('[Google Auth] Tokeninfo access_token check error:', err.message);
-  }
 
-  throw new Error('Invalid or expired Google session. Please sign in with your Google account again.');
+    return {
+      googleId: sub,
+      email: tokenInfo.email,
+      name: profile.name || profile.given_name || tokenInfo.email.split('@')[0],
+      avatar:
+        profile.picture ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || tokenInfo.email.split('@')[0])}&background=3b82f6&color=fff`,
+      emailVerified: tokenInfo.email_verified === true || profile.email_verified === true,
+    };
+  } catch (err: any) {
+    if (err instanceof GoogleAuthError) throw err;
+    console.warn('[AUTH:GOOGLE] Access token verification error:', err?.message);
+    if (err?.message?.includes('ENOTFOUND') || err?.message?.includes('ETIMEDOUT') || err?.message?.includes('ECONNREFUSED')) {
+      throw new GoogleAuthError('AUTH_SERVER_UNAVAILABLE', 'Google authentication service unreachable', 503);
+    }
+    throw new GoogleAuthError('GOOGLE_TOKEN_INVALID', 'Invalid Google session. Please sign in with your Google account again.');
+  }
 }
