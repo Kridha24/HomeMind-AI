@@ -6,6 +6,7 @@ import { verifyAccessToken } from './utils/jwt';
 import { webrtcSignaling } from './services/webrtcSignalingService';
 import { SecureMessagingService } from './modules/communication/secureMessagingService';
 import { DeviceTokenService } from './modules/communication/deviceTokenService';
+import { prisma } from './repositories/db';
 
 const server = http.createServer(app);
 
@@ -92,6 +93,31 @@ io.on('connection', (socket) => {
     socket.join(`user_${userId}`);
   });
 
+  // Conversation Room Handlers (for targeted conversation-level delivery)
+  socket.on('join_conversation', async (data: { conversationId: string }) => {
+    if (!householdId || !userId || !data?.conversationId) return;
+    try {
+      const isMember = await SecureMessagingService.isMemberOfConversation(
+        data.conversationId,
+        userId,
+        householdId
+      );
+      if (isMember) {
+        socket.join(`conversation_${data.conversationId}`);
+        console.log(`[Socket.IO] User ${userId} joined conversation_${data.conversationId}`);
+      }
+    } catch (err) {
+      console.warn(`[Socket.IO] Error joining conversation_${data.conversationId}:`, err);
+    }
+  });
+
+  socket.on('leave_conversation', (data: { conversationId: string }) => {
+    if (data?.conversationId) {
+      socket.leave(`conversation_${data.conversationId}`);
+      console.log(`[Socket.IO] User ${userId} left conversation_${data.conversationId}`);
+    }
+  });
+
   // 2. Real-time Family Text Chat (Legacy compatibility)
   socket.on('family_send_message', (payload: {
     text: string;
@@ -164,11 +190,42 @@ io.on('connection', (socket) => {
         createdAt: result.message.createdAt,
       });
 
-      // 2. Broadcast encrypted envelope to household room
-      io.to(`household_${householdId}`).emit('message:new', persisted);
+      // 2. Fetch conversation metadata to distinguish DIRECT vs HOUSEHOLD
+      const conv = await prisma.conversation.findUnique({
+        where: { id: payload.conversationId },
+        select: {
+          id: true,
+          type: true,
+          members: {
+            where: { leftAt: null },
+            select: { userId: true },
+          },
+        },
+      });
+
+      const isDirect = conv?.type === 'DIRECT';
+      const convMembers = conv?.members || [];
+
+      // a) Broadcast to the dedicated conversation room (for users currently active in this conversation)
+      io.to(`conversation_${payload.conversationId}`).emit('message:new', persisted);
+
+      // b) For DIRECT conversations: strictly emit ONLY to authorized participants' personal user rooms.
+      // NEVER broadcast direct-chat messages to the general household room!
+      if (isDirect) {
+        for (const m of convMembers) {
+          io.to(`user_${m.userId}`).emit('message:new', persisted);
+        }
+        console.log(`[E2EE Socket] DIRECT message emitted strictly to authorized participants (conv=${payload.conversationId}, participants=${convMembers.length})`);
+      } else {
+        // c) For HOUSEHOLD group conversations: broadcast to household room and individual members
+        io.to(`household_${householdId}`).emit('message:new', persisted);
+        for (const m of convMembers) {
+          io.to(`user_${m.userId}`).emit('message:new', persisted);
+        }
+        console.log(`[E2EE Socket] HOUSEHOLD group message emitted (household=${householdId}, conv=${payload.conversationId})`);
+      }
 
       // 3. Privacy-Safe Push Notification (NO PLAINTEXT, NO SECRETS!)
-      // Broadcast to household recipient device tokens
       DeviceTokenService.getUserTokens(userId).catch(() => {});
     } catch (err: any) {
       console.error('[E2EE Socket] Error processing message:send:', err);
@@ -180,53 +237,117 @@ io.on('connection', (socket) => {
   });
 
   // Delivery receipt acknowledgement
-  socket.on('message:delivered', async (data: { messageId: string; deviceId: string }) => {
+  socket.on('message:delivered', async (data: { messageId: string; deviceId: string; conversationId?: string }) => {
     if (!userId || !householdId || !data.messageId) return;
     try {
       await SecureMessagingService.recordDeliveryReceipt(data.messageId, userId, data.deviceId);
-      io.to(`household_${householdId}`).emit('message:delivered_receipt', {
+      const receiptPayload = {
         messageId: data.messageId,
         userId,
         deviceId: data.deviceId,
         deliveredAt: new Date().toISOString(),
+      };
+
+      const msg = await prisma.message.findUnique({
+        where: { id: data.messageId },
+        select: {
+          senderId: true,
+          conversationId: true,
+          conversation: { select: { type: true } },
+        },
       });
+
+      if (msg) {
+        io.to(`conversation_${msg.conversationId}`).emit('message:delivered_receipt', receiptPayload);
+        io.to(`user_${msg.senderId}`).emit('message:delivered_receipt', receiptPayload);
+        // Only broadcast to household if it is a group/household conversation
+        if (msg.conversation?.type !== 'DIRECT') {
+          io.to(`household_${householdId}`).emit('message:delivered_receipt', receiptPayload);
+        }
+      } else if (data.conversationId) {
+        io.to(`conversation_${data.conversationId}`).emit('message:delivered_receipt', receiptPayload);
+      }
     } catch (err) {
       console.warn('[E2EE Socket] Error recording delivery receipt:', err);
     }
   });
 
   // Read receipt acknowledgement
-  socket.on('message:read', async (data: { messageId: string; deviceId: string }) => {
+  socket.on('message:read', async (data: { messageId: string; deviceId: string; conversationId?: string }) => {
     if (!userId || !householdId || !data.messageId) return;
     try {
       await SecureMessagingService.recordReadReceipt(data.messageId, userId, data.deviceId);
-      io.to(`household_${householdId}`).emit('message:read_receipt', {
+      const receiptPayload = {
         messageId: data.messageId,
         userId,
         deviceId: data.deviceId,
         readAt: new Date().toISOString(),
+      };
+
+      const msg = await prisma.message.findUnique({
+        where: { id: data.messageId },
+        select: {
+          senderId: true,
+          conversationId: true,
+          conversation: { select: { type: true } },
+        },
       });
+
+      if (msg) {
+        io.to(`conversation_${msg.conversationId}`).emit('message:read_receipt', receiptPayload);
+        io.to(`user_${msg.senderId}`).emit('message:read_receipt', receiptPayload);
+        // Only broadcast to household if it is a group/household conversation
+        if (msg.conversation?.type !== 'DIRECT') {
+          io.to(`household_${householdId}`).emit('message:read_receipt', receiptPayload);
+        }
+      } else if (data.conversationId) {
+        io.to(`conversation_${data.conversationId}`).emit('message:read_receipt', receiptPayload);
+      }
     } catch (err) {
       console.warn('[E2EE Socket] Error recording read receipt:', err);
     }
   });
 
   // Transient Typing Indicators
-  socket.on('typing:start', (data: { conversationId: string }) => {
-    if (!householdId || !userId) return;
-    socket.to(`household_${householdId}`).emit('typing:started', {
+  socket.on('typing:start', async (data: { conversationId: string }) => {
+    if (!householdId || !userId || !data?.conversationId) return;
+    const payload = {
       conversationId: data.conversationId,
       userId,
       userName: user?.name || 'Family Member',
-    });
+    };
+
+    socket.to(`conversation_${data.conversationId}`).emit('typing:started', payload);
+
+    try {
+      const conv = await prisma.conversation.findUnique({
+        where: { id: data.conversationId },
+        select: { type: true },
+      });
+      if (conv?.type !== 'DIRECT') {
+        socket.to(`household_${householdId}`).emit('typing:started', payload);
+      }
+    } catch {}
   });
 
-  socket.on('typing:stop', (data: { conversationId: string }) => {
-    if (!householdId || !userId) return;
-    socket.to(`household_${householdId}`).emit('typing:stopped', {
+  socket.on('typing:stop', async (data: { conversationId: string }) => {
+    if (!householdId || !userId || !data?.conversationId) return;
+    const payload = {
       conversationId: data.conversationId,
       userId,
-    });
+    };
+
+    socket.to(`conversation_${data.conversationId}`).emit('typing:stopped', payload);
+
+    try {
+      const conv = await prisma.conversation.findUnique({
+        where: { id: data.conversationId },
+        select: { type: true },
+      });
+      if (conv?.type !== 'DIRECT') {
+        socket.to(`household_${householdId}`).emit('typing:stopped', payload);
+      }
+    } catch {}
   });
 
   // 3. WebRTC End-to-End P2P Signaling (Encrypted Audio/Video Calls)

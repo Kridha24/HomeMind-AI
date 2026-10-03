@@ -322,10 +322,11 @@ export class IntentExtractor {
           .replace(/income\s*(me\s*add\s*(kar\s*do|karo))?/gi, '')
           .replace(/(?:₹|rs\.?|inr)?\s*[\d,]+(?:\.\d+)?\s*(?:k|rupees|rs)?/gi, '')
           .replace(/\b(add kar do|add karo|daal do|dal do|me add|received from)\b/gi, '')
+          .replace(/^[\s,.-]+|[\s,.-]+$/g, '')
           .trim();
 
         if (!title || title.length < 2) {
-          title = `Income from ${source}`;
+          title = source === 'Family' && lower.includes('bhaiya') ? 'Received from bhaiya' : `Income from ${source}`;
         }
 
         return {
@@ -555,7 +556,17 @@ export class IntentExtractor {
     // =========================================================================
     // 9. QUERIES & ANALYTICS: "Is month kitna kharcha hua?" / "Sabse bada expense kya hai?"
     // =========================================================================
-    if (lower.includes('kitna kharcha') || lower.includes('spending summary') || lower.includes('how much spent') || lower.includes('expenses this month') || lower.includes('total spend')) {
+    if (
+      lower.includes('kitna kharcha') ||
+      lower.includes('kitna expense') ||
+      lower.includes('kitna kharch') ||
+      lower.includes('spending summary') ||
+      lower.includes('how much spent') ||
+      lower.includes('expenses this month') ||
+      lower.includes('total spend') ||
+      lower.includes('kharcha kitna') ||
+      lower.includes('expense kitna')
+    ) {
       return {
         tool: 'getFinanceSummary',
         args: { period: 'month' },

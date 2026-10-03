@@ -7,13 +7,17 @@ export function roundMoney(amount: number): number {
   return Math.round((amount + Number.EPSILON) * 100) / 100;
 }
 
-export function formatCurrency(amount: number, currency: string = 'INR'): string {
-  const rounded = roundMoney(amount);
+export function formatCurrency(
+  amount: number,
+  currency: string = 'INR',
+  options: { minimumFractionDigits?: number; maximumFractionDigits?: number } = {}
+): string {
+  const rounded = roundMoney(Number.isFinite(amount) ? amount : 0);
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: options.minimumFractionDigits ?? 2,
+    maximumFractionDigits: options.maximumFractionDigits ?? 2,
   }).format(rounded);
 }
 

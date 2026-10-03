@@ -46,8 +46,14 @@ export const Login: React.FC = () => {
   const { setAuth } = useAuthStore();
   const { fetchSettings } = useSettingStore();
 
-  // Show "session expired" toast if redirected here from silent refresh failure
-  const sessionExpired = searchParams.get('sessionExpired') === 'true';
+  const redirectParam = searchParams.get('redirect');
+  const safeRedirect = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//') && !redirectParam.includes(':') && redirectParam !== '/login'
+    ? redirectParam
+    : '/';
+
+  const [dismissSessionExpired, setDismissSessionExpired] = useState(false);
+  // Show "session expired" banner if redirected here from genuine refresh failure
+  const sessionExpired = !dismissSessionExpired && searchParams.get('sessionExpired') === 'true';
 
   const initTokenClient = () => {
     if (!window.google?.accounts?.oauth2 || !GOOGLE_CLIENT_ID) return null;
@@ -239,7 +245,7 @@ export const Login: React.FC = () => {
 
   const handleOverlayFinish = () => {
     setShowSuccessOverlay(false);
-    navigate('/');
+    navigate(safeRedirect, { replace: true });
   };
 
   return (
@@ -250,13 +256,20 @@ export const Login: React.FC = () => {
       <AnimatePresence>
         {sessionExpired && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg"
+            initial={{ opacity: 0, y: -20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.96 }}
+            className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-amber-500/15 dark:bg-amber-950/80 backdrop-blur-xl border border-amber-500/40 text-amber-950 dark:text-amber-200 text-xs sm:text-sm font-semibold px-4 sm:px-5 py-3 rounded-2xl shadow-xl shadow-amber-500/10 max-w-md w-[92%]"
           >
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            Your session expired. Please sign in again.
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 flex-shrink-0" />
+            <span className="flex-1">Your session expired. Sign in again to continue.</span>
+            <button
+              onClick={() => setDismissSessionExpired(true)}
+              className="text-amber-700 dark:text-amber-400 hover:text-amber-950 dark:hover:text-amber-100 p-1 -mr-1 rounded-lg text-base leading-none transition-colors"
+              aria-label="Dismiss banner"
+            >
+              &times;
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

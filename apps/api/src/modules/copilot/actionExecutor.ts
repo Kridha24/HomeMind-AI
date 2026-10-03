@@ -3,6 +3,7 @@ import { ExpenseService } from '../finance/expenses/expense.service';
 import { IncomeService } from '../finance/income/income.service';
 import { BillService } from '../bills/bill.service';
 import { AnalyticsService } from '../analytics/analytics.service';
+import { formatCurrency } from '@homemind/shared';
 import {
   CopilotToolName,
   CopilotExecutionContext,
@@ -106,7 +107,11 @@ export class ActionExecutor {
     args: Record<string, any>,
     ctx: CopilotExecutionContext
   ): Promise<CopilotToolResult> {
-    const { householdId, userId, currencySymbol } = ctx;
+    const { householdId, userId } = ctx;
+    // Single source of truth: shared formatter, household currency (defaults to INR).
+    const currencyCode = ctx.currencyCode || 'INR';
+    const fmt = (value: number) =>
+      formatCurrency(Number(value) || 0, currencyCode, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
     try {
       switch (toolName) {
@@ -146,7 +151,7 @@ export class ActionExecutor {
             type: 'expense',
             title,
             amount,
-            formattedAmount: `${currencySymbol}${amount.toLocaleString()}`,
+            formattedAmount: `${fmt(amount)}`,
             category,
             date: date.toISOString().split('T')[0],
             status: 'Recorded',
@@ -157,7 +162,7 @@ export class ActionExecutor {
           return {
             tool: toolName,
             success: true,
-            message: `Recorded expense of ${currencySymbol}${amount.toLocaleString()} for "${title}" in ${category}.`,
+            message: `Recorded expense of ${fmt(amount)} for "${title}" in ${category}.`,
             data: expense,
             card,
             invalidatedKeys: ['expenses', 'finance', 'analytics', 'dashboard'],
@@ -204,7 +209,7 @@ export class ActionExecutor {
             type: 'expense',
             title: updated.title,
             amount: updated.amount,
-            formattedAmount: `${currencySymbol}${updated.amount.toLocaleString()}`,
+            formattedAmount: `${fmt(updated.amount)}`,
             category: updated.category,
             status: 'Updated',
             linkUrl: '/expenses',
@@ -214,7 +219,7 @@ export class ActionExecutor {
           return {
             tool: toolName,
             success: true,
-            message: `Updated expense "${updated.title}" amount to ${currencySymbol}${updated.amount.toLocaleString()}.`,
+            message: `Updated expense "${updated.title}" amount to ${fmt(updated.amount)}.`,
             data: updated,
             card,
             invalidatedKeys: ['expenses', 'finance', 'analytics', 'dashboard'],
@@ -249,7 +254,7 @@ export class ActionExecutor {
           return {
             tool: toolName,
             success: true,
-            message: `Deleted expense "${deleted.title}" (${currencySymbol}${deleted.amount}).`,
+            message: `Deleted expense "${deleted.title}" (${fmt(deleted.amount)}).`,
             data: deleted,
             invalidatedKeys: ['expenses', 'finance', 'analytics', 'dashboard'],
           };
@@ -290,18 +295,18 @@ export class ActionExecutor {
             type: 'income',
             title,
             amount,
-            formattedAmount: `+${currencySymbol}${amount.toLocaleString()}`,
+            formattedAmount: `+${fmt(amount)}`,
             category: source,
             date: date.toISOString().split('T')[0],
             status: 'Credited',
-            linkUrl: '/finance',
+            linkUrl: '/income',
             linkText: 'View Income',
           };
 
           return {
             tool: toolName,
             success: true,
-            message: `Recorded income of ${currencySymbol}${amount.toLocaleString()} from ${source}.`,
+            message: `Recorded income of ${fmt(amount)} from ${source}.`,
             data: income,
             card,
             invalidatedKeys: ['income', 'finance', 'analytics', 'dashboard'],
@@ -334,7 +339,7 @@ export class ActionExecutor {
             type: 'bill',
             title,
             amount,
-            formattedAmount: `${currencySymbol}${amount.toLocaleString()}`,
+            formattedAmount: `${fmt(amount)}`,
             category,
             date: dueDate.toISOString().split('T')[0],
             status: 'Scheduled',
@@ -345,7 +350,7 @@ export class ActionExecutor {
           return {
             tool: toolName,
             success: true,
-            message: `Created bill "${title}" for ${currencySymbol}${amount.toLocaleString()} due on ${dueDate.toLocaleDateString()}.`,
+            message: `Created bill "${title}" for ${fmt(amount)} due on ${dueDate.toLocaleDateString()}.`,
             data: bill,
             card,
             invalidatedKeys: ['bills', 'analytics', 'dashboard'],
@@ -405,7 +410,7 @@ export class ActionExecutor {
           // If multiple matches, do not guess!
           if (matchingBills.length > 1) {
             const options = matchingBills.map((b) => ({
-              label: `${b.title} (${currencySymbol}${b.amount}, Due: ${b.dueDate.toISOString().split('T')[0]})`,
+              label: `${b.title} (${fmt(b.amount)}, Due: ${b.dueDate.toISOString().split('T')[0]})`,
               text: `Mark "${b.title}" paid`,
               action: b.id,
             }));
@@ -438,7 +443,7 @@ export class ActionExecutor {
             type: 'bill',
             title: updated.title,
             amount: updated.amount,
-            formattedAmount: `${currencySymbol}${updated.amount.toLocaleString()}`,
+            formattedAmount: `${fmt(updated.amount)}`,
             category: updated.category,
             status: 'PAID',
             linkUrl: '/bills',
@@ -448,7 +453,7 @@ export class ActionExecutor {
           return {
             tool: toolName,
             success: true,
-            message: `Marked "${updated.title}" (${currencySymbol}${updated.amount.toLocaleString()}) as PAID.`,
+            message: `Marked "${updated.title}" (${fmt(updated.amount)}) as PAID.`,
             data: updated,
             card,
             invalidatedKeys: ['bills', 'expenses', 'finance', 'analytics', 'dashboard'],
@@ -719,7 +724,7 @@ export class ActionExecutor {
             return {
               tool: toolName,
               success: true,
-              message: `${targetUser.name}'s finances this month: Income ${currencySymbol}${memberMonthlyIncome.toLocaleString()}, Expenses ${currencySymbol}${memberMonthlyExpenses.toLocaleString()}, Net ${currencySymbol}${(memberMonthlyIncome - memberMonthlyExpenses).toLocaleString()}.`,
+              message: `${targetUser.name}'s finances this month: Income ${fmt(memberMonthlyIncome)}, Expenses ${fmt(memberMonthlyExpenses)}, Net ${fmt((memberMonthlyIncome - memberMonthlyExpenses))}.`,
               data: {
                 isTargetMember: true,
                 memberId: targetUser.id,
@@ -751,7 +756,7 @@ export class ActionExecutor {
             return {
               tool: toolName,
               success: true,
-              message: `Your personal finances this month: Income ${currencySymbol}${myMonthlyIncome.toLocaleString()}, Expenses ${currencySymbol}${myMonthlyExpenses.toLocaleString()}, Net Savings ${currencySymbol}${(myMonthlyIncome - myMonthlyExpenses).toLocaleString()}. (Household financial aggregates are private to Owner and Co-Owner).`,
+              message: `Your personal finances this month: Income ${fmt(myMonthlyIncome)}, Expenses ${fmt(myMonthlyExpenses)}, Net Savings ${fmt((myMonthlyIncome - myMonthlyExpenses))}. (Household financial aggregates are private to Owner and Co-Owner).`,
               data: {
                 isPersonal: true,
                 monthlyIncome: myMonthlyIncome,
@@ -781,7 +786,7 @@ export class ActionExecutor {
           return {
             tool: toolName,
             success: true,
-            message: `This month: Income ${currencySymbol}${monthlyIncome.toLocaleString()}, Expenses ${currencySymbol}${monthlyExpenses.toLocaleString()}, Net Savings ${currencySymbol}${(monthlyIncome - monthlyExpenses).toLocaleString()}.`,
+            message: `This month: Income ${fmt(monthlyIncome)}, Expenses ${fmt(monthlyExpenses)}, Net Savings ${fmt((monthlyIncome - monthlyExpenses))}.`,
             data: {
               monthlyIncome,
               monthlyExpenses,
@@ -810,7 +815,7 @@ export class ActionExecutor {
             data: bills.map((b) => ({
               id: b.id,
               title: b.title,
-              amount: `${currencySymbol}${b.amount.toLocaleString()}`,
+              amount: `${fmt(b.amount)}`,
               status: b.status,
               dueDate: b.dueDate.toISOString().split('T')[0],
             })),

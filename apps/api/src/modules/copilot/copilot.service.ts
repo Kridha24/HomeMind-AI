@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import { prisma } from '../../repositories/db';
 import { ContextManager } from '../../services/ai/context/contextManager';
 import { IntentExtractor } from './intentExtractor';
+import { SemanticParser } from './semanticParser';
 import { ActionExecutor } from './actionExecutor';
 import {
   CopilotProcessRequest,
@@ -35,6 +36,7 @@ export class CopilotService {
       userName: ctx.userName,
       userRole: req.userRole || 'MEMBER',
       currencySymbol: ctx.currencySymbol || '₹',
+      currencyCode: ctx.currencyCode || 'INR',
       idempotencyKey,
     };
 
@@ -91,7 +93,9 @@ export class CopilotService {
     let answer = '';
 
     for (const part of compoundParts) {
-      const intent = IntentExtractor.extract(part, members, previousAction);
+      const routed = SemanticParser.route(part, members, previousAction);
+      const intent = routed.intent;
+      console.log(`[COPILOT] parser = ${routed.source}`);
 
       if (!intent) {
         continue;
@@ -129,9 +133,14 @@ export class CopilotService {
         break;
       }
 
+      console.log(`[COPILOT] intent = ${intent.tool}`);
+      console.log(`[COPILOT] validation = pass`);
+      console.log(`[COPILOT] tool = ${intent.tool}`);
+
       // 6. Execute Action via Verified Domain Service
       const result = await ActionExecutor.executeWithIdempotency(intent.tool, intent.args, execCtx);
       actionsExecuted.push(result);
+      console.log(`[COPILOT] execution = ${result.success ? 'success' : 'failed'}`);
 
       if (result.card) {
         cards.push(result.card);
@@ -139,19 +148,20 @@ export class CopilotService {
 
       if (result.invalidatedKeys) {
         result.invalidatedKeys.forEach((k) => invalidatedDomains.add(k));
+        console.log(`[COPILOT] cache invalidation = success`);
       }
     }
 
     // 7. Compose Human Response If Not Already Set
     if (!answer) {
       if (actionsExecuted.length === 0) {
-        // Fallback friendly conversation / help
-        answer = `I understood your message, but didn't detect an authorized household command. You can say things like:\n` +
-          `• *"450 mess expense add karo"*\n` +
-          `• *"4000 income me add kar do, bhaiya se liya tha"*\n` +
-          `• *"Kal cylinder lene ka task bana do"*\n` +
-          `• *"Milk grocery list me add karo"*\n` +
-          `• *"PG rent paid mark kar do"*`;
+        // Nothing actionable could be understood — ask for the missing detail instead of a dead end.
+        answer = `I need one more detail — aap kya karna chahte hain? Thoda aur batayiye, jaise:\n` +
+          `• *"500 petrol me gaya"* (expense)\n` +
+          `• *"2000 mummy ne diye"* (income)\n` +
+          `• *"kal electricity bill bharna yaad dila"* (task)\n` +
+          `• *"milk khatam ho gaya"* (grocery)\n` +
+          `• *"is month kitna kharcha hua?"* (question)`;
       } else {
         const successCount = actionsExecuted.filter((a) => a.success).length;
         const failCount = actionsExecuted.length - successCount;
@@ -285,6 +295,7 @@ export class CopilotService {
       userName: ctx.userName,
       userRole: userRole || 'MEMBER',
       currencySymbol: ctx.currencySymbol || '₹',
+      currencyCode: ctx.currencyCode || 'INR',
     };
 
     return ActionExecutor.execute(targetTool as any, targetArgs, execCtx);

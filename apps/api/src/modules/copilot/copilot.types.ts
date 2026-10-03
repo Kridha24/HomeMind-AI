@@ -75,6 +75,7 @@ export interface CopilotExecutionContext {
   userName: string;
   userRole: string;
   currencySymbol: string;
+  currencyCode?: string;
   idempotencyKey?: string;
 }
 

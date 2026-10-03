@@ -14,6 +14,10 @@ export class CopilotController {
         return res.status(401).json({ error: 'Unauthorized: Household context missing' });
       }
 
+      console.log('[COPILOT] request received');
+      console.log(`[COPILOT] authenticated user resolved (userId: ${userId ? 'YES' : 'NO'}, role: ${userRole || 'MEMBER'})`);
+      console.log(`[COPILOT] household resolved (householdId: ${householdId ? 'YES' : 'NO'})`);
+
       const { message, threadId, idempotencyKey } = req.body;
       if (!message || typeof message !== 'string') {
         return res.status(400).json({ error: 'Valid message string is required.' });

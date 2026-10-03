@@ -14,6 +14,7 @@ import { emailService } from '../services/emailService';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { normalizePhone, phoneLookupVariants } from '../utils/phone';
 import { checkOTPSendAbuse, checkOTPVerifyLockout } from '../infrastructure/rate-limit';
+import { config } from '../config';
 
 /**
  * 1. Real Google OAuth Authentication Endpoint
@@ -920,19 +921,67 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response) =>
   }
 };
 
+// In-memory grace period cache for token rotation deduplication (RFC 6819)
+// Allows concurrent requests from the same user session within 30 seconds to receive the newly rotated tokens
+interface RotationGraceRecord {
+  userId: string;
+  accessToken: string;
+  refreshToken: string;
+  rotatedAt: number;
+}
+const recentTokenRotations = new Map<string, RotationGraceRecord>();
+
+// Clean up stale rotation entries older than 60s
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of recentTokenRotations.entries()) {
+    if (now - record.rotatedAt > 60000) {
+      recentTokenRotations.delete(key);
+    }
+  }
+}, 30000).unref();
+
 /**
- * 5. Token Rotation Endpoint
+ * 5. Token Rotation Endpoint (RFC 6819 with Grace Period)
  */
 export const refresh = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { refreshToken } = req.body;
+    const refreshToken = req.body?.refreshToken || req.cookies?.refreshToken;
     if (!refreshToken) return res.status(400).json({ error: 'Refresh token required' });
 
-    const decoded = verifyRefreshToken(refreshToken);
+    let decoded;
+    try {
+      decoded = verifyRefreshToken(refreshToken);
+    } catch (err: any) {
+      return res.status(403).json({ error: 'Expired or invalid refresh token' });
+    }
 
+    // 1. Check Grace Period Cache:
+    // If this refresh token was rotated within the last 30 seconds (due to simultaneous requests or multiple tabs),
+    // return the fresh token pair already generated rather than failing with 403 Revoked.
+    const tokenSignature = refreshToken.split('.')[2] || refreshToken;
+    const cachedRotation = recentTokenRotations.get(tokenSignature);
+    if (cachedRotation && Date.now() - cachedRotation.rotatedAt < 30000) {
+      console.log(`[AUTH] Token refresh deduplicated via grace cache for user: ${cachedRotation.userId}`);
+      return res.json({
+        accessToken: cachedRotation.accessToken,
+        refreshToken: cachedRotation.refreshToken
+      });
+    }
+
+    // 2. Validate user exists and is active
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId }
+    });
+
+    if (!user || user.softDelete || !user.isActive) {
+      return res.status(401).json({ error: 'User account not found or disabled' });
+    }
+
+    // 3. Find active refresh token in DB
     const userTokens = await prisma.refreshToken.findMany({
       where: {
-        userId: decoded.userId,
+        userId: user.id,
         expiresAt: { gt: new Date() }
       }
     });
@@ -950,37 +999,60 @@ export const refresh = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(403).json({ error: 'Invalid or revoked refresh token' });
     }
 
-    await prisma.refreshToken.delete({ where: { id: matchedTokenRecord.id } });
-
+    // 4. Generate new tokens preserving current role & household
     const payload = {
-      userId: decoded.userId,
-      email: decoded.email,
-      phoneNumber: decoded.phoneNumber,
-      role: decoded.role,
-      householdId: decoded.householdId
+      userId: user.id,
+      email: user.email || undefined,
+      phoneNumber: user.phoneNumber || undefined,
+      role: user.role,
+      householdId: user.householdId || decoded.householdId || ''
     };
 
     const newAccessToken = generateAccessToken(payload);
     const newRefreshTokenStr = generateRefreshToken(payload);
     const newHashedRefresh = await hashToken(newRefreshTokenStr);
 
-    await prisma.refreshToken.create({
-      data: {
-        tokenHash: newHashedRefresh,
-        userId: decoded.userId,
-        device: matchedTokenRecord.device,
-        ipAddress: matchedTokenRecord.ipAddress,
-        userAgent: matchedTokenRecord.userAgent,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      }
+    // 5. Store rotation in grace period cache
+    recentTokenRotations.set(tokenSignature, {
+      userId: user.id,
+      accessToken: newAccessToken,
+      refreshToken: newRefreshTokenStr,
+      rotatedAt: Date.now()
     });
 
-    res.json({
+    // 6. Atomically replace the token in DB
+    await prisma.$transaction([
+      prisma.refreshToken.delete({ where: { id: matchedTokenRecord.id } }),
+      prisma.refreshToken.create({
+        data: {
+          tokenHash: newHashedRefresh,
+          userId: user.id,
+          device: matchedTokenRecord.device,
+          ipAddress: (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || matchedTokenRecord.ipAddress,
+          userAgent: (req.headers['user-agent'] as string) || matchedTokenRecord.userAgent,
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        }
+      })
+    ]);
+
+    // Optional environment-aware cookie support
+    if (req.cookies?.refreshToken) {
+      res.cookie('refreshToken', newRefreshTokenStr, {
+        httpOnly: true,
+        secure: config.isProduction,
+        sameSite: config.isProduction ? 'none' : 'lax',
+        path: '/api/v1/auth',
+        maxAge: 30 * 24 * 60 * 60 * 1000
+      });
+    }
+
+    return res.json({
       accessToken: newAccessToken,
       refreshToken: newRefreshTokenStr
     });
   } catch (err: any) {
-    res.status(403).json({ error: 'Expired or invalid refresh token' });
+    console.error('[AUTH] Refresh endpoint exception:', err?.message || err);
+    return res.status(500).json({ error: 'Internal error processing refresh' });
   }
 };
 

@@ -81,8 +81,9 @@ export class ContextManager {
       .filter((g) => g.quantity <= (g.minThreshold || 1))
       .map((g) => ({ name: g.name, quantity: g.quantity, unit: g.unit }));
 
-    const currencyCode = settings?.currency || 'USD';
-    const currencySymbol = CURRENCY_SYMBOLS[currencyCode] || '$';
+    // Match the Prisma Setting default (INR) when a household has no Setting row yet.
+    const currencyCode = settings?.currency || 'INR';
+    const currencySymbol = CURRENCY_SYMBOLS[currencyCode] || '₹';
 
     return {
       userName: user?.name || 'Household User',
