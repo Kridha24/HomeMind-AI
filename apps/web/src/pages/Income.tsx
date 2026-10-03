@@ -4,6 +4,9 @@ import apiClient from '../services/apiClient';
 import { useSettingStore } from '../stores/useSettingStore';
 import { EmptyState } from '../components/common/EmptyState';
 import { AddIncomeModal } from '../components/common/AddIncomeModal';
+import { CompactHeader } from '../components/common/CompactHeader';
+import { Button } from '../components/common/Button';
+import { Badge } from '../components/common/Badge';
 
 interface IncomeRecord {
   id: string;
@@ -111,79 +114,77 @@ export const Income: React.FC = () => {
       });
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-4 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-primary/80 shadow-sm">
-        <div>
-          <h1 className="text-2xl font-extrabold text-primary flex items-center gap-2">
-            <Wallet className="w-6 h-6 text-emerald-500" /> Income & Earnings Ledger
-          </h1>
-          <p className="text-xs text-secondary">
-            Track and manage every household income source and monthly revenue stream in {currencySymbol}
-          </p>
-        </div>
-
-        <button
-          onClick={handleAddNew}
-          className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-md shadow-emerald-600/25 active:scale-95 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Income Record</span>
-        </button>
-      </div>
+      <CompactHeader
+        icon={Wallet}
+        title="Income & Earnings"
+        description={`Track and manage household revenue streams in ${currencySymbol}`}
+        accent="income"
+        actions={
+          <Button
+            variant="emerald"
+            size="sm"
+            icon={Plus}
+            onClick={handleAddNew}
+          >
+            Add Income
+          </Button>
+        }
+      />
 
       {/* Highlights Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Overall Lifetime Income */}
-        <div className="glass-panel p-5 border-emerald-500/30 bg-emerald-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-emerald-950/20 dark:to-slate-900 space-y-1.5 shadow-sm">
+        <div className="glass-panel p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-1 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
               Total Overall Income
             </span>
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               All-Time
             </span>
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-primary font-mono">
+          <p className="text-xl sm:text-2xl font-extrabold text-emerald-700 dark:text-emerald-400 font-mono tracking-tight">
             +{format(overallIncome)}
           </p>
-          <p className="text-[11px] text-muted">Across {incomes.length} earnings streams</p>
+          <p className="text-[11px] text-muted truncate">Across {incomes.length} earnings streams</p>
         </div>
 
         {/* Current Month's Income */}
-        <div className="glass-panel p-5 border-teal-500/30 bg-teal-50/50 dark:bg-gradient-to-tr dark:from-slate-900 dark:via-teal-950/20 dark:to-slate-900 space-y-1.5 shadow-sm">
+        <div className="glass-panel p-4 rounded-2xl border border-teal-500/30 bg-teal-500/5 space-y-1 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider">
-              Monthly Income ({currentMonthShort})
+            <span className="text-[11px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider">
+              Monthly Income
             </span>
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
-              {currentMonthName}
+              {currentMonthShort}
             </span>
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-teal-700 dark:text-primary font-mono">
+          <p className="text-xl sm:text-2xl font-extrabold text-teal-700 dark:text-teal-400 font-mono tracking-tight">
             +{format(currentMonthIncome)}
           </p>
-          <p className="text-[11px] text-muted">
-            {currentMonthRecords.length} {currentMonthRecords.length === 1 ? 'record' : 'records'} logged in {currentMonthShort}
+          <p className="text-[11px] text-muted truncate">
+            {currentMonthRecords.length} {currentMonthRecords.length === 1 ? 'record' : 'records'} in {currentMonthShort}
           </p>
         </div>
 
         {/* Primary Income Source */}
-        <div className="glass-panel p-5 border-primary/80 space-y-1.5 shadow-sm">
-          <span className="text-xs font-bold text-muted uppercase tracking-wider">Primary Income Source</span>
-          <p className="text-2xl font-extrabold text-primary truncate">
+        <div className="glass-panel p-4 rounded-2xl border border-primary/80 space-y-1 shadow-2xs">
+          <span className="text-[11px] font-bold text-muted uppercase tracking-wider">Primary Source</span>
+          <p className="text-xl sm:text-2xl font-extrabold text-primary truncate">
             {primarySource}
           </p>
-          <p className="text-[11px] text-muted">Main financial pillar</p>
+          <p className="text-[11px] text-muted truncate">Main financial pillar</p>
         </div>
 
         {/* Total Income Entries */}
-        <div className="glass-panel p-5 border-primary/80 space-y-1.5 shadow-sm">
-          <span className="text-xs font-bold text-muted uppercase tracking-wider">Total Income Entries</span>
-          <p className="text-2xl font-extrabold text-indigo-500 dark:text-indigo-400 font-mono">
-            {incomes.length} Records
+        <div className="glass-panel p-4 rounded-2xl border border-primary/80 space-y-1 shadow-2xs">
+          <span className="text-[11px] font-bold text-muted uppercase tracking-wider">Total Records</span>
+          <p className="text-xl sm:text-2xl font-extrabold text-indigo-500 dark:text-indigo-400 font-mono">
+            {incomes.length}
           </p>
-          <p className="text-[11px] text-muted">{currentMonthRecords.length} recorded this month</p>
+          <p className="text-[11px] text-muted truncate">{currentMonthRecords.length} recorded this month</p>
         </div>
       </div>
 
@@ -253,9 +254,9 @@ export const Income: React.FC = () => {
                       </div>
                     </td>
                     <td className="p-4">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 uppercase tracking-wider">
+                      <Badge variant="emerald" size="sm">
                         {inc.source}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="p-4 text-muted font-mono text-[11px]">
                       {new Date(inc.date).toLocaleDateString()}
