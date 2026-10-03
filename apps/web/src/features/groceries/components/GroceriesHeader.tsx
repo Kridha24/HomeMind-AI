@@ -38,27 +38,27 @@ export const GroceriesHeader: React.FC<GroceriesHeaderProps> = ({
   };
 
   return (
-    <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-primary/80 shadow-xs space-y-4">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="glass-panel px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl border border-primary/80 shadow-xs space-y-3">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Title and Household context */}
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/20 shadow-xs">
               <ShoppingBag className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-primary tracking-tight">
-                  Groceries
+                <h1 className="text-lg sm:text-xl font-extrabold text-primary tracking-tight">
+                  Grocery Inventory
                 </h1>
                 {household?.name && (
-                  <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                     {household.name}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-secondary mt-0.5">
-                Plan, share and complete household shopping.
+              <p className="text-xs text-secondary">
+                Plan, track, and complete household grocery shopping.
               </p>
             </div>
           </div>

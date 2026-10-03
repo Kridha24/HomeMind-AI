@@ -39,19 +39,21 @@ export const TasksHeader: React.FC<TasksHeaderProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-panel border border-primary/80 shadow-xs">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-primary flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0">
-              <CheckSquare className="w-5 h-5" />
-            </div>
-            <span>Tasks & Chores</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-secondary mt-1">
-            Organize household responsibilities and keep everyone on track.
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl bg-panel border border-primary/80 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20 shadow-xs">
+            <CheckSquare className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-lg sm:text-xl font-extrabold text-primary tracking-tight">
+              Household Tasks
+            </h1>
+            <p className="text-xs text-secondary">
+              Organize household responsibilities and keep everyone on track.
+            </p>
+          </div>
         </div>
 
         {/* Action Buttons */}
