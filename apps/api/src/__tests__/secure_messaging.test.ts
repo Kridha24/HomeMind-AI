@@ -385,6 +385,60 @@ async function runSecureMessagingTests() {
     }
     assert(serverDecrypted === false, 'Server/Attacker cannot derive plaintext without recipient private key');
 
+    // ------------------------------------------------------------------------
+    // Test 11: Direct 1-to-1 Conversations
+    // ------------------------------------------------------------------------
+    console.log('\n--- Test 11: Direct 1-to-1 Conversation Engine ---');
+
+    // 1. Prevent self direct conversation
+    let selfDisallowed = false;
+    try {
+      await SecureMessagingService.getOrCreateDirectConversation(householdA.id, userA1.id, userA1.id);
+    } catch (err: any) {
+      if (err.message.includes('Self conversation')) selfDisallowed = true;
+    }
+    assert(selfDisallowed, 'Direct conversation with oneself is forbidden');
+
+    // 2. Prevent cross-household direct conversation
+    let crossHouseholdDisallowed = false;
+    try {
+      await SecureMessagingService.getOrCreateDirectConversation(householdA.id, userA1.id, userB1.id);
+    } catch (err: any) {
+      if (err.message.includes('Both users must belong')) crossHouseholdDisallowed = true;
+    }
+    assert(crossHouseholdDisallowed, 'Direct conversation across different households is forbidden');
+
+    // 3. Create valid 1-to-1 direct conversation
+    const userA3 = await prisma.user.create({
+      data: {
+        email: `usera3_${Date.now()}@example.com`,
+        name: 'Amy Alpha',
+        householdId: householdA.id,
+        role: 'MEMBER',
+        isActive: true,
+        softDelete: false,
+      },
+    });
+
+    await DeviceKeyService.registerDeviceKey(userA3.id, {
+      deviceId: 'dev_a3_mobile',
+      publicKey: 'mock_public_key_a3',
+      deviceType: 'mobile',
+    });
+
+    const directConv1 = await SecureMessagingService.getOrCreateDirectConversation(householdA.id, userA1.id, userA3.id);
+    assert(directConv1.type === 'DIRECT', 'Direct conversation created with type DIRECT');
+    assert(directConv1.members.length === 2, 'Direct conversation has exactly 2 members');
+
+    // 4. Idempotency: calling again (with either user ordering) returns existing conversation
+    const directConv2 = await SecureMessagingService.getOrCreateDirectConversation(householdA.id, userA3.id, userA1.id);
+    assert(directConv1.id === directConv2.id, 'Idempotent: returns existing direct conversation without duplicate creation');
+
+    // 5. Conversation-scoped recipient device keys
+    const directRecipients = await DeviceKeyService.getConversationRecipientDevices(directConv1.id, householdA.id);
+    assert(directRecipients.length > 0, 'Direct recipients discovered for conversation participants');
+    assert(directRecipients.every(r => [userA1.id, userA3.id].includes(r.userId)), 'Direct recipients strictly confined to conversation members');
+
   } catch (err) {
     console.error('Test execution error:', err);
     failed++;
@@ -398,7 +452,8 @@ async function runSecureMessagingTests() {
         await prisma.conversation.deleteMany({ where: { householdId: householdA.id } });
         await prisma.deviceKey.deleteMany({ where: { userId: userA1?.id } });
         await prisma.deviceKey.deleteMany({ where: { userId: userA2?.id } });
-        await prisma.user.deleteMany({ where: { id: { in: [userA1?.id, userA2?.id].filter(Boolean) } } });
+        await prisma.deviceKey.deleteMany({ where: { user: { householdId: householdA.id } } });
+        await prisma.user.deleteMany({ where: { householdId: householdA.id } });
         await prisma.household.delete({ where: { id: householdA.id } });
       }
       if (householdB) {

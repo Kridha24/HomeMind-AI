@@ -140,4 +140,58 @@ export class DeviceKeyService {
 
     return deviceKeys;
   }
+
+  /**
+   * Get all active recipient devices for active members of a specific conversation.
+   * Ensures forward secrecy: only active members of this conversation get the wrapped CEKs.
+   */
+  public static async getConversationRecipientDevices(
+    conversationId: string,
+    householdId: string,
+    excludeDeviceId?: string
+  ): Promise<{ userId: string; deviceId: string; publicKey: string; deviceType: string }[]> {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: {
+        members: {
+          where: { leftAt: null },
+          select: { userId: true },
+        },
+      },
+    });
+
+    if (!conversation || conversation.householdId !== householdId) {
+      return [];
+    }
+
+    const memberUserIds = conversation.members.map((m) => m.userId);
+    if (memberUserIds.length === 0) return [];
+
+    const activeMembers = await prisma.user.findMany({
+      where: {
+        id: { in: memberUserIds },
+        householdId,
+        softDelete: false,
+        isActive: true,
+      },
+      select: { id: true },
+    });
+
+    const activeUserIds = activeMembers.map((m) => m.id);
+    if (activeUserIds.length === 0) return [];
+
+    return prisma.deviceKey.findMany({
+      where: {
+        userId: { in: activeUserIds },
+        revokedAt: null,
+        ...(excludeDeviceId ? { deviceId: { not: excludeDeviceId } } : {}),
+      },
+      select: {
+        userId: true,
+        deviceId: true,
+        publicKey: true,
+        deviceType: true,
+      },
+    });
+  }
 }

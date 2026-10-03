@@ -30,6 +30,7 @@ import {
   E2EEMessagingEngine,
   EncryptedEnvelope,
 } from '../../services/e2ee/e2eeCrypto';
+import { toast } from '../../features/household/utils/toast';
 
 interface Member {
   id: string;
@@ -87,6 +88,7 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
     publicKey: string;
   } | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isLoadingChannel, setIsLoadingChannel] = useState(false);
 
   // Typing state
   const [typingUsers, setTypingUsers] = useState<Record<string, string>>({});
@@ -95,105 +97,89 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // 1. Initialize Device Identity & Fetch Default Household Conversation
+  // Helper to decrypt server message envelope history
+  const decryptServerMessages = async (
+    serverMessages: any[],
+    membersList: Member[],
+    currentUserId?: string
+  ): Promise<DecryptedMessage[]> => {
+    const decryptedList: DecryptedMessage[] = [];
+    for (const sm of serverMessages) {
+      let decryptedText = 'Unable to decrypt this message.';
+      let isDecrypted = false;
+
+      try {
+        let recipientWrappedKeys = sm.recipientWrappedKeys || {};
+        if (typeof recipientWrappedKeys === 'string') {
+          try {
+            recipientWrappedKeys = JSON.parse(recipientWrappedKeys);
+          } catch {
+            recipientWrappedKeys = {};
+          }
+        }
+
+        const envelope: EncryptedEnvelope = {
+          conversationId: sm.conversationId,
+          clientMessageId: sm.clientMessageId,
+          senderDeviceId: sm.senderDeviceId,
+          ciphertext: sm.ciphertext,
+          iv: sm.iv,
+          ephemeralPublicKey: sm.ephemeralPublicKey,
+          recipientWrappedKeys,
+          aad: sm.aad,
+          encryptionVersion: sm.encryptionVersion,
+        };
+        decryptedText = await E2EEMessagingEngine.decryptMessage(envelope);
+        isDecrypted = !decryptedText.startsWith('Unable to decrypt');
+      } catch {
+        decryptedText = 'Unable to decrypt this message.';
+      }
+
+      const sender = membersList.find((m) => m.id === sm.senderId);
+      const isMe = sm.senderId === currentUserId;
+
+      // Deduce status from receipts
+      let status: DecryptedMessage['status'] = 'SENT';
+      if (sm.receipts && sm.receipts.length > 0) {
+        const hasRead = sm.receipts.some((r: any) => r.readAt);
+        const hasDelivered = sm.receipts.some((r: any) => r.deliveredAt);
+        if (hasRead) status = 'READ';
+        else if (hasDelivered) status = 'DELIVERED';
+      }
+
+      decryptedList.push({
+        id: sm.id,
+        clientMessageId: sm.clientMessageId,
+        conversationId: sm.conversationId,
+        senderId: sm.senderId,
+        senderName: sender?.name || (isMe ? 'You' : 'Family Member'),
+        senderDeviceId: sm.senderDeviceId,
+        text: decryptedText,
+        createdAt: sm.createdAt,
+        status,
+        isDecrypted,
+        encryptionVersion: sm.encryptionVersion || 'v1',
+        readByCount: sm.receipts ? sm.receipts.filter((r: any) => r.readAt).length : 0,
+      });
+    }
+    return decryptedList;
+  };
+
+  // 1. Initialize Device Identity (ECDH P-256) in IndexedDB and backend directory
   useEffect(() => {
     let isMounted = true;
 
     async function initE2EE() {
       try {
         setIsInitializing(true);
-        // Initialize or load device identity key (ECDH P-256) in IndexedDB
         const devInfo = await E2EEMessagingEngine.initDeviceIdentity();
-        if (isMounted) setDeviceInfo(devInfo);
-
-        // Fetch or create default household conversation
-        const targetHouseholdId = household?.id || (user as any)?.householdId;
-        if (!targetHouseholdId) {
-          setIsInitializing(false);
-          return;
-        }
-
-        const convRes = await apiClient.get('/communication/conversation', {
-          params: { householdId: targetHouseholdId },
-        });
-
-        const conv = convRes.data.conversation;
-        if (!conv) {
-          setIsInitializing(false);
-          return;
-        }
-
-        if (isMounted) setConversationId(conv.id);
-
-        // Fetch recipient devices for key wrapping
-        const recRes = await apiClient.get(
-          `/communication/conversation/${conv.id}/recipients`
-        );
-        if (isMounted) setRecipientDevices(recRes.data.recipients || []);
-
-        // Fetch message history and decrypt client-side
-        const msgRes = await apiClient.get(
-          `/communication/conversation/${conv.id}/messages`
-        );
-        const serverMessages = msgRes.data.messages || [];
-
-        const decryptedList: DecryptedMessage[] = [];
-        for (const sm of serverMessages) {
-          let decryptedText = 'Unable to decrypt this message.';
-          let isDecrypted = false;
-
-          try {
-            const envelope: EncryptedEnvelope = {
-              conversationId: sm.conversationId,
-              clientMessageId: sm.clientMessageId,
-              senderDeviceId: sm.senderDeviceId,
-              ciphertext: sm.ciphertext,
-              iv: sm.iv,
-              ephemeralPublicKey: sm.ephemeralPublicKey,
-              recipientWrappedKeys: sm.recipientWrappedKeys || {},
-              aad: sm.aad,
-              encryptionVersion: sm.encryptionVersion,
-            };
-            decryptedText = await E2EEMessagingEngine.decryptMessage(envelope);
-            isDecrypted = !decryptedText.startsWith('Unable to decrypt');
-          } catch {
-            decryptedText = 'Unable to decrypt this message.';
-          }
-
-          const sender = members.find((m) => m.id === sm.senderId);
-          const isMe = sm.senderId === user?.id;
-
-          // Deduce status from receipts
-          let status: DecryptedMessage['status'] = 'SENT';
-          if (sm.receipts && sm.receipts.length > 0) {
-            const hasRead = sm.receipts.some((r: any) => r.readAt);
-            const hasDelivered = sm.receipts.some((r: any) => r.deliveredAt);
-            if (hasRead) status = 'READ';
-            else if (hasDelivered) status = 'DELIVERED';
-          }
-
-          decryptedList.push({
-            id: sm.id,
-            clientMessageId: sm.clientMessageId,
-            conversationId: sm.conversationId,
-            senderId: sm.senderId,
-            senderName: sender?.name || (isMe ? 'You' : 'Family Member'),
-            senderDeviceId: sm.senderDeviceId,
-            text: decryptedText,
-            createdAt: sm.createdAt,
-            status,
-            isDecrypted,
-            encryptionVersion: sm.encryptionVersion || 'v1',
-            readByCount: sm.receipts ? sm.receipts.filter((r: any) => r.readAt).length : 0,
-          });
-        }
-
         if (isMounted) {
-          setMessages(decryptedList);
+          setDeviceInfo(devInfo);
           setIsInitializing(false);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('[E2EE] Init failed:', err);
+        toast.error(err?.message || 'E2EE device initialization failed');
         if (isMounted) setIsInitializing(false);
       }
     }
@@ -203,7 +189,80 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [household?.id, user?.id, members]);
+  }, []);
+
+  // 2. Fetch or Create Conversation & Messages whenever activeChannel or household changes
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadActiveConversation() {
+      if (isInitializing) return;
+
+      const targetHouseholdId = household?.id || (user as any)?.householdId;
+      if (!targetHouseholdId || !user?.id) {
+        return;
+      }
+
+      try {
+        setIsLoadingChannel(true);
+        setMessages([]);
+
+        let conv;
+        if (activeChannel === 'group') {
+          // Fetch default household conversation
+          const convRes = await apiClient.get('/communication/conversation', {
+            params: { householdId: targetHouseholdId },
+          });
+          conv = convRes.data.conversation;
+        } else {
+          // Fetch or create 1-to-1 direct conversation with selected family member
+          const convRes = await apiClient.post('/communication/conversation', {
+            participantIds: [user.id, activeChannel],
+          });
+          conv = convRes.data.conversation;
+        }
+
+        if (!conv) {
+          throw new Error('Conversation could not be loaded');
+        }
+
+        if (!isMounted) return;
+        setConversationId(conv.id);
+
+        // Fetch recipient devices for key wrapping
+        const recRes = await apiClient.get(
+          `/communication/conversation/${conv.id}/recipients`
+        );
+        if (isMounted) {
+          setRecipientDevices(recRes.data.recipients || recRes.data.devices || []);
+        }
+
+        // Fetch message history and decrypt client-side
+        const msgRes = await apiClient.get(
+          `/communication/conversation/${conv.id}/messages`
+        );
+        const serverMessages = msgRes.data.messages || [];
+        const decryptedList = await decryptServerMessages(serverMessages, members, user.id);
+
+        if (isMounted) {
+          setMessages(decryptedList);
+          setIsLoadingChannel(false);
+        }
+      } catch (err: any) {
+        console.error('[E2EE] Failed to load conversation:', err);
+        toast.error(err?.response?.data?.error || err.message || 'Failed to load conversation');
+        if (isMounted) {
+          setIsLoadingChannel(false);
+        }
+      }
+    }
+
+    loadActiveConversation();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeChannel, isInitializing, household?.id, user?.id, members]);
 
   // 2. Real-time Socket Event Handlers
   useEffect(() => {
@@ -417,7 +476,12 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
   // 3. Encrypted Message Send Flow
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim() || !conversationId || !user?.id) return;
+    if (!inputText.trim() || !user?.id) return;
+
+    if (!conversationId) {
+      toast.error('No active conversation selected');
+      return;
+    }
 
     const socket = socketService.getSocket();
     if (!socket) return;
@@ -460,7 +524,7 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
         const recRes = await apiClient.get(
           `/communication/conversation/${conversationId}/recipients`
         );
-        currentRecipients = recRes.data.recipients || [];
+        currentRecipients = recRes.data.recipients || recRes.data.devices || [];
         setRecipientDevices(currentRecipients);
       } catch (err) {
         console.warn('[E2EE] Could not refresh recipient keys, using cached:', err);
@@ -741,10 +805,14 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
 
         {/* Message Stream */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-          {isInitializing ? (
+          {isInitializing || isLoadingChannel ? (
             <div className="h-full flex flex-col items-center justify-center text-center text-muted space-y-2">
               <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs">Initializing device identity & loading secure lounge...</p>
+              <p className="text-xs">
+                {isInitializing
+                  ? 'Initializing device identity & loading secure lounge...'
+                  : 'Opening secure conversation...'}
+              </p>
             </div>
           ) : displayedMessages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center text-muted space-y-2 p-6">

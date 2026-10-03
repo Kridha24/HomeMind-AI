@@ -109,8 +109,10 @@ export class E2EEMessagingEngine {
           deviceType: 'web',
           publicKey: this.localPublicKeyJWK,
         });
-      } catch (e) {
-        console.warn('[E2EE] Could not sync device key with server (offline or transient):', e);
+      } catch (e: any) {
+        console.error('[E2EE] Could not sync device key with server:', e);
+        const errDetail = e?.response?.data?.error || e?.message || 'Server error';
+        throw new Error(`Device key sync failed: ${errDetail}`);
       }
 
       return { deviceId: this.localDeviceId, publicKey: this.localPublicKeyJWK };
@@ -148,8 +150,10 @@ export class E2EEMessagingEngine {
         deviceType: 'web',
         publicKey: publicKeyJWK,
       });
-    } catch (e) {
-      console.warn('[E2EE] Failed to register new device key:', e);
+    } catch (e: any) {
+      console.error('[E2EE] Failed to register new device key:', e);
+      const errDetail = e?.response?.data?.error || e?.message || 'Server error';
+      throw new Error(`Device registration failed: ${errDetail}`);
     }
 
     return { deviceId, publicKey: publicKeyJWK };

@@ -168,6 +168,68 @@ export class CommunicationController {
   }
 
   /**
+   * POST /api/v1/communication/conversation
+   * Create or retrieve a 1-to-1 direct conversation between participants.
+   * Body: { participantIds: [currentUserId, targetUserId] }
+   */
+  public static async createDirectConversation(req: AuthenticatedRequest, res: Response) {
+    try {
+      const currentUserId = req.user?.userId;
+      const householdId = req.user?.householdId;
+
+      if (!currentUserId || !householdId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const { participantIds } = req.body;
+      if (!Array.isArray(participantIds) || participantIds.length !== 2) {
+        return res.status(400).json({
+          error: 'participantIds array with exactly 2 user IDs is required',
+        });
+      }
+
+      if (!participantIds.includes(currentUserId)) {
+        return res.status(403).json({
+          error: 'You must be a participant in the conversation',
+        });
+      }
+
+      const targetUserId = participantIds.find((id) => id !== currentUserId);
+      if (!targetUserId || targetUserId === currentUserId) {
+        return res.status(400).json({
+          error: 'Cannot create a direct conversation with yourself',
+        });
+      }
+
+      const conversation = await SecureMessagingService.getOrCreateDirectConversation(
+        householdId,
+        currentUserId,
+        targetUserId
+      );
+
+      return res.status(200).json({
+        conversation: {
+          id: conversation.id,
+          householdId: conversation.householdId,
+          type: conversation.type,
+          participants: conversation.members.map((m: any) => m.user),
+          members: conversation.members,
+        },
+      });
+    } catch (err: any) {
+      console.error('[Communication] Error creating/getting direct conversation:', err);
+      const message = err.message || 'Failed to process direct conversation';
+      if (
+        message.includes('Self conversation') ||
+        message.includes('Both users must belong')
+      ) {
+        return res.status(400).json({ error: message });
+      }
+      return res.status(500).json({ error: message });
+    }
+  }
+
+  /**
    * GET /api/v1/communication/conversation/:id/messages
    * Fetch paginated encrypted messages (ciphertext only)
    */
@@ -215,12 +277,21 @@ export class CommunicationController {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      const devices = await DeviceKeyService.getHouseholdRecipientDevices(
-        householdId,
-        excludeDeviceId as string | undefined
-      );
+      let devices;
+      if (conversationId) {
+        devices = await DeviceKeyService.getConversationRecipientDevices(
+          conversationId,
+          householdId,
+          excludeDeviceId as string | undefined
+        );
+      } else {
+        devices = await DeviceKeyService.getHouseholdRecipientDevices(
+          householdId,
+          excludeDeviceId as string | undefined
+        );
+      }
 
-      return res.json({ devices });
+      return res.json({ devices, recipients: devices });
     } catch (err: any) {
       console.error('[Communication] Error getting recipient keys:', err);
       return res.status(500).json({ error: 'Failed to get recipient keys' });

@@ -18,6 +18,7 @@ router.delete('/device-key/:deviceId', sensitiveEndpointLimiter, CommunicationCo
 
 // Encrypted Conversation & Messages
 router.get('/conversation', CommunicationController.getHouseholdConversation);
+router.post('/conversation', CommunicationController.createDirectConversation);
 router.get('/conversation/:id/messages', CommunicationController.getMessages);
 router.get('/conversation/:id/recipients', CommunicationController.getRecipientKeys);
 

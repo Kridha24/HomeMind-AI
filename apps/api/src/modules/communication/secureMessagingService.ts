@@ -75,6 +75,85 @@ export class SecureMessagingService {
   }
 
   /**
+   * Get or create a 1-to-1 direct conversation between two household members
+   */
+  public static async getOrCreateDirectConversation(
+    householdId: string,
+    currentUserId: string,
+    targetUserId: string
+  ) {
+    if (currentUserId === targetUserId) {
+      throw new Error('Self conversation is not allowed');
+    }
+
+    // Verify both users belong to the active household
+    const activeUsers = await prisma.user.findMany({
+      where: {
+        id: { in: [currentUserId, targetUserId] },
+        householdId,
+        softDelete: false,
+        isActive: true,
+      },
+      select: { id: true, name: true, role: true, avatar: true },
+    });
+
+    if (activeUsers.length !== 2) {
+      throw new Error('Both users must belong to the active household');
+    }
+
+    // Find existing 1-to-1 direct conversation
+    const existingConversations = await prisma.conversation.findMany({
+      where: {
+        householdId,
+        type: 'DIRECT',
+        AND: [
+          { members: { some: { userId: currentUserId, leftAt: null } } },
+          { members: { some: { userId: targetUserId, leftAt: null } } },
+        ],
+      },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: { id: true, name: true, role: true, avatar: true },
+            },
+          },
+        },
+      },
+    });
+
+    const existing = existingConversations.find(
+      (c) => c.members.filter((m) => m.leftAt === null).length === 2
+    );
+
+    if (existing) {
+      return existing;
+    }
+
+    // Otherwise create one
+    const newConversation = await prisma.conversation.create({
+      data: {
+        householdId,
+        type: 'DIRECT',
+        members: {
+          create: [{ userId: currentUserId }, { userId: targetUserId }],
+        },
+      },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: { id: true, name: true, role: true, avatar: true },
+            },
+          },
+        },
+      },
+    });
+
+    return newConversation;
+  }
+
+  /**
    * Verify whether a user is an authorized active participant of a conversation
    */
   public static async isMemberOfConversation(
