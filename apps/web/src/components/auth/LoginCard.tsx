@@ -5,6 +5,9 @@ import { SecurityBadge } from './SecurityBadge';
 
 interface LoginCardProps {
   onGoogleClick: () => void;
+  googleButtonRef?: React.RefObject<HTMLDivElement>;
+  isGisReady?: boolean;
+  isNative?: boolean;
   loading: boolean;
   error: string;
   onPhoneClick: () => void;
@@ -13,6 +16,9 @@ interface LoginCardProps {
 
 export const LoginCard: React.FC<LoginCardProps> = ({
   onGoogleClick,
+  googleButtonRef,
+  isGisReady = true,
+  isNative = false,
   loading,
   error,
   onPhoneClick,
@@ -44,7 +50,13 @@ export const LoginCard: React.FC<LoginCardProps> = ({
       {/* Auth Options */}
       <div className="space-y-3 pt-1">
         {googleConfigured ? (
-          <GoogleLoginButton onClick={onGoogleClick} loading={loading} />
+          <GoogleLoginButton
+            buttonRef={googleButtonRef}
+            isReady={isGisReady}
+            loading={loading}
+            isNative={isNative}
+            onClick={onGoogleClick}
+          />
         ) : (
           <div className="p-3.5 bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/25 rounded-2xl flex items-start gap-2.5 text-xs text-amber-700 dark:text-amber-300">
             <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5" />

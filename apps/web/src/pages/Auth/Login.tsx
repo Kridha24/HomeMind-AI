@@ -39,7 +39,12 @@ export const Login: React.FC = () => {
   const [loadingState, setLoadingState] = useState<'idle' | 'connecting' | 'success'>('idle');
   const [error, setError] = useState('');
   const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const tokenClientRef = useRef<any>(null);
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+
+  const [isGisReady, setIsGisReady] = useState<boolean>(() => {
+    if (Capacitor.isNativePlatform()) return true;
+    return typeof window !== 'undefined' && !!window.google?.accounts?.id;
+  });
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -55,100 +60,86 @@ export const Login: React.FC = () => {
   // Show "session expired" banner if redirected here from genuine refresh failure
   const sessionExpired = !dismissSessionExpired && searchParams.get('sessionExpired') === 'true';
 
-  const initGoogleClients = () => {
-    if (!GOOGLE_CLIENT_ID) return;
-
-    // 1. Primary: Google Identity Services (GIS) OIDC ID Token Client
-    if (window.google?.accounts?.id) {
-      try {
-        window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: async (response: any) => {
-            if (response?.credential) {
-              await submitGoogleToken(response.credential);
-            }
-          },
-          auto_select: false,
-          cancel_on_tap_outside: true,
-          context: 'signin',
-        });
-      } catch (err) {
-        console.warn('[Google GIS] ID client init error:', err);
-      }
-    }
-
-    // 2. Fallback: OAuth2 Token Client Popup
-    if (window.google?.accounts?.oauth2) {
-      try {
-        tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: 'openid email profile',
-          ux_mode: 'popup',
-          callback: async (tokenResponse: any) => {
-            if (tokenResponse?.error) {
-              if (tokenResponse.error === 'popup_closed_by_user' || tokenResponse.error === 'access_denied') {
-                setLoadingGoogle(false);
-                setLoadingState('idle');
-                return;
-              }
-              setError('Google sign-in was cancelled or failed. Please try again.');
-              setLoadingGoogle(false);
-              setLoadingState('idle');
-              return;
-            }
-            const accessToken = tokenResponse?.access_token;
-            if (!accessToken) {
-              setError('Google did not return an account token. Please try again.');
-              setLoadingGoogle(false);
-              setLoadingState('idle');
-              return;
-            }
-            await submitGoogleToken(accessToken);
-          },
-          error_callback: (err: any) => {
-            console.error('[Google GIS Error Callback]', err);
-            setLoadingGoogle(false);
-            setLoadingState('idle');
-            setError(err?.message || 'Google account picker could not be opened. Check popup blocker or authorized origins.');
-          },
-        });
-      } catch (e) {
-        console.warn('[Google] OAuth client init failed:', e);
-      }
-    }
-  };
-
-  // Load Google Identity Services once on web platform
+  // Load Google Identity Services script on Web
   useEffect(() => {
-    if (Capacitor.isNativePlatform()) return;
+    if (Capacitor.isNativePlatform()) {
+      setIsGisReady(true);
+      return;
+    }
     if (!GOOGLE_CLIENT_ID) return;
 
-    if (window.google?.accounts?.id || window.google?.accounts?.oauth2) {
-      initGoogleClients();
+    const checkGis = () => !!window.google?.accounts?.id;
+
+    if (checkGis()) {
+      setIsGisReady(true);
       return;
     }
 
-    const existingScript = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
-    if (!existingScript) {
-      const script = document.createElement('script');
+    let script = document.querySelector<HTMLScriptElement>('script[src*="accounts.google.com/gsi/client"]');
+    if (!script) {
+      script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
       script.onload = () => {
-        initGoogleClients();
+        if (checkGis()) {
+          setIsGisReady(true);
+        }
+      };
+      script.onerror = () => {
+        console.error('[Google GIS] Failed to load script from accounts.google.com');
+        setError('Google sign-in script could not be loaded. Please check your internet connection or ad-blocker.');
       };
       document.head.appendChild(script);
     } else {
-      // Script already in DOM, poll briefly for window.google
+      // Script already injected into DOM; poll briefly for window.google.accounts.id
       const interval = setInterval(() => {
-        if (window.google?.accounts?.id || window.google?.accounts?.oauth2) {
-          initGoogleClients();
+        if (checkGis()) {
+          setIsGisReady(true);
           clearInterval(interval);
         }
-      }, 100);
+      }, 50);
       return () => clearInterval(interval);
     }
   }, []);
+
+  // Initialize GIS and render official Google Sign-In button on Web
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) return;
+    if (!isGisReady || !GOOGLE_CLIENT_ID || !googleButtonRef.current) return;
+
+    try {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (response: any) => {
+          if (response?.credential) {
+            await submitGoogleToken(response.credential);
+          } else {
+            console.warn('[Google GIS] Callback received without credential:', response);
+          }
+        },
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        context: 'signin',
+        itp_support: true,
+      });
+
+      const containerWidth = googleButtonRef.current.parentElement?.clientWidth || 340;
+      const buttonWidth = Math.min(Math.max(Math.floor(containerWidth), 220), 380);
+
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'pill',
+        logo_alignment: 'left',
+        width: buttonWidth,
+      });
+    } catch (err) {
+      console.warn('[Google GIS] Button initialization error:', err);
+    }
+  }, [isGisReady]);
 
   const submitGoogleToken = async (googleToken: string) => {
     setLoadingGoogle(true);
@@ -179,7 +170,7 @@ export const Login: React.FC = () => {
         setError(
           msg === 'Invalid Google session. Please sign in with your Google account again.'
             ? 'Google could not verify this account. Try again or use phone/email login.'
-            : msg || 'Google sign-in failed. Check your connection and try again.'
+            : msg || "Google sign-in couldn't open in this browser session. Retry or use mobile sign-in."
         );
       }
       setLoadingState('idle');
@@ -249,56 +240,15 @@ export const Login: React.FC = () => {
             'Google Sign-In configuration error ([16] Account reauth failed). Please ensure the Android OAuth Client ID (Package: com.kridha.homemind + SHA-1) is added in Google Cloud Console.'
           );
         } else {
-          setError(err?.message || 'Google sign-in failed. Please try again.');
+          setError(err?.message || "Google sign-in couldn't open in this browser session. Retry or use mobile sign-in.");
         }
       }
       return;
     }
 
-    // Web flow using Google Identity Services (GIS)
-    if (!tokenClientRef.current) {
-      initGoogleClients();
-    }
-
-    setLoadingGoogle(true);
-    setLoadingState('connecting');
-
-    // 1. Try Google Identity Services ID Token Prompt
-    let promptTriggered = false;
-    if (window.google?.accounts?.id) {
-      try {
-        window.google.accounts.id.prompt((notification: any) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            console.log('[Google GIS] One Tap not displayed, opening popup account picker');
-            if (tokenClientRef.current) {
-              tokenClientRef.current.requestAccessToken({ prompt: 'select_account' });
-            } else {
-              setLoadingGoogle(false);
-              setLoadingState('idle');
-            }
-          }
-        });
-        promptTriggered = true;
-      } catch (err) {
-        console.warn('[Google GIS] Prompt exception, trying popup:', err);
-      }
-    }
-
-    // 2. If ID prompt not available or fails, use OAuth2 popup
-    if (!promptTriggered) {
-      if (tokenClientRef.current) {
-        try {
-          tokenClientRef.current.requestAccessToken({ prompt: 'select_account' });
-        } catch {
-          setLoadingGoogle(false);
-          setLoadingState('idle');
-          setError('Could not open Google account picker. Allow popups for this site and try again.');
-        }
-      } else {
-        setLoadingGoogle(false);
-        setLoadingState('idle');
-        setError('Google sign-in is still initializing. Please wait a moment and try again.');
-      }
+    // Web flow is handled directly by Google's rendered button (GIS iframe user-gesture)
+    if (!window.google?.accounts?.id) {
+      setError('Google sign-in is still initializing. Please wait a moment and try again.');
     }
   };
 
@@ -408,6 +358,9 @@ export const Login: React.FC = () => {
 
           <LoginCard
             onGoogleClick={triggerGoogleSignIn}
+            googleButtonRef={googleButtonRef}
+            isGisReady={isGisReady}
+            isNative={Capacitor.isNativePlatform()}
             onPhoneClick={() => setShowPhoneModal(true)}
             loading={loadingGoogle}
             error={error}
