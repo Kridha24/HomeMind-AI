@@ -80,6 +80,12 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
 
   // E2EE & Conversation State
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const activeConversationIdRef = useRef<string | null>(null);
+  activeConversationIdRef.current = conversationId;
+
+  // Track processed message IDs to guarantee exactly-once rendering
+  const processedMessageIdsRef = useRef<Set<string>>(new Set());
+
   const [recipientDevices, setRecipientDevices] = useState<
     Array<{ deviceId: string; publicKey: string }>
   >([]);
@@ -229,6 +235,12 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
         if (!isMounted) return;
         setConversationId(conv.id);
 
+        // Join conversation room on server
+        const socket = socketService.getSocket();
+        if (socket) {
+          socket.emit('join_conversation', { conversationId: conv.id });
+        }
+
         // Fetch recipient devices for key wrapping
         const recRes = await apiClient.get(
           `/communication/conversation/${conv.id}/recipients`
@@ -245,6 +257,13 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
         const decryptedList = await decryptServerMessages(serverMessages, members, user.id);
 
         if (isMounted) {
+          // Seed the deduplication set with existing history message IDs
+          processedMessageIdsRef.current.clear();
+          decryptedList.forEach((m) => {
+            if (m.id) processedMessageIdsRef.current.add(m.id);
+            if (m.clientMessageId) processedMessageIdsRef.current.add(m.clientMessageId);
+          });
+
           setMessages(decryptedList);
           setIsLoadingChannel(false);
         }
@@ -261,6 +280,10 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
 
     return () => {
       isMounted = false;
+      const socket = socketService.getSocket();
+      if (socket && activeConversationIdRef.current) {
+        socket.emit('leave_conversation', { conversationId: activeConversationIdRef.current });
+      }
     };
   }, [activeChannel, isInitializing, household?.id, user?.id, members]);
 
@@ -271,10 +294,25 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
 
     // Handle new incoming encrypted message
     const handleNewMessage = async (envelope: any) => {
-      if (envelope.conversationId !== conversationId) return;
+      // 1. Channel filter: ensure event belongs to active conversation
+      if (envelope.conversationId !== activeConversationIdRef.current) return;
+
+      // 2. Early Deduplication Check: if server message ID has already been fully processed, discard duplicate event
+      if (envelope.id && processedMessageIdsRef.current.has(envelope.id)) {
+        return;
+      }
 
       const isMe = envelope.senderId === user?.id;
       const myDeviceId = E2EEMessagingEngine.getDeviceId();
+
+      let recipientWrappedKeys = envelope.recipientWrappedKeys || {};
+      if (typeof recipientWrappedKeys === 'string') {
+        try {
+          recipientWrappedKeys = JSON.parse(recipientWrappedKeys);
+        } catch {
+          recipientWrappedKeys = {};
+        }
+      }
 
       let decryptedText = 'Unable to decrypt this message.';
       let isDecrypted = false;
@@ -287,7 +325,7 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
           ciphertext: envelope.ciphertext,
           iv: envelope.iv,
           ephemeralPublicKey: envelope.ephemeralPublicKey,
-          recipientWrappedKeys: envelope.recipientWrappedKeys || {},
+          recipientWrappedKeys,
           aad: envelope.aad,
           encryptionVersion: envelope.encryptionVersion,
         });
@@ -299,11 +337,19 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
       const sender = members.find((m) => m.id === envelope.senderId);
 
       setMessages((prev) => {
+        // Guard: check if an identical non-SENDING message is already rendered in the current list
+        const isAlreadyPresent = prev.some(
+          (m) =>
+            (envelope.id && m.id === envelope.id && m.status !== 'SENDING') ||
+            (envelope.clientMessageId && m.clientMessageId === envelope.clientMessageId && m.status !== 'SENDING')
+        );
+        if (isAlreadyPresent) return prev;
+
         // Deduplicate: replace optimistic message if clientMessageId matches
         const existingIdx = prev.findIndex(
           (m) =>
             m.clientMessageId === envelope.clientMessageId ||
-            m.id === envelope.id
+            (envelope.id && m.id === envelope.id)
         );
 
         const newMsg: DecryptedMessage = {
@@ -334,15 +380,21 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
         return [...prev, newMsg];
       });
 
+      // Mark ID as processed to block duplicate socket deliveries
+      if (envelope.id) processedMessageIdsRef.current.add(envelope.id);
+      if (envelope.clientMessageId) processedMessageIdsRef.current.add(envelope.clientMessageId);
+
       // Acknowledge delivery & read if message is from another member
       if (!isMe) {
         socket.emit('message:delivered', {
           messageId: envelope.id,
           deviceId: myDeviceId,
+          conversationId: envelope.conversationId,
         });
         socket.emit('message:read', {
           messageId: envelope.id,
           deviceId: myDeviceId,
+          conversationId: envelope.conversationId,
         });
       }
     };
@@ -360,6 +412,24 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
             : m
         )
       );
+    };
+
+    // Handle server error rejection of message (FAILED state)
+    const handleMessageError = (data: {
+      clientMessageId?: string;
+      error: string;
+    }) => {
+      console.error('[E2EE] Message send rejected by server:', data);
+      if (data.clientMessageId) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.clientMessageId === data.clientMessageId
+              ? { ...m, status: 'FAILED' }
+              : m
+          )
+        );
+      }
+      toast.error(data.error || 'Message failed to send');
     };
 
     // Handle delivery receipt
@@ -420,6 +490,7 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
 
     socket.on('message:new', handleNewMessage);
     socket.on('message:sent', handleMessageSent);
+    socket.on('message:error', handleMessageError);
     socket.on('message:delivered_receipt', handleDeliveredReceipt);
     socket.on('message:read_receipt', handleReadReceipt);
     socket.on('typing:started', handleTypingStarted);
@@ -428,6 +499,7 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
     return () => {
       socket.off('message:new', handleNewMessage);
       socket.off('message:sent', handleMessageSent);
+      socket.off('message:error', handleMessageError);
       socket.off('message:delivered_receipt', handleDeliveredReceipt);
       socket.off('message:read_receipt', handleReadReceipt);
       socket.off('typing:started', handleTypingStarted);
@@ -543,8 +615,20 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
 
       // Transmit ONLY ciphertext envelope over socket (SERVER NEVER SEES PLAINTEXT)
       socket.emit('message:send', envelope);
-    } catch (err) {
+
+      // Guard: If server never confirms within 10s, fail cleanly instead of faking sent status
+      setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.clientMessageId === clientMessageId && m.status === 'SENDING'
+              ? { ...m, status: 'FAILED' }
+              : m
+          )
+        );
+      }, 10000);
+    } catch (err: any) {
       console.error('[E2EE] Encryption failed before send:', err);
+      toast.error(err?.message || 'Encryption failed: recipient key unavailable');
       setMessages((prev) =>
         prev.map((m) =>
           m.clientMessageId === clientMessageId

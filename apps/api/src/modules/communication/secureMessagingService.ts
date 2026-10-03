@@ -101,56 +101,62 @@ export class SecureMessagingService {
       throw new Error('Both users must belong to the active household');
     }
 
-    // Find existing 1-to-1 direct conversation
-    const existingConversations = await prisma.conversation.findMany({
-      where: {
-        householdId,
-        type: 'DIRECT',
-        AND: [
-          { members: { some: { userId: currentUserId, leftAt: null } } },
-          { members: { some: { userId: targetUserId, leftAt: null } } },
-        ],
-      },
-      include: {
-        members: {
-          include: {
-            user: {
-              select: { id: true, name: true, role: true, avatar: true },
+    // Canonicalize participant pair to prevent ordering discrepancies: (A, B) === (B, A)
+    const sortedUserIds = [currentUserId, targetUserId].sort();
+
+    return prisma.$transaction(async (tx) => {
+      // Find existing 1-to-1 direct conversation with exactly these two participants
+      const existingConversations = await tx.conversation.findMany({
+        where: {
+          householdId,
+          type: 'DIRECT',
+          AND: [
+            { members: { some: { userId: sortedUserIds[0], leftAt: null } } },
+            { members: { some: { userId: sortedUserIds[1], leftAt: null } } },
+          ],
+        },
+        include: {
+          members: {
+            include: {
+              user: {
+                select: { id: true, name: true, role: true, avatar: true },
+              },
             },
           },
         },
-      },
-    });
+        orderBy: { createdAt: 'asc' }, // Oldest canonical conversation first
+      });
 
-    const existing = existingConversations.find(
-      (c) => c.members.filter((m) => m.leftAt === null).length === 2
-    );
+      const existing = existingConversations.find(
+        (c) => c.members.filter((m) => m.leftAt === null).length === 2
+      );
 
-    if (existing) {
-      return existing;
-    }
+      if (existing) {
+        return existing;
+      }
 
-    // Otherwise create one
-    const newConversation = await prisma.conversation.create({
-      data: {
-        householdId,
-        type: 'DIRECT',
-        members: {
-          create: [{ userId: currentUserId }, { userId: targetUserId }],
+      // Otherwise create one with canonical ordering
+      const newConversation = await tx.conversation.create({
+        data: {
+          householdId,
+          type: 'DIRECT',
+          members: {
+            create: [{ userId: sortedUserIds[0] }, { userId: sortedUserIds[1] }],
+          },
         },
-      },
-      include: {
-        members: {
-          include: {
-            user: {
-              select: { id: true, name: true, role: true, avatar: true },
+        include: {
+          members: {
+            include: {
+              user: {
+                select: { id: true, name: true, role: true, avatar: true },
+              },
             },
           },
         },
-      },
-    });
+      });
 
-    return newConversation;
+      return newConversation;
+    });
   }
 
   /**

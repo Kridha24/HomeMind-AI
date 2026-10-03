@@ -291,6 +291,9 @@ export class E2EEMessagingEngine {
 
     const wrappedKeyB64 = envelope.recipientWrappedKeys[myDeviceId];
     if (!wrappedKeyB64) {
+      console.warn(
+        `[E2EE] Message decrypt failed: DEVICE_KEY_NOT_FOUND (myDeviceId=${myDeviceId}, envelopeDevices=${Object.keys(envelope.recipientWrappedKeys || {}).join(',')})`
+      );
       return 'Unable to decrypt this message. (Message not encrypted for this device)';
     }
 
@@ -341,8 +344,11 @@ export class E2EEMessagingEngine {
       );
 
       return new TextDecoder().decode(decryptedBuffer);
-    } catch (err) {
-      console.warn('[E2EE] Decryption failed for message:', envelope.clientMessageId);
+    } catch (err: any) {
+      console.warn(
+        `[E2EE] Message decrypt failed: AUTHENTICATION_FAILED for message ${envelope.clientMessageId}:`,
+        err?.message || 'Decryption verification failed'
+      );
       return 'Unable to decrypt this message.';
     }
   }

@@ -32,22 +32,24 @@ export const HouseholdHeader: React.FC<HouseholdHeaderProps> = ({
   onToggleView,
 }) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-panel border border-primary/80 shadow-xs">
-      <div className="space-y-1 min-w-0">
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
-            <Users className="w-5 h-5" />
-          </div>
-          <h1 className="text-xl sm:text-2xl font-black text-primary truncate max-w-md">
-            {household?.name || 'Family Workspace'}
-          </h1>
-          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25">
-            {memberCount} {memberCount === 1 ? 'member' : 'members'} • Active
-          </span>
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl bg-panel border border-primary/80 shadow-xs">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20 shadow-xs">
+          <Users className="w-5 h-5" />
         </div>
-        <p className="text-xs sm:text-sm text-secondary">
-          Manage your household, members and shared responsibilities.
-        </p>
+        <div className="space-y-0.5 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-lg sm:text-xl font-extrabold text-primary truncate max-w-md">
+              {household?.name || 'Family Workspace'}
+            </h1>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+              {memberCount} {memberCount === 1 ? 'member' : 'members'} • Active
+            </span>
+          </div>
+          <p className="text-xs text-secondary">
+            Manage your household, members, and shared responsibilities.
+          </p>
+        </div>
       </div>
 
       <div className="flex items-center gap-2.5 self-start md:self-auto flex-wrap">

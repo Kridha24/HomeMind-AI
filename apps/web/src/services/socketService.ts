@@ -12,9 +12,29 @@ class SocketService {
     const token = useAuthStore.getState().accessToken;
     if (!token) return null;
 
-    // Get socket server URL (fallback to localhost:5000 in dev or relative host)
-    let socketUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
-    socketUrl = socketUrl.replace(/\/api\/v1\/?$/, ''); // Strip /api/v1 prefix
+    // Determine socket server URL matching apiClient logic
+    const isDev = import.meta.env.DEV;
+    const isLocalhost = typeof window !== 'undefined' && (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === '[::1]' ||
+      window.location.hostname === '::1' ||
+      /^192\.168\.\d+\.\d+$/.test(window.location.hostname) ||
+      /^10\.\d+\.\d+\.\d+$/.test(window.location.hostname) ||
+      /^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$/.test(window.location.hostname)
+    );
+
+    let socketUrl: string;
+    if (isDev && isLocalhost && import.meta.env.VITE_FORCE_REMOTE_API !== 'true') {
+      // Use local window.location.origin so Vite proxy forwards /socket.io -> localhost:5001
+      socketUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5001';
+    } else {
+      const configuredRemoteUrl =
+        import.meta.env.VITE_API_URL ||
+        import.meta.env.VITE_API_BASE_URL ||
+        'https://homemind-ai-backend-yjk3.onrender.com/api/v1';
+      socketUrl = configuredRemoteUrl.replace(/\/api\/v1\/?$/, '');
+    }
 
     try {
       this.socket = io(socketUrl, {
@@ -50,6 +70,23 @@ class SocketService {
       return this.connect();
     }
     return this.socket;
+  }
+
+  public updateAuthToken(newToken: string) {
+    if (!newToken) return;
+    if (this.socket) {
+      this.socket.auth = { token: newToken };
+      if (this.socket.io && (this.socket.io as any).opts) {
+        (this.socket.io as any).opts.query = { token: newToken };
+        if (!(this.socket.io as any).opts.extraHeaders) {
+          (this.socket.io as any).opts.extraHeaders = {};
+        }
+        (this.socket.io as any).opts.extraHeaders.Authorization = `Bearer ${newToken}`;
+      }
+      if (!this.socket.connected) {
+        this.socket.connect();
+      }
+    }
   }
 
   public disconnect() {
