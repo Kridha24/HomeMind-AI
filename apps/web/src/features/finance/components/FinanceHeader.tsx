@@ -97,11 +97,10 @@ export const FinanceHeader: React.FC<FinanceHeaderProps> = ({
           </Button>
 
           <Button
-            variant="primary"
+            variant="danger"
             size="sm"
             icon={TrendingDown}
             onClick={onAddExpense}
-            className="bg-rose-600 hover:bg-rose-500 border-rose-500/30"
           >
             + Expense
           </Button>

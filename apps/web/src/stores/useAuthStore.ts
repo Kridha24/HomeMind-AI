@@ -18,6 +18,25 @@ interface AuthState {
   logout: () => void;
 }
 
+if (typeof window !== 'undefined') {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const sessionData = params.get('auth_session');
+    if (sessionData) {
+      const parsed = JSON.parse(decodeURIComponent(sessionData));
+      const parsedToken = parsed.accessToken || parsed.token;
+      if (parsed.user && parsedToken) {
+        localStorage.setItem('user', JSON.stringify(parsed.user));
+        localStorage.setItem('household', JSON.stringify(parsed.household || null));
+        localStorage.setItem('accessToken', parsedToken);
+        if (parsed.refreshToken) localStorage.setItem('refreshToken', parsed.refreshToken);
+      }
+    }
+  } catch (e) {
+    // Ignore invalid session data
+  }
+}
+
 const getInitialAuthStatus = (): AuthStatus => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;

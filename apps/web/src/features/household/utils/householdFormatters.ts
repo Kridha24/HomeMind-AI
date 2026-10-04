@@ -56,9 +56,9 @@ export const ROLE_CONFIGS: Record<string, RoleConfig> = {
   MEMBER: {
     role: 'MEMBER',
     label: 'Member',
-    badgeBg: 'bg-emerald-500/10 dark:bg-emerald-500/15',
-    textColor: 'text-emerald-600 dark:text-emerald-400',
-    borderColor: 'border-emerald-500/30 dark:border-emerald-500/40',
+    badgeBg: 'bg-blue-500/10 dark:bg-blue-500/15',
+    textColor: 'text-blue-600 dark:text-blue-400',
+    borderColor: 'border-blue-500/30 dark:border-blue-500/40',
     icon: User,
     description: 'Can view and collaborate on tasks, groceries, and bills',
   },

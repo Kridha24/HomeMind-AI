@@ -1,7 +1,7 @@
 import React from 'react';
 import { LucideIcon, Loader2 } from 'lucide-react';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'emerald';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'emerald' | 'warning';
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -15,15 +15,17 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold shadow-xs hover:shadow-md hover:shadow-blue-500/20 border border-blue-500/40 focus:ring-blue-500/40',
+    'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:from-blue-700 active:to-indigo-700 text-white font-semibold shadow-xs hover:shadow-md hover:shadow-blue-500/20 hover:-translate-y-px border border-blue-500/40 focus:ring-blue-500/40',
   emerald:
-    'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold shadow-xs hover:shadow-md hover:shadow-emerald-500/20 border border-emerald-500/40 focus:ring-emerald-500/40',
+    'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:from-emerald-700 active:to-teal-700 text-white font-semibold shadow-xs hover:shadow-md hover:shadow-emerald-500/20 hover:-translate-y-px border border-emerald-500/40 focus:ring-emerald-500/40',
   secondary:
-    'bg-secondary/80 hover:bg-secondary active:bg-secondary/60 text-primary font-medium border border-primary/60 hover:border-primary focus:ring-slate-400/30',
+    'bg-secondary/80 hover:bg-secondary active:bg-secondary/60 text-primary font-medium border border-primary/60 hover:border-primary hover:-translate-y-px focus:ring-slate-400/30',
   ghost:
     'bg-transparent hover:bg-secondary/60 text-secondary hover:text-primary font-medium border border-transparent focus:ring-slate-400/20',
+  warning:
+    'bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold border border-amber-500/30 hover:-translate-y-px focus:ring-amber-500/30',
   danger:
-    'bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 font-semibold border border-rose-500/30 focus:ring-rose-500/30',
+    'bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 font-semibold border border-rose-500/30 hover:-translate-y-px focus:ring-rose-500/30',
 };
 
 const sizeClasses: Record<ButtonSize, { btn: string; icon: string }> = {

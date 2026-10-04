@@ -111,10 +111,10 @@ export const BillsFilters: React.FC<BillsFiltersProps> = ({
               role="tab"
               aria-selected={isActive}
               onClick={() => onQuickFilterChange(opt.key)}
-              className={`px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                 isActive
-                  ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                  : 'bg-secondary/40 text-secondary hover:text-primary border-primary/80 hover:bg-secondary/70'
+                  ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 shadow-xs'
+                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 font-medium'
               }`}
             >
               {opt.label}

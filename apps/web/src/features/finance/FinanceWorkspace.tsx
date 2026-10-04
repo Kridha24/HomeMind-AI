@@ -370,10 +370,10 @@ export const FinanceWorkspace: React.FC = () => {
           <button
             type="button"
             onClick={() => handleTabChange('all')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap border ${
               activeTab === 'all'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-secondary hover:text-primary hover:bg-surface-elevated'
+                ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30 shadow-xs'
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
             }`}
           >
             All Activity ({totalCount})
@@ -382,42 +382,42 @@ export const FinanceWorkspace: React.FC = () => {
           <button
             type="button"
             onClick={() => handleTabChange('expenses')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap border ${
               activeTab === 'expenses'
-                ? 'bg-rose-600 text-white shadow-sm'
-                : 'text-secondary hover:text-primary hover:bg-surface-elevated'
+                ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30 shadow-xs'
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
             }`}
           >
-            <CreditCard className="w-3.5 h-3.5" />
+            <CreditCard className="w-3.5 h-3.5 text-rose-500" />
             <span>Expenses</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleTabChange('income')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap border ${
               activeTab === 'income'
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'text-secondary hover:text-primary hover:bg-surface-elevated'
+                ? 'bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-500/30 shadow-xs'
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
             }`}
           >
-            <Wallet className="w-3.5 h-3.5" />
+            <Wallet className="w-3.5 h-3.5 text-teal-500" />
             <span>Income</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleTabChange('sms')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap border ${
               activeTab === 'sms'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-secondary hover:text-primary hover:bg-surface-elevated'
+                ? 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 shadow-xs'
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
             }`}
           >
-            <Smartphone className="w-3.5 h-3.5" />
+            <Smartphone className="w-3.5 h-3.5 text-indigo-500" />
             <span>Bank & UPI SMS</span>
             {stats?.needsReviewCount > 0 && (
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-400 text-slate-950 font-mono font-extrabold">
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-400 text-slate-950 font-mono font-extrabold shadow-2xs">
                 {stats.needsReviewCount}
               </span>
             )}
@@ -426,13 +426,13 @@ export const FinanceWorkspace: React.FC = () => {
           <button
             type="button"
             onClick={() => handleTabChange('categories')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap border ${
               activeTab === 'categories'
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-secondary hover:text-primary hover:bg-surface-elevated'
+                ? 'bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30 shadow-xs'
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
             }`}
           >
-            <PieChart className="w-3.5 h-3.5" />
+            <PieChart className="w-3.5 h-3.5 text-violet-500" />
             <span>Categories</span>
           </button>
         </div>

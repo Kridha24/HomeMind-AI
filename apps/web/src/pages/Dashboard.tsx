@@ -339,6 +339,7 @@ export const Dashboard: React.FC = () => {
             pendingTasksCount={pendingTasks.length}
             billsDueSoonCount={upcomingBills.length}
             todayTransactionsCount={todayTransactionsCount}
+            userRole={user?.role}
             onSelectTab={(tab) => setActionCenterTab(tab)}
           />
 
@@ -477,6 +478,7 @@ export const Dashboard: React.FC = () => {
             pendingTasksCount={pendingTasks.length}
             billsDueSoonCount={upcomingBills.length}
             todayTransactionsCount={groceriesList.length}
+            userRole={user?.role}
             onSelectTab={(tab) => setActionCenterTab(tab)}
           />
 

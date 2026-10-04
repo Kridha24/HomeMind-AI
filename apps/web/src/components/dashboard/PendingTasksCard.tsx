@@ -72,12 +72,15 @@ export const PendingTasksCard: React.FC<PendingTasksCardProps> = ({
   };
 
   return (
-    <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 md:p-6 shadow-sm flex flex-col justify-between space-y-4">
+    <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-violet-500/[0.06] via-purple-500/[0.02] to-white dark:from-violet-950/25 dark:via-slate-900 dark:to-slate-900 border border-violet-500/25 dark:border-violet-500/35 p-4 sm:p-5 md:p-6 shadow-sm flex flex-col justify-between space-y-4">
+      {/* Luminous Top Bar */}
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-violet-500 via-indigo-500 to-purple-400 opacity-90" />
+
       <div>
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between pb-3 border-b border-violet-500/15 dark:border-violet-500/20">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-violet-500/20 text-violet-700 dark:text-violet-300 border border-violet-500/30 flex items-center justify-center flex-shrink-0 shadow-2xs">
               <CheckSquare className="w-4 h-4" />
             </div>
             <div>
@@ -90,10 +93,10 @@ export const PendingTasksCard: React.FC<PendingTasksCardProps> = ({
             </div>
           </div>
           <div className="text-right flex-shrink-0">
-            <span className="text-base sm:text-xl font-extrabold text-purple-600 dark:text-purple-400 font-mono block">
+            <span className="text-base sm:text-xl font-extrabold text-violet-600 dark:text-violet-400 font-mono block">
               {tasks.length}
             </span>
-            <span className="text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+            <span className="text-[9px] font-bold text-violet-700 dark:text-violet-300 uppercase tracking-wider">
               Pending
             </span>
           </div>

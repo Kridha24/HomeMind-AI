@@ -1,18 +1,21 @@
-# HomeMind AI – Intelligent Household Operating System
+# HomeMind AI — Intelligent Family Household Operating System
 
 <div align="center">
 
-  ![HomeMind AI Banner](https://img.shields.io/badge/HomeMind_AI-Household_Operating_System-3b82f6?style=for-the-badge&logo=sparkles&logoColor=white)
-  
-  **"The AI that manages your home, predicts your needs, and simplifies everyday living."**
+  ![HomeMind AI Banner](https://img.shields.io/badge/HomeMind_AI-Household_Operating_System-6366f1?style=for-the-badge&logo=homeadvisor&logoColor=white)
 
-  [![React 19](https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react)](https://react.dev/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-  [![Node.js](https://img.shields.io/badge/Node.js-20-green?style=flat-square&logo=node.js)](https://nodejs.org/)
-  [![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
+  **A unified, privacy-first, intelligent operating system for modern families and households.**
+
+  [![React 18](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react)](https://react.dev/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+  [![Node.js](https://img.shields.io/badge/Node.js-20-339933?style=flat-square&logo=node.js)](https://nodejs.org/)
+  [![Express](https://img.shields.io/badge/Express-4.18-000000?style=flat-square&logo=express)](https://expressjs.com/)
   [![Prisma](https://img.shields.io/badge/Prisma-5.22-2D3748?style=flat-square&logo=prisma)](https://www.prisma.io/)
   [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
-  [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker)](https://www.docker.com/)
+  [![Redis](https://img.shields.io/badge/Redis-7.0-DC382D?style=flat-square&logo=redis)](https://redis.io/)
+  [![Socket.IO](https://img.shields.io/badge/Socket.IO-4.7-010101?style=flat-square&logo=socketdotio)](https://socket.io/)
+  [![WebRTC](https://img.shields.io/badge/WebRTC-P2P_Calling-333333?style=flat-square&logo=webrtc)](https://webrtc.org/)
+  [![Turborepo](https://img.shields.io/badge/Turborepo-Monorepo-EF4444?style=flat-square&logo=turborepo)](https://turbo.build/)
 
 </div>
 
@@ -20,181 +23,236 @@
 
 ## 📌 Executive Overview
 
-**HomeMind AI** is an enterprise-grade, multi-tenant Household Operating System SaaS platform powered by Artificial Intelligence. Designed like a high-end commercial SaaS application, HomeMind AI moves beyond simple expense trackers or grocery reminder apps to deliver unified household intelligence.
+**HomeMind AI** is an intelligent, multi-tenant Household Operating System designed to replace fragmented utility apps, spreadsheets, chat groups, and paper chore lists with a single cohesive command center.
 
-It orchestrates:
-- 💳 **Financial Telemetry & Expense Outlays**
-- ⚡ **Utility Bill Tracking & Payment Warnings**
-- 🛒 **Pantry Inventory & Expiry Management**
-- 📸 **Computer Vision Pantry & Receipt OCR**
-- 🍲 **Zero-Food-Waste AI Recipe Recommendations**
-- 📺 **Appliance Telemetry & Predictive Maintenance**
-- 💊 **Prescription Tracking & Family Intake Schedules**
-- 📋 **Household Task Workspace & Priority Tags**
-- 👥 **Family Workspace & Permission Role Management**
-- 🌿 **Sustainability Score & Carbon Footprint Telemetry (0–100 Rating)**
-- 🤖 **DB-Grounded Natural Language Conversational AI Assistant**
-- 📄 **Automated PDF Executive Report Exporting**
+Crafted around a warm, premium, and human-centric living experience, HomeMind AI balances proactive smart home intelligence with strict tenant data isolation, role-based governance, and end-to-end cryptographic privacy.
 
 ---
 
-## 🔒 Enterprise Authentication & Data Isolation
+## 🌟 Core System Capabilities
 
-### 1. Authentication Flows
-HomeMind AI strictly enforces enterprise security and supports **only** two authentication methods:
-- 🔵 **Continue with Google (Google OAuth)**: Verifies Google OAuth tokens, initializes an isolated household context, and returns JWT access & refresh token pairs.
-- 🟢 **Continue with Mobile Number + 6-Digit OTP**: Verifies mobile SMS OTP codes, creates or retrieves user credentials, and attaches household context.
+### 1. 🏠 Executive Command Center (Dashboard)
+- **Personalized Living Greeting**: Real-time context, live household clock, active member presence, and environmental indicators.
+- **Quick Action Command Bar**: Instant one-click triggers for `+ Income`, `+ Expense`, `+ Bill`, `+ Grocery`, and `+ Task`.
+- **Financial Velocity Metrics**: Glowing visual cards displaying total income, monthly expenditure, net balance, and active budget utilization.
+- **Today Living Overview**: Consolidated snapshot tracking overdue and upcoming bills, assigned chores, and urgent pantry shortages.
+- **Household Status Strip**: Multi-device synchronization state, active home mode, and network health.
 
-*(Note: Legacy email/password logins and demo credentials have been completely removed to prevent unauthorized access).*
+### 2. 💳 Finance & Wealth Command Center
+- **Transaction Engine**: Real-time income and expense tracking with category-aware indexing and multi-account support.
+- **Interactive Period Filters**: Switch effortlessly between weekly, monthly, quarterly, yearly, and custom reporting intervals.
+- **Visual Analytics**: Interactive category distribution charts, cash-flow timelines, and monthly spending velocity graphs.
+- **Multi-Currency Support**: Universal formatting supporting USD (`$`), INR (`₹`), EUR (`€`), GBP (`£`), JPY (`¥`), and customizable symbols.
+- **Automated SMS Parser Bridge**: Privacy-conscious cellular and bank SMS transaction parsing engine with idempotency safeguards.
 
-### 2. Multi-Tenant Data Isolation & Audit Schema
-- **Strict Household Scoping**: Every database table includes a mandatory `householdId` relation. All backend API controllers extract `userId` and `householdId` from the authenticated JWT token payload, preventing any cross-tenant data leaks.
-- **Enterprise Audit Columns**: Every record includes `id`, `householdId`, `createdBy`, `updatedBy`, `softDelete`, `createdAt`, and `updatedAt`.
+### 3. ⚡ Utility Bills & Recurring Obligations
+- **Bills Management**: Due-date countdowns, bill category tags (Electricity, Water, Internet, Subscriptions, Insurance), and overdue alerts.
+- **One-Click Settlement**: Direct "Mark as Paid" action that reconciles ledger balances and logs payment confirmation stamps.
+- **Predictive Recurring Schedules**: Automatic renewal tracking with customizable reminder thresholds (1 day, 3 days, 1 week before due).
 
-### 3. Clean Slate / Zero Demo Data Onboarding
-Every new user starts with **0 Expenses, 0 Bills, 0 Groceries, 0 Appliances, 0 Medicines, and 0 Tasks**. The dashboard automatically renders an Apple-inspired onboarding wizard (*"Welcome to HomeMind AI – Let's setup your home"*) with one-click setup actions (`+ Add Expense`, `+ Add Grocery`, `+ Add Appliance`, `+ Invite Family`).
+### 4. 🛒 Smart Groceries & Pantry Inventory OS
+- **Real-Time Shopping Mode**: Distraction-free, interactive mobile checklist with animated progress tracking and instant item completion.
+- **Inventory Stock Categorization**: Grouped views sorted by urgency (`Urgent`, `Normal`, `Low`) and storage area (`Pantry`, `Fridge`, `Freezer`, `Household`).
+- **Pantry Vision & Receipt OCR**: Computer vision ingestion interface for scanning store receipts and shelf photography into structured inventory records.
+- **Zero-Food-Waste Intelligence**: Smart meal and recipe suggestions prioritized around expiring inventory items.
+
+### 5. 📋 Household Tasks & Chore Allocation
+- **Collaborative Family Allocation**: Assign tasks to specific household members with priority indicators (`High`, `Medium`, `Low`).
+- **Chore Tab Views**: Segregated perspectives for `Today`, `Upcoming`, `Completed`, and full household backlogs.
+- **Live Sync**: Instant state updates across family devices powered by real-time WebSockets.
+
+### 6. 👥 Family Workspace & Role Governance
+- **Role-Based Access Control (RBAC)**: Fine-grained permissions separating `OWNER`, `ADMIN`, and `MEMBER` privileges.
+- **Cryptographic Household Codes**: Secure household invite codes for onboarding family members without sharing account credentials.
+- **Directory & Presence**: Live status badges (`Online`, `Away`, `Offline`) and responsibility matrix for transparent family coordination.
+
+### 7. 🔒 Family Connect: Encrypted Messaging & WebRTC Calling
+- **End-to-End Encrypted (E2EE) Chat**: Device-level cryptographic key exchange ensuring household conversations remain unreadable to server operators.
+- **Peer-to-Peer Audio & Video Calling**: Ultra-low latency WebRTC calling with live camera/mic toggles, speaker switching, and DTLS/SRTP protection.
+- **Signaling Server**: Isolated room signaling over Socket.IO with ephemeral credential support.
+
+### 8. 🤖 Proactive AI Copilot & Natural Language Agent
+- **DB-Grounded Natural Language Ingestion**: Add expenses, groceries, and tasks via plain language (e.g., *"Added $42 for organic groceries at Whole Foods"*).
+- **Proactive Budget & Expiry Alerts**: Contextual notifications predicting grocery replenishment needs and identifying abnormal utility usage spikes.
+
+### 9. ⚙️ Centralized Settings & Personalization
+- **Theme Customization**: Light, Dark, and Glassmorphism design system with curated semantic tone tokens.
+- **Localization**: Customizable currency, timezone, date conventions (`MM/DD/YYYY`, `DD/MM/YYYY`, `YYYY-MM-DD`), and number formats.
+- **Active Session Security**: Inspect active client sessions, IP locations, and user-agent details with one-click remote session revocation.
+- **Privacy Controls**: Granular toggles for AI proactive suggestions, OCR processing, and notification preferences.
 
 ---
 
-## 🛠️ System Architecture
+## 🏗️ Architecture & Monorepo Structure
+
+HomeMind AI is structured as a scalable, high-performance monorepo powered by **Turborepo** and **pnpm workspaces**:
 
 ```
-                               ┌───────────────────────────┐
-                               │ React 19 + Vite Frontend  │
-                               │  Apple SaaS UI / Recharts │
-                               └─────────────┬─────────────┘
-                                             │ REST / Socket.IO
-                                             ▼
-                               ┌───────────────────────────┐
-                               │  Node.js + Express API    │
-                               │  TypeScript / Prisma ORM  │
-                               └──────┬─────────────┬──────┘
-                                      │             │
-                    DB-Grounded Context │             │ PostgreSQL / SQLite
-                                      ▼             ▼
-                        ┌───────────────────┐ ┌───────────────────┐
-                        │ Python FastAPI AI │ │  Database Engine  │
-                        │ OCR / Forecasting │ │ User & Household  │
-                        └───────────────────┘ └───────────────────┘
-```
-
----
-
-## 🚀 Detailed Features & Modules
-
-### 1. 📊 Command Center Dashboard
-- **Telemetry Cards**: Real-time monthly spend outlays, net savings rate, pending bill tickers, and expiring inventory count.
-- **Visual Velocity Charts**: Interactive Recharts area graphs displaying 6-month spending velocity vs monthly ceiling caps.
-- **AI Recommendation Banner**: Actionable predictive prompts generated from live household statistics.
-
-### 2. 📸 Pantry Vision & Receipt OCR
-- **Receipt OCR**: Upload paper store receipts to parse store name, purchase date, itemized prices, and line items. Auto-ingests into Expenses and Inventory.
-- **Pantry Shelf Vision**: Snap photos of fridge or pantry shelves. Computer vision detects products (Milk, Bread, Yogurt, Fruits) and updates quantity levels.
-
-### 3. 🍲 Zero-Food-Waste Recipe Recommendation Engine
-- Analyzes items near expiry date to generate healthy, quick, and budget-friendly meals, preventing food waste ($12.50+ average savings per recommendation).
-
-### 4. 📈 Predictive Utility & Financial Forecasting
-- Statistical polynomial time-series algorithms forecast next month's Electricity, Gas, Water, and overall expense outlays with energy-saving tips.
-
-### 5. 📺 Appliance Telemetry & Service Manager
-- Tracks purchase dates, active warranty countdowns, technician service logs, and AI maintenance predictions.
-
-### 6. 💊 Family Medicine & Prescription Tracker
-- Manages prescription dosages, pill counts, doctor details, expiry warnings, and interactive intake completion toggles.
-
-### 7. 🌿 Sustainability Score Dashboard (0–100 Rating)
-- Calculates carbon footprint, power grid draw (kWh), water conservation (L), and food waste reduction (kg) to rate household eco-efficiency.
-
-### 8. 🤖 DB-Grounded AI Assistant Chat
-- Conversational drawer grounded on live database records. Answers questions like *"How much did I spend this month?"* or *"Which bill is due next?"* without hallucination.
-
-### 9. 📄 Executive PDF Report Exporter
-- Streams compiled PDF performance reports built with PDFKit.
-
----
-
-## 📦 Directory Structure
-
-```
-├── backend/
-│   ├── prisma/
-│   │   └── schema.prisma         # Prisma ORM Database Schema
-│   ├── src/
-│   │   ├── config/               # JWT & Environment Config
-│   │   ├── controllers/          # REST Controllers
-│   │   ├── middleware/           # Auth & Error Middleware
-│   │   ├── repositories/         # Prisma DB Repository
-│   │   ├── routes/               # API Route Handlers
-│   │   ├── services/             # AI Client & PDF Exporter
-│   │   └── server.ts             # Express & Socket.IO Entrypoint
-│   └── package.json
-├── ai-service/
-│   ├── app/
-│   │   ├── main.py               # FastAPI App Entrypoint
-│   │   └── routers/              # OCR, Forecast, Recipe, Chat Routers
-│   ├── Dockerfile
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── components/           # Navbar, Sidebar, Drawers & Modals
-│   │   ├── pages/                # 13 Application Modules & Auth Pages
-│   │   ├── services/             # Axios API Client
-│   │   ├── stores/               # Zustand Global Auth Store
-│   │   ├── App.tsx               # Protected Routing
-│   │   └── main.tsx              # React 19 Entrypoint
-│   └── package.json
-├── docker-compose.yml
+homemind-ai/
+├── apps/
+│   ├── api/                    # Primary REST & Socket.IO backend service
+│   │   ├── prisma/             # Multi-tenant PostgreSQL database schema
+│   │   ├── src/controllers/    # HTTP route controllers
+│   │   ├── src/modules/        # Domain engines (copilot, finance, bills, chat, calling)
+│   │   ├── src/services/       # Outbox, cache, and WebSocket managers
+│   │   └── src/server.ts       # Express bootstrap & HTTP/WS server
+│   ├── web/                    # Vite + React 18 frontend single-page application
+│   │   ├── src/components/     # Design system, layout, and shared UI components
+│   │   ├── src/features/       # Domain modules (finance, groceries, tasks, household, analytics)
+│   │   ├── src/stores/         # Zustand state stores (auth, settings, household)
+│   │   └── src/index.css       # Tailwind CSS design system & semantic tokens
+│   └── worker/                 # Asynchronous background job worker (BullMQ & Redis)
+│       ├── src/processors/     # Async task, notification, and outbox processors
+│       └── src/worker.ts       # Worker process entrypoint
+├── packages/
+│   ├── config/                 # Shared environment schemas & linting rules
+│   ├── database/               # Centralized Prisma client and migration utilities
+│   ├── observability/          # OpenTelemetry metrics and structured logging
+│   ├── shared/                 # Common TypeScript interfaces, DTOs, and event contracts
+│   └── validation/             # Zod input validation schemas
+├── ai-service/                 # Optional Python FastAPI Computer Vision microservice
+├── docker-compose.yml          # Local containerized orchestration (PostgreSQL + Redis)
+├── pnpm-workspace.yaml         # PNPM workspace definition
+├── turbo.json                  # Turborepo task pipeline caching configuration
 └── README.md
 ```
 
 ---
 
-## ⚙️ Local Installation & Setup
+## 🔒 Security & Tenant Isolation
+
+- **Mandatory Tenant Scoping**: Every database entity belongs to a `householdId`. All queries enforce tenant isolation at both the service layer and the database access layer to prevent IDOR / BOLA vulnerabilities.
+- **Token Security**: Dual-token architecture using short-lived signed JWT access tokens (RS256/HS256) and cryptographically secure refresh token rotation stored in HTTP-only/secure cookies.
+- **Safe Development Defaults**: Zero real credentials or personal identifiers are committed to source control. Template configurations utilize strict validation.
+- **Zero Third-Party Telemetry Leaks**: Analytical telemetry is strictly self-hosted; family data is never used to train external public models.
+
+---
+
+## 🛠️ Technology Stack
+
+| Domain | Technologies |
+| :--- | :--- |
+| **Frontend Core** | React 18, TypeScript 5.3, Vite 5, Tailwind CSS |
+| **UI & Icons** | Lucide React, Framer Motion, Recharts, Custom Semantic System |
+| **State Management** | Zustand, TanStack React Query v5 |
+| **Backend Core** | Node.js 20, Express, TypeScript, Socket.IO 4.7 |
+| **ORM & Database** | Prisma 5.22, PostgreSQL 15 / SQLite (embedded development) |
+| **Queues & Cache** | Redis 7, BullMQ, Transactional Outbox Pattern |
+| **Communications** | WebRTC (P2P Audio/Video), Native WebSocket Signaling, E2EE |
+| **Build & Tooling** | Turborepo, pnpm workspaces, ESLint, TypeScript Strict Mode |
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js (v18+)
-- Python (v3.11+)
-- Git
-
-### 1. Backend API Setup
-```bash
-cd backend
-npm install
-npx prisma generate
-npx prisma db push
-npm run dev
-```
-*Backend API Server will run on `http://localhost:5001`*
-
-### 2. Python AI Service Setup
-```bash
-cd ai-service
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-```
-*AI Service will run on `http://localhost:8000`*
-
-### 3. Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev
-```
-*Frontend Web App will run on `http://localhost:3000`*
+- **Node.js**: v20.x or higher
+- **pnpm**: v8.x or v9.x (`npm install -g pnpm`)
+- **Docker**: Optional, for running containerized PostgreSQL and Redis
 
 ---
 
-## 🐳 Docker Compose Deployment
-
-To launch all services (PostgreSQL, Backend API, Python AI Service, Vite Frontend) in containerized mode:
-
+### Step 1: Clone the Repository
 ```bash
-docker-compose up --build
+git clone https://github.com/Kridha24/HomeMind-AI.git
+cd HomeMind-AI
 ```
 
 ---
 
-## 📝 License
+### Step 2: Configure Environment Variables
+Copy the master environment template and customize settings as needed:
 
-This project is open-source under the [MIT License](LICENSE).
+```bash
+cp .env.example .env
+```
+
+Ensure the following foundational variables are populated in your local `.env`:
+
+```env
+# Database Configuration
+DATABASE_URL="postgresql://homemind:homemind_password@localhost:5432/homemind_db?schema=public"
+
+# Backend Authentication Secrets (Generate secure random 64-char hex strings)
+JWT_SECRET="your-development-jwt-secret-key-at-least-64-characters-long-example"
+JWT_REFRESH_SECRET="your-development-jwt-refresh-secret-key-at-least-64-characters-long"
+
+# Application URLs
+PORT=5001
+FRONTEND_URL="http://localhost:3000"
+VITE_API_URL="http://localhost:5001/api/v1"
+
+# Redis Cache & Background Queue
+REDIS_URL="redis://localhost:6379"
+```
+
+---
+
+### Step 3: Install Workspace Dependencies
+```bash
+pnpm install
+```
+
+---
+
+### Step 4: Database Setup & Prisma Generation
+```bash
+# Generate the Prisma client
+pnpm --filter @homemind/database run db:generate
+
+# Push schema migrations to the target database
+pnpm --filter @homemind/database run db:push
+```
+
+---
+
+### Step 5: Start the Development Environment
+
+You can start the full stack concurrently using Turborepo:
+
+```bash
+pnpm run dev
+```
+
+Or run individual services independently:
+
+```bash
+# Start Web Frontend (http://localhost:3000)
+pnpm --filter web dev
+
+# Start API Backend (http://localhost:5001)
+pnpm --filter api dev
+
+# Start Background Worker
+pnpm --filter worker dev
+```
+
+---
+
+## 🐳 Containerized Deployment (Docker Compose)
+
+To spin up the entire production-ready environment including PostgreSQL 15, Redis 7, the API service, and Web frontend:
+
+```bash
+docker-compose up -d --build
+```
+
+---
+
+## 🧪 Testing & Code Quality
+
+HomeMind AI maintains strict TypeScript compilation and quality standards across all workspace packages:
+
+```bash
+# Run TypeScript compilation checks across all apps and packages
+pnpm run build
+
+# Run linting across the monorepo
+pnpm run lint
+```
+
+---
+
+## 📄 License
+
+This repository is licensed under the [MIT License](LICENSE).

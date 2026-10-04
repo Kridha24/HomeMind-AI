@@ -40,10 +40,10 @@ export const AnalyticsPeriodFilter: React.FC<AnalyticsPeriodFilterProps> = ({
             <button
               key={opt.id}
               onClick={() => onSelectPeriod(opt.id)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 ${
                 isSelected
-                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30'
-                  : 'bg-secondary/60 hover:bg-secondary border border-primary/60 text-secondary hover:text-primary'
+                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-600/25 border border-violet-500/40'
+                  : 'bg-secondary/60 hover:bg-secondary border border-primary/60 text-secondary hover:text-primary hover:-translate-y-px'
               }`}
             >
               {opt.label}

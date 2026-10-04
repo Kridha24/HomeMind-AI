@@ -69,9 +69,12 @@ export const HouseholdIdentityCard: React.FC<HouseholdIdentityCardProps> = ({
   };
 
   return (
-    <div className="p-5 sm:p-6 rounded-3xl bg-panel border border-primary/80 shadow-xs space-y-5">
+    <div className="relative overflow-hidden p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-indigo-500/[0.08] via-purple-500/[0.04] to-white dark:from-indigo-950/40 dark:via-purple-950/20 dark:to-slate-900 border border-indigo-500/25 dark:border-indigo-500/35 shadow-xs space-y-5">
+      {/* Luminous Top Bar */}
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 opacity-90" />
+
       {/* Top: Name, Role & Status */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-primary/50 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-500/15 dark:border-indigo-500/25 pb-4">
         <div className="space-y-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1">

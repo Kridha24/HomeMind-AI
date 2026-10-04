@@ -239,8 +239,33 @@ function AppShell() {
       ? 'min-h-[100dvh] bg-background text-primary flex bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950'
       : 'min-h-[100dvh] bg-background text-primary flex';
 
+  // Route-aware module atmosphere (purely visual)
+  const p = location.pathname;
+  const ambientClass = p === '/'
+    ? 'amb-dashboard'
+    : p.startsWith('/expenses') || p.startsWith('/transactions')
+    ? 'amb-finance'
+    : p.startsWith('/income')
+    ? 'amb-income'
+    : p.startsWith('/bills')
+    ? 'amb-bills'
+    : p.startsWith('/groceries') || p.startsWith('/inventory') || p.startsWith('/sustainability')
+    ? 'amb-groceries'
+    : p.startsWith('/tasks')
+    ? 'amb-tasks'
+    : p.startsWith('/family')
+    ? 'amb-family'
+    : p.startsWith('/analytics') || p.startsWith('/reports')
+    ? 'amb-analytics'
+    : p.startsWith('/pantry-vision')
+    ? 'amb-vision'
+    : p.startsWith('/appliances') || p.startsWith('/medicines')
+    ? 'amb-home'
+    : 'amb-settings';
+
   return (
-    <div className={themeClass}>
+    <div className={`${themeClass} relative isolate`}>
+      <div aria-hidden="true" className={`hm-ambient ${ambientClass}`} />
       <Sidebar isOpen={isMobileSidebarOpen} onClose={() => setIsMobileSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col min-w-0">

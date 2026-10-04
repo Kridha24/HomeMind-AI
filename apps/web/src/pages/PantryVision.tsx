@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Camera, Upload, Sparkles, Check, RefreshCw, ShoppingBag, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { Camera, Receipt, Sparkles, Check, RefreshCw, ShoppingBag, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import apiClient from '../services/apiClient';
 import { useSettingStore } from '../stores/useSettingStore';
@@ -74,24 +74,28 @@ export const PantryVision: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
-          Scan Groceries & Receipts
-          <Camera className="w-5 h-5 text-pink-500" />
-        </h1>
-        <p className="text-xs text-secondary">
-          Upload a photo of your fridge, pantry, or store receipt to automatically add items.
-        </p>
+    <div className="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto animate-in fade-in duration-200">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 shadow-xs">
+          <Camera className="w-5 h-5 text-violet-500" />
+        </div>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-primary flex items-center gap-2">
+            Scan Groceries & Receipts
+          </h1>
+          <p className="text-xs text-secondary">
+            Upload a photo of your fridge, pantry, or store receipt to automatically add items.
+          </p>
+        </div>
       </div>
 
       {!aiOcr && (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-between gap-4">
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-amber-300 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-xs font-semibold">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+            <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
             <span>Smart Receipt and Pantry OCR Digitization is disabled in Settings.</span>
           </div>
-          <Link to="/settings" className="px-3 py-1.5 rounded-xl bg-amber-500 text-white text-xs font-bold hover:bg-amber-600">
+          <Link to="/settings" className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-colors">
             Open Settings
           </Link>
         </div>
@@ -109,8 +113,9 @@ export const PantryVision: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Shelf Photo Scanner Box */}
-        <div className="glass-panel p-6 space-y-4 text-center border-purple-500/30">
-          <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto">
+        <div className="group relative overflow-hidden glass-panel p-6 space-y-4 text-center rounded-2xl border border-violet-500/25 bg-violet-500/5 hover:border-violet-500/40 hover:-translate-y-px transition-all duration-200 shadow-2xs">
+          <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-violet-500 to-indigo-500 opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="w-12 h-12 rounded-2xl bg-violet-500/15 border border-violet-500/30 text-violet-600 dark:text-violet-400 flex items-center justify-center mx-auto shadow-xs">
             <Camera className="w-6 h-6" />
           </div>
           <div>
@@ -120,7 +125,7 @@ export const PantryVision: React.FC = () => {
           <button
             onClick={() => triggerFileInput('shelf')}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-purple-600/25 active:scale-95 transition-all"
+            className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-violet-600/25 active:scale-95 transition-all cursor-pointer"
           >
             {loading && activeScanType === 'shelf' ? (
               <RefreshCw className="w-4 h-4 animate-spin" />
@@ -132,9 +137,10 @@ export const PantryVision: React.FC = () => {
         </div>
 
         {/* Receipt Scanner Box */}
-        <div className="glass-panel p-6 space-y-4 text-center border-blue-500/30">
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto">
-            <Upload className="w-6 h-6" />
+        <div className="group relative overflow-hidden glass-panel p-6 space-y-4 text-center rounded-2xl border border-cyan-500/25 bg-cyan-500/5 hover:border-cyan-500/40 hover:-translate-y-px transition-all duration-200 shadow-2xs">
+          <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-cyan-500 to-teal-400 opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="w-12 h-12 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mx-auto shadow-xs">
+            <Receipt className="w-6 h-6" />
           </div>
           <div>
             <h3 className="font-bold text-sm text-primary">Scan Bill Receipt</h3>
@@ -143,12 +149,12 @@ export const PantryVision: React.FC = () => {
           <button
             onClick={() => triggerFileInput('receipt')}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25 active:scale-95 transition-all"
+            className="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-cyan-600/25 active:scale-95 transition-all cursor-pointer"
           >
             {loading && activeScanType === 'receipt' ? (
               <RefreshCw className="w-4 h-4 animate-spin" />
             ) : (
-              <Upload className="w-4 h-4" />
+              <Receipt className="w-4 h-4" />
             )}
             Upload Receipt Photo
           </button>
@@ -159,7 +165,7 @@ export const PantryVision: React.FC = () => {
       {imagePreview && (
         <div className="glass-panel p-6 border-secondary/50 flex flex-col items-center relative overflow-hidden rounded-3xl">
           <h3 className="text-sm font-bold text-primary mb-4 flex items-center gap-2">
-            <ImageIcon className="w-4 h-4 text-blue-500" />
+            <ImageIcon className="w-4 h-4 text-cyan-500" />
             Photo Preview
           </h3>
           <div className="relative max-h-72 rounded-2xl overflow-hidden shadow-2xl border border-primary/40">
@@ -167,14 +173,14 @@ export const PantryVision: React.FC = () => {
 
             {/* Live Glowing Laser Scanline */}
             {loading && (
-              <div className="absolute inset-0 bg-blue-500/10 pointer-events-none">
+              <div className="absolute inset-0 bg-cyan-500/10 pointer-events-none">
                 <div className="w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_20px_#22d3ee] animate-bounce duration-1000" />
               </div>
             )}
           </div>
 
           {loading && (
-            <div className="mt-4 flex items-center gap-2 text-blue-600 dark:text-cyan-400 font-semibold text-xs animate-pulse bg-blue-50 dark:bg-cyan-500/10 px-4 py-2 rounded-xl border border-blue-200 dark:border-cyan-500/20">
+            <div className="mt-4 flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-semibold text-xs animate-pulse bg-cyan-500/10 px-4 py-2 rounded-xl border border-cyan-500/20">
               <RefreshCw className="w-4 h-4 animate-spin" />
               <span>Scanning photo and reading items...</span>
             </div>
@@ -184,19 +190,22 @@ export const PantryVision: React.FC = () => {
 
       {/* Results Display */}
       {scanResult && !loading && (
-        <div className="glass-panel p-5 space-y-4 border-emerald-500/40 animate-in fade-in zoom-in duration-500">
-          <div className="flex items-center justify-between border-b border-primary pb-3">
-            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-              <Check className="w-5 h-5" />
+        <div className="group relative overflow-hidden glass-panel p-5 space-y-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 animate-in fade-in zoom-in duration-300 shadow-sm">
+          <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-emerald-500 to-teal-400 opacity-80" />
+          <div className="flex items-center justify-between border-b border-primary/80 pb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <Check className="w-4 h-4" />
+              </div>
               <h3 className="font-bold text-sm text-primary">Items Found Successfully</h3>
             </div>
-            <span className="text-xs bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400 px-2.5 py-1 rounded-full font-semibold border border-emerald-200 dark:border-emerald-500/20">
+            <span className="text-xs bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-full font-semibold border border-emerald-500/30">
               Saved to your Inventory
             </span>
           </div>
 
           {scanResult.storeName && (
-            <div className="flex justify-between items-center bg-secondary/50 p-3 rounded-lg border border-secondary/50">
+            <div className="flex justify-between items-center bg-secondary/50 p-3 rounded-xl border border-primary/80">
               <div>
                 <p className="text-[10px] text-muted uppercase font-bold tracking-wider">Store</p>
                 <p className="text-sm font-bold text-primary">{scanResult.storeName}</p>

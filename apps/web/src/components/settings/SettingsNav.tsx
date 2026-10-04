@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { SettingsNavItem } from './primitives/SettingsNavItem';
 
+import { SemanticColor } from '../common/IconTile';
+
 export type SettingsTabId =
   | 'profile'
   | 'household'
@@ -34,6 +36,7 @@ export interface NavItemConfig {
   icon: React.ElementType;
   keywords: string[];
   badge?: string;
+  accent: SemanticColor;
 }
 
 export const SETTINGS_NAV_ITEMS: NavItemConfig[] = [
@@ -43,6 +46,7 @@ export const SETTINGS_NAV_ITEMS: NavItemConfig[] = [
     description: 'Personal details, avatar & contact',
     icon: UserRound,
     keywords: ['profile', 'avatar', 'name', 'email', 'phone', 'contact', 'timezone', 'identity'],
+    accent: 'blue',
   },
   {
     id: 'household',
@@ -50,6 +54,7 @@ export const SETTINGS_NAV_ITEMS: NavItemConfig[] = [
     description: 'Residence info, members & invites',
     icon: Home,
     keywords: ['household', 'residence', 'family', 'members', 'invite', 'code', 'roles', 'owner', 'admin'],
+    accent: 'violet',
   },
   {
     id: 'security',
@@ -57,6 +62,7 @@ export const SETTINGS_NAV_ITEMS: NavItemConfig[] = [
     description: 'Active sessions & authentication',
     icon: ShieldCheck,
     keywords: ['security', 'password', 'sessions', 'devices', 'auth', 'google', 'phone', 'otp', 'logout', '2fa'],
+    accent: 'slate',
   },
   {
     id: 'notifications',
@@ -64,6 +70,7 @@ export const SETTINGS_NAV_ITEMS: NavItemConfig[] = [
     description: 'Alert channels & bill reminders',
     icon: Bell,
     keywords: ['notifications', 'alerts', 'bills', 'reminders', 'finance', 'push', 'chores', 'tasks'],
+    accent: 'amber',
   },
   {
     id: 'preferences',
@@ -71,6 +78,7 @@ export const SETTINGS_NAV_ITEMS: NavItemConfig[] = [
     description: 'Language, currency & timezone',
     icon: SlidersHorizontal,
     keywords: ['preferences', 'language', 'currency', 'inr', 'timezone', 'date', 'regional', 'formats'],
+    accent: 'sky',
   },
   {
     id: 'appearance',
@@ -78,6 +86,7 @@ export const SETTINGS_NAV_ITEMS: NavItemConfig[] = [
     description: 'Theme style & display mode',
     icon: Palette,
     keywords: ['appearance', 'theme', 'dark', 'light', 'system', 'mode', 'motion', 'compact', 'display'],
+    accent: 'purple',
   },
   {
     id: 'ai',
@@ -86,6 +95,7 @@ export const SETTINGS_NAV_ITEMS: NavItemConfig[] = [
     icon: Sparkles,
     keywords: ['ai', 'copilot', 'smart', 'predictions', 'insights', 'recipes', 'gemini', 'categorization'],
     badge: 'PRO',
+    accent: 'cyan',
   },
   {
     id: 'privacy',
@@ -93,6 +103,7 @@ export const SETTINGS_NAV_ITEMS: NavItemConfig[] = [
     description: 'SMS parser status & data controls',
     icon: LockKeyhole,
     keywords: ['privacy', 'data', 'sms', 'export', 'retention', 'telemetry', 'danger', 'delete'],
+    accent: 'emerald',
   },
   {
     id: 'integrations',
@@ -100,6 +111,7 @@ export const SETTINGS_NAV_ITEMS: NavItemConfig[] = [
     description: 'Google, Firebase & Android bridge',
     icon: Plug,
     keywords: ['integrations', 'google', 'firebase', 'android', 'sms', 'fcm', 'plugins', 'sync'],
+    accent: 'indigo',
   },
   {
     id: 'about',
@@ -107,6 +119,7 @@ export const SETTINGS_NAV_ITEMS: NavItemConfig[] = [
     description: 'HomeMind.AI version & runtime',
     icon: Info,
     keywords: ['about', 'version', 'system', 'homemind.ai', 'environment', 'build', 'license'],
+    accent: 'slate',
   },
 ];
 
@@ -179,6 +192,7 @@ export const SettingsNav: React.FC<SettingsNavProps> = ({
               icon={item.icon}
               isActive={activeTab === item.id}
               badge={item.badge}
+              accent={item.accent}
               onClick={() => onSelectTab(item.id)}
             />
           ))
@@ -200,9 +214,9 @@ export const SettingsNav: React.FC<SettingsNavProps> = ({
               role="tab"
               aria-selected={isActive}
               onClick={() => onSelectTab(item.id)}
-              className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 min-h-[44px] ${
+              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 min-h-[44px] ${
                 isActive
-                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/25'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25'
                   : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >

@@ -10,14 +10,14 @@ interface ExpenseCategoryChartProps {
 }
 
 const CATEGORY_COLORS = [
+  '#6366f1', // indigo
   '#10b981', // emerald
-  '#3b82f6', // blue
   '#f59e0b', // amber
-  '#ec4899', // pink
-  '#8b5cf6', // purple
+  '#f43f5e', // rose
   '#06b6d4', // cyan
-  '#f97316', // orange
-  '#64748b', // slate
+  '#8b5cf6', // violet
+  '#14b8a6', // teal
+  '#3b82f6', // blue
 ];
 
 export const ExpenseCategoryChart: React.FC<ExpenseCategoryChartProps> = ({
@@ -38,10 +38,13 @@ export const ExpenseCategoryChart: React.FC<ExpenseCategoryChartProps> = ({
   };
 
   return (
-    <div className="glass-panel p-6 border-primary space-y-5">
-      <div className="flex items-center justify-between border-b border-primary pb-3">
+    <div className="group relative overflow-hidden glass-panel p-6 rounded-2xl border border-primary/80 space-y-5 hover:border-emerald-500/30 transition-all duration-200">
+      <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-500 opacity-80 group-hover:opacity-100 transition-opacity" />
+      <div className="flex items-center justify-between border-b border-primary/80 pb-3">
         <h3 className="text-sm font-extrabold text-primary flex items-center gap-2 uppercase tracking-wider">
-          <PieChart className="w-4 h-4 text-emerald-500" />
+          <div className="w-7 h-7 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <PieChart className="w-4 h-4" />
+          </div>
           <span>Spending by Category</span>
         </h3>
         <span className="text-xs font-mono font-bold text-rose-500">

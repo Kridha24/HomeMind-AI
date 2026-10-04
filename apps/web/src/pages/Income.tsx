@@ -136,15 +136,19 @@ export const Income: React.FC = () => {
       {/* Highlights Bar */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Overall Lifetime Income */}
-        <div className="glass-panel p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-              Total Overall Income
-            </span>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+        <div className="group relative overflow-hidden glass-panel p-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/5 hover:border-emerald-500/40 hover:-translate-y-px transition-all duration-200 shadow-2xs">
+          <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-emerald-500 to-teal-400 opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+              <Wallet className="w-4 h-4" />
+            </div>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
               All-Time
             </span>
           </div>
+          <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider block">
+            Total Overall Income
+          </span>
           <p className="text-xl sm:text-2xl font-extrabold text-emerald-700 dark:text-emerald-400 font-mono tracking-tight">
             +{format(overallIncome)}
           </p>
@@ -152,15 +156,19 @@ export const Income: React.FC = () => {
         </div>
 
         {/* Current Month's Income */}
-        <div className="glass-panel p-4 rounded-2xl border border-teal-500/30 bg-teal-500/5 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider">
-              Monthly Income
-            </span>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
+        <div className="group relative overflow-hidden glass-panel p-4 rounded-2xl border border-teal-500/25 bg-teal-500/5 hover:border-teal-500/40 hover:-translate-y-px transition-all duration-200 shadow-2xs">
+          <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-teal-500 to-emerald-400 opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-xl bg-teal-500/15 border border-teal-500/30 text-teal-600 dark:text-teal-400 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-500/30">
               {currentMonthShort}
             </span>
           </div>
+          <span className="text-[11px] font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider block">
+            Monthly Income
+          </span>
           <p className="text-xl sm:text-2xl font-extrabold text-teal-700 dark:text-teal-400 font-mono tracking-tight">
             +{format(currentMonthIncome)}
           </p>
@@ -170,8 +178,17 @@ export const Income: React.FC = () => {
         </div>
 
         {/* Primary Income Source */}
-        <div className="glass-panel p-4 rounded-2xl border border-primary/80 space-y-1 shadow-2xs">
-          <span className="text-[11px] font-bold text-muted uppercase tracking-wider">Primary Source</span>
+        <div className="group relative overflow-hidden glass-panel p-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 hover:border-cyan-500/35 hover:-translate-y-px transition-all duration-200 shadow-2xs">
+          <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-cyan-500 to-blue-400 opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
+              Top Stream
+            </span>
+          </div>
+          <span className="text-[11px] font-bold text-cyan-800 dark:text-cyan-300 uppercase tracking-wider block">Primary Source</span>
           <p className="text-xl sm:text-2xl font-extrabold text-primary truncate">
             {primarySource}
           </p>
@@ -179,9 +196,18 @@ export const Income: React.FC = () => {
         </div>
 
         {/* Total Income Entries */}
-        <div className="glass-panel p-4 rounded-2xl border border-primary/80 space-y-1 shadow-2xs">
-          <span className="text-[11px] font-bold text-muted uppercase tracking-wider">Total Records</span>
-          <p className="text-xl sm:text-2xl font-extrabold text-indigo-500 dark:text-indigo-400 font-mono">
+        <div className="group relative overflow-hidden glass-panel p-4 rounded-2xl border border-violet-500/20 bg-violet-500/5 hover:border-violet-500/35 hover:-translate-y-px transition-all duration-200 shadow-2xs">
+          <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-violet-500 to-indigo-400 opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-xl bg-violet-500/15 border border-violet-500/30 text-violet-600 dark:text-violet-400 flex items-center justify-center">
+              <Calendar className="w-4 h-4" />
+            </div>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-700 dark:text-violet-300 border border-violet-500/30">
+              Logged
+            </span>
+          </div>
+          <span className="text-[11px] font-bold text-violet-800 dark:text-violet-300 uppercase tracking-wider block">Total Records</span>
+          <p className="text-xl sm:text-2xl font-extrabold text-violet-700 dark:text-violet-400 font-mono">
             {incomes.length}
           </p>
           <p className="text-[11px] text-muted truncate">{currentMonthRecords.length} recorded this month</p>

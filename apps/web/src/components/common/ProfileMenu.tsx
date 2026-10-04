@@ -48,9 +48,9 @@ export const ProfileMenu: React.FC = () => {
   const avatarUrl = user?.avatar || user?.avatarUrl;
 
   const roleBadgeStyles: Record<string, string> = {
-    OWNER: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
+    OWNER: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25',
     ADMIN: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/25',
-    MEMBER: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25',
+    MEMBER: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
     GUEST: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/25',
   };
 
@@ -59,16 +59,16 @@ export const ProfileMenu: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label="User Profile Menu"
-        className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 hover:bg-slate-50 dark:hover:bg-slate-700/60 hover:shadow-xs active:scale-[0.98] transition-all duration-150"
+        className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 hover:bg-slate-50 dark:hover:bg-slate-700/60 hover:border-violet-500/30 hover:shadow-xs active:scale-[0.98] transition-all duration-150"
       >
         {avatarUrl ? (
           <img
             src={avatarUrl}
             alt={fullName}
-            className="w-7 h-7 rounded-full border border-blue-500/30 object-cover flex-shrink-0"
+            className="w-7 h-7 rounded-full border border-violet-500/40 object-cover flex-shrink-0 shadow-2xs"
           />
         ) : (
-          <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-[11px] font-extrabold shadow-2xs flex-shrink-0">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-violet-600 via-indigo-600 to-blue-600 text-white flex items-center justify-center text-[11px] font-extrabold shadow-2xs flex-shrink-0 ring-1 ring-white/20">
             {initials}
           </div>
         )}
@@ -77,7 +77,7 @@ export const ProfileMenu: React.FC = () => {
           <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate leading-none">
             {fullName}
           </span>
-          <span className="text-[10px] text-blue-600 dark:text-blue-400 font-extrabold uppercase tracking-wider block mt-0.5">
+          <span className="text-[10px] text-violet-600 dark:text-violet-400 font-extrabold uppercase tracking-wider block mt-0.5">
             {role}
           </span>
         </div>

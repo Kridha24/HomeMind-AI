@@ -11,6 +11,8 @@ export type ModuleAccent =
   | 'family'
   | 'analytics'
   | 'settings'
+  | 'vision'
+  | 'sustainability'
   | 'neutral';
 
 interface CompactHeaderProps {
@@ -26,54 +28,64 @@ interface CompactHeaderProps {
 
 const accentTileStyles: Record<ModuleAccent, { bg: string; text: string; ring: string }> = {
   dashboard: {
-    bg: 'bg-indigo-500/10 dark:bg-indigo-500/15',
-    text: 'text-indigo-600 dark:text-indigo-400',
-    ring: 'border-indigo-500/20 dark:border-indigo-500/30',
+    bg: 'bg-gradient-to-br from-indigo-500 to-blue-600',
+    text: 'text-white',
+    ring: 'border-transparent shadow-xs shadow-indigo-500/25',
   },
   expenses: {
-    bg: 'bg-emerald-500/10 dark:bg-emerald-500/15',
-    text: 'text-emerald-600 dark:text-emerald-400',
-    ring: 'border-emerald-500/20 dark:border-emerald-500/30',
+    bg: 'bg-gradient-to-br from-emerald-500 to-teal-600',
+    text: 'text-white',
+    ring: 'border-transparent shadow-xs shadow-emerald-500/25',
   },
   income: {
-    bg: 'bg-teal-500/10 dark:bg-teal-500/15',
-    text: 'text-teal-600 dark:text-teal-400',
-    ring: 'border-teal-500/20 dark:border-teal-500/30',
+    bg: 'bg-gradient-to-br from-teal-500 to-emerald-600',
+    text: 'text-white',
+    ring: 'border-transparent shadow-xs shadow-teal-500/25',
   },
   bills: {
-    bg: 'bg-amber-500/10 dark:bg-amber-500/15',
-    text: 'text-amber-600 dark:text-amber-400',
-    ring: 'border-amber-500/20 dark:border-amber-500/30',
+    bg: 'bg-gradient-to-br from-amber-500 to-orange-500',
+    text: 'text-white',
+    ring: 'border-transparent shadow-xs shadow-amber-500/25',
   },
   groceries: {
-    bg: 'bg-rose-500/10 dark:bg-rose-500/15',
-    text: 'text-rose-600 dark:text-rose-400',
-    ring: 'border-rose-500/20 dark:border-rose-500/30',
+    bg: 'bg-gradient-to-br from-rose-500 to-pink-600',
+    text: 'text-white',
+    ring: 'border-transparent shadow-xs shadow-rose-500/25',
   },
   tasks: {
-    bg: 'bg-sky-500/10 dark:bg-sky-500/15',
-    text: 'text-sky-600 dark:text-sky-400',
-    ring: 'border-sky-500/20 dark:border-sky-500/30',
+    bg: 'bg-gradient-to-br from-violet-500 to-purple-600',
+    text: 'text-white',
+    ring: 'border-transparent shadow-xs shadow-violet-500/25',
   },
   family: {
-    bg: 'bg-purple-500/10 dark:bg-purple-500/15',
-    text: 'text-purple-600 dark:text-purple-400',
-    ring: 'border-purple-500/20 dark:border-purple-500/30',
+    bg: 'bg-gradient-to-br from-purple-500 to-indigo-600',
+    text: 'text-white',
+    ring: 'border-transparent shadow-xs shadow-purple-500/25',
   },
   analytics: {
-    bg: 'bg-violet-500/10 dark:bg-violet-500/15',
-    text: 'text-violet-600 dark:text-violet-400',
-    ring: 'border-violet-500/20 dark:border-violet-500/30',
+    bg: 'bg-gradient-to-br from-violet-600 to-cyan-600',
+    text: 'text-white',
+    ring: 'border-transparent shadow-xs shadow-violet-500/25',
   },
   settings: {
-    bg: 'bg-slate-500/10 dark:bg-slate-500/15',
-    text: 'text-slate-600 dark:text-slate-400',
-    ring: 'border-slate-500/20 dark:border-slate-500/30',
+    bg: 'bg-gradient-to-br from-slate-600 to-slate-800',
+    text: 'text-white',
+    ring: 'border-transparent shadow-xs shadow-slate-500/25',
+  },
+  vision: {
+    bg: 'bg-gradient-to-br from-cyan-500 to-blue-600',
+    text: 'text-white',
+    ring: 'border-transparent shadow-xs shadow-cyan-500/25',
+  },
+  sustainability: {
+    bg: 'bg-gradient-to-br from-emerald-600 to-teal-500',
+    text: 'text-white',
+    ring: 'border-transparent shadow-xs shadow-emerald-500/25',
   },
   neutral: {
-    bg: 'bg-slate-500/10 dark:bg-slate-500/15',
-    text: 'text-slate-600 dark:text-slate-400',
-    ring: 'border-slate-500/20 dark:border-slate-500/30',
+    bg: 'bg-gradient-to-br from-slate-500 to-slate-700',
+    text: 'text-white',
+    ring: 'border-transparent shadow-xs shadow-slate-500/25',
   },
 };
 
@@ -87,27 +99,27 @@ export const CompactHeader: React.FC<CompactHeaderProps> = ({
   children,
   className = '',
 }) => {
-  const styles = accentTileStyles[accent];
+  const styles = accentTileStyles[accent] || accentTileStyles.neutral;
 
   return (
     <div
-      className={`w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-2 border-b border-primary/40 ${className}`}
+      className={`w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-3 border-b border-slate-200/80 dark:border-slate-800 ${className}`}
     >
       <div className="flex items-center gap-3 min-w-0">
         <div
           className={`w-10 h-10 rounded-xl flex items-center justify-center border shadow-xs flex-shrink-0 transition-transform ${styles.bg} ${styles.text} ${styles.ring}`}
         >
-          <Icon className="w-5 h-5" />
+          <Icon className="w-5 h-5 text-white" />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-primary truncate">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white truncate">
               {title}
             </h1>
             {badge}
           </div>
           {description && (
-            <p className="text-xs text-muted truncate max-w-xl">
+            <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-xl font-medium">
               {description}
             </p>
           )}

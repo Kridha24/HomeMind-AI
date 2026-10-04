@@ -76,12 +76,15 @@ export const UpcomingBillsCard: React.FC<UpcomingBillsCardProps> = ({
           .reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
   return (
-    <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 md:p-6 shadow-sm flex flex-col justify-between space-y-4">
+    <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-amber-500/[0.06] via-orange-500/[0.02] to-white dark:from-amber-950/25 dark:via-slate-900 dark:to-slate-900 border border-amber-500/25 dark:border-amber-500/35 p-4 sm:p-5 md:p-6 shadow-sm flex flex-col justify-between space-y-4">
+      {/* Luminous Top Bar */}
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-500 via-orange-400 to-amber-300 opacity-90" />
+
       <div>
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between pb-3 border-b border-amber-500/15 dark:border-amber-500/20">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 flex items-center justify-center flex-shrink-0 shadow-2xs">
               <FileText className="w-4 h-4" />
             </div>
             <div>
@@ -97,7 +100,7 @@ export const UpcomingBillsCard: React.FC<UpcomingBillsCardProps> = ({
             <span className="text-base sm:text-xl font-extrabold text-red-600 dark:text-red-400 font-mono block">
               -{format(effectiveTotalDue)}
             </span>
-            <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+            <span className="text-[9px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
               Total Due
             </span>
           </div>

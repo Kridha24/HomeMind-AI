@@ -12,12 +12,12 @@ interface IncomeSourceChartProps {
 const INCOME_COLORS = [
   '#06b6d4', // cyan
   '#10b981', // emerald
-  '#8b5cf6', // purple
-  '#3b82f6', // blue
+  '#6366f1', // indigo
+  '#8b5cf6', // violet
   '#f59e0b', // amber
-  '#ec4899', // pink
   '#14b8a6', // teal
-  '#64748b', // slate
+  '#3b82f6', // blue
+  '#f43f5e', // rose
 ];
 
 export const IncomeSourceChart: React.FC<IncomeSourceChartProps> = ({
@@ -38,10 +38,13 @@ export const IncomeSourceChart: React.FC<IncomeSourceChartProps> = ({
   };
 
   return (
-    <div className="glass-panel p-6 border-primary space-y-5">
-      <div className="flex items-center justify-between border-b border-primary pb-3">
+    <div className="group relative overflow-hidden glass-panel p-6 rounded-2xl border border-primary/80 space-y-5 hover:border-cyan-500/30 transition-all duration-200">
+      <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-500 opacity-80 group-hover:opacity-100 transition-opacity" />
+      <div className="flex items-center justify-between border-b border-primary/80 pb-3">
         <h3 className="text-sm font-extrabold text-primary flex items-center gap-2 uppercase tracking-wider">
-          <TrendingUp className="w-4 h-4 text-cyan-500" />
+          <div className="w-7 h-7 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+            <TrendingUp className="w-4 h-4" />
+          </div>
           <span>Income Sources</span>
         </h3>
         <span className="text-xs font-mono font-bold text-emerald-500">

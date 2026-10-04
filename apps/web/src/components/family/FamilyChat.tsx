@@ -653,10 +653,13 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
         <div className="p-4 border-b border-primary/80">
           <div className="flex items-center justify-between">
             <h3 className="font-extrabold text-sm text-primary flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <div className="w-7 h-7 rounded-xl bg-indigo-500/15 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                <MessageSquare className="w-4 h-4" />
+              </div>
               Family Channels
             </h3>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]" />
               {onlineUserIds.length} Online
             </span>
           </div>
@@ -667,9 +670,9 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
           {/* Main Household Group Channel */}
           <button
             onClick={() => setActiveChannel('group')}
-            className={`w-full p-3 rounded-2xl text-left flex items-center justify-between transition-all ${
+            className={`w-full p-3 rounded-2xl text-left flex items-center justify-between transition-all duration-150 ${
               activeChannel === 'group'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+                ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/25'
                 : 'hover:bg-secondary/60 text-primary'
             }`}
           >
@@ -678,7 +681,7 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
                 className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm ${
                   activeChannel === 'group'
                     ? 'bg-white/20 text-white'
-                    : 'bg-blue-500/15 text-blue-600 dark:text-blue-400'
+                    : 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25'
                 }`}
               >
                 <Users className="w-5 h-5" />
@@ -696,7 +699,7 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
             </div>
             <span
               className={`w-2 h-2 rounded-full ${
-                activeChannel === 'group' ? 'bg-white' : 'bg-emerald-500'
+                activeChannel === 'group' ? 'bg-white shadow-[0_0_6px_#ffffff]' : 'bg-emerald-500 shadow-[0_0_6px_#10b981]'
               }`}
             />
           </button>
@@ -721,9 +724,9 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
                 <button
                   key={member.id}
                   onClick={() => setActiveChannel(member.id)}
-                  className={`w-full p-2.5 rounded-2xl text-left flex items-center justify-between transition-all ${
+                  className={`w-full p-2.5 rounded-2xl text-left flex items-center justify-between transition-all duration-150 ${
                     isSelected
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+                      ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/25'
                       : 'hover:bg-secondary/60 text-primary'
                   }`}
                 >
@@ -733,15 +736,15 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
                         className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs ${
                           isSelected
                             ? 'bg-white/20 text-white'
-                            : 'bg-secondary border border-primary/80 text-primary'
+                            : 'bg-violet-500/10 border border-violet-500/25 text-violet-600 dark:text-violet-400'
                         }`}
                       >
                         {member.name.charAt(0)}
                       </div>
                       <span
                         className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 ${
-                          isSelected ? 'border-blue-600' : 'border-panel'
-                        } ${isOnline ? 'bg-emerald-500' : 'bg-slate-400'}`}
+                          isSelected ? 'border-indigo-600' : 'border-panel'
+                        } ${isOnline ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-slate-400'}`}
                       />
                     </div>
 
@@ -767,11 +770,11 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
         <div className="p-3 border-t border-primary/60 text-center bg-secondary/10">
           <button
             onClick={() => setIsSecurityModalOpen(true)}
-            className="w-full py-1.5 px-2 rounded-xl hover:bg-secondary/60 text-[10px] text-muted font-medium flex items-center justify-center gap-1.5 transition-colors group cursor-pointer"
+            className="w-full py-1.5 px-2 rounded-xl hover:bg-emerald-500/10 text-[10px] text-muted font-medium flex items-center justify-center gap-1.5 transition-colors group cursor-pointer"
             title="Click for End-to-End Encryption details"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 group-hover:scale-110 transition-transform" />
-            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+            <span className="font-semibold text-emerald-700 dark:text-emerald-400">
               🔒 End-to-end encrypted
             </span>
           </button>
@@ -783,7 +786,7 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
         {/* Chat Header */}
         <div className="p-4 border-b border-primary/80 flex items-center justify-between bg-secondary/20">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow-sm">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-bold flex items-center justify-center text-sm shadow-sm">
               {activeChannel === 'group' ? (
                 <Users className="w-5 h-5" />
               ) : (
@@ -800,11 +803,11 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
                 {/* E2EE Verified Badge */}
                 <button
                   onClick={() => setIsSecurityModalOpen(true)}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition-colors cursor-pointer"
                   title="Messages are encrypted on your device and decrypted only on participating devices."
                 >
-                  <Lock className="w-2.5 h-2.5" />
-                  <span>E2EE</span>
+                  <Lock className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>E2EE Protected</span>
                 </button>
               </div>
               <p className="text-[11px] text-muted">
@@ -823,7 +826,7 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
               onClick={() => setShowSearch(!showSearch)}
               className={`p-2 rounded-xl border border-primary/80 transition-colors ${
                 showSearch
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-indigo-600 text-white shadow-xs'
                   : 'bg-secondary/80 text-secondary hover:text-primary'
               }`}
               title="Search locally decrypted messages"
@@ -835,16 +838,16 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
               <>
                 <button
                   onClick={() => onStartCall(activeMember, 'audio')}
-                  className="p-2 sm:p-2.5 rounded-xl bg-secondary/80 hover:bg-emerald-500/15 hover:border-emerald-500/30 text-secondary hover:text-emerald-600 dark:hover:text-emerald-400 border border-primary/80 transition-all shadow-xs active:scale-95 flex items-center gap-1.5 text-xs font-bold"
+                  className="p-2 sm:p-2.5 rounded-xl bg-secondary/80 hover:bg-amber-500/15 hover:border-amber-500/35 text-secondary hover:text-amber-600 dark:hover:text-amber-400 border border-primary/80 transition-all shadow-xs active:scale-95 flex items-center gap-1.5 text-xs font-bold"
                   title="Start Audio Call (DTLS-SRTP Media Encrypted)"
                 >
-                  <Phone className="w-4 h-4" />
+                  <Phone className="w-4 h-4 text-amber-500" />
                   <span className="hidden sm:inline">Audio</span>
                 </button>
 
                 <button
                   onClick={() => onStartCall(activeMember, 'video')}
-                  className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white transition-all shadow-md shadow-blue-600/25 active:scale-95 flex items-center gap-1.5 text-xs font-bold"
+                  className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white transition-all shadow-md shadow-indigo-600/25 active:scale-95 flex items-center gap-1.5 text-xs font-bold"
                   title="Start Video Call (DTLS-SRTP Media Encrypted)"
                 >
                   <Video className="w-4 h-4" />
@@ -937,10 +940,10 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
                     )}
 
                     <div
-                      className={`p-3.5 rounded-2xl text-xs font-medium break-words shadow-sm ${
+                      className={`p-3.5 rounded-2xl text-xs font-medium break-words shadow-sm transition-all ${
                         isMe
-                          ? 'bg-blue-600 text-white rounded-br-xs'
-                          : 'bg-panel border border-primary/80 text-primary rounded-bl-xs'
+                          ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-br-xs shadow-md shadow-indigo-600/20'
+                          : 'bg-panel border border-primary/80 text-primary rounded-bl-xs shadow-2xs'
                       }`}
                     >
                       {msg.isDecrypted ? (
@@ -1041,7 +1044,8 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
             <button
               type="button"
               onClick={() => setShowEmojiBar(!showEmojiBar)}
-              className="p-2.5 rounded-xl text-secondary hover:text-primary hover:bg-secondary/60 transition-colors"
+              className="p-2.5 rounded-xl text-secondary hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+              title="Add emoji"
             >
               <Smile className="w-5 h-5" />
             </button>
@@ -1051,13 +1055,14 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
               value={inputText}
               onChange={handleInputChange}
               placeholder="Type an end-to-end encrypted message..."
-              className="flex-1 bg-panel border border-primary/80 rounded-2xl px-4 py-2.5 text-xs text-primary placeholder-slate-400 focus:outline-none focus:border-blue-500 font-medium"
+              className="flex-1 bg-panel border border-primary/80 rounded-2xl px-4 py-2.5 text-xs text-primary placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 font-medium transition-all"
             />
 
             <button
               type="submit"
               disabled={!inputText.trim()}
-              className="p-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-md shadow-blue-600/25 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+              className="p-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white transition-all shadow-md shadow-indigo-600/25 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+              title="Send Encrypted Message"
             >
               <Send className="w-4 h-4" />
             </button>

@@ -28,15 +28,16 @@ export const BillsSummary: React.FC<BillsSummaryProps> = ({
             : 'border-primary/80 hover:border-amber-500/50'
         }`}
       >
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] font-bold text-secondary uppercase tracking-wider">
+        <div className="h-[2.5px] w-full bg-gradient-to-r from-amber-500 to-orange-400 absolute top-0 left-0 right-0 opacity-80 group-hover:opacity-100 transition-opacity" />
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
             Total Due
           </span>
-          <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-xl bg-amber-500/12 text-amber-600 dark:text-amber-400 border border-amber-500/25 flex items-center justify-center transition-transform group-hover:scale-105">
             <TrendingDown className="w-4 h-4" />
           </div>
         </div>
-        <p className="text-xl sm:text-2xl font-extrabold text-primary font-mono mt-2 truncate">
+        <p className="text-xl sm:text-2xl font-extrabold text-amber-700 dark:text-amber-400 font-mono mt-2 truncate">
           {formatINR(metrics.totalDue)}
         </p>
         <p className="text-[11px] text-secondary mt-1">
@@ -56,11 +57,12 @@ export const BillsSummary: React.FC<BillsSummaryProps> = ({
             : 'border-primary/80 hover:border-blue-500/50'
         }`}
       >
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] font-bold text-secondary uppercase tracking-wider">
+        <div className="h-[2.5px] w-full bg-gradient-to-r from-blue-500 to-sky-400 absolute top-0 left-0 right-0 opacity-80 group-hover:opacity-100 transition-opacity" />
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
             Due This Week
           </span>
-          <div className="w-7 h-7 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-xl bg-blue-500/12 text-blue-600 dark:text-blue-400 border border-blue-500/25 flex items-center justify-center transition-transform group-hover:scale-105">
             <Clock className="w-4 h-4" />
           </div>
         </div>
@@ -84,15 +86,16 @@ export const BillsSummary: React.FC<BillsSummaryProps> = ({
             : 'border-primary/80 hover:border-rose-500/40'
         } ${activeFilter === 'overdue' ? 'ring-1 ring-rose-500/40 shadow-xs' : ''}`}
       >
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] font-bold text-secondary uppercase tracking-wider">
+        <div className="h-[2.5px] w-full bg-gradient-to-r from-rose-500 to-red-400 absolute top-0 left-0 right-0 opacity-80 group-hover:opacity-100 transition-opacity" />
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
             Overdue
           </span>
           <div
-            className={`w-7 h-7 rounded-xl flex items-center justify-center ${
+            className={`w-7 h-7 rounded-xl flex items-center justify-center border transition-transform group-hover:scale-105 ${
               metrics.overdueCount > 0
-                ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 animate-pulse'
-                : 'bg-secondary/40 text-secondary'
+                ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30 animate-pulse'
+                : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
             }`}
           >
             <AlertCircle className="w-4 h-4" />
@@ -126,11 +129,12 @@ export const BillsSummary: React.FC<BillsSummaryProps> = ({
             : 'border-primary/80 hover:border-emerald-500/50'
         }`}
       >
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] font-bold text-secondary uppercase tracking-wider">
+        <div className="h-[2.5px] w-full bg-gradient-to-r from-emerald-500 to-teal-400 absolute top-0 left-0 right-0 opacity-80 group-hover:opacity-100 transition-opacity" />
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
             Paid This Month
           </span>
-          <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-xl bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center justify-center transition-transform group-hover:scale-105">
             <CheckCircle2 className="w-4 h-4" />
           </div>
         </div>

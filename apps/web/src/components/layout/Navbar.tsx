@@ -62,8 +62,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     <header
       className={`
         min-h-[56px] pt-[env(safe-area-inset-top,0px)]
-        bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl
-        border-b border-slate-200/80 dark:border-slate-800
+        bg-slate-50/85 dark:bg-slate-950/90 backdrop-blur-xl
+        border-b border-slate-200/90 dark:border-slate-800
         sticky top-0 z-30 ${marginClass}
         flex items-center justify-between
         px-3 sm:px-5 gap-2 sm:gap-4
@@ -78,7 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={onToggleMobileSidebar}
             aria-label="Open navigation menu"
-            className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex-shrink-0"
+            className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors flex-shrink-0"
           >
             <Menu className="w-4 h-4" />
           </button>
@@ -88,10 +88,10 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div
           onClick={onOpenSearch}
           className={`relative flex-1 cursor-pointer transition-all duration-180 ease-out ${
-            searchFocused ? 'max-w-xl ring-2 ring-blue-500/20 shadow-md' : 'max-w-md'
+            searchFocused ? 'max-w-xl ring-2 ring-indigo-500/20 shadow-md' : 'max-w-md'
           }`}
         >
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             readOnly
@@ -101,11 +101,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               if (onOpenSearch) onOpenSearch();
             }}
             onBlur={() => setSearchFocused(false)}
-            className="w-full bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100/70 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-xl pl-8 pr-16 py-1.5 text-xs text-slate-700 dark:text-slate-200 placeholder-slate-400 cursor-pointer outline-none transition-all duration-180"
+            className="w-full bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200/90 dark:border-slate-700/80 focus:border-indigo-500/40 rounded-xl pl-8 pr-16 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 cursor-pointer outline-none transition-all duration-180 shadow-2xs"
           />
           <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 pointer-events-none">
-            <kbd className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-[10px] font-bold text-slate-500 dark:text-slate-400 shadow-2xs">
-              <Command className="w-2.5 h-2.5" />K
+            <kbd className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-500 dark:text-slate-400 shadow-2xs">
+              <Command className="w-2.5 h-2.5 text-indigo-500" />K
             </kbd>
           </div>
         </div>
@@ -121,9 +121,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setIsHouseholdMenuOpen(!isHouseholdMenuOpen)}
             aria-label="Household selector"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-[11px] text-slate-700 dark:text-slate-300 font-semibold max-w-[200px] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/[0.08] to-indigo-500/[0.08] hover:from-emerald-500/15 hover:to-indigo-500/15 border border-emerald-500/25 dark:border-emerald-500/35 hover:border-emerald-500/50 text-[11px] text-slate-800 dark:text-slate-200 font-bold max-w-[200px] transition-colors shadow-2xs"
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 shadow-[0_0_6px_#10b981]" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 shadow-[0_0_6px_#10b981] animate-pulse" />
             <span className="truncate">{householdName}</span>
             <ChevronDown className="w-3 h-3 text-slate-400 flex-shrink-0" />
           </button>
@@ -134,7 +134,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-3 z-50 space-y-2.5 animate-in fade-in zoom-in-95 duration-150"
             >
               <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/12 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center font-bold text-xs flex-shrink-0">
                   <Home className="w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -195,11 +195,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         <button
           onClick={onOpenNotifications}
           aria-label={t('common.notifications', 'Notifications')}
-          className="relative p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 active:scale-95 transition-all duration-150"
+          className="relative p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-amber-500/10 dark:hover:bg-amber-500/15 border border-transparent hover:border-amber-500/25 active:scale-95 transition-all duration-150"
         >
           <Bell className="w-4 h-4" />
           {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900 animate-pulse" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900 shadow-[0_0_8px_#f43f5e] animate-pulse" />
           )}
         </button>
 
