@@ -8,7 +8,7 @@ import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSettingStore } from '../../stores/useSettingStore';
 import { LoginCard } from '../../components/auth/LoginCard';
-import { AuthSuccessOverlay } from '../../components/auth/AuthSuccessOverlay';
+import { HomeEntryTransition } from '../../components/auth/HomeEntryTransition';
 import { PhoneAuthModal } from '../../components/common/PhoneAuthModal';
 
 // Desktop-only decorative components — hidden on mobile via CSS
@@ -59,6 +59,7 @@ export const Login: React.FC = () => {
   const [dismissSessionExpired, setDismissSessionExpired] = useState(false);
   // Show "session expired" banner if redirected here from genuine refresh failure
   const sessionExpired = !dismissSessionExpired && searchParams.get('sessionExpired') === 'true';
+  const previewTransition = searchParams.get('preview_transition') === 'true';
 
   // Load Google Identity Services script on Web
   useEffect(() => {
@@ -254,7 +255,10 @@ export const Login: React.FC = () => {
 
   const handleOverlayFinish = () => {
     setShowSuccessOverlay(false);
-    navigate(safeRedirect, { replace: true });
+    navigate(safeRedirect, {
+      replace: true,
+      state: { justLoggedIn: true, welcomeName: pendingSuccessData?.userName }
+    });
   };
 
   return (
@@ -414,9 +418,9 @@ export const Login: React.FC = () => {
         <span className="hidden sm:inline">Crafted for modern households</span>
       </footer>
 
-      {showSuccessOverlay && (
-        <AuthSuccessOverlay
-          userName={pendingSuccessData?.userName}
+      {(showSuccessOverlay || previewTransition) && (
+        <HomeEntryTransition
+          userName={pendingSuccessData?.userName || 'Mihir'}
           onFinish={handleOverlayFinish}
         />
       )}

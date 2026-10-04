@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Wallet,
@@ -73,6 +74,24 @@ const COUNTRY_FLAGS: Record<string, string> = {
 };
 
 export const Dashboard: React.FC = () => {
+  const location = useLocation();
+  const [welcomeAlert, setWelcomeAlert] = useState<boolean>(() => {
+    return Boolean((location.state as any)?.justLoggedIn);
+  });
+
+  React.useEffect(() => {
+    if (welcomeAlert) {
+      try {
+        window.history.replaceState({}, document.title);
+      } catch (e) {}
+
+      const timer = setTimeout(() => {
+        setWelcomeAlert(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [welcomeAlert]);
+
   const queryClient = useQueryClient();
   const { user, household, updateUser } = useAuthStore();
   const { format, currencySymbol, country } = useSettingStore();
@@ -285,6 +304,37 @@ export const Dashboard: React.FC = () => {
         memberCount={summary?.activeMembersCount || summary?.membersCount || 2}
         onInviteClick={() => setShowInviteModal(true)}
       />
+
+      {/* One-time Welcome Home Banner after signature entrance */}
+      {welcomeAlert && (
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-indigo-900/60 via-purple-900/40 to-slate-900/80 border border-indigo-400/40 backdrop-blur-xl shadow-xl flex items-center justify-between animate-in fade-in slide-in-from-top-3 duration-500">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 flex-shrink-0">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+                <span>Welcome home 👋</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-400/30">
+                  Online
+                </span>
+              </h4>
+              <p className="text-[11px] sm:text-xs text-indigo-200">
+                Your household operating system is ready and synchronized.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setWelcomeAlert(false);
+              try { window.history.replaceState({}, document.title); } catch (e) {}
+            }}
+            className="text-xs font-semibold text-indigo-300 hover:text-white px-2.5 py-1 rounded-lg hover:bg-white/10 transition-colors"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* 1. Contextual Personalized Greeting Hero & Bold Localized Date */}
       <DashboardGreeting
