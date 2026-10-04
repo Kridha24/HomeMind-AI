@@ -18,7 +18,7 @@ export const HouseholdHeader: React.FC<HouseholdHeaderProps> = ({
   const navigate = useNavigate();
   const { household, user } = useAuthStore();
 
-  const householdName = household?.name || `${user?.name || 'My'}'s Home`;
+  const householdName = household?.name || (user?.name ? `${user.name}'s Home` : "Mihir kridha Shekhar Gupta's Home");
 
   return (
     <div

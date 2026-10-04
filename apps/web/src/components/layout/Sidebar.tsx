@@ -16,6 +16,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSettingStore } from '../../stores/useSettingStore';
@@ -38,7 +39,7 @@ interface NavItem {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
-  const { household } = useAuthStore();
+  const { user, household } = useAuthStore();
   const { sidebarCollapsed, toggleSidebar } = useSettingStore();
   const { t } = useI18n();
   const location = useLocation();
@@ -55,28 +56,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
   ];
 
   const financeItems: NavItem[] = [
-    { key: 'nav.expenses', name: t('nav.expenses', 'Expenses & Ledger'), path: '/expenses', icon: CreditCard, accent: 'emerald' },
-    { key: 'nav.income', name: t('nav.income', 'Income & Earnings'), path: '/income', icon: Wallet, accent: 'teal' },
+    { key: 'nav.expenses', name: t('nav.expenses', 'Expenses & Ledger'), path: '/expenses', icon: CreditCard, accent: 'rose' },
+    { key: 'nav.income', name: t('nav.income', 'Income & Earnings'), path: '/income', icon: Wallet, accent: 'emerald' },
     { key: 'nav.bills', name: t('nav.bills', 'Bills & Utilities'), path: '/bills', icon: FileText, accent: 'amber' },
   ];
 
   const householdItems: NavItem[] = [
-    { key: 'nav.inventory', name: t('nav.inventory', 'Grocery Inventory'), path: '/groceries', icon: ShoppingBag, accent: 'rose' },
-    { key: 'nav.tasks', name: t('nav.tasks', 'Household Tasks'), path: '/tasks', icon: CheckSquare, accent: 'sky' },
+    { key: 'nav.inventory', name: t('nav.inventory', 'Grocery Inventory'), path: '/groceries', icon: ShoppingBag, accent: 'teal' },
+    { key: 'nav.tasks', name: t('nav.tasks', 'Household Tasks'), path: '/tasks', icon: CheckSquare, accent: 'purple' },
   ];
 
   const familyItems: NavItem[] = [
-    { key: 'nav.family', name: t('nav.family', 'Family Workspace'), path: '/family', icon: Users, accent: 'purple' },
+    { key: 'nav.family', name: t('nav.family', 'Family Workspace'), path: '/family', icon: Users, accent: 'indigo' },
   ];
 
   const insightItems: NavItem[] = [
-    { key: 'nav.analytics', name: t('nav.analytics', 'Analytics & Trends'), path: '/analytics', icon: BarChart3, accent: 'violet' },
-    { key: 'nav.pantryVision', name: t('nav.pantryVision', 'Vision OCR'), path: '/pantry-vision', icon: Camera, accent: 'cyan', badge: 'AI' },
+    { key: 'nav.analytics', name: t('nav.analytics', 'Analytics & Trends'), path: '/analytics', icon: BarChart3, accent: 'cyan' },
+    { key: 'nav.pantryVision', name: t('nav.pantryVision', 'Pantry Vision'), path: '/pantry-vision', icon: Camera, accent: 'sky', badge: 'AI' },
     { key: 'nav.sustainability', name: t('nav.sustainability', 'Sustainability'), path: '/sustainability', icon: Leaf, accent: 'emerald', badge: 'ECO' },
   ];
 
   const systemItems: NavItem[] = [
-    { key: 'nav.settings', name: t('nav.settings', 'Settings'), path: '/settings', icon: SettingsIcon, accent: 'neutral' },
+    { key: 'nav.settings', name: t('nav.settings', 'App Settings'), path: '/settings', icon: SettingsIcon, accent: 'neutral' },
   ];
 
   const handleHover = (e: React.MouseEvent<HTMLElement>, item: NavItem) => {
@@ -158,7 +159,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                   HomeMind.AI
                 </span>
                 <span className="text-[9px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block mt-0.5">
-                  AI OS
+                  AI OS for Smarter Homes
                 </span>
               </div>
             )}
@@ -206,26 +207,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
             )}
           </button>
 
-          {/* Household Status Pill */}
+          {/* Household Profile Card */}
           <div
             className={`flex items-center ${
               isCollapsed ? 'justify-center w-9 h-9' : 'w-full px-2.5 py-2'
-            } rounded-xl bg-gradient-to-r from-indigo-500/[0.08] via-purple-500/[0.05] to-emerald-500/[0.05] dark:from-indigo-950/40 dark:via-slate-900 dark:to-emerald-950/20 border border-indigo-500/25 dark:border-indigo-500/35 relative hover:border-indigo-500/50 transition-colors shadow-2xs`}
+            } rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 relative hover:border-indigo-500/50 transition-all shadow-xs cursor-pointer group`}
           >
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-600 to-blue-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-2xs">
-              {household?.name?.charAt(0) || 'H'}
+            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-sm shadow-indigo-500/30">
+              {user?.name?.charAt(0) || 'M'}
             </div>
             {!isCollapsed && (
-              <div className="ml-2 min-w-0 flex-1">
-                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block truncate">
-                  {household?.name || 'Home Residence'}
+              <div className="ml-2.5 min-w-0 flex-1">
+                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block truncate group-hover:text-indigo-600 transition-colors">
+                  {user?.name || 'Mihir kridha Shekhar Gupta'}
                 </span>
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">
-                  Active Household
-                </span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 shadow-[0_0_6px_#10b981]" />
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block">
+                    Active Household
+                  </span>
+                </div>
               </div>
             )}
-            <span className="w-2 h-2 rounded-full bg-emerald-500 absolute top-1.5 right-1.5 shadow-[0_0_6px_#10b981]" />
+            {!isCollapsed && (
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 transition-colors flex-shrink-0 ml-1" />
+            )}
           </div>
         </div>
       </aside>

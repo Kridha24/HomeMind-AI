@@ -35,6 +35,7 @@ import { FinancialSummaryGrid } from '../components/dashboard/FinancialSummaryGr
 import { TodayOverview } from '../components/dashboard/TodayOverview';
 import { UpcomingBillsCard } from '../components/dashboard/UpcomingBillsCard';
 import { PendingTasksCard } from '../components/dashboard/PendingTasksCard';
+import { MonthlyOverviewCard } from '../components/dashboard/MonthlyOverviewCard';
 import { RecentActivityCard } from '../components/dashboard/RecentActivityCard';
 import { HomeMindInsightCard } from '../components/dashboard/HomeMindInsightCard';
 import { DashboardSkeleton } from '../components/dashboard/DashboardSkeleton';
@@ -349,9 +350,15 @@ export const Dashboard: React.FC = () => {
             onAction={(tab) => setActionCenterTab(tab)}
           />
 
-          {/* High-Priority Action Center: Upcoming Bills & Due Tasks */}
+          {/* Lower Content Grid: 3-Column Layout (Tasks, Bills, Monthly Overview) */}
           <div className="space-y-3">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <PendingTasksCard
+                tasks={pendingTasks}
+                onCompleteTask={handleCompleteTask}
+                onAddTask={() => setShowTaskModal(true)}
+              />
+
               <UpcomingBillsCard
                 bills={upcomingBills}
                 totalDue={upcomingBillsTotal}
@@ -364,10 +371,10 @@ export const Dashboard: React.FC = () => {
                 }}
               />
 
-              <PendingTasksCard
-                tasks={pendingTasks}
-                onCompleteTask={handleCompleteTask}
-                onAddTask={() => setShowTaskModal(true)}
+              <MonthlyOverviewCard
+                monthlyIncome={monthlyIncome}
+                monthlyExpenses={monthlyExpenses || 4000}
+                format={format}
               />
             </div>
           </div>
@@ -482,8 +489,8 @@ export const Dashboard: React.FC = () => {
             onSelectTab={(tab) => setActionCenterTab(tab)}
           />
 
-          {/* Action Center Grid: My Assigned Tasks & Household Bills */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Lower Content Grid: 3-Column Layout (Tasks, Bills, Monthly Overview) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Assigned & Household Tasks */}
             <PendingTasksCard
               tasks={pendingTasks}
@@ -502,6 +509,12 @@ export const Dashboard: React.FC = () => {
                 setEditingBill(null);
                 setShowBillModal(true);
               }}
+            />
+
+            <MonthlyOverviewCard
+              monthlyIncome={0}
+              monthlyExpenses={4000}
+              format={format}
             />
           </div>
 
