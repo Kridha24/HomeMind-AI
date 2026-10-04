@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, PhoneCall, ShieldCheck, Home, Zap } from 'lucide-react';
+import { AlertCircle, PhoneCall, Lock, Zap } from 'lucide-react';
 import { GoogleLoginButton } from './GoogleLoginButton';
 import { SecurityBadge } from './SecurityBadge';
 
@@ -25,14 +25,14 @@ export const LoginCard: React.FC<LoginCardProps> = ({
   googleConfigured = true,
 }) => {
   return (
-    <div className="w-full max-w-[430px] bg-panel/90 dark:bg-slate-900/95 backdrop-blur-2xl p-7 sm:p-9 space-y-6 border border-primary/20 dark:border-white/10 rounded-3xl shadow-2xl shadow-black/20 relative z-10 transition-all">
+    <div className="w-full max-w-[440px] bg-[#0A1128]/85 dark:bg-[#0A1128]/90 backdrop-blur-2xl p-7 sm:p-9 space-y-6 border border-indigo-500/30 dark:border-indigo-400/25 rounded-[30px] shadow-2xl shadow-indigo-950/60 relative z-10 transition-all">
       {/* Card Header */}
       <div className="space-y-1.5 text-center">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-primary dark:text-white tracking-tight">
-          Namaste 👋
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          Welcome Back 👋
         </h2>
-        <p className="text-sm text-muted dark:text-slate-400 font-medium">
-          Sign in to your household workspace
+        <p className="text-sm text-slate-400 font-medium">
+          Sign in to continue
         </p>
       </div>
 
@@ -67,37 +67,37 @@ export const LoginCard: React.FC<LoginCardProps> = ({
         )}
 
         <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-primary/20 dark:bg-white/10" />
-          <span className="text-[11px] uppercase tracking-wider text-muted dark:text-slate-400 font-semibold">or</span>
-          <div className="flex-1 h-px bg-primary/20 dark:bg-white/10" />
+          <div className="flex-1 h-px bg-white/10" />
+          <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">OR</span>
+          <div className="flex-1 h-px bg-white/10" />
         </div>
 
         <button
           type="button"
           onClick={onPhoneClick}
           disabled={loading}
-          className="w-full min-h-[48px] bg-panel dark:bg-slate-800/80 hover:bg-secondary dark:hover:bg-slate-800 border border-primary/30 dark:border-white/15 text-primary dark:text-slate-100 font-semibold py-3.5 px-5 rounded-2xl text-sm flex items-center justify-center gap-2.5 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 active:scale-[0.98] disabled:opacity-60 group shadow-md"
+          className="w-full min-h-[48px] bg-slate-900/80 hover:bg-slate-800/90 border border-white/10 hover:border-emerald-500/30 text-slate-100 font-semibold py-3.5 px-5 rounded-2xl text-sm flex items-center justify-center gap-2.5 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 active:scale-[0.98] disabled:opacity-60 group shadow-md"
         >
-          <PhoneCall className="w-4 h-4 text-emerald-500 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
+          <PhoneCall className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
           <span>Continue with Mobile Number</span>
         </button>
       </div>
 
       {/* Trust Badges */}
       <div className="grid grid-cols-2 gap-2.5">
-        <div className="p-3 rounded-2xl bg-background/60 dark:bg-slate-800/40 border border-primary/15 dark:border-white/5 text-center space-y-1">
-          <div className="flex items-center justify-center gap-1 text-[11px] text-muted dark:text-slate-400 font-medium">
-            <Zap className="w-3 h-3 text-amber-500" />
+        <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-amber-500/20 text-center space-y-1">
+          <div className="flex items-center justify-center gap-1.5 text-[11px] text-amber-400 font-semibold">
+            <Zap className="w-3.5 h-3.5 text-amber-400" />
             <span>Instant Access</span>
           </div>
-          <span className="text-xs text-primary dark:text-slate-200 font-bold block">No Password Needed</span>
+          <span className="text-xs text-slate-200 font-bold block">No Password Needed</span>
         </div>
-        <div className="p-3 rounded-2xl bg-background/60 dark:bg-slate-800/40 border border-primary/15 dark:border-white/5 text-center space-y-1">
-          <div className="flex items-center justify-center gap-1 text-[11px] text-muted dark:text-slate-400 font-medium">
-            <Home className="w-3 h-3 text-blue-500" />
+        <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-indigo-500/25 text-center space-y-1">
+          <div className="flex items-center justify-center gap-1.5 text-[11px] text-indigo-400 font-semibold">
+            <Lock className="w-3.5 h-3.5 text-indigo-400" />
             <span>100% Private</span>
           </div>
-          <span className="text-xs text-primary dark:text-slate-200 font-bold block">Isolated Household</span>
+          <span className="text-xs text-slate-200 font-bold block">Your Data. Your Home.</span>
         </div>
       </div>
 

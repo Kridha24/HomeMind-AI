@@ -1,135 +1,116 @@
 import React from 'react';
-import {
-  Sparkles,
-  Home,
-  Bot,
-  Users,
-  CheckSquare,
-  DollarSign,
-  ShoppingBag,
-  Calendar,
-} from 'lucide-react';
+import { Home, Receipt, ShoppingBag, FileText, CheckSquare } from 'lucide-react';
 
 export const HomeMindEcosystem: React.FC = () => {
-  const nodes = [
-    {
-      id: 'home',
-      name: 'Home',
-      tag: 'Residence',
-      icon: Home,
-      color: 'text-blue-400',
-      bg: 'bg-blue-500/10',
-      border: 'border-blue-500/20',
-      animation: 'animate-float-slow',
-    },
-    {
-      id: 'ai',
-      name: 'AI Assistant',
-      tag: 'Everyday AI',
-      icon: Bot,
-      color: 'text-indigo-400',
-      bg: 'bg-indigo-500/10',
-      border: 'border-indigo-500/20',
-      animation: 'animate-float-delayed',
-    },
-    {
-      id: 'family',
-      name: 'Family',
-      tag: 'Household',
-      icon: Users,
-      color: 'text-purple-400',
-      bg: 'bg-purple-500/10',
-      border: 'border-purple-500/20',
-      animation: 'animate-float-slow',
-    },
-    {
-      id: 'tasks',
-      name: 'Tasks',
-      tag: 'Chores & Routine',
-      icon: CheckSquare,
-      color: 'text-amber-400',
-      bg: 'bg-amber-500/10',
-      border: 'border-amber-500/20',
-      animation: 'animate-float-delayed',
-    },
-    {
-      id: 'finance',
-      name: 'Finance',
-      tag: 'Budget & Bills',
-      icon: DollarSign,
-      color: 'text-emerald-400',
-      bg: 'bg-emerald-500/10',
-      border: 'border-emerald-500/20',
-      animation: 'animate-float-slow',
-    },
-    {
-      id: 'shopping',
-      name: 'Shopping',
-      tag: 'Pantry & Needs',
-      icon: ShoppingBag,
-      color: 'text-rose-400',
-      bg: 'bg-rose-500/10',
-      border: 'border-rose-500/20',
-      animation: 'animate-float-delayed',
-    },
-    {
-      id: 'calendar',
-      name: 'Calendar',
-      tag: 'Timeline Sync',
-      icon: Calendar,
-      color: 'text-cyan-400',
-      bg: 'bg-cyan-500/10',
-      border: 'border-cyan-500/20',
-      animation: 'animate-float-slow',
-    },
-  ];
-
   return (
-    <div className="relative w-full max-w-xl py-3 my-1">
-      {/* Central HomeMind AI Nucleus */}
-      <div className="relative flex flex-col items-center justify-center z-10">
-        <div className="relative flex items-center justify-center">
-          <div className="absolute inset-0 bg-blue-500/20 rounded-2xl blur-xl animate-pulse-glow" />
-          <div className="relative z-10 px-4 py-2.5 rounded-2xl bg-panel/90 border border-blue-500/40 backdrop-blur-2xl shadow-xl flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-blue-500/30">
-              <Sparkles className="w-4 h-4" />
+    <div className="relative w-full max-w-xl py-4 my-2 select-none">
+      {/* SVG Network Connector Lines */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="line-coral" x1="50%" y1="50%" x2="20%" y2="20%">
+            <stop offset="0%" stopColor="#818cf8" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.9" />
+          </linearGradient>
+          <linearGradient id="line-amber" x1="50%" y1="50%" x2="80%" y2="20%">
+            <stop offset="0%" stopColor="#818cf8" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.9" />
+          </linearGradient>
+          <linearGradient id="line-emerald" x1="50%" y1="50%" x2="20%" y2="80%">
+            <stop offset="0%" stopColor="#818cf8" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#10b981" stopOpacity="0.9" />
+          </linearGradient>
+          <linearGradient id="line-violet" x1="50%" y1="50%" x2="80%" y2="80%">
+            <stop offset="0%" stopColor="#818cf8" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#a855f7" stopOpacity="0.9" />
+          </linearGradient>
+        </defs>
+        {/* Subtle connecting lines from center to 4 corners */}
+        <line x1="50%" y1="50%" x2="24%" y2="24%" stroke="url(#line-coral)" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.6" />
+        <line x1="50%" y1="50%" x2="76%" y2="24%" stroke="url(#line-amber)" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.6" />
+        <line x1="50%" y1="50%" x2="24%" y2="76%" stroke="url(#line-emerald)" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.6" />
+        <line x1="50%" y1="50%" x2="76%" y2="76%" stroke="url(#line-violet)" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.6" />
+      </svg>
+
+      <div className="relative z-10 grid grid-cols-2 gap-3 sm:gap-4 items-center">
+        {/* Module 1: Expenses (Coral / Rose) */}
+        <div className="p-3.5 rounded-2xl bg-[#0e172e]/80 border border-rose-500/30 backdrop-blur-xl shadow-lg shadow-rose-950/20 flex items-center gap-3 transition-transform hover:-translate-y-0.5">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 flex items-center justify-center text-white shadow-md shadow-rose-500/25 flex-shrink-0">
+            <Receipt className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-white block">Expenses</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
             </div>
-            <div>
-              <span className="text-xs font-extrabold text-white tracking-tight block">
-                HomeMind.AI
+            <span className="text-[10px] text-rose-300/80 font-medium block">Budget & Tracking</span>
+          </div>
+        </div>
+
+        {/* Module 2: Bills (Amber / Orange) */}
+        <div className="p-3.5 rounded-2xl bg-[#0e172e]/80 border border-amber-500/30 backdrop-blur-xl shadow-lg shadow-amber-950/20 flex items-center gap-3 transition-transform hover:-translate-y-0.5">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-md shadow-amber-500/25 flex-shrink-0">
+            <FileText className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-white block">Bills</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            </div>
+            <span className="text-[10px] text-amber-300/80 font-medium block">Rent & Utilities</span>
+          </div>
+        </div>
+
+        {/* Central Core (Spans full or sits between) */}
+        <div className="col-span-2 flex justify-center -my-1">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 rounded-full blur-md opacity-40 animate-pulse" />
+            <div className="relative px-4 py-2 rounded-full bg-[#0a1128]/95 border border-indigo-400/40 backdrop-blur-2xl flex items-center gap-2 shadow-xl shadow-indigo-950/60">
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                <Home className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-xs font-bold text-white tracking-wide">
+                HomeMind AI Core
               </span>
-              <span className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider block">
-                Intelligent Operating Core
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 font-semibold">
+                SYNCED
               </span>
             </div>
           </div>
         </div>
 
-        {/* Connected Ecosystem Grid */}
-        <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4">
-          {nodes.map((node, i) => (
-            <div
-              key={node.id}
-              className={`p-2.5 rounded-2xl bg-panel/60 backdrop-blur-xl border border-white/[0.08] hover:border-white/20 transition-all shadow-lg flex items-center gap-2.5 ${
-                node.animation
-              } ${i === 6 ? 'col-span-2' : ''}`}
-            >
-              <div
-                className={`w-7 h-7 rounded-xl ${node.bg} border ${node.border} flex items-center justify-center ${node.color} flex-shrink-0`}
-              >
-                <node.icon className="w-3.5 h-3.5" />
-              </div>
-              <div className="truncate">
-                <span className="text-[11px] font-bold text-primary block truncate">
-                  {node.name}
-                </span>
-                <span className="text-[9px] text-muted block truncate">
-                  {node.tag}
-                </span>
-              </div>
+        {/* Module 3: Groceries (Emerald) */}
+        <div className="p-3.5 rounded-2xl bg-[#0e172e]/80 border border-emerald-500/30 backdrop-blur-xl shadow-lg shadow-emerald-950/20 flex items-center gap-3 transition-transform hover:-translate-y-0.5">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/25 flex-shrink-0">
+            <ShoppingBag className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-white block">Groceries</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             </div>
-          ))}
+            <span className="text-[10px] text-emerald-300/80 font-medium block">Pantry & Shopping</span>
+          </div>
         </div>
+
+        {/* Module 4: Tasks (Violet) */}
+        <div className="p-3.5 rounded-2xl bg-[#0e172e]/80 border border-purple-500/30 backdrop-blur-xl shadow-lg shadow-purple-950/20 flex items-center gap-3 transition-transform hover:-translate-y-0.5">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-purple-500/25 flex-shrink-0">
+            <CheckSquare className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-white block">Tasks</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+            </div>
+            <span className="text-[10px] text-purple-300/80 font-medium block">Household Chores</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="text-center mt-3">
+        <p className="text-[11px] text-slate-400 font-medium tracking-wide">
+          One intelligent operating system for your whole household.
+        </p>
       </div>
     </div>
   );

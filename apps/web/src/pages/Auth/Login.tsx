@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Sparkles, AlertCircle } from 'lucide-react';
+import { Sparkles, AlertCircle, Moon, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Capacitor } from '@capacitor/core';
 import { SocialLogin } from '@capgo/capacitor-social-login';
@@ -258,7 +258,7 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-background text-primary flex items-center justify-center p-4 sm:p-8 lg:p-12 relative overflow-x-hidden overflow-y-auto select-none font-sans">
+    <div className="min-h-[100dvh] w-full bg-[#070B16] text-white flex flex-col justify-between p-4 sm:p-6 lg:p-8 relative overflow-x-hidden overflow-y-auto select-none font-sans">
       <AuthBackground />
 
       {/* Session expired banner */}
@@ -268,13 +268,13 @@ export const Login: React.FC = () => {
             initial={{ opacity: 0, y: -20, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.96 }}
-            className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-amber-500/15 dark:bg-amber-950/80 backdrop-blur-xl border border-amber-500/40 text-amber-950 dark:text-amber-200 text-xs sm:text-sm font-semibold px-4 sm:px-5 py-3 rounded-2xl shadow-xl shadow-amber-500/10 max-w-md w-[92%]"
+            className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-amber-500/15 backdrop-blur-xl border border-amber-500/40 text-amber-200 text-xs sm:text-sm font-semibold px-4 sm:px-5 py-3 rounded-2xl shadow-xl shadow-amber-500/10 max-w-md w-[92%]"
           >
-            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 flex-shrink-0" />
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 flex-shrink-0" />
             <span className="flex-1">Your session expired. Sign in again to continue.</span>
             <button
               onClick={() => setDismissSessionExpired(true)}
-              className="text-amber-700 dark:text-amber-400 hover:text-amber-950 dark:hover:text-amber-100 p-1 -mr-1 rounded-lg text-base leading-none transition-colors"
+              className="text-amber-400 hover:text-white p-1 -mr-1 rounded-lg text-base leading-none transition-colors"
               aria-label="Dismiss banner"
             >
               &times;
@@ -290,72 +290,111 @@ export const Login: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center"
+            className="fixed inset-0 z-50 bg-[#070B16]/80 backdrop-blur-sm flex items-center justify-center"
           >
             <div className="flex flex-col items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center animate-pulse">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
-              <p className="text-sm font-semibold text-secondary">Connecting…</p>
+              <p className="text-sm font-semibold text-slate-300">Connecting…</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <main className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10 my-auto">
+      {/* ── 1. TOP NAVIGATION ── */}
+      <header className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-3 flex items-center justify-between relative z-20">
+        {/* Left: HomeMind.AI logo */}
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 border border-white/20">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="font-extrabold text-base tracking-tight text-white block">HomeMind.AI</span>
+            <span className="text-[10px] text-indigo-400 font-bold tracking-widest uppercase block leading-none">
+              SMART HOME SYSTEM
+            </span>
+          </div>
+        </div>
 
-        {/* ── LEFT COLUMN: Brand + decorative (hidden on mobile) ── */}
-        <section className="lg:col-span-7 flex flex-col justify-center space-y-5 text-left hidden lg:flex">
-          {/* Logo & Brand */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 border border-white/20">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="font-extrabold text-base tracking-tight text-primary block">HomeMind.AI</span>
-              <span className="text-[11px] text-blue-400 font-semibold tracking-wider uppercase block leading-none">
-                Smart Home System
-              </span>
-            </div>
+        {/* Center: Minimal Navigation Links */}
+        <nav className="hidden md:flex items-center gap-1.5 p-1 rounded-full bg-[#0A1128]/70 border border-white/10 backdrop-blur-xl shadow-lg">
+          <span className="px-4 py-1.5 rounded-full bg-violet-600/30 text-white border border-violet-400/40 text-xs font-semibold shadow-inner cursor-pointer">
+            Home
+          </span>
+          <span className="px-3.5 py-1.5 rounded-full text-xs font-medium text-slate-300 hover:text-white transition-colors cursor-pointer">
+            Features
+          </span>
+          <span className="px-3.5 py-1.5 rounded-full text-xs font-medium text-slate-300 hover:text-white transition-colors cursor-pointer">
+            Pricing
+          </span>
+          <span className="px-3.5 py-1.5 rounded-full text-xs font-medium text-slate-300 hover:text-white transition-colors cursor-pointer">
+            About
+          </span>
+        </nav>
+
+        {/* Right: Theme Toggle & Language */}
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            className="w-8 h-8 rounded-xl bg-[#0A1128]/80 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+            aria-label="Theme toggle"
+          >
+            <Moon className="w-4 h-4 text-indigo-300" />
+          </button>
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0A1128]/80 border border-white/10 text-xs font-medium text-slate-200">
+            <span>🇺🇸</span>
+            <span>English (US)</span>
+          </div>
+        </div>
+      </header>
+
+      {/* ── 2. HERO + AUTH MAIN CONTENT ── */}
+      <main className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center relative z-10 py-6 sm:py-8 my-auto">
+
+        {/* ── LEFT / CENTER: Hero Storytelling + Smart Home AI Visual (65% width on desktop) ── */}
+        <section className="lg:col-span-7 xl:col-span-8 flex flex-col justify-center space-y-6 text-left">
+          
+          {/* Eyebrow Label */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-500/15 border border-indigo-400/30 text-indigo-300 text-xs font-bold tracking-widest uppercase w-fit">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            <span>SMART HOMES. HAPPIER PEOPLE.</span>
           </div>
 
-          {/* Headline */}
-          <div className="space-y-1.5">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] text-primary">
-              Apna Ghar.<br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-slate-300">
-                Smarter.
+          {/* Large Bold Headline */}
+          <div className="space-y-3">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05] text-white">
+              AI for <br />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-violet-400">
+                Real Homes.
               </span>
             </h1>
-            <p className="text-sm sm:text-base text-secondary font-normal max-w-lg leading-relaxed pt-1">
-              Expenses, groceries, bills, tasks — sab ek jagah.
+            <p className="text-base sm:text-lg text-slate-300 font-normal max-w-xl leading-relaxed">
+              From daily chores to big financial decisions — HomeMind.AI keeps your household in sync.
             </p>
           </div>
 
-          <DynamicAIMessage />
-
-          {/* @media prefers-reduced-motion handled in index.css */}
-          <HomeMindEcosystem />
-          <FloatingFeatureCards />
-          <ProductBenefits />
-        </section>
-
-        {/* ── RIGHT COLUMN: Mobile brand + auth card ── */}
-        <section className="lg:col-span-5 w-full flex flex-col items-center gap-6">
-
-          {/* Mobile-only brand (visible when left column is hidden) */}
-          <div className="flex items-center gap-3 lg:hidden">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/25">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="font-extrabold text-lg tracking-tight text-primary block">HomeMind.AI</span>
-              <span className="text-[11px] text-blue-400 font-semibold tracking-wider uppercase leading-none block">
-                Apna Ghar, Smarter
-              </span>
-            </div>
+          {/* CTA & Secondary Note */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-1">
+            <button
+              type="button"
+              onClick={() => setShowPhoneModal(true)}
+              className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:via-indigo-500 hover:to-violet-500 text-white font-bold text-sm flex items-center gap-2.5 shadow-xl shadow-indigo-600/30 border border-white/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span>Join Now</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <span className="text-xs text-slate-400 font-medium">
+              One AI for your entire home.
+            </span>
           </div>
 
+          {/* Connected Floating Smart Home Modules Network */}
+          <HomeMindEcosystem />
+        </section>
+
+        {/* ── RIGHT COLUMN: Authentication Card (approx 32-35% width) ── */}
+        <section className="lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center">
           <LoginCard
             onGoogleClick={triggerGoogleSignIn}
             googleButtonRef={googleButtonRef}
@@ -368,6 +407,12 @@ export const Login: React.FC = () => {
           />
         </section>
       </main>
+
+      {/* Footer Branding Note */}
+      <footer className="w-full max-w-7xl mx-auto px-4 py-2 flex items-center justify-between text-[11px] text-slate-500 relative z-20">
+        <span>© {new Date().getFullYear()} HomeMind.AI • All rights reserved</span>
+        <span className="hidden sm:inline">Crafted for modern households</span>
+      </footer>
 
       {showSuccessOverlay && (
         <AuthSuccessOverlay
