@@ -45,7 +45,15 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
   const unpaidBills = upcomingBills.filter((b: any) => b.status !== 'PAID');
   const firstBill = unpaidBills[0];
 
-  // 2. Reduce Food Waste (Real groceries nearing use or low stock)
+  // 2. Groceries: Check for real expiry data vs low/out-of-stock restock signals
+  const now = new Date();
+  const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const expiringSoonGroceries = groceries.filter((g: any) => {
+    if (!g.expiryDate) return false;
+    const exp = new Date(g.expiryDate);
+    return exp.getTime() >= now.getTime() && exp.getTime() <= threeDaysFromNow.getTime();
+  });
+
   const urgentGroceries = groceries.filter(
     (g: any) => g.status === 'LOW_STOCK' || g.status === 'OUT_OF_STOCK'
   );
@@ -74,15 +82,30 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
     });
   }
 
-  // Card 2: Food Waste / Grocery Replenishment
-  if (urgentGroceries.length > 0) {
+  // Card 2A: Real Expiry Date -> Reduce Food Waste
+  if (expiringSoonGroceries.length > 0) {
+    const itemNames = expiringSoonGroceries.map((g: any) => g.name).slice(0, 3).join(', ');
+    realCards.push({
+      id: 'grocery-expiry',
+      type: 'GROCERY',
+      title: 'Pantry Expiry Alert',
+      description: `${itemNames} near expiration date. Use soon to minimize food waste.`,
+      impactBadge: 'Reduce Food Waste',
+      impactColor: 'emerald',
+      primaryActionLabel: 'View Grocery',
+      onPrimaryAction: () => {
+        navigate('/groceries');
+      },
+    });
+  } else if (urgentGroceries.length > 0) {
+    // Card 2B: LOW_STOCK / OUT_OF_STOCK -> Restock Soon (NOT food waste)
     const itemNames = urgentGroceries.map((g: any) => g.name).slice(0, 3).join(', ');
     realCards.push({
       id: 'grocery-stock',
       type: 'GROCERY',
-      title: 'Pantry Freshness & Restock',
-      description: `${itemNames} marked low or depleted in stock. Restock to prevent running out.`,
-      impactBadge: 'Reduce Food Waste',
+      title: 'Pantry Restock Notice',
+      description: `${itemNames} marked low or depleted in stock. Restock soon to keep household essentials full.`,
+      impactBadge: 'Restock Soon',
       impactColor: 'emerald',
       primaryActionLabel: 'View Grocery',
       onPrimaryAction: () => {
@@ -104,7 +127,7 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
     });
   }
 
-  // Card 3: Save Time / Household Task
+  // Card 3: Save Time / Existing Pending Household Task (Prefer "View Task" to avoid duplicate tasks)
   if (firstPendingTask) {
     realCards.push({
       id: `task-${firstPendingTask.id || firstPendingTask.title}`,
@@ -118,10 +141,9 @@ export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
         : 'Pending household chore awaiting member action.',
       impactBadge: 'Save Time',
       impactColor: 'purple',
-      primaryActionLabel: 'Create Task',
+      primaryActionLabel: 'View Task',
       onPrimaryAction: () => {
-        if (onOpenTaskModal) onOpenTaskModal();
-        else navigate('/tasks');
+        navigate('/tasks');
       },
     });
   }

@@ -218,14 +218,16 @@ export const Dashboard: React.FC = () => {
     }).length;
   }, [recentHistory]);
 
-  // Real pantry freshness telemetry
+  // Real pantry stock availability telemetry
   const pantryStats = useMemo(() => {
     const total = groceriesList.length;
-    const fresh = groceriesList.filter(
+    const inStock = groceriesList.filter(
       (g: any) => g.status !== 'LOW_STOCK' && g.status !== 'OUT_OF_STOCK'
     ).length;
-    const expiringSoon = groceriesList.filter((g: any) => g.status === 'LOW_STOCK').length;
-    return { total, fresh, expiringSoon };
+    const lowStock = groceriesList.filter(
+      (g: any) => g.status === 'LOW_STOCK' || g.status === 'OUT_OF_STOCK'
+    ).length;
+    return { total, inStock, lowStock };
   }, [groceriesList]);
 
   // Real chore completion telemetry

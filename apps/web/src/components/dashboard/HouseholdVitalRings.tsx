@@ -8,7 +8,7 @@ interface HouseholdVitalRingsProps {
   monthlyExpenses: number;
   monthlySavings: number;
   taskStats?: { total: number; completed: number };
-  pantryStats?: { total: number; fresh: number; expiringSoon: number };
+  pantryStats?: { total: number; inStock?: number; fresh?: number; lowStock?: number; expiringSoon?: number };
 }
 
 export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
@@ -16,7 +16,7 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
   monthlyExpenses,
   monthlySavings,
   taskStats = { total: 10, completed: 8 },
-  pantryStats = { total: 24, fresh: 21, expiringSoon: 3 },
+  pantryStats = { total: 24, inStock: 21, lowStock: 3 },
 }) => {
   const { format } = useSettingStore();
   const { t } = useI18n();
@@ -27,10 +27,11 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
     ? Math.max(0, Math.min(100, Math.round((monthlySavings / monthlyIncome) * 100)))
     : null;
 
-  // 2. Kitchen Food Freshness (Percentage of items fresh)
+  // 2. Pantry Stock Health (Percentage of items in stock)
   const hasPantryData = !!(pantryStats && pantryStats.total > 0);
+  const inStockCount = pantryStats ? (pantryStats.inStock ?? pantryStats.fresh ?? 0) : 0;
   const pantryRatio = hasPantryData
-    ? Math.max(0, Math.min(100, Math.round((pantryStats.fresh / pantryStats.total) * 100)))
+    ? Math.max(0, Math.min(100, Math.round((inStockCount / pantryStats.total) * 100)))
     : null;
 
   // 3. Home Chores & Tasks (Percentage of completed chores)
@@ -81,7 +82,7 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
             </span>
           </div>
           <p className="text-[11px] sm:text-xs text-secondary">
-            {t('vitals.subtitle', 'Calculated from actual budget savings, pantry food freshness, and completed chores')}
+            {t('vitals.subtitle', 'Calculated from actual budget savings, pantry stock health, and completed chores')}
           </p>
         </div>
 
@@ -241,7 +242,7 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
             </div>
           </div>
 
-          {/* 2. Kitchen Food Freshness Card */}
+          {/* 2. Pantry Stock Health Card */}
           <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 flex items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
@@ -249,14 +250,14 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
               </div>
               <div>
                 <span className="text-xs font-bold text-primary block">
-                  Kitchen Food Freshness
+                  Pantry Stock Health
                 </span>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">
-                  Fresh / total tracked grocery items
+                  In stock / total tracked inventory items
                 </span>
                 <span className="text-[11px] text-secondary font-mono mt-0.5 block">
                   {hasPantryData
-                    ? `${pantryStats!.fresh} fresh of ${pantryStats!.total} tracked`
+                    ? `${inStockCount} in stock of ${pantryStats!.total} tracked`
                     : 'Add items in pantry inventory'}
                 </span>
               </div>
@@ -267,7 +268,7 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
                   <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono block">
                     {pantryRatio}%
                   </span>
-                  <span className="text-[10px] text-muted font-medium">Fresh</span>
+                  <span className="text-[10px] text-muted font-medium">In Stock</span>
                 </>
               ) : (
                 <span className="text-[11px] font-medium text-slate-400 italic">Not enough data yet</span>
