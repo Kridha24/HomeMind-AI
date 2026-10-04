@@ -21,26 +21,32 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
   const { format } = useSettingStore();
   const { t } = useI18n();
 
-  // 1. Savings & Budget Score (Percentage of Income not spent)
-  const budgetRatio =
-    monthlyIncome > 0
-      ? Math.max(0, Math.min(100, Math.round((monthlySavings / monthlyIncome) * 100)))
-      : 75;
+  // 1. Savings & Budget Score (Percentage of Income saved)
+  const hasBudgetData = monthlyIncome > 0;
+  const budgetRatio = hasBudgetData
+    ? Math.max(0, Math.min(100, Math.round((monthlySavings / monthlyIncome) * 100)))
+    : null;
 
   // 2. Kitchen Food Freshness (Percentage of items fresh)
-  const pantryRatio =
-    pantryStats.total > 0
-      ? Math.max(0, Math.min(100, Math.round((pantryStats.fresh / pantryStats.total) * 100)))
-      : 88;
+  const hasPantryData = !!(pantryStats && pantryStats.total > 0);
+  const pantryRatio = hasPantryData
+    ? Math.max(0, Math.min(100, Math.round((pantryStats.fresh / pantryStats.total) * 100)))
+    : null;
 
   // 3. Home Chores & Tasks (Percentage of completed chores)
-  const taskRatio =
-    taskStats.total > 0
-      ? Math.max(0, Math.min(100, Math.round((taskStats.completed / taskStats.total) * 100)))
-      : 80;
+  const hasTaskData = !!(taskStats && taskStats.total > 0);
+  const taskRatio = hasTaskData
+    ? Math.max(0, Math.min(100, Math.round((taskStats.completed / taskStats.total) * 100)))
+    : null;
 
-  // Overall Home Health Score
-  const overallScore = Math.round((budgetRatio + pantryRatio + taskRatio) / 3);
+  // Overall Home Health Score (Average of available verified metrics)
+  const availableRatios = [budgetRatio, pantryRatio, taskRatio].filter(
+    (r): r is number => r !== null && !isNaN(r) && isFinite(r)
+  );
+  const overallScore =
+    availableRatios.length > 0
+      ? Math.round(availableRatios.reduce((acc, r) => acc + r, 0) / availableRatios.length)
+      : null;
 
   // SVG Geometry Calculation
   const size = 220;
@@ -56,13 +62,13 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
   const circ2 = 2 * Math.PI * r2;
   const circ3 = 2 * Math.PI * r3;
 
-  const strokeDash1 = (budgetRatio / 100) * circ1;
-  const strokeDash2 = (pantryRatio / 100) * circ2;
-  const strokeDash3 = (taskRatio / 100) * circ3;
+  const strokeDash1 = budgetRatio !== null ? (budgetRatio / 100) * circ1 : 0;
+  const strokeDash2 = pantryRatio !== null ? (pantryRatio / 100) * circ2 : 0;
+  const strokeDash3 = taskRatio !== null ? (taskRatio / 100) * circ3 : 0;
 
   return (
     <div className="glass-panel p-4 sm:p-6 md:p-7 border-primary/80 rounded-2xl sm:rounded-3xl relative overflow-hidden bg-panel/90 backdrop-blur-xl shadow-sm dark:shadow-2xl space-y-4 sm:space-y-6">
-      {/* Header with Multi-Language Support */}
+      {/* Header with Explanation & Status */}
       <div className="flex items-center justify-between">
         <div className="space-y-0.5 sm:space-y-1">
           <div className="flex items-center gap-2">
@@ -71,21 +77,29 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
             </h2>
             <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1 shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              {t('vitals.status', 'Live Status')}
+              {t('vitals.status', 'Household Summary')}
             </span>
           </div>
           <p className="text-[11px] sm:text-xs text-secondary">
-            {t('vitals.subtitle', 'Quick 1-second view of your savings, kitchen food, and home chores')}
+            {t('vitals.subtitle', 'Calculated from actual budget savings, pantry food freshness, and completed chores')}
           </p>
         </div>
 
         <div className="text-right flex-shrink-0">
-          <span className="text-xl sm:text-2xl md:text-3xl font-black text-primary font-mono tracking-tight block">
-            {overallScore}%
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">
-            {overallScore >= 70 ? t('vitals.great', 'Looking Great 👍') : t('vitals.attention', 'Attention Needed ⚠️')}
-          </span>
+          {overallScore !== null ? (
+            <>
+              <span className="text-xl sm:text-2xl md:text-3xl font-black text-primary font-mono tracking-tight block">
+                {overallScore}%
+              </span>
+              <span className="text-[10px] sm:text-[11px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">
+                {overallScore >= 70 ? t('vitals.great', 'Looking Great 👍') : t('vitals.attention', 'Attention Needed ⚠️')}
+              </span>
+            </>
+          ) : (
+            <span className="text-xs sm:text-sm font-bold text-slate-400 dark:text-slate-500 italic block">
+              Not enough data yet
+            </span>
+          )}
         </div>
       </div>
 
@@ -186,12 +200,12 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <Sparkles className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             <span className="text-[10px] font-extrabold text-muted uppercase tracking-widest mt-0.5">
-              {t('vitals.score', 'Score')}
+              {overallScore !== null ? `${overallScore}%` : 'Vitals'}
             </span>
           </div>
         </div>
 
-        {/* Right: Detailed Ring Breakdowns */}
+        {/* Right: Detailed Metric Calculations */}
         <div className="md:col-span-7 space-y-3">
           {/* 1. Monthly Savings Card */}
           <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20 flex items-center justify-between gap-3 shadow-xs">
@@ -201,18 +215,29 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
               </div>
               <div>
                 <span className="text-xs font-bold text-primary block">
-                  {t('vitals.budget', '1. Money Saved (Budget)')}
+                  Money Saved
                 </span>
-                <span className="text-[11px] text-secondary">
-                  {monthlySavings >= 0 ? `+${format(monthlySavings)}` : `-${format(Math.abs(monthlySavings))}`}
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">
+                  Budget target vs actual spending
+                </span>
+                <span className="text-[11px] text-secondary font-mono mt-0.5 block">
+                  {hasBudgetData
+                    ? monthlySavings >= 0 ? `+${format(monthlySavings)} saved` : `-${format(Math.abs(monthlySavings))} deficit`
+                    : 'Log income to calculate budget'}
                 </span>
               </div>
             </div>
-            <div className="text-right">
-              <span className="text-sm font-black text-blue-600 dark:text-blue-400 font-mono block">
-                {budgetRatio}%
-              </span>
-              <span className="text-[10px] text-muted font-medium">{t('dash.saved', 'Saved')}</span>
+            <div className="text-right flex-shrink-0">
+              {budgetRatio !== null ? (
+                <>
+                  <span className="text-sm font-black text-blue-600 dark:text-blue-400 font-mono block">
+                    {budgetRatio}%
+                  </span>
+                  <span className="text-[10px] text-muted font-medium">{t('dash.saved', 'Saved')}</span>
+                </>
+              ) : (
+                <span className="text-[11px] font-medium text-slate-400 italic">Not enough data yet</span>
+              )}
             </div>
           </div>
 
@@ -224,18 +249,29 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
               </div>
               <div>
                 <span className="text-xs font-bold text-primary block">
-                  {t('vitals.food', '2. Kitchen Food Freshness')}
+                  Kitchen Food Freshness
                 </span>
-                <span className="text-[11px] text-secondary">
-                  {pantryStats.fresh} / {pantryStats.total} items fresh
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">
+                  Fresh / total tracked grocery items
+                </span>
+                <span className="text-[11px] text-secondary font-mono mt-0.5 block">
+                  {hasPantryData
+                    ? `${pantryStats!.fresh} fresh of ${pantryStats!.total} tracked`
+                    : 'Add items in pantry inventory'}
                 </span>
               </div>
             </div>
-            <div className="text-right">
-              <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono block">
-                {pantryRatio}%
-              </span>
-              <span className="text-[10px] text-muted font-medium">Fresh</span>
+            <div className="text-right flex-shrink-0">
+              {pantryRatio !== null ? (
+                <>
+                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono block">
+                    {pantryRatio}%
+                  </span>
+                  <span className="text-[10px] text-muted font-medium">Fresh</span>
+                </>
+              ) : (
+                <span className="text-[11px] font-medium text-slate-400 italic">Not enough data yet</span>
+              )}
             </div>
           </div>
 
@@ -247,18 +283,29 @@ export const HouseholdVitalRings: React.FC<HouseholdVitalRingsProps> = ({
               </div>
               <div>
                 <span className="text-xs font-bold text-primary block">
-                  {t('vitals.chores', '3. Home Chores & Tasks')}
+                  Home Chores & Tasks
                 </span>
-                <span className="text-[11px] text-secondary">
-                  {taskStats.completed} / {taskStats.total} done
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">
+                  Completed / due tasks
+                </span>
+                <span className="text-[11px] text-secondary font-mono mt-0.5 block">
+                  {hasTaskData
+                    ? `${taskStats!.completed} completed of ${taskStats!.total} total`
+                    : 'Assign tasks to track chore completion'}
                 </span>
               </div>
             </div>
-            <div className="text-right">
-              <span className="text-sm font-black text-purple-600 dark:text-purple-400 font-mono block">
-                {taskRatio}%
-              </span>
-              <span className="text-[10px] text-muted font-medium">Done</span>
+            <div className="text-right flex-shrink-0">
+              {taskRatio !== null ? (
+                <>
+                  <span className="text-sm font-black text-purple-600 dark:text-purple-400 font-mono block">
+                    {taskRatio}%
+                  </span>
+                  <span className="text-[10px] text-muted font-medium">Done</span>
+                </>
+              ) : (
+                <span className="text-[11px] font-medium text-slate-400 italic">Not enough data yet</span>
+              )}
             </div>
           </div>
         </div>

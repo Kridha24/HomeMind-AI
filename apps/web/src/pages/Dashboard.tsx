@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Wallet,
@@ -20,6 +20,9 @@ import {
   CheckCircle2,
   Clock,
   ListTodo,
+  Briefcase,
+  Laptop,
+  Gift,
 } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import socketService from '../services/socketService';
@@ -75,6 +78,7 @@ const COUNTRY_FLAGS: Record<string, string> = {
 
 export const Dashboard: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [welcomeAlert, setWelcomeAlert] = useState<boolean>(() => {
     return Boolean((location.state as any)?.justLoggedIn);
   });
@@ -213,6 +217,96 @@ export const Dashboard: React.FC = () => {
       );
     }).length;
   }, [recentHistory]);
+
+  // Real pantry freshness telemetry
+  const pantryStats = useMemo(() => {
+    const total = groceriesList.length;
+    const fresh = groceriesList.filter(
+      (g: any) => g.status !== 'LOW_STOCK' && g.status !== 'OUT_OF_STOCK'
+    ).length;
+    const expiringSoon = groceriesList.filter((g: any) => g.status === 'LOW_STOCK').length;
+    return { total, fresh, expiringSoon };
+  }, [groceriesList]);
+
+  // Real chore completion telemetry
+  const taskStats = useMemo(() => {
+    const completed = summary?.completedTasksCount ?? 0;
+    const pending = pendingTasks.length;
+    const total = summary?.totalTasksCount ?? (completed + pending);
+    return { total, completed };
+  }, [summary, pendingTasks]);
+
+  // Real data-driven household insight (Part A.6 - Real Household Insight)
+  const realHouseholdInsight = useMemo(() => {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    // 1. Food & Dining / Weekly spending
+    const weekExpenses = recentHistory.filter(
+      (item: any) => item.type === 'EXPENSE' && new Date(item.date) >= sevenDaysAgo
+    );
+    const foodExpenses = weekExpenses
+      .filter(
+        (item: any) =>
+          (item.category || '').toLowerCase().includes('food') ||
+          (item.category || '').toLowerCase().includes('dining')
+      )
+      .reduce((acc: number, item: any) => acc + (item.amount || 0), 0);
+
+    if (foodExpenses > 0) {
+      return {
+        tag: 'Food & Dining',
+        text: `You spent ${format(foodExpenses)} on Food & Dining this week.`,
+      };
+    }
+
+    // 2. Bills due in next 5 days
+    const fiveDaysAhead = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
+    const urgentBills = upcomingBills.filter(
+      (b: any) => b.status !== 'PAID' && new Date(b.dueDate) <= fiveDaysAhead
+    );
+    if (urgentBills.length > 0) {
+      return {
+        tag: 'Upcoming Bills',
+        text: `${urgentBills.length} ${urgentBills.length === 1 ? 'bill is' : 'bills are'} due in the next 5 days.`,
+      };
+    }
+
+    // 3. Groceries needing purchase
+    const urgentGroceries = groceriesList.filter(
+      (g: any) => g.status === 'LOW_STOCK' || g.status === 'OUT_OF_STOCK'
+    );
+    if (urgentGroceries.length > 0) {
+      return {
+        tag: 'Pantry Restock',
+        text: `${urgentGroceries.length} grocery ${urgentGroceries.length === 1 ? 'item still needs' : 'items still need'} to be purchased.`,
+      };
+    }
+
+    // 4. Monthly savings
+    if (monthlySavings > 0) {
+      return {
+        tag: 'Savings Milestone',
+        text: `Your household has saved ${format(monthlySavings)} so far this month.`,
+      };
+    }
+
+    return null;
+  }, [recentHistory, upcomingBills, groceriesList, monthlySavings, format]);
+
+  const getIncomeSourceIcon = (source?: string) => {
+    const s = (source || '').toLowerCase();
+    if (s.includes('salary') || s.includes('job') || s.includes('work')) {
+      return <Briefcase className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
+    }
+    if (s.includes('freelance') || s.includes('client') || s.includes('project')) {
+      return <Laptop className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
+    }
+    if (s.includes('family') || s.includes('gift') || s.includes('parent') || s.includes('allowance')) {
+      return <Gift className="w-4 h-4 text-purple-600 dark:text-purple-400" />;
+    }
+    return <Wallet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
+  };
 
   const handleRefreshAll = () => {
     refetch();
@@ -392,7 +486,43 @@ export const Dashboard: React.FC = () => {
             todayTransactionsCount={todayTransactionsCount}
             userRole={user?.role}
             onSelectTab={(tab) => setActionCenterTab(tab)}
+            tasks={pendingTasks}
+            bills={upcomingBills}
+            groceries={groceriesList}
+            format={format}
           />
+
+          {/* Optional Mini Household Insight Card (Part A.6 - Real Data Only) */}
+          {realHouseholdInsight && (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-indigo-50/90 to-blue-50/90 dark:from-indigo-950/20 dark:to-blue-950/20 border border-indigo-200/80 dark:border-indigo-800/40 flex items-center justify-between gap-3 shadow-2xs">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25 flex items-center justify-center flex-shrink-0 shadow-2xs">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
+                      Household Insight
+                    </span>
+                    <span className="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-indigo-100 dark:bg-indigo-500/10 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-500/20">
+                      {realHouseholdInsight.tag}
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 truncate mt-0.5">
+                    {realHouseholdInsight.text}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/analytics')}
+                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1 flex-shrink-0 group"
+              >
+                <span>Analytics</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+          )}
 
           {/* Deterministic Smart Insights Card */}
           <HomeMindInsightCard
@@ -434,16 +564,18 @@ export const Dashboard: React.FC = () => {
             monthlyIncome={monthlyIncome}
             monthlyExpenses={monthlyExpenses}
             monthlySavings={monthlySavings}
-            taskStats={{
-              total: pendingTasks.length + 5,
-              completed: 5,
-            }}
-            pantryStats={{ total: 24, fresh: 21, expiringSoon: 3 }}
+            taskStats={taskStats}
+            pantryStats={pantryStats}
           />
 
           {/* Actionable Suggestions Feed */}
           <ActionableAIFeed
             upcomingBills={upcomingBills}
+            groceries={groceriesList}
+            pendingTasks={pendingTasks}
+            monthlyIncome={monthlyIncome}
+            monthlyExpenses={monthlyExpenses}
+            monthlySavings={monthlySavings}
             onOpenExpenseModal={() => {
               setEditingExpense(null);
               setShowExpenseModal(true);
@@ -451,23 +583,23 @@ export const Dashboard: React.FC = () => {
             onOpenTaskModal={() => setShowTaskModal(true)}
           />
 
-          {/* Income & Earnings Overview Section with Edit Shortcut */}
-          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-emerald-500/25 dark:border-emerald-900/40 p-4 sm:p-5 shadow-xs space-y-3">
+          {/* Income & Earnings Overview Section with Edit Shortcut (Part A.4) */}
+          <div className="rounded-2xl sm:rounded-3xl bg-emerald-500/[0.04] dark:bg-emerald-950/20 border border-emerald-500/25 dark:border-emerald-800/40 p-4 sm:p-5 shadow-xs space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-xs sm:text-sm font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Wallet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />{' '}
+                  <Wallet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />{' '}
                   Income & Earnings
                 </span>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">
-                  Track salary, freelance payments, and earnings for {monthName} {year}.
+                  Verified salary, freelance income, and allowances for {monthName} {year}.
                 </p>
               </div>
               <div className="text-right">
-                <span className="text-base sm:text-xl font-extrabold text-emerald-600 dark:text-emerald-400 font-mono block">
+                <span className="text-base sm:text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono block">
                   +{format(monthlyIncome)}
                 </span>
-                <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
                   Monthly Total
                 </span>
               </div>
@@ -475,48 +607,59 @@ export const Dashboard: React.FC = () => {
 
             {incomesList.length > 0 ? (
               <div className="flex overflow-x-auto no-scrollbar gap-2.5 pb-1 sm:grid sm:grid-cols-2 md:grid-cols-3 sm:gap-3">
-                {incomesList.slice(0, 3).map((inc: any) => (
+                {incomesList.slice(0, 6).map((inc: any) => (
                   <div
                     key={inc.id}
-                    className="min-w-[210px] sm:min-w-0 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between shadow-2xs group hover:border-emerald-500/40 transition-colors flex-shrink-0 sm:flex-shrink"
+                    onClick={() => handleEditIncome(inc)}
+                    className="min-w-[210px] sm:min-w-0 p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-800/80 border border-emerald-500/20 dark:border-emerald-700/40 flex items-center justify-between shadow-2xs group hover:border-emerald-500 hover:shadow-sm transition-all cursor-pointer flex-shrink-0 sm:flex-shrink"
                   >
-                    <div className="space-y-0.5 min-w-0 pr-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate max-w-[110px]">
-                          {inc.title}
-                        </span>
-                        <button
-                          onClick={() => handleEditIncome(inc)}
-                          className="p-1 text-slate-400 hover:text-blue-500 rounded-md transition-colors"
-                          title="Edit Income"
-                        >
-                          <Edit3 className="w-3 h-3" />
-                        </button>
+                    <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                        {getIncomeSourceIcon(inc.source || inc.title)}
                       </div>
-                      <span className="px-1.5 py-0.2 rounded-full text-[8px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 uppercase tracking-wider inline-block">
-                        {inc.source || 'Salary'}
-                      </span>
-                      <p className="text-[9px] text-slate-400 font-mono">
-                        {new Date(inc.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                      </p>
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block truncate max-w-[110px] group-hover:text-emerald-600 transition-colors">
+                            {inc.title}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditIncome(inc);
+                            }}
+                            className="p-1 text-slate-400 hover:text-blue-500 rounded-md transition-colors"
+                            title="Edit Income"
+                          >
+                            <Edit3 className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[9px]">
+                          <span className="px-1.5 py-0.2 rounded-md font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 uppercase tracking-wider inline-block">
+                            {inc.source || 'Salary'}
+                          </span>
+                          <span className="text-slate-400 font-mono">
+                            {new Date(inc.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-xs sm:text-sm font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
+                    <span className="text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono flex-shrink-0">
                       +{format(inc.amount)}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 text-center text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between shadow-2xs">
-                <span className="text-[11px] sm:text-xs">
-                  No income entries logged yet for this month.
+              <div className="p-3.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-center text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between shadow-2xs">
+                <span className="text-[11px] sm:text-xs font-medium">
+                  No income entries logged yet for {monthName} {year}.
                 </span>
                 <button
                   onClick={() => {
                     setEditingIncome(null);
                     setShowIncomeModal(true);
                   }}
-                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1 active:scale-95"
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1 active:scale-95"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add Income
                 </button>
@@ -537,6 +680,10 @@ export const Dashboard: React.FC = () => {
             todayTransactionsCount={groceriesList.length}
             userRole={user?.role}
             onSelectTab={(tab) => setActionCenterTab(tab)}
+            tasks={pendingTasks}
+            bills={upcomingBills}
+            groceries={groceriesList}
+            format={format}
           />
 
           {/* Lower Content Grid: 3-Column Layout (Tasks, Bills, Monthly Overview) */}

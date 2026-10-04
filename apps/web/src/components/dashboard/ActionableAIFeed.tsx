@@ -5,6 +5,11 @@ import { useNavigate } from 'react-router-dom';
 
 interface ActionableAIFeedProps {
   upcomingBills?: any[];
+  groceries?: any[];
+  pendingTasks?: any[];
+  monthlyIncome?: number;
+  monthlyExpenses?: number;
+  monthlySavings?: number;
   onOpenAIChatWithPrompt?: (prompt: string) => void;
   onOpenTaskModal?: () => void;
   onOpenExpenseModal?: () => void;
@@ -12,91 +17,140 @@ interface ActionableAIFeedProps {
 
 interface ActionCard {
   id: string;
-  type: 'BILL' | 'RECIPE' | 'MAINTENANCE' | 'SAVINGS';
+  type: 'BILL' | 'GROCERY' | 'TASK' | 'FINANCE';
   title: string;
   description: string;
   impactBadge: string;
-  impactColor: 'amber' | 'emerald' | 'blue' | 'purple';
+  impactColor: 'amber' | 'emerald' | 'purple' | 'blue';
   primaryActionLabel: string;
   onPrimaryAction: () => void;
 }
 
 export const ActionableAIFeed: React.FC<ActionableAIFeedProps> = ({
   upcomingBills = [],
+  groceries = [],
+  pendingTasks = [],
+  monthlyIncome = 0,
+  monthlyExpenses = 0,
+  monthlySavings = 0,
   onOpenAIChatWithPrompt,
   onOpenTaskModal,
   onOpenExpenseModal,
 }) => {
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
-  const { format, currencySymbol, aiSuggestions, aiRecipes } = useSettingStore();
+  const { format, aiSuggestions } = useSettingStore();
   const navigate = useNavigate();
 
-  const firstBill = upcomingBills[0];
+  // 1. Avoid Late Fee (Real upcoming bill)
+  const unpaidBills = upcomingBills.filter((b: any) => b.status !== 'PAID');
+  const firstBill = unpaidBills[0];
 
-  const defaultCards: ActionCard[] = [
-    ...(firstBill
-      ? [
-          {
-            id: 'bill-1',
-            type: 'BILL' as const,
-            title: `Bill Due: ${firstBill.title}`,
-            description: `${format(firstBill.amount)} is due on ${new Date(
-              firstBill.dueDate
-            ).toLocaleDateString([], { month: 'short', day: 'numeric' })}.`,
-            impactBadge: 'Avoid Late Fee',
-            impactColor: 'amber' as const,
-            primaryActionLabel: 'Log Bill Payment',
-            onPrimaryAction: () => {
-              if (onOpenExpenseModal) onOpenExpenseModal();
-              else navigate('/bills');
-            },
-          },
-        ]
-      : []),
-    {
-      id: 'pantry-recipe',
-      type: 'RECIPE' as const,
-      title: 'Quick Recipe Idea',
-      description: 'Tomatoes, Bell Peppers & Milk need to be used soon. Make a quick 15-min Paneer dish tonight.',
-      impactBadge: 'Save Food Waste',
-      impactColor: 'emerald' as const,
-      primaryActionLabel: 'View Recipe',
+  // 2. Reduce Food Waste (Real groceries nearing use or low stock)
+  const urgentGroceries = groceries.filter(
+    (g: any) => g.status === 'LOW_STOCK' || g.status === 'OUT_OF_STOCK'
+  );
+
+  // 3. Save Time (Real pending household chores)
+  const firstPendingTask = pendingTasks.find((t: any) => t.status !== 'COMPLETED');
+
+  // Build real data action cards
+  const realCards: ActionCard[] = [];
+
+  // Card 1: Bill / Avoid Late Fee
+  if (firstBill) {
+    realCards.push({
+      id: `bill-${firstBill.id || firstBill.title}`,
+      type: 'BILL',
+      title: `Bill Due: ${firstBill.title}`,
+      description: `${format(firstBill.amount)} is due on ${new Date(
+        firstBill.dueDate
+      ).toLocaleDateString([], { month: 'short', day: 'numeric' })}. Avoid late fee penalties.`,
+      impactBadge: 'Avoid Late Fee',
+      impactColor: 'amber',
+      primaryActionLabel: 'View Bill',
       onPrimaryAction: () => {
-        if (onOpenAIChatWithPrompt) {
-          onOpenAIChatWithPrompt(
-            'Suggest a quick 15-minute healthy dinner recipe using tomatoes, bell peppers, and milk before they expire.'
-          );
-        } else {
-          navigate('/pantry-vision');
-        }
+        navigate('/bills');
       },
-    },
-    {
-      id: 'appliance-service',
-      type: 'MAINTENANCE' as const,
-      title: 'Appliance Care Tip',
-      description: 'Air Conditioner has been running a lot this month. Clean dust filters to improve cooling.',
-      impactBadge: 'Saves Power',
-      impactColor: 'blue' as const,
-      primaryActionLabel: 'Create Reminder Task',
+    });
+  }
+
+  // Card 2: Food Waste / Grocery Replenishment
+  if (urgentGroceries.length > 0) {
+    const itemNames = urgentGroceries.map((g: any) => g.name).slice(0, 3).join(', ');
+    realCards.push({
+      id: 'grocery-stock',
+      type: 'GROCERY',
+      title: 'Pantry Freshness & Restock',
+      description: `${itemNames} marked low or depleted in stock. Restock to prevent running out.`,
+      impactBadge: 'Reduce Food Waste',
+      impactColor: 'emerald',
+      primaryActionLabel: 'View Grocery',
+      onPrimaryAction: () => {
+        navigate('/groceries');
+      },
+    });
+  } else if (groceries.length > 0) {
+    realCards.push({
+      id: 'grocery-check',
+      type: 'GROCERY',
+      title: 'Grocery Inventory In Sync',
+      description: `${groceries.length} household groceries tracked with active stock levels.`,
+      impactBadge: 'Kitchen Pantry',
+      impactColor: 'emerald',
+      primaryActionLabel: 'View Grocery',
+      onPrimaryAction: () => {
+        navigate('/groceries');
+      },
+    });
+  }
+
+  // Card 3: Save Time / Household Task
+  if (firstPendingTask) {
+    realCards.push({
+      id: `task-${firstPendingTask.id || firstPendingTask.title}`,
+      type: 'TASK',
+      title: `Task: ${firstPendingTask.title}`,
+      description: firstPendingTask.dueDate
+        ? `Scheduled for ${new Date(firstPendingTask.dueDate).toLocaleDateString([], {
+            month: 'short',
+            day: 'numeric',
+          })}. Complete on time to keep home running smoothly.`
+        : 'Pending household chore awaiting member action.',
+      impactBadge: 'Save Time',
+      impactColor: 'purple',
+      primaryActionLabel: 'Create Task',
       onPrimaryAction: () => {
         if (onOpenTaskModal) onOpenTaskModal();
-        else navigate('/appliances');
+        else navigate('/tasks');
       },
-    },
-  ];
+    });
+  }
 
-  let candidateCards = defaultCards;
+  // Card 4: Household Finance Observation
+  if (monthlyIncome > 0 || monthlyExpenses > 0) {
+    const savingsRatio =
+      monthlyIncome > 0 ? Math.round((monthlySavings / monthlyIncome) * 100) : 0;
+    realCards.push({
+      id: 'finance-summary',
+      type: 'FINANCE',
+      title: monthlySavings >= 0 ? 'Household Savings On Track' : 'Monthly Spending Alert',
+      description: `Spent ${format(monthlyExpenses)} of ${format(
+        monthlyIncome
+      )} total monthly income (${savingsRatio}% savings rate).`,
+      impactBadge: 'Household Finance',
+      impactColor: 'blue',
+      primaryActionLabel: 'View Expenses',
+      onPrimaryAction: () => {
+        navigate('/expenses');
+      },
+    });
+  }
+
   if (!aiSuggestions) {
-    // If proactive AI suggestions are turned off, only keep required bill reminders
-    candidateCards = candidateCards.filter((c) => c.type === 'BILL');
-  }
-  if (!aiRecipes) {
-    // If AI recipes are turned off, filter out recipe cards
-    candidateCards = candidateCards.filter((c) => c.type !== 'RECIPE');
+    return null;
   }
 
-  const activeCards = candidateCards.filter((c) => !dismissedIds.includes(c.id));
+  const activeCards = realCards.filter((c) => !dismissedIds.includes(c.id));
 
   const handleDismiss = (id: string) => {
     setDismissedIds((prev) => [...prev, id]);
