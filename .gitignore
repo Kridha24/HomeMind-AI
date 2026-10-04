@@ -11,6 +11,8 @@ dist/
 apps/*/dist/
 packages/*/dist/
 .next/
+.vite/
+apps/*/.vite/
 
 # Local Database & Environment Files
 *.db
