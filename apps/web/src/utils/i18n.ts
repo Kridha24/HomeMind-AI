@@ -34,7 +34,6 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'nav.pantryVision': 'Pantry Vision OCR',
     'nav.appliances': 'Home Appliances',
     'nav.medicines': 'Medicine Tracker',
-    'nav.sustainability': 'Sustainability Score',
     'nav.analytics': 'Analytics & Trends',
     'nav.reports': 'Financial Reports',
     'nav.manual': 'User Manual',
@@ -93,16 +92,6 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'dash.addTask': 'Add Task',
     'dash.quickMenu': 'for Quick Menu',
 
-    // Vitals
-    'vitals.title': 'Home Health Score',
-    'vitals.status': 'Live Status',
-    'vitals.subtitle': 'Quick 1-second view of your savings, kitchen food, and home chores',
-    'vitals.great': 'Looking Great 👍',
-    'vitals.attention': 'Attention Needed ⚠️',
-    'vitals.budget': '1. Money Saved (Budget)',
-    'vitals.food': '2. Kitchen Food Freshness',
-    'vitals.chores': '3. Home Chores & Tasks',
-    'vitals.score': 'Score',
 
     // AI
     'ai.suggestions': 'Smart Home Suggestions',
@@ -147,7 +136,6 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'nav.pantryVision': 'बिल और राशन स्कैनर (OCR)',
     'nav.appliances': 'घर के उपकरण (Appliances)',
     'nav.medicines': 'दवाइयां (Medicines)',
-    'nav.sustainability': 'बिजली और बचत (Eco Score)',
     'nav.analytics': 'खर्च का हिसाब-किताब (Analytics)',
     'nav.reports': 'PDF रिपोर्ट (Reports)',
     'nav.manual': 'उपयोगकर्ता गाइड (Manual)',
@@ -206,16 +194,6 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'dash.addTask': '+ काम जोड़ें',
     'dash.quickMenu': 'क्विक मेन्यू के लिए',
 
-    // Vitals
-    'vitals.title': 'घर का हेल्थ स्कोर',
-    'vitals.status': 'लाइव स्टेटस',
-    'vitals.subtitle': 'बचत, किचन का राशन और घर के कामों का 1-सेकंड सारांश',
-    'vitals.great': 'सब कुछ बढ़िया है 👍',
-    'vitals.attention': 'ध्यान देने की ज़रूरत है ⚠️',
-    'vitals.budget': '1. कुल बचत (बजट)',
-    'vitals.food': '2. किचन का खाना और ताज़गी',
-    'vitals.chores': '3. पूरे हुए घर के काम',
-    'vitals.score': 'स्कोर',
 
     // AI
     'ai.suggestions': 'स्मार्ट होम सुझाव (AI Suggestions)',

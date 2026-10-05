@@ -85,7 +85,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
       const botMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         sender: 'bot',
-        text: res.data.answer || 'I evaluated your request against your live household database.',
+        text: res.data.message || res.data.answer || 'I evaluated your request against your live household database.',
         cards: res.data.cards || [],
         toolCalls: res.data.actionsExecuted || [],
         pendingConfirmation: res.data.pendingConfirmation,
@@ -200,11 +200,11 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
   };
 
   const quickStarters = [
-    '4000 income me add kar do, bhaiya se liya tha',
-    '450 mess me kharch hua',
-    'kal cylinder lene ka task bana do',
-    'milk aur bread grocery me add kar do',
-    'is month kitna kharcha hua?',
+    'Add 500 for breakfast',
+    'Show my pending tasks',
+    'How much did I spend this month?',
+    'Add milk and bread to groceries',
+    'Remind me to pay electricity bill tomorrow',
   ];
 
   return (
@@ -222,7 +222,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
                 <h3 className="font-bold text-sm text-primary">HomeMind.AI Copilot</h3>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               </div>
-              <span className="text-[10px] text-muted">Action-Aware Autonomous Assistant</span>
+              <span className="text-[10px] text-muted">Your conversational household assistant</span>
             </div>
           </div>
 
@@ -254,15 +254,15 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
                 <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto text-blue-500">
                   <Bot className="w-5 h-5" />
                 </div>
-                <h4 className="font-bold text-xs text-primary">Namaste! Main aapka HomeMind.AI Action Copilot hoon.</h4>
+                <h4 className="font-bold text-xs text-primary">Hi there! I'm your HomeMind AI Copilot.</h4>
                 <p className="text-[11px] text-muted leading-relaxed">
-                  Aap natural language mein bol kar directly income, expense, task, bills ya groceries add ya manage kar sakte hain.
+                  Speak or type naturally in English, Hindi, or Hinglish to record expenses, track income, manage chores, check bills, or update your grocery list.
                 </p>
               </div>
 
               <div className="space-y-1.5">
                 <span className="text-[10px] font-bold text-muted uppercase tracking-wider block px-1">
-                  Try Action Commands
+                  Suggested Actions
                 </span>
                 <div className="space-y-1.5">
                   {quickStarters.map((q, idx) => (
@@ -394,7 +394,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
           {loading && (
             <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 font-medium py-1.5 px-3 rounded-xl bg-blue-500/10 border border-blue-500/20 max-w-max animate-pulse">
               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              <span>Executing action across household database...</span>
+              <span>Thinking & updating your household...</span>
             </div>
           )}
 
@@ -415,7 +415,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}
-              placeholder="e.g. 4000 income me add kar do, bhaiya se liya tha"
+              placeholder="Ask anything or talk naturally…"
               className="flex-1 bg-transparent text-xs text-primary placeholder:text-muted focus:outline-none px-2 py-1 font-medium"
             />
             <button

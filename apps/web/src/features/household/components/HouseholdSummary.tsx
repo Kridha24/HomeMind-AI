@@ -21,40 +21,36 @@ export const HouseholdSummary: React.FC<HouseholdSummaryProps> = ({
     {
       label: 'Family Members',
       count: memberCount,
+      secondaryText: memberCount === 1 ? '1 active member' : `${memberCount} active members`,
       icon: Users,
-      color: 'text-indigo-600 dark:text-indigo-400',
-      bg: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30 group-hover:bg-indigo-600 group-hover:text-white',
-      container: 'border-indigo-500/30 dark:border-indigo-500/35 bg-gradient-to-br from-indigo-500/[0.08] via-indigo-500/[0.02] to-white dark:from-indigo-500/[0.14] dark:via-indigo-950/20 dark:to-slate-900',
-      gradient: 'from-indigo-500 via-purple-500 to-blue-400',
+      badgeColor: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
+      gradient: 'from-violet-500 via-indigo-500 to-purple-400',
       action: () => {},
     },
     {
       label: 'Pending Chores',
       count: pendingTasksCount,
+      secondaryText: pendingTasksCount === 0 ? 'All tasks completed' : 'Tasks to complete',
       icon: CheckSquare,
-      color: 'text-sky-600 dark:text-sky-400',
-      bg: 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30 group-hover:bg-sky-600 group-hover:text-white',
-      container: 'border-sky-500/30 dark:border-sky-500/35 bg-gradient-to-br from-sky-500/[0.08] via-sky-500/[0.02] to-white dark:from-sky-500/[0.14] dark:via-sky-950/20 dark:to-slate-900',
-      gradient: 'from-sky-500 via-blue-500 to-indigo-400',
+      badgeColor: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
+      gradient: 'from-cyan-500 via-blue-500 to-indigo-400',
       action: () => navigate('/tasks?status=pending'),
     },
     {
       label: 'Groceries to Buy',
       count: neededGroceriesCount,
+      secondaryText: neededGroceriesCount === 0 ? 'Pantry stocked' : 'Items needed',
       icon: ShoppingBasket,
-      color: 'text-rose-600 dark:text-rose-400',
-      bg: 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30 group-hover:bg-rose-600 group-hover:text-white',
-      container: 'border-rose-500/30 dark:border-rose-500/35 bg-gradient-to-br from-rose-500/[0.08] via-rose-500/[0.02] to-white dark:from-rose-500/[0.14] dark:via-rose-950/20 dark:to-slate-900',
+      badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
       gradient: 'from-rose-500 via-pink-500 to-rose-400',
       action: () => navigate('/groceries'),
     },
     {
       label: 'Bills Due',
       count: unpaidBillsCount,
+      secondaryText: unpaidBillsCount === 0 ? 'All bills paid' : 'Awaiting payment',
       icon: FileText,
-      color: 'text-amber-600 dark:text-amber-400',
-      bg: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 group-hover:bg-amber-600 group-hover:text-white',
-      container: 'border-amber-500/30 dark:border-amber-500/35 bg-gradient-to-br from-amber-500/[0.08] via-amber-500/[0.02] to-white dark:from-amber-500/[0.14] dark:via-amber-950/20 dark:to-slate-900',
+      badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
       gradient: 'from-amber-500 via-orange-400 to-amber-300',
       action: () => navigate('/bills?filter=unpaid'),
     },
@@ -70,18 +66,27 @@ export const HouseholdSummary: React.FC<HouseholdSummaryProps> = ({
             key={idx}
             type="button"
             onClick={card.action}
-            className={`group relative overflow-hidden p-4 rounded-2xl border text-left transition-all duration-200 hover:-translate-y-px shadow-xs hover:shadow-md flex items-center justify-between gap-3 ${card.container}`}
+            className="group relative overflow-hidden p-4 rounded-2xl bg-panel border border-primary/80 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md flex items-center justify-between gap-3 shadow-2xs"
           >
-            <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${card.gradient} opacity-90 group-hover:opacity-100 transition-opacity`} />
-            <div className="space-y-1">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">{card.label}</span>
-              <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono block">
+            {/* Top Micro-Gradient Line */}
+            <div
+              className={`absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r ${card.gradient} opacity-80 group-hover:opacity-100 transition-opacity`}
+            />
+
+            <div className="space-y-1 min-w-0">
+              <span className="text-xs font-semibold text-secondary block truncate">
+                {card.label}
+              </span>
+              <span className="text-2xl sm:text-3xl font-black text-primary font-mono block">
                 {card.count}
+              </span>
+              <span className="text-[11px] text-muted block truncate font-medium">
+                {card.secondaryText}
               </span>
             </div>
 
             <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border shadow-2xs transition-colors ${card.bg}`}
+              className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border transition-transform duration-200 group-hover:scale-105 shadow-2xs ${card.badgeColor}`}
             >
               <Icon className="w-5 h-5" />
             </div>

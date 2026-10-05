@@ -162,7 +162,7 @@ export class ActionExecutor {
           return {
             tool: toolName,
             success: true,
-            message: `Recorded expense of ${fmt(amount)} for "${title}" in ${category}.`,
+            message: `Done — I added ${fmt(amount)} for "${title}" under ${category}.`,
             data: expense,
             card,
             invalidatedKeys: ['expenses', 'finance', 'analytics', 'dashboard'],
@@ -219,7 +219,7 @@ export class ActionExecutor {
           return {
             tool: toolName,
             success: true,
-            message: `Updated expense "${updated.title}" amount to ${fmt(updated.amount)}.`,
+            message: `Got it! Updated "${updated.title}" amount to ${fmt(updated.amount)}.`,
             data: updated,
             card,
             invalidatedKeys: ['expenses', 'finance', 'analytics', 'dashboard'],
@@ -306,7 +306,7 @@ export class ActionExecutor {
           return {
             tool: toolName,
             success: true,
-            message: `Recorded income of ${fmt(amount)} from ${source}.`,
+            message: `Done — I recorded ${fmt(amount)} income from ${source}.`,
             data: income,
             card,
             invalidatedKeys: ['income', 'finance', 'analytics', 'dashboard'],
@@ -511,7 +511,7 @@ export class ActionExecutor {
           return {
             tool: toolName,
             success: true,
-            message: `Created task "${title}" due on ${dueDate.toLocaleDateString()}${task.assignee ? ` (Assigned to ${task.assignee.name})` : ''}.`,
+            message: `Scheduled task: "${title}" due on ${dueDate.toLocaleDateString()}${task.assignee ? ` (assigned to ${task.assignee.name})` : ''}.`,
             data: task,
             card,
             invalidatedKeys: ['tasks', 'analytics', 'dashboard'],
@@ -561,7 +561,7 @@ export class ActionExecutor {
           return {
             tool: toolName,
             success: true,
-            message: `Marked task "${updated.title}" as completed.`,
+            message: `Done — marked task "${updated.title}" as completed.`,
             data: updated,
             card,
             invalidatedKeys: ['tasks', 'analytics', 'dashboard'],
@@ -666,8 +666,8 @@ export class ActionExecutor {
             success: true,
             message:
               createdItems.length === 1
-                ? `Added "${createdItems[0].name}" to your grocery list.`
-                : `Added ${createdItems.length} items (${itemNames.join(', ')}) to your grocery list.`,
+                ? `Got it! Added "${createdItems[0].name}" to your grocery list.`
+                : `Got it! Added ${createdItems.map((i) => i.name).join(', ')} to your grocery list.`,
             data: createdItems,
             card,
             invalidatedKeys: ['groceries', 'analytics', 'dashboard'],
@@ -786,7 +786,7 @@ export class ActionExecutor {
           return {
             tool: toolName,
             success: true,
-            message: `This month: Income ${fmt(monthlyIncome)}, Expenses ${fmt(monthlyExpenses)}, Net Savings ${fmt((monthlyIncome - monthlyExpenses))}.`,
+            message: `Here is your household summary for this month:\n• **Income:** ${fmt(monthlyIncome)}\n• **Expenses:** ${fmt(monthlyExpenses)}\n• **Net Savings:** ${fmt(monthlyIncome - monthlyExpenses)}${unpaidBills.length > 0 ? `\n• **Unpaid Bills:** ${unpaidBills.length} totaling ${fmt(unpaidTotal)}` : ''}`,
             data: {
               monthlyIncome,
               monthlyExpenses,
@@ -808,10 +808,19 @@ export class ActionExecutor {
             orderBy: { dueDate: 'asc' },
           });
 
+          const msg =
+            bills.length === 0
+              ? 'No unpaid bills found. All clear!'
+              : `You have ${bills.length} unpaid bill${bills.length > 1 ? 's' : ''}:\n` +
+                bills
+                  .slice(0, 10)
+                  .map((b) => `• **${b.title}**: ${fmt(b.amount)} (Due: ${new Date(b.dueDate).toLocaleDateString()})`)
+                  .join('\n');
+
           return {
             tool: toolName,
             success: true,
-            message: `Found ${bills.length} bills.`,
+            message: msg,
             data: bills.map((b) => ({
               id: b.id,
               title: b.title,
@@ -834,10 +843,18 @@ export class ActionExecutor {
             take: 20,
           });
 
+          const msg =
+            tasks.length === 0
+              ? `You have no pending tasks right now. You're all caught up!`
+              : `Here are your pending tasks (${tasks.length}):\n` +
+                tasks
+                  .map((t) => `• **${t.title}**${t.dueDate ? ` (Due: ${new Date(t.dueDate).toLocaleDateString()})` : ''}${t.priority === 'URGENT' ? ' 🚨' : ''}`)
+                  .join('\n');
+
           return {
             tool: toolName,
             success: true,
-            message: `Found ${tasks.length} tasks.`,
+            message: msg,
             data: tasks.map((t) => ({
               id: t.id,
               title: t.title,
@@ -857,10 +874,19 @@ export class ActionExecutor {
           const lowStock = items.filter((i) => i.quantity <= (i.minThreshold || 1));
           const list = args.onlyLowStock ? lowStock : items;
 
+          const msg =
+            list.length === 0
+              ? 'Your grocery list is currently empty. Need to restock anything?'
+              : `Here is your grocery list (${list.length} item${list.length > 1 ? 's' : ''}${lowStock.length ? `, ${lowStock.length} low in stock` : ''}):\n` +
+                list
+                  .slice(0, 10)
+                  .map((i) => `• **${i.name}** — ${i.quantity} ${i.unit || 'pcs'}${i.quantity <= (i.minThreshold || 1) ? ' ⚠️ *Low stock*' : ''}`)
+                  .join('\n');
+
           return {
             tool: toolName,
             success: true,
-            message: `Found ${list.length} grocery items (${lowStock.length} low in stock).`,
+            message: msg,
             data: list.map((i) => ({
               id: i.id,
               name: i.name,

@@ -337,4 +337,166 @@ export class SecureMessagingService {
       },
     });
   }
+
+  /**
+   * Calculate unread message counts per conversation for a user in their household.
+   * Backed by database message receipts.
+   */
+  public static async getUnreadCounts(
+    userId: string,
+    householdId: string
+  ): Promise<{
+    totalUnread: number;
+    byConversation: Record<string, number>;
+    unreadMessages: Array<{
+      id: string;
+      conversationId: string;
+      conversationType: string;
+      senderId: string;
+      senderName: string;
+      senderAvatar?: string | null;
+      ciphertext: string;
+      iv: string;
+      ephemeralPublicKey: string;
+      recipientWrappedKeys: any;
+      aad: string;
+      createdAt: string;
+    }>;
+  }> {
+    const userConversations = await prisma.conversation.findMany({
+      where: {
+        householdId,
+        members: {
+          some: {
+            userId,
+            leftAt: null,
+          },
+        },
+      },
+      select: {
+        id: true,
+        type: true,
+        messages: {
+          where: {
+            senderId: { not: userId },
+            deletedAt: null,
+            receipts: {
+              none: {
+                userId,
+                readAt: { not: null },
+              },
+            },
+          },
+          select: {
+            id: true,
+            conversationId: true,
+            senderId: true,
+            ciphertext: true,
+            iv: true,
+            ephemeralPublicKey: true,
+            recipientWrappedKeys: true,
+            aad: true,
+            createdAt: true,
+            sender: {
+              select: {
+                id: true,
+                name: true,
+                avatar: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        },
+      },
+    });
+
+    const byConversation: Record<string, number> = {};
+    let totalUnread = 0;
+    const unreadMessages: Array<any> = [];
+
+    for (const conv of userConversations) {
+      const count = conv.messages.length;
+      byConversation[conv.id] = count;
+      totalUnread += count;
+
+      for (const msg of conv.messages) {
+        unreadMessages.push({
+          id: msg.id,
+          conversationId: conv.id,
+          conversationType: conv.type,
+          senderId: msg.senderId,
+          senderName: msg.sender?.name || 'Family Member',
+          senderAvatar: msg.sender?.avatar || null,
+          ciphertext: msg.ciphertext,
+          iv: msg.iv,
+          ephemeralPublicKey: msg.ephemeralPublicKey,
+          recipientWrappedKeys: msg.recipientWrappedKeys,
+          aad: msg.aad,
+          createdAt: msg.createdAt.toISOString(),
+        });
+      }
+    }
+
+    // Sort all unread messages latest first
+    unreadMessages.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return { totalUnread, byConversation, unreadMessages };
+  }
+
+  /**
+   * Mark all unread messages in a conversation as read for a user.
+   */
+  public static async markConversationAsRead(
+    conversationId: string,
+    userId: string,
+    householdId: string,
+    deviceId: string
+  ): Promise<{ success: boolean; markedCount: number }> {
+    const isMember = await this.isMemberOfConversation(conversationId, userId, householdId);
+    if (!isMember) {
+      throw new Error('Forbidden: Not an active member of this conversation');
+    }
+
+    const unreadMessages = await prisma.message.findMany({
+      where: {
+        conversationId,
+        senderId: { not: userId },
+        deletedAt: null,
+        receipts: {
+          none: {
+            userId,
+            readAt: { not: null },
+          },
+        },
+      },
+      select: { id: true },
+    });
+
+    const now = new Date();
+    for (const msg of unreadMessages) {
+      await prisma.messageReceipt.upsert({
+        where: {
+          messageId_userId_deviceId: {
+            messageId: msg.id,
+            userId,
+            deviceId,
+          },
+        },
+        create: {
+          messageId: msg.id,
+          userId,
+          deviceId,
+          deliveredAt: now,
+          readAt: now,
+        },
+        update: {
+          readAt: now,
+        },
+      });
+    }
+
+    return { success: true, markedCount: unreadMessages.length };
+  }
 }
+

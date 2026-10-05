@@ -11,6 +11,7 @@ import { CommandPalette } from './components/common/CommandPalette';
 import { AIChatDrawer } from './components/common/AIChatDrawer';
 import { DraggableFAB } from './components/common/DraggableFAB';
 import { NotificationDrawer } from './components/common/NotificationDrawer';
+import { RealtimeNotificationProvider, useRealtimeNotifications } from './contexts/RealtimeNotificationContext';
 
 // Modals
 import { AddExpenseModal } from './components/common/AddExpenseModal';
@@ -32,7 +33,6 @@ import { Appliances } from './pages/Appliances';
 import { Medicines } from './pages/Medicines';
 import { Tasks } from './pages/Tasks';
 import { FamilyWorkspace } from './pages/FamilyWorkspace';
-import { Sustainability } from './pages/Sustainability';
 import { Analytics } from './pages/Analytics';
 import { Reports } from './pages/Reports';
 import { Profile } from './pages/Profile';
@@ -88,6 +88,8 @@ function AppShell() {
 
   const { fetchSettings, theme, sidebarCollapsed } = useSettingStore();
   const { isAuthenticated } = useAuthStore();
+  const { totalUnread } = useRealtimeNotifications();
+
 
   useEffect(() => {
     if (isAuthenticated) fetchSettings();
@@ -249,7 +251,7 @@ function AppShell() {
     ? 'amb-income'
     : p.startsWith('/bills')
     ? 'amb-bills'
-    : p.startsWith('/groceries') || p.startsWith('/inventory') || p.startsWith('/sustainability')
+    : p.startsWith('/groceries') || p.startsWith('/inventory')
     ? 'amb-groceries'
     : p.startsWith('/tasks')
     ? 'amb-tasks'
@@ -266,7 +268,11 @@ function AppShell() {
   return (
     <div className={`${themeClass} relative isolate`}>
       <div aria-hidden="true" className={`hm-ambient ${ambientClass}`} />
-      <Sidebar isOpen={isMobileSidebarOpen} onClose={() => setIsMobileSidebarOpen(false)} />
+      <Sidebar
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
+        unreadCount={totalUnread}
+      />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar
@@ -274,7 +280,9 @@ function AppShell() {
           onOpenNotifications={() => setIsNotificationsOpen(true)}
           onToggleMobileSidebar={() => setIsMobileSidebarOpen((p) => !p)}
           onOpenSearch={() => setIsCommandPaletteOpen(true)}
+          unreadCount={totalUnread}
         />
+
 
         {/* Main content: offset for 72px default / 220px expanded sidebar on desktop */}
         <main
@@ -296,7 +304,7 @@ function AppShell() {
             <Route path="/medicines" element={<Medicines />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/family" element={<FamilyWorkspace />} />
-            <Route path="/sustainability" element={<Sustainability />} />
+            <Route path="/sustainability" element={<Navigate to="/" replace />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/profile" element={<Navigate to="/settings?tab=profile" replace />} />
@@ -404,9 +412,12 @@ export function App() {
           path="/*"
           element={
             <ProtectedRoute>
-              <AppShell />
+              <RealtimeNotificationProvider>
+                <AppShell />
+              </RealtimeNotificationProvider>
             </ProtectedRoute>
           }
+
         />
       </Routes>
     </Router>

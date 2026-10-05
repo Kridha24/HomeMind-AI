@@ -89,6 +89,8 @@ export interface CopilotProcessRequest {
 }
 
 export interface CopilotResponse {
+  type?: 'action' | 'query' | 'clarification' | 'conversation';
+  message?: string;
   threadId: string;
   answer: string;
   actionsExecuted: CopilotToolResult[];
@@ -101,3 +103,4 @@ export interface CopilotResponse {
   suggestions: string[];
   invalidatedDomains: string[];
 }
+

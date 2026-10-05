@@ -11,7 +11,6 @@ import {
   Pill,
   CheckSquare,
   Users,
-  Leaf,
   BarChart3,
   FileSpreadsheet,
   Settings,
@@ -420,17 +419,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       action: () => {
         onClose();
         navigate('/tasks');
-      },
-    },
-    {
-      id: 'nav-sustainability',
-      title: 'Sustainability & Green Score',
-      category: 'Navigation',
-      icon: Leaf,
-      keywords: ['carbon', 'waste', 'solar', 'eco'],
-      action: () => {
-        onClose();
-        navigate('/sustainability');
       },
     },
     {

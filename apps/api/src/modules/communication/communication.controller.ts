@@ -297,4 +297,57 @@ export class CommunicationController {
       return res.status(500).json({ error: 'Failed to get recipient keys' });
     }
   }
+
+  /**
+   * GET /api/v1/communication/unread
+   * Fetch unread message counts per conversation for current user
+   */
+  public static async getUnreadCounts(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      const householdId = req.user?.householdId;
+
+      if (!userId || !householdId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const counts = await SecureMessagingService.getUnreadCounts(userId, householdId);
+      return res.json(counts);
+    } catch (err: any) {
+      console.error('[Communication] Error getting unread counts:', err);
+      return res.status(500).json({ error: 'Failed to get unread counts' });
+    }
+  }
+
+  /**
+   * POST /api/v1/communication/conversation/:id/read
+   * Mark all unread messages in a conversation as read
+   */
+  public static async markConversationRead(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      const householdId = req.user?.householdId;
+      const { id: conversationId } = req.params;
+      const { deviceId = 'web-client' } = req.body;
+
+      if (!userId || !householdId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const result = await SecureMessagingService.markConversationAsRead(
+        conversationId,
+        userId,
+        householdId,
+        deviceId
+      );
+      return res.json(result);
+    } catch (err: any) {
+      if (err.message?.includes('Forbidden')) {
+        return res.status(403).json({ error: err.message });
+      }
+      console.error('[Communication] Error marking conversation read:', err);
+      return res.status(500).json({ error: 'Failed to mark conversation read' });
+    }
+  }
 }
+

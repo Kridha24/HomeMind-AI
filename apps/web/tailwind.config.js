@@ -40,7 +40,8 @@ export default {
         input: 'rgb(var(--border-input) / <alpha-value>)',
       },
       fontFamily: {
-        sans: ['Inter', 'SF Pro Display', '-apple-system', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'Inter', 'SF Pro Display', '-apple-system', 'sans-serif'],
+        serif: ['Playfair Display', 'Georgia', 'serif'],
       },
     },
   },

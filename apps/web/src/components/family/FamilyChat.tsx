@@ -26,11 +26,14 @@ import {
 import { socketService } from '../../services/socketService';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { useSearchParams } from 'react-router-dom';
+import { useRealtimeNotifications } from '../../contexts/RealtimeNotificationContext';
 import {
   E2EEMessagingEngine,
   EncryptedEnvelope,
 } from '../../services/e2ee/e2eeCrypto';
 import { toast } from '../../features/household/utils/toast';
+
 
 interface Member {
   id: string;
@@ -70,7 +73,22 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
   onStartCall,
 }) => {
   const { user, household } = useAuthStore();
-  const [activeChannel, setActiveChannel] = useState<'group' | string>('group');
+  const [searchParams] = useSearchParams();
+  const { setActiveConversationId, markConversationRead, unreadByConversation } = useRealtimeNotifications();
+
+  const [activeChannel, setActiveChannel] = useState<'group' | string>(() => {
+    const memberParam = searchParams.get('member');
+    return memberParam || 'group';
+  });
+
+  // Switch channel when URL query changes
+  useEffect(() => {
+    const memberParam = searchParams.get('member');
+    if (memberParam && memberParam !== activeChannel) {
+      setActiveChannel(memberParam);
+    }
+  }, [searchParams, activeChannel]);
+
   const [messages, setMessages] = useState<DecryptedMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [showEmojiBar, setShowEmojiBar] = useState(false);
@@ -234,6 +252,8 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
 
         if (!isMounted) return;
         setConversationId(conv.id);
+        setActiveConversationId(conv.id);
+        markConversationRead(conv.id);
 
         // Join conversation room on server
         const socket = socketService.getSocket();
@@ -280,12 +300,14 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
 
     return () => {
       isMounted = false;
+      setActiveConversationId(null);
       const socket = socketService.getSocket();
       if (socket && activeConversationIdRef.current) {
         socket.emit('leave_conversation', { conversationId: activeConversationIdRef.current });
       }
     };
-  }, [activeChannel, isInitializing, household?.id, user?.id, members]);
+  }, [activeChannel, isInitializing, household?.id, user?.id, members, setActiveConversationId, markConversationRead]);
+
 
   // 2. Real-time Socket Event Handlers
   useEffect(() => {
@@ -396,8 +418,10 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
           deviceId: myDeviceId,
           conversationId: envelope.conversationId,
         });
+        markConversationRead(envelope.conversationId);
       }
     };
+
 
     // Handle server confirmation of message acceptance (SENT state)
     const handleMessageSent = (data: {
@@ -761,9 +785,17 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
                       </span>
                     </div>
                   </div>
+
+                  {/* Unread Message Badge for this member */}
+                  {!isSelected && (unreadByConversation[member.id] || 0) > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500 text-white shadow-xs ml-auto flex-shrink-0 animate-pulse">
+                      {unreadByConversation[member.id]}
+                    </span>
+                  )}
                 </button>
               );
             })}
+
         </div>
 
         {/* E2EE Info Footer with Verified Security Badge */}

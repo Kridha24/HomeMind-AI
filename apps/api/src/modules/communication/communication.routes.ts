@@ -21,5 +21,8 @@ router.get('/conversation', CommunicationController.getHouseholdConversation);
 router.post('/conversation', CommunicationController.createDirectConversation);
 router.get('/conversation/:id/messages', CommunicationController.getMessages);
 router.get('/conversation/:id/recipients', CommunicationController.getRecipientKeys);
+router.get('/unread', CommunicationController.getUnreadCounts);
+router.post('/conversation/:id/read', CommunicationController.markConversationRead);
 
 export default router;
+

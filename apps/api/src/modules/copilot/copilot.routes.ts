@@ -11,3 +11,4 @@ router.post('/confirm', CopilotController.confirmAction);
 router.get('/history', CopilotController.getActionHistory);
 
 export { router as copilotRouter };
+

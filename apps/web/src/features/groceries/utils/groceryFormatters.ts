@@ -101,23 +101,23 @@ export function getCategoryColor(category: string): {
       bg: 'bg-emerald-500/10 dark:bg-emerald-500/15',
       text: 'text-emerald-700 dark:text-emerald-400',
       border: 'border-emerald-500/30',
-      badge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300',
+      badge: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/25',
     };
   }
   if (normalized.includes('fruit')) {
     return {
-      bg: 'bg-orange-500/10 dark:bg-orange-500/15',
-      text: 'text-orange-700 dark:text-orange-400',
-      border: 'border-orange-500/30',
-      badge: 'bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-300',
+      bg: 'bg-rose-500/10 dark:bg-rose-500/15',
+      text: 'text-rose-700 dark:text-rose-400',
+      border: 'border-rose-500/30',
+      badge: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/25',
     };
   }
   if (normalized.includes('dairy') || normalized.includes('milk') || normalized.includes('egg')) {
     return {
-      bg: 'bg-blue-500/10 dark:bg-blue-500/15',
-      text: 'text-blue-700 dark:text-blue-400',
-      border: 'border-blue-500/30',
-      badge: 'bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300',
+      bg: 'bg-sky-500/10 dark:bg-sky-500/15',
+      text: 'text-sky-700 dark:text-sky-400',
+      border: 'border-sky-500/30',
+      badge: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/25',
     };
   }
   if (normalized.includes('bread') || normalized.includes('grain') || normalized.includes('rice') || normalized.includes('bakery')) {
@@ -125,37 +125,37 @@ export function getCategoryColor(category: string): {
       bg: 'bg-amber-500/10 dark:bg-amber-500/15',
       text: 'text-amber-700 dark:text-amber-400',
       border: 'border-amber-500/30',
-      badge: 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300',
-    };
-  }
-  if (normalized.includes('oil') || normalized.includes('spice')) {
-    return {
-      bg: 'bg-yellow-500/10 dark:bg-yellow-500/15',
-      text: 'text-yellow-700 dark:text-yellow-400',
-      border: 'border-yellow-500/30',
-      badge: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950/40 dark:text-yellow-300',
-    };
-  }
-  if (normalized.includes('clean') || normalized.includes('hygiene')) {
-    return {
-      bg: 'bg-cyan-500/10 dark:bg-cyan-500/15',
-      text: 'text-cyan-700 dark:text-cyan-400',
-      border: 'border-cyan-500/30',
-      badge: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-300',
+      badge: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/25',
     };
   }
   if (normalized.includes('snack') || normalized.includes('beverage')) {
     return {
-      bg: 'bg-purple-500/10 dark:bg-purple-500/15',
-      text: 'text-purple-700 dark:text-purple-400',
-      border: 'border-purple-500/30',
-      badge: 'bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300',
+      bg: 'bg-violet-500/10 dark:bg-violet-500/15',
+      text: 'text-violet-700 dark:text-violet-400',
+      border: 'border-violet-500/30',
+      badge: 'bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/25',
+    };
+  }
+  if (normalized.includes('personal') || normalized.includes('hygiene') || normalized.includes('care')) {
+    return {
+      bg: 'bg-cyan-500/10 dark:bg-cyan-500/15',
+      text: 'text-cyan-700 dark:text-cyan-400',
+      border: 'border-cyan-500/30',
+      badge: 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/25',
+    };
+  }
+  if (normalized.includes('house') || normalized.includes('clean') || normalized.includes('kitchen') || normalized.includes('home')) {
+    return {
+      bg: 'bg-blue-500/10 dark:bg-blue-500/15',
+      text: 'text-blue-700 dark:text-blue-400',
+      border: 'border-blue-500/30',
+      badge: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/25',
     };
   }
   return {
     bg: 'bg-slate-500/10 dark:bg-slate-500/15',
-    text: 'text-slate-700 dark:text-slate-300',
+    text: 'text-slate-600 dark:text-slate-300',
     border: 'border-slate-500/30',
-    badge: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300',
+    badge: 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/25',
   };
 }

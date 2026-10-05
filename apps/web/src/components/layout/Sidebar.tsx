@@ -10,7 +10,6 @@ import {
   Users,
   BarChart3,
   Camera,
-  Leaf,
   Settings as SettingsIcon,
   Sparkles,
   X,
@@ -27,6 +26,7 @@ import { SidebarTooltip } from './SidebarTooltip';
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
+  unreadCount?: number;
 }
 
 interface NavItem {
@@ -38,7 +38,7 @@ interface NavItem {
   badge?: string;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose, unreadCount = 0 }) => {
   const { user, household } = useAuthStore();
   const { sidebarCollapsed, toggleSidebar } = useSettingStore();
   const { t } = useI18n();
@@ -67,13 +67,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
   ];
 
   const familyItems: NavItem[] = [
-    { key: 'nav.family', name: t('nav.family', 'Family Workspace'), path: '/family', icon: Users, accent: 'indigo' },
+    {
+      key: 'nav.family',
+      name: t('nav.family', 'Family Workspace'),
+      path: '/family',
+      icon: Users,
+      accent: 'indigo',
+      badge: unreadCount > 0 ? String(unreadCount) : undefined,
+    },
   ];
+
 
   const insightItems: NavItem[] = [
     { key: 'nav.analytics', name: t('nav.analytics', 'Analytics & Trends'), path: '/analytics', icon: BarChart3, accent: 'cyan' },
     { key: 'nav.pantryVision', name: t('nav.pantryVision', 'Pantry Vision'), path: '/pantry-vision', icon: Camera, accent: 'sky', badge: 'AI' },
-    { key: 'nav.sustainability', name: t('nav.sustainability', 'Sustainability'), path: '/sustainability', icon: Leaf, accent: 'emerald', badge: 'ECO' },
   ];
 
   const systemItems: NavItem[] = [

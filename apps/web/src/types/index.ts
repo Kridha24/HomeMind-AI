@@ -131,13 +131,6 @@ export interface Task {
   updatedAt?: string;
 }
 
-export interface SustainabilityMetric {
-  waterUsageLitre: number;
-  electricityKwh: number;
-  foodWasteKg: number;
-  ecoScore: number;
-}
-
 export interface NotificationItem {
   id: string;
   title: string;

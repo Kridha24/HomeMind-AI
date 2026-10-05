@@ -12,7 +12,11 @@ import {
   AlertTriangle,
   Receipt,
   Clock,
+  MessageSquare,
+  Volume2,
+  Globe,
 } from 'lucide-react';
+
 import { useSettingStore } from '../../../stores/useSettingStore';
 import { SettingsCard } from '../primitives/SettingsCard';
 import { SettingsRow } from '../primitives/SettingsRow';
@@ -43,6 +47,35 @@ export const NotificationSettings: React.FC = () => {
   const [aiInsights, setAiInsights] = useState(
     () => localStorage.getItem('hm_notif_ai') !== 'false'
   );
+  const [messageAlerts, setMessageAlerts] = useState(
+    () => localStorage.getItem('hm_notif_messages') !== 'false'
+  );
+  const [notificationSound, setNotificationSound] = useState(
+    () => localStorage.getItem('hm_notif_sound') === 'true'
+  );
+  const [browserPermission, setBrowserPermission] = useState<NotificationPermission>(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      return Notification.permission;
+    }
+    return 'default';
+  });
+
+  const handleRequestBrowserPerm = async () => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      try {
+        const res = await Notification.requestPermission();
+        setBrowserPermission(res);
+        if (res === 'granted') {
+          setFeedback({ type: 'success', text: 'Browser desktop notifications enabled' });
+        } else {
+          setFeedback({ type: 'error', text: 'Browser notifications permission was not granted' });
+        }
+      } catch {
+        setFeedback({ type: 'error', text: 'Failed to request notification permission' });
+      }
+    }
+  };
+
 
   const handleTogglePush = async (checked: boolean) => {
     setSaving(true);
@@ -149,8 +182,69 @@ export const NotificationSettings: React.FC = () => {
         </div>
       </SettingsCard>
 
+      {/* Direct Messages & Real-time Chat */}
+      <SettingsCard
+        id="message-notifications"
+        title="Direct Messages & Family Chat"
+        description="Configure in-app popups, desktop browser notifications, and chime alerts."
+        badge="Realtime E2EE"
+      >
+        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          <SettingsRow
+            label="In-App Message Banners"
+            description="Show toast popups when family members send direct messages while browsing"
+            icon={MessageSquare}
+          >
+            <SettingsToggle
+              checked={messageAlerts}
+              onChange={() =>
+                handleCategoryToggle('hm_notif_messages', messageAlerts, setMessageAlerts, 'Message Alerts')
+              }
+              ariaLabel="Enable in-app message alerts"
+            />
+          </SettingsRow>
+
+          <SettingsRow
+            label="Desktop Browser Notifications"
+            description="Deliver alerts when HomeMind.AI tab is in background or window is unfocused"
+            icon={Globe}
+          >
+            <div className="flex items-center gap-2">
+              {browserPermission === 'granted' ? (
+                <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/25">
+                  Granted
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleRequestBrowserPerm}
+                  className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm transition-colors"
+                >
+                  Enable Desktop Alerts
+                </button>
+              )}
+            </div>
+          </SettingsRow>
+
+          <SettingsRow
+            label="Notification Sound"
+            description="Play a subtle, quiet chime on incoming direct messages (no noisy autoplay)"
+            icon={Volume2}
+          >
+            <SettingsToggle
+              checked={notificationSound}
+              onChange={() =>
+                handleCategoryToggle('hm_notif_sound', notificationSound, setNotificationSound, 'Notification Sound')
+              }
+              ariaLabel="Enable notification sound"
+            />
+          </SettingsRow>
+        </div>
+      </SettingsCard>
+
       {/* 2. Finance Notifications */}
       <SettingsCard
+
         id="finance-notifications"
         title="Finance & Payments"
         description="Filter spending alerts and due date notices on this device."

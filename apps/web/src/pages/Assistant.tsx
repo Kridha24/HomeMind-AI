@@ -122,7 +122,7 @@ export const Assistant: React.FC = () => {
 
       const assistantMessage: Message = {
         sender: 'assistant',
-        text: res.data.answer || 'I evaluated your request against your live household database.',
+        text: res.data.message || res.data.answer || 'I evaluated your request against your live household database.',
         toolCalls: res.data.toolCallsExecuted || [],
         cards: res.data.cards || [],
         clarificationRequired: res.data.clarificationRequired,
@@ -533,7 +533,7 @@ export const Assistant: React.FC = () => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={loading}
-            placeholder="Ask HomeMind anything..."
+            placeholder="Ask anything or talk naturally…"
             className="flex-1 bg-transparent border-0 resize-none text-xs sm:text-sm text-primary placeholder-slate-500 focus:outline-none px-2 py-1 max-h-[120px] scrollbar-thin"
           />
 

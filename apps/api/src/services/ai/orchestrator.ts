@@ -38,11 +38,12 @@ export class AIOrchestrator {
       threadId,
     });
 
-    // If an action was recognized, or confirmation/clarification is needed, return Copilot response
+    // If an action was recognized, or confirmation/clarification is needed, or conversational response returned, return Copilot response
     if (
       copilotRes.actionsExecuted.length > 0 ||
       copilotRes.pendingConfirmation ||
-      copilotRes.clarificationRequired
+      copilotRes.clarificationRequired ||
+      copilotRes.type === 'conversation'
     ) {
       return {
         threadId: copilotRes.threadId,

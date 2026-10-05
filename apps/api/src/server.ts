@@ -6,7 +6,9 @@ import { verifyAccessToken } from './utils/jwt';
 import { webrtcSignaling } from './services/webrtcSignalingService';
 import { SecureMessagingService } from './modules/communication/secureMessagingService';
 import { DeviceTokenService } from './modules/communication/deviceTokenService';
+import { PushNotificationService } from './modules/communication/pushNotificationService';
 import { prisma } from './repositories/db';
+
 
 const server = http.createServer(app);
 
@@ -178,18 +180,6 @@ io.on('connection', (socket) => {
         });
       }
 
-      const persisted = {
-        ...result.message,
-        recipientWrappedKeys: payload.recipientWrappedKeys,
-      };
-
-      // 1. Confirm SENT to sender with server-assigned ID & timestamp
-      socket.emit('message:sent', {
-        clientMessageId: payload.clientMessageId,
-        messageId: result.message.id,
-        createdAt: result.message.createdAt,
-      });
-
       // 2. Fetch conversation metadata to distinguish DIRECT vs HOUSEHOLD
       const conv = await prisma.conversation.findUnique({
         where: { id: payload.conversationId },
@@ -205,6 +195,19 @@ io.on('connection', (socket) => {
 
       const isDirect = conv?.type === 'DIRECT';
       const convMembers = conv?.members || [];
+
+      const persisted = {
+        ...result.message,
+        recipientWrappedKeys: payload.recipientWrappedKeys,
+        conversationType: conv?.type || 'HOUSEHOLD',
+      };
+
+      // 1. Confirm SENT to sender with server-assigned ID & timestamp
+      socket.emit('message:sent', {
+        clientMessageId: payload.clientMessageId,
+        messageId: result.message.id,
+        createdAt: result.message.createdAt,
+      });
 
       // a) Broadcast to the dedicated conversation room (for users currently active in this conversation)
       io.to(`conversation_${payload.conversationId}`).emit('message:new', persisted);
@@ -226,7 +229,19 @@ io.on('connection', (socket) => {
       }
 
       // 3. Privacy-Safe Push Notification (NO PLAINTEXT, NO SECRETS!)
-      DeviceTokenService.getUserTokens(userId).catch(() => {});
+      const recipientUserIds = convMembers.map((m) => m.userId).filter((id) => id !== userId);
+      PushNotificationService.dispatchMessagePush({
+        recipientUserIds,
+        conversationId: payload.conversationId,
+        conversationType: conv?.type === 'DIRECT' ? 'DIRECT' : 'HOUSEHOLD',
+        senderId: userId,
+        senderName: result.message.sender?.name || 'Family Member',
+        messageId: result.message.id,
+        createdAt: result.message.createdAt,
+      }).catch((pushErr) => {
+        console.warn('[E2EE Socket] Push notification dispatch error:', pushErr);
+      });
+
     } catch (err: any) {
       console.error('[E2EE Socket] Error processing message:send:', err);
       socket.emit('message:error', {

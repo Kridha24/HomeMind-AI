@@ -4,8 +4,7 @@ import { useAuthStore } from '../../stores/useAuthStore';
 import { socketService } from '../../services/socketService';
 import { HouseholdMember } from '../../types';
 import { useHousehold } from './hooks/useHousehold';
-import { HouseholdHeader } from './components/HouseholdHeader';
-import { HouseholdIdentityCard } from './components/HouseholdIdentityCard';
+import { HouseholdHero } from './components/HouseholdHero';
 import { HouseholdSummary } from './components/HouseholdSummary';
 import { HouseholdQuickActions } from './components/HouseholdQuickActions';
 import { MemberGrid } from './components/MemberGrid';
@@ -75,9 +74,17 @@ export const FamilyWorkspace: React.FC = () => {
   const [isIncomingCall, setIsIncomingCall] = useState(false);
   const [incomingSignalData, setIncomingSignalData] = useState<any>(null);
 
-  // Auto-open modals based on URL query param (e.g. ?action=invite)
+  // Auto-open modals or switch view based on URL query param (e.g. ?action=invite or ?conversation=...)
   useEffect(() => {
     const action = searchParams.get('action');
+    const tab = searchParams.get('tab');
+    const conv = searchParams.get('conversation');
+    const member = searchParams.get('member');
+
+    if (tab === 'communication' || conv || member) {
+      setActiveView('communication');
+    }
+
     if (action === 'invite') {
       setIsInviteOpen(true);
       setSearchParams({}, { replace: true });
@@ -182,28 +189,33 @@ export const FamilyWorkspace: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 animate-fadeIn">
-      {/* 1. Page Header with Switcher & View Toggle */}
-      <HouseholdHeader
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 animate-fadeIn">
+      {/* 1. Compact Premium Household Hero Card */}
+      <HouseholdHero
         household={household}
+        members={members}
         memberCount={members.length}
+        currentUserRole={user?.role}
         onInvite={() => setIsInviteOpen(true)}
         onOpenSwitcher={() => setIsSwitcherOpen(true)}
         onRefresh={handleRefreshAll}
         isRefreshing={loadingMembers || loadingActivity}
         activeView={activeView}
         onToggleView={setActiveView}
+        onRename={async (newName: string) => {
+          await renameMutation.mutateAsync(newName);
+        }}
       />
 
       {/* 2. Workspace View vs Communication View */}
       {activeView === 'communication' ? (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-card border border-border">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-3xl bg-panel border border-primary/80 shadow-xs">
             <div>
-              <h2 className="text-base font-semibold text-foreground">
+              <h2 className="text-base font-bold text-primary">
                 Family Communication & Calling
               </h2>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted">
                 Direct messaging and real-time audio/video calls with household members
               </p>
             </div>
@@ -214,8 +226,9 @@ export const FamilyWorkspace: React.FC = () => {
                 .map((m) => (
                   <button
                     key={m.id}
+                    type="button"
                     onClick={() => handleStartCall(m, 'video')}
-                    className="px-3 py-1.5 text-xs font-medium rounded-xl border border-border bg-muted/30 hover:bg-muted/60 text-foreground transition-colors"
+                    className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-primary/80 bg-secondary/50 hover:bg-secondary text-primary transition-colors"
                   >
                     Call {m.name.split(' ')[0]}
                   </button>
@@ -229,28 +242,14 @@ export const FamilyWorkspace: React.FC = () => {
           />
         </div>
       ) : (
-        <div className="space-y-6 sm:space-y-8">
-          {/* 3. Household Identity Hero Card */}
-          <HouseholdIdentityCard
-            household={household}
-            members={members}
-            currentUserRole={user?.role}
-            onRename={async (newName: string) => {
-              await renameMutation.mutateAsync(newName);
-            }}
-            onRegenerateCode={async () => {
-              await regenerateCodeMutation.mutateAsync();
-            }}
-            isRegenerating={regenerateCodeMutation.isPending}
-          />
-
-          {/* 4. Quick Actions */}
+        <div className="space-y-6">
+          {/* Quick Actions Row */}
           <HouseholdQuickActions
             currentUserRole={user?.role}
             onOpenInviteModal={() => setIsInviteOpen(true)}
           />
 
-          {/* 5. Cross-Module Household Summary Snapshot */}
+          {/* 4 Summary Metric Cards */}
           <HouseholdSummary
             memberCount={members.length}
             pendingTasksCount={tasks.filter((t) => t.status !== 'COMPLETED').length}
@@ -258,13 +257,16 @@ export const FamilyWorkspace: React.FC = () => {
             unpaidBillsCount={bills.filter((b) => b.status === 'UNPAID' || b.status === 'OVERDUE').length}
           />
 
-          {/* 6. Members Grid / Row Section */}
-          {members.length <= 1 ? (
-            <div className="space-y-4">
-              <FamilyWorkspaceEmptyState
-                onInviteMember={() => setIsInviteOpen(true)}
-                canInvite={user?.role === 'OWNER' || user?.role === 'ADMIN'}
-              />
+          {/* Main Content Grid: 60% Left (Members & Responsibilities) / 40% Right (Recent Activity) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Column (60% on desktop) */}
+            <div className="lg:col-span-7 space-y-6">
+              {members.length <= 1 && (
+                <FamilyWorkspaceEmptyState
+                  onInviteMember={() => setIsInviteOpen(true)}
+                  canInvite={user?.role === 'OWNER' || user?.role === 'ADMIN'}
+                />
+              )}
               <MemberGrid
                 members={members}
                 currentUserId={user?.id}
@@ -277,29 +279,16 @@ export const FamilyWorkspace: React.FC = () => {
                 onViewMemberTasks={(m) => navigate(`/tasks?assignee=${encodeURIComponent(m.id)}`)}
                 onInvite={() => setIsInviteOpen(true)}
               />
+              <HouseholdResponsibilities members={members} tasks={tasks} />
             </div>
-          ) : (
-            <MemberGrid
-              members={members}
-              currentUserId={user?.id}
-              currentUserRole={user?.role}
-              memberTaskCounts={memberTaskCounts}
-              onSelectMember={(m) => setDetailMember(m)}
-              onOpenRoleChange={(m) => setRoleMember(m)}
-              onOpenTransferOwnership={(m) => setTransferTarget(m)}
-              onOpenRemoveMember={(m) => setRemovalMember(m)}
-              onViewMemberTasks={(m) => navigate(`/tasks?assignee=${encodeURIComponent(m.id)}`)}
-              onInvite={() => setIsInviteOpen(true)}
-            />
-          )}
 
-          {/* 7. Shared Responsibilities & Recent Household Activity */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-            <HouseholdResponsibilities members={members} tasks={tasks} />
-            <HouseholdActivity activities={activity} isLoading={loadingActivity} />
+            {/* Right Column (40% on desktop) */}
+            <div className="lg:col-span-5 space-y-6">
+              <HouseholdActivity activities={activity} isLoading={loadingActivity} />
+            </div>
           </div>
 
-          {/* 8. Danger Zone: Leave Household or Delete Household */}
+          {/* Compact Danger Zone at the Very Bottom */}
           <HouseholdDangerZone
             currentUserRole={user?.role}
             householdName={household?.name || 'Household'}

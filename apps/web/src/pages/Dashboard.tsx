@@ -37,9 +37,6 @@ import { DashboardGreeting } from '../components/dashboard/DashboardGreeting';
 import { QuickActionCommandBar } from '../components/dashboard/QuickActionCommandBar';
 import { FinancialSummaryGrid } from '../components/dashboard/FinancialSummaryGrid';
 import { TodayOverview } from '../components/dashboard/TodayOverview';
-import { UpcomingBillsCard } from '../components/dashboard/UpcomingBillsCard';
-import { PendingTasksCard } from '../components/dashboard/PendingTasksCard';
-import { MonthlyOverviewCard } from '../components/dashboard/MonthlyOverviewCard';
 import { RecentActivityCard } from '../components/dashboard/RecentActivityCard';
 import { HomeMindInsightCard } from '../components/dashboard/HomeMindInsightCard';
 import { DashboardSkeleton } from '../components/dashboard/DashboardSkeleton';
@@ -47,7 +44,6 @@ import { DashboardErrorState } from '../components/dashboard/DashboardErrorState
 import { computeDeterministicInsights } from '../components/dashboard/utils/dashboardUtils';
 
 // Startup UI Components
-import { HouseholdVitalRings } from '../components/dashboard/HouseholdVitalRings';
 import { ActionableAIFeed } from '../components/dashboard/ActionableAIFeed';
 
 // Modals
@@ -183,12 +179,6 @@ export const Dashboard: React.FC = () => {
       ? monthlyIncome - monthlyExpenses
       : monthlyIncome - monthlyExpenses;
   const upcomingBills = summary?.upcomingBills || [];
-  const upcomingBillsTotal =
-    summary?.upcomingBillsTotal !== undefined && summary.upcomingBillsTotal > 0
-      ? summary.upcomingBillsTotal
-      : upcomingBills
-          .filter((b: any) => b.status !== 'PAID')
-          .reduce((acc: number, b: any) => acc + (b.amount || 0), 0);
   const pendingTasks = summary?.pendingTasks || [];
   const recentHistory = summary?.recent5History || [];
   const incomesList = Array.isArray(incomeData) ? incomeData : [];
@@ -218,25 +208,6 @@ export const Dashboard: React.FC = () => {
     }).length;
   }, [recentHistory]);
 
-  // Real pantry stock availability telemetry
-  const pantryStats = useMemo(() => {
-    const total = groceriesList.length;
-    const inStock = groceriesList.filter(
-      (g: any) => g.status !== 'LOW_STOCK' && g.status !== 'OUT_OF_STOCK'
-    ).length;
-    const lowStock = groceriesList.filter(
-      (g: any) => g.status === 'LOW_STOCK' || g.status === 'OUT_OF_STOCK'
-    ).length;
-    return { total, inStock, lowStock };
-  }, [groceriesList]);
-
-  // Real chore completion telemetry
-  const taskStats = useMemo(() => {
-    const completed = summary?.completedTasksCount ?? 0;
-    const pending = pendingTasks.length;
-    const total = summary?.totalTasksCount ?? (completed + pending);
-    return { total, completed };
-  }, [summary, pendingTasks]);
 
   // Real data-driven household insight (Part A.6 - Real Household Insight)
   const realHouseholdInsight = useMemo(() => {
@@ -365,24 +336,6 @@ export const Dashboard: React.FC = () => {
     setShowIncomeModal(true);
   };
 
-  const handleEditBill = (bill: any) => {
-    setEditingBill(bill);
-    setShowBillModal(true);
-  };
-
-  const handleMarkBillPaid = async (billId: string) => {
-    try {
-      await apiClient.put(`/bills/${billId}/pay`);
-      handleRefreshAll();
-    } catch (e) {
-      console.error('Failed to mark bill paid', e);
-    }
-  };
-
-  const handleCompleteTask = async (taskId: string) => {
-    await apiClient.put(`/tasks/${taskId}/status`, { status: 'COMPLETED' });
-    handleRefreshAll();
-  };
 
   // Prevent flash of owner financials during initial load (Part 46)
   if (loading) {
@@ -532,43 +485,6 @@ export const Dashboard: React.FC = () => {
             onAction={(tab) => setActionCenterTab(tab)}
           />
 
-          {/* Lower Content Grid: 3-Column Layout (Tasks, Bills, Monthly Overview) */}
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <PendingTasksCard
-                tasks={pendingTasks}
-                onCompleteTask={handleCompleteTask}
-                onAddTask={() => setShowTaskModal(true)}
-              />
-
-              <UpcomingBillsCard
-                bills={upcomingBills}
-                totalDue={upcomingBillsTotal}
-                format={format}
-                onPayBill={handleMarkBillPaid}
-                onEditBill={handleEditBill}
-                onAddBill={() => {
-                  setEditingBill(null);
-                  setShowBillModal(true);
-                }}
-              />
-
-              <MonthlyOverviewCard
-                monthlyIncome={monthlyIncome}
-                monthlyExpenses={monthlyExpenses || 4000}
-                format={format}
-              />
-            </div>
-          </div>
-
-          {/* Household Vital Rings */}
-          <HouseholdVitalRings
-            monthlyIncome={monthlyIncome}
-            monthlyExpenses={monthlyExpenses}
-            monthlySavings={monthlySavings}
-            taskStats={taskStats}
-            pantryStats={pantryStats}
-          />
 
           {/* Actionable Suggestions Feed */}
           <ActionableAIFeed
@@ -688,34 +604,6 @@ export const Dashboard: React.FC = () => {
             format={format}
           />
 
-          {/* Lower Content Grid: 3-Column Layout (Tasks, Bills, Monthly Overview) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Assigned & Household Tasks */}
-            <PendingTasksCard
-              tasks={pendingTasks}
-              onCompleteTask={handleCompleteTask}
-              onAddTask={() => setShowTaskModal(true)}
-            />
-
-            {/* Household Shared Bills */}
-            <UpcomingBillsCard
-              bills={upcomingBills}
-              totalDue={upcomingBillsTotal}
-              format={format}
-              onPayBill={handleMarkBillPaid}
-              onEditBill={handleEditBill}
-              onAddBill={() => {
-                setEditingBill(null);
-                setShowBillModal(true);
-              }}
-            />
-
-            <MonthlyOverviewCard
-              monthlyIncome={0}
-              monthlyExpenses={4000}
-              format={format}
-            />
-          </div>
 
           {/* Shared Household Groceries Snapshot */}
           <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 shadow-xs space-y-3">

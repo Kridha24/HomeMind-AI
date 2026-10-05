@@ -69,12 +69,14 @@ function notifyNetworkUnavailable() {
   }
 }
 
-function handleRealSessionExpiry() {
+function handleRealSessionExpiry(reason = 'sessionExpired') {
   if (typeof window === 'undefined') return;
 
   const currentPath = window.location.pathname + window.location.search;
   // If already on /login, avoid infinite redirection loops
   if (window.location.pathname === '/login') return;
+
+  console.log(`[AUTH_UI] redirect-to-login reason=${reason}`);
 
   // Clear credentials
   useAuthStore.getState().logout();
@@ -102,8 +104,10 @@ apiClient.interceptors.response.use(
       url.includes('/auth/phone') ||
       url.includes('/auth/email');
 
+    const isLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
+
     // ── Silent refresh on 401 Unauthorized ──────────────────────────────────
-    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint && !isLoginPage) {
       originalRequest._retry = true;
 
       if (!refreshPromise) {
@@ -113,7 +117,7 @@ apiClient.interceptors.response.use(
         refreshPromise = (async () => {
           const refreshToken = localStorage.getItem('refreshToken');
           if (!refreshToken) {
-            if (isDev) console.warn('[AUTH] refresh failed: TOKEN_EXPIRED (missing)');
+            console.warn('[AUTH_UI] refresh failed status=401 (missing refresh token)');
             throw { isAuthError: true, status: 401, message: 'NO_REFRESH_TOKEN' };
           }
 
@@ -173,7 +177,7 @@ apiClient.interceptors.response.use(
             }
 
             // Genuinely invalid or revoked refresh token (401 or 403)
-            if (isDev) console.warn('[AUTH] refresh failed: TOKEN_EXPIRED');
+            console.warn(`[AUTH_UI] refresh failed status=${status || 401}`);
             throw { isAuthError: true, status: status || 401, originalError: refreshErr };
           } finally {
             refreshPromise = null;
@@ -188,7 +192,7 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (err: any) {
         if (err?.isAuthError) {
-          handleRealSessionExpiry();
+          handleRealSessionExpiry('sessionExpired');
         } else if (err?.isNetworkError) {
           notifyNetworkUnavailable();
         }

@@ -49,31 +49,31 @@ export const GroceryItemCard: React.FC<GroceryItemCardProps> = ({
 
   return (
     <div
-      className={`p-4 rounded-2xl border transition-all duration-200 ${
+      className={`p-3 rounded-xl border transition-all duration-150 ${
         isPurchased
-          ? 'bg-secondary/20 border-primary/40 opacity-80'
+          ? 'bg-secondary/15 border-primary/40 opacity-75 dark:opacity-70'
           : 'bg-panel border-primary/70 shadow-xs'
       }`}
     >
-      {/* Top Header Row: Checkbox + Title + Category Badge */}
-      <div className="flex items-start gap-3">
-        {/* Large 44x44px touch target Checkbox */}
+      {/* Top Header Row: Checkbox + Title + Category Chip + Status */}
+      <div className="flex items-start gap-2.5">
+        {/* Touch target Checkbox */}
         <button
           type="button"
           role="checkbox"
           aria-checked={isPurchased}
           aria-label={`Mark ${item.name} as ${isPurchased ? 'pending' : 'purchased'}`}
           onClick={handleCheckboxClick}
-          className="min-w-[44px] min-h-[44px] flex items-center justify-center -ml-2 -mt-1 active:scale-90 transition-transform"
+          className="min-w-[36px] min-h-[36px] flex items-center justify-center -ml-1 -mt-0.5 active:scale-90 transition-transform"
         >
           <div
-            className={`w-7 h-7 rounded-xl flex items-center justify-center border-2 transition-all ${
+            className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 transition-all ${
               isPurchased
-                ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
+                ? 'bg-emerald-600 border-emerald-600 text-white shadow-2xs'
                 : 'border-slate-400 dark:border-slate-600 bg-transparent'
             }`}
           >
-            {isPurchased && <Check className="w-4 h-4 stroke-[3] animate-in zoom-in-50 duration-150" />}
+            {isPurchased && <Check className="w-3.5 h-3.5 stroke-[3] animate-in zoom-in-50 duration-150" />}
           </div>
         </button>
 
@@ -82,22 +82,32 @@ export const GroceryItemCard: React.FC<GroceryItemCardProps> = ({
           <div className="flex items-center gap-1.5 flex-wrap">
             <h4
               className={`text-sm font-bold tracking-tight truncate ${
-                isPurchased ? 'line-through text-secondary' : 'text-primary'
+                isPurchased ? 'line-through text-secondary/80' : 'text-primary'
               }`}
             >
               {item.name}
             </h4>
             <span
-              className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${categoryColor.badge} ${categoryColor.border}`}
+              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${categoryColor.badge} ${categoryColor.border}`}
             >
               {item.category}
             </span>
+            {isPurchased ? (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+                Purchased
+              </span>
+            ) : urgency === 'URGENT' || urgency === 'LOW_STOCK' ? (
+              <GroceryStatusBadge urgency={urgency} isPurchased={false} />
+            ) : null}
           </div>
 
-          {/* Urgency and Expiry */}
-          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-            <GroceryStatusBadge urgency={urgency} isPurchased={isPurchased} />
-            {expiryInfo && !isPurchased && (
+          {/* Expiry / Secondary meta */}
+          <div className="flex items-center gap-2 mt-1 text-[11px] text-secondary">
+            {isPurchased ? (
+              <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                Purchased • {formatPurchaseTime(item.purchaseDate) || 'Recently'}
+              </span>
+            ) : expiryInfo ? (
               <span
                 className={`text-[10px] px-1.5 py-0.5 rounded ${
                   expiryInfo.isUrgent
@@ -107,26 +117,31 @@ export const GroceryItemCard: React.FC<GroceryItemCardProps> = ({
               >
                 {expiryInfo.text}
               </span>
-            )}
+            ) : item.createdBy ? (
+              <span className="flex items-center gap-1">
+                <User className="w-3 h-3 text-muted" />
+                <span>Added by {item.createdBy}</span>
+              </span>
+            ) : null}
           </div>
         </div>
       </div>
 
-      {/* Bottom Metadata & Controls Bar */}
-      <div className="flex items-center justify-between pt-3 mt-3 border-t border-primary/50 text-xs">
-        {/* Quantity Stepper with >= 44px touch targets */}
-        <div className="flex items-center gap-1 bg-secondary/50 dark:bg-slate-900/60 p-1 rounded-xl border border-primary/50">
+      {/* Bottom Controls Bar */}
+      <div className="flex items-center justify-between pt-2 mt-2 border-t border-primary/40 text-xs">
+        {/* Quantity Stepper */}
+        <div className="flex items-center gap-0.5 bg-secondary/40 dark:bg-slate-900/60 p-0.5 rounded-xl border border-primary/50">
           <button
             type="button"
             onClick={handleDecrement}
             disabled={item.quantity <= 0}
             aria-label="Decrease quantity"
-            className="min-w-[36px] min-h-[36px] rounded-lg flex items-center justify-center text-secondary hover:text-primary active:bg-secondary/70 disabled:opacity-30"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-secondary hover:text-primary active:bg-secondary/70 disabled:opacity-30"
           >
-            <Minus className="w-4 h-4" />
+            <Minus className="w-3 h-3" />
           </button>
 
-          <span className="px-2 font-mono font-bold text-primary min-w-[55px] text-center text-xs">
+          <span className="px-2 font-mono font-bold text-primary min-w-[50px] text-center text-xs">
             {formatQuantityWithUnit(item.quantity, item.unit)}
           </span>
 
@@ -134,20 +149,14 @@ export const GroceryItemCard: React.FC<GroceryItemCardProps> = ({
             type="button"
             onClick={handleIncrement}
             aria-label="Increase quantity"
-            className="min-w-[36px] min-h-[36px] rounded-lg flex items-center justify-center text-secondary hover:text-primary active:bg-secondary/70"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-secondary hover:text-primary active:bg-secondary/70"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3 h-3" />
           </button>
         </div>
 
-        {/* Action Buttons with 44px touch target */}
+        {/* Actions */}
         <div className="flex items-center gap-1">
-          {isPurchased && (
-            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mr-1 hidden sm:inline">
-              {formatPurchaseTime(item.purchaseDate)}
-            </span>
-          )}
-
           <button
             type="button"
             onClick={(e) => {
@@ -155,9 +164,9 @@ export const GroceryItemCard: React.FC<GroceryItemCardProps> = ({
               onEdit(item);
             }}
             aria-label="Edit item"
-            className="min-w-[44px] min-h-[44px] rounded-xl flex items-center justify-center text-secondary hover:text-indigo-600 active:bg-secondary/60"
+            className="p-1.5 rounded-lg text-secondary hover:text-indigo-600 active:bg-secondary/60"
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit2 className="w-3.5 h-3.5" />
           </button>
 
           <button
@@ -167,12 +176,13 @@ export const GroceryItemCard: React.FC<GroceryItemCardProps> = ({
               onDelete(item);
             }}
             aria-label="Delete item"
-            className="min-w-[44px] min-h-[44px] rounded-xl flex items-center justify-center text-secondary hover:text-rose-600 active:bg-secondary/60"
+            className="p-1.5 rounded-lg text-secondary hover:text-rose-600 active:bg-secondary/60"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
     </div>
   );
 };
+

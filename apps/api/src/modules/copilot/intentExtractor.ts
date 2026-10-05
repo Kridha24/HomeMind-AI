@@ -17,6 +17,39 @@ export class IntentExtractor {
    * Handles: 4k, 2.5k, ₹4,000, 4000 rupees, 4000 rs, rs 4000, 450
    */
   public static parseAmount(text: string): number | null {
+    // 0. Correction & Negation Phrasing: e.g. "actually 500 nahi 450 tha", "not 500 but 450", "450 instead of 500"
+    const corrMatch = text.match(
+      /(?:₹|rs\.?)?\s*[\d,]+(?:\.\d+)?\s*(?:nahi|nahin|not|nhi)\s*(?:tha\s*)?(?:₹|rs\.?)?\s*([\d,]+(?:\.\d+)?)/i
+    );
+    if (corrMatch) {
+      const val = parseFloat(corrMatch[1].replace(/,/g, ''));
+      if (!isNaN(val) && val > 0) return val;
+    }
+
+    const insteadMatch1 = text.match(
+      /(?:₹|rs\.?)?\s*([\d,]+(?:\.\d+)?)\s*instead of\s*(?:₹|rs\.?)?\s*[\d,]+(?:\.\d+)?/i
+    );
+    if (insteadMatch1) {
+      const val = parseFloat(insteadMatch1[1].replace(/,/g, ''));
+      if (!isNaN(val) && val > 0) return val;
+    }
+
+    const insteadMatch2 = text.match(
+      /instead of\s*(?:₹|rs\.?)?\s*[\d,]+(?:\.\d+)?(?:\s*it was|\s*make it)?\s*(?:₹|rs\.?)?\s*([\d,]+(?:\.\d+)?)/i
+    );
+    if (insteadMatch2) {
+      const val = parseFloat(insteadMatch2[1].replace(/,/g, ''));
+      if (!isNaN(val) && val > 0) return val;
+    }
+
+    const jagahMatch = text.match(
+      /(?:₹|rs\.?)?\s*[\d,]+(?:\.\d+)?\s*(?:ki jagah|ke badle)\s*(?:₹|rs\.?)?\s*([\d,]+(?:\.\d+)?)/i
+    );
+    if (jagahMatch) {
+      const val = parseFloat(jagahMatch[1].replace(/,/g, ''));
+      if (!isNaN(val) && val > 0) return val;
+    }
+
     // 1. "4k" or "2.5k"
     const kMatch = text.match(/(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*k\b/i);
     if (kMatch) {
@@ -228,19 +261,23 @@ export class IntentExtractor {
     }
 
     // =========================================================================
-    // 2. CONTEXTUAL FOLLOW-UP ("Actually make it ₹500" / "500 kar do")
+    // 2. CONTEXTUAL FOLLOW-UP ("Actually make it ₹500" / "500 nahi 450 tha")
     // =========================================================================
     const isModification =
       (lower.startsWith('actually ') ||
         lower.startsWith('make it ') ||
         lower.startsWith('change to ') ||
         lower.startsWith('update to ') ||
+        lower.includes('nahi') ||
+        lower.includes('nahin') ||
+        lower.includes('not ') ||
+        lower.includes('instead') ||
+        lower.includes('ki jagah') ||
+        lower.includes('ke badle') ||
         /^(?:actually\s+)?(?:\d+|₹[\d,]+)\s*(?:kar do|karo)?$/i.test(lower.trim()) ||
         lower.includes('change amount') ||
         lower.includes('amount badal do')) &&
       !lower.includes('income') &&
-      !lower.includes('expense') &&
-      !lower.includes('kharch') &&
       !lower.includes('add');
 
     if (
@@ -260,6 +297,114 @@ export class IntentExtractor {
           confidence: 0.95,
         };
       }
+    }
+
+    // =========================================================================
+    // 3. READ-ONLY LIVE HOUSEHOLD QUERIES (Prioritized over creations)
+    // =========================================================================
+
+    // Tasks Queries: e.g. "Show my pending tasks", "mera pending tasks dikhao", "aaj ke tasks kya hain"
+    if (
+      /\b(pending tasks|pending task|show tasks|show my tasks|show my pending tasks|my tasks|tasks dikhao|task dikhao|aaj ke tasks|aaj ke task|today task|today tasks|what tasks|mera pending task|mera pending tasks|mere pending tasks|list tasks)\b/i.test(lower) &&
+      !lower.startsWith('create task') &&
+      !lower.startsWith('add task') &&
+      !lower.includes('task bana')
+    ) {
+      return {
+        tool: 'getTasks',
+        args: { status: 'PENDING' },
+        riskLevel: 'LOW',
+        confidence: 0.95,
+      };
+    }
+
+    // Finance Queries: e.g. "How much did I spend this month?", "is month kitna kharcha hua?", "spending summary"
+    if (
+      lower.includes('kitna kharcha') ||
+      lower.includes('kitna expense') ||
+      lower.includes('kitna kharch') ||
+      lower.includes('spending summary') ||
+      lower.includes('how much spent') ||
+      lower.includes('how much did i spend') ||
+      lower.includes('how much did we spend') ||
+      lower.includes('expenses this month') ||
+      lower.includes('monthly spending') ||
+      lower.includes('total spend') ||
+      lower.includes('total spending') ||
+      lower.includes('kharcha kitna') ||
+      lower.includes('expense kitna') ||
+      lower.includes('household summary')
+    ) {
+      return {
+        tool: 'getFinanceSummary',
+        args: { period: 'month' },
+        riskLevel: 'LOW',
+        confidence: 0.95,
+      };
+    }
+
+    // Expenses Analytics: e.g. "sabse bada expense kya hai", "top expenses"
+    if (lower.includes('sabse bada expense') || lower.includes('highest expense') || lower.includes('top expense') || lower.includes('top expenses')) {
+      return {
+        tool: 'getExpenses',
+        args: { sortBy: 'amount_desc', limit: 3 },
+        riskLevel: 'LOW',
+        confidence: 0.95,
+      };
+    }
+
+    // Bills Queries: e.g. "kitne bills pending hain", "pending bills", "show upcoming bills"
+    if (
+      lower.includes('kitne bills pending') ||
+      lower.includes('unpaid bills') ||
+      lower.includes('pending bills') ||
+      lower.includes('bills due') ||
+      lower.includes('upcoming bills') ||
+      lower.includes('show upcoming bills') ||
+      lower.includes('show bills') ||
+      lower.includes('bills dikhao') ||
+      lower.includes('bill dikhao')
+    ) {
+      return {
+        tool: 'getBills',
+        args: { status: 'UNPAID' },
+        riskLevel: 'LOW',
+        confidence: 0.95,
+      };
+    }
+
+    // Groceries Queries: e.g. "grocery list dikhao", "shopping list", "show grocery list"
+    if (
+      (lower.includes('grocery list') ||
+        lower.includes('groceries list') ||
+        lower.includes('show grocery') ||
+        lower.includes('show groceries') ||
+        lower.includes('shopping list') ||
+        lower.includes('ration list') ||
+        lower.includes('what to buy') ||
+        lower.includes('list dikhao') ||
+        lower.includes('low stock') ||
+        lower.includes('out of stock')) &&
+      !lower.startsWith('add ') &&
+      !lower.includes('me add') &&
+      !lower.includes('khatam')
+    ) {
+      return {
+        tool: 'getGroceries',
+        args: { onlyLowStock: lower.includes('low stock') || lower.includes('out of stock') },
+        riskLevel: 'LOW',
+        confidence: 0.95,
+      };
+    }
+
+    // General Household Analytics
+    if (lower.includes('analytics') || lower.includes('savings rate') || lower.includes('cash flow')) {
+      return {
+        tool: 'getAnalytics',
+        args: { period: 'month' },
+        riskLevel: 'LOW',
+        confidence: 0.95,
+      };
     }
 
     // =========================================================================
@@ -311,7 +456,19 @@ export class IntentExtractor {
       if (amount && amount > 0) {
         let source = 'Other Income';
         if (lower.includes('salary') || lower.includes('tankhwah')) source = 'Salary';
-        else if (lower.includes('bhaiya') || lower.includes('family') || lower.includes('papa') || lower.includes('mummy')) source = 'Family';
+        else if (
+          lower.includes('bhaiya') ||
+          lower.includes('family') ||
+          lower.includes('papa') ||
+          lower.includes('mummy') ||
+          lower.includes('mom') ||
+          lower.includes('dad') ||
+          lower.includes('mother') ||
+          lower.includes('father') ||
+          lower.includes('brother') ||
+          lower.includes('sister')
+        )
+          source = 'Family';
         else if (lower.includes('freelance') || lower.includes('client')) source = 'Freelance';
         else if (lower.includes('investment') || lower.includes('dividend') || lower.includes('stocks')) source = 'Investments';
         else if (lower.includes('rent')) source = 'Rental Income';
@@ -325,8 +482,23 @@ export class IntentExtractor {
           .replace(/^[\s,.-]+|[\s,.-]+$/g, '')
           .trim();
 
-        if (!title || title.length < 2) {
-          title = source === 'Family' && lower.includes('bhaiya') ? 'Received from bhaiya' : `Income from ${source}`;
+        if (!title || title.length < 2 || title.toLowerCase() === 'from mom' || title.toLowerCase() === 'mom') {
+          if (source === 'Family') {
+            const rel = lower.includes('mom')
+              ? 'mom'
+              : lower.includes('mummy')
+              ? 'mummy'
+              : lower.includes('bhaiya')
+              ? 'bhaiya'
+              : lower.includes('papa')
+              ? 'papa'
+              : lower.includes('dad')
+              ? 'dad'
+              : 'Family';
+            title = `Received from ${rel}`;
+          } else {
+            title = `Income from ${source}`;
+          }
         }
 
         return {
@@ -402,7 +574,13 @@ export class IntentExtractor {
       lower.includes('cleaning') ||
       lower.includes('assign karo') ||
       lower.includes('assign to') ||
-      lower.includes('remind me to')
+      lower.includes('remind me to') ||
+      lower.includes('remind me') ||
+      lower.includes('yaad dila') ||
+      lower.includes('bharna hai') ||
+      lower.includes('bharna h') ||
+      lower.includes('pay karna hai') ||
+      lower.includes('pay karna yaad')
     ) {
       // Check complete task intent first
       if (
@@ -439,14 +617,16 @@ export class IntentExtractor {
 
       const dueDate = this.parseDate(raw);
       let taskTitle = raw
-        .replace(/^(remind me to|create task to|create task|add task to|add task|task bana do|schedule task|assign task)\s+/i, '')
-        .replace(/\b(ka task bana do|ka task banao|assign karo|assign to|ko assign karo|task do|task)\b/gi, '')
+        .replace(/^(remind me to|remind me|create task to|create task|add task to|add task|task bana do|schedule task|assign task)\s+/i, '')
+        .replace(/\b(ka task bana do|ka task banao|assign karo|assign to|ko assign karo|task do|task|yaad dila dena|yaad dila do|yaad dilana)\b/gi, '')
         .replace(new RegExp(`\\b${assigneeName || ''}\\b`, 'gi'), '')
         .replace(/\b(kal|aaj|today|tomorrow|next week)\b/gi, '')
         .trim();
 
       if (!taskTitle || taskTitle.length < 2) {
         taskTitle = 'Household Task';
+      } else {
+        taskTitle = taskTitle.charAt(0).toUpperCase() + taskTitle.slice(1);
       }
 
       return {

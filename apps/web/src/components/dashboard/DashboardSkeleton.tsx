@@ -59,32 +59,6 @@ export const DashboardSkeleton: React.FC<DashboardSkeletonProps> = ({ showFinanc
       {/* Today at a glance skeleton */}
       <div className="h-28 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4" />
 
-      {/* 2-column bills & tasks skeleton */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-        <div className="h-64 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
-            <div className="h-4 w-36 bg-slate-200 dark:bg-slate-800 rounded" />
-            <div className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
-          </div>
-          <div className="space-y-3">
-            {[1, 2, 3].map((j) => (
-              <div key={j} className="h-10 bg-slate-100 dark:bg-slate-850 rounded-xl" />
-            ))}
-          </div>
-        </div>
-
-        <div className="h-64 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
-            <div className="h-4 w-36 bg-slate-200 dark:bg-slate-800 rounded" />
-            <div className="h-4 w-12 bg-slate-200 dark:bg-slate-800 rounded" />
-          </div>
-          <div className="space-y-3">
-            {[1, 2, 3].map((j) => (
-              <div key={j} className="h-10 bg-slate-100 dark:bg-slate-850 rounded-xl" />
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

@@ -108,15 +108,22 @@ export const GroceriesWorkspace: React.FC = () => {
     setSearchParams(next, { replace: true });
   };
 
-  // Quick Add handler
-  const handleQuickAdd = async (name: string) => {
-    await addItem({
-      name,
-      category: 'Other',
-      quantity: 1,
-      unit: 'pcs',
-      minThreshold: 1,
-    });
+  // Quick Add handler (supports single and comma/newline separated multi-items)
+  const handleQuickAdd = async (rawInput: string) => {
+    const itemNames = rawInput
+      .split(/[,;\n]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    for (const name of itemNames) {
+      await addItem({
+        name,
+        category: 'Other',
+        quantity: 1,
+        unit: 'pcs',
+        minThreshold: 1,
+      });
+    }
   };
 
   // Add/Edit Submit handler
@@ -183,8 +190,8 @@ export const GroceriesWorkspace: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
-      {/* 1. Header */}
+    <div className="space-y-4 animate-in fade-in duration-200">
+      {/* 1. Header with Integrated Quick Add */}
       <GroceriesHeader
         onAddItem={() => {
           setEditingItem(null);
@@ -205,14 +212,14 @@ export const GroceriesWorkspace: React.FC = () => {
         <GroceriesErrorState onRetry={() => refetch()} error={error} />
       ) : (
         <>
-          {/* 4. Real Metrics Summary Strip */}
+          {/* 4. Compact Summary Strip (No permanent progress block) */}
           <GroceriesSummary
             metrics={metrics}
             onFilterChange={handleStatusChange}
             activeFilter={statusFilter}
           />
 
-          {/* 5. Filters, Search & Sort */}
+          {/* 5. Unified Control Bar & Active Filters */}
           {items.length > 0 && (
             <GroceriesFilters
               statusFilter={statusFilter}
@@ -244,9 +251,11 @@ export const GroceriesWorkspace: React.FC = () => {
               type={
                 searchQuery
                   ? 'no-search-results'
+                  : statusFilter === 'purchased'
+                  ? 'no-purchased'
                   : statusFilter === 'urgent'
                   ? 'no-urgent'
-                  : statusFilter === 'pending' && metrics.isShoppingComplete
+                  : statusFilter === 'pending'
                   ? 'all-purchased'
                   : 'no-search-results'
               }
@@ -258,7 +267,7 @@ export const GroceriesWorkspace: React.FC = () => {
               }}
             />
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {groupedByCategory.map(([category, categoryItems]) => (
                 <GroceryCategoryGroup
                   key={`${householdId}-${category}`}

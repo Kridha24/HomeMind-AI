@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Layers } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { GroceryItem } from '../../../types';
 import { getCategoryColor } from '../utils/groceryFormatters';
 import { GroceryItemRow } from './GroceryItemRow';
@@ -32,57 +32,51 @@ export const GroceryCategoryGroup: React.FC<GroceryCategoryGroupProps> = ({
   const isComplete = items.length > 0 && pendingCount === 0;
 
   return (
-    <div className="space-y-2">
-      {/* Category Accordion Header */}
+    <div className="space-y-1.5">
+      {/* 7. Category Accordion Header */}
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-secondary/40 dark:bg-slate-900/50 hover:bg-secondary/70 border border-primary/50 transition-all text-left"
+        className="w-full flex items-center justify-between py-2 px-3 sm:px-3.5 rounded-xl bg-secondary/30 dark:bg-slate-900/50 hover:bg-secondary/50 border border-primary/50 transition-all text-left"
         aria-expanded={isExpanded}
       >
-        <div className="flex items-center gap-2.5">
-          <div className="text-secondary">
-            {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="text-secondary shrink-0">
+            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
           </div>
 
-          <div className="flex items-center gap-2">
-            <span
-              className={`px-2.5 py-1 rounded-xl text-xs font-bold border ${color.badge} ${color.border} flex items-center gap-1.5`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>{category}</span>
-            </span>
+          <span
+            className={`px-2 py-0.5 rounded-md text-[11px] font-bold border shrink-0 ${color.badge} ${color.border}`}
+          >
+            {category}
+          </span>
 
-            <span className="text-xs font-medium text-secondary">
-              {items.length} {items.length === 1 ? 'item' : 'items'}
-              {pendingCount > 0 && (
-                <span className="text-indigo-600 dark:text-indigo-400 font-semibold ml-1.5">
-                  ({pendingCount} to buy)
-                </span>
-              )}
-            </span>
-          </div>
+          <span className="text-xs text-secondary font-medium truncate">
+            {items.length} {items.length === 1 ? 'item' : 'items'}
+            <span className="mx-1.5">•</span>
+            {purchasedCount} purchased
+          </span>
         </div>
 
         {/* Category progress indicator */}
-        <div className="flex items-center gap-2">
-          <span
-            className={`text-xs font-mono font-bold px-2 py-0.5 rounded-lg border ${
-              isComplete
-                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                : 'bg-secondary text-secondary border-primary/40'
-            }`}
-          >
-            {purchasedCount} / {items.length} ✓
-          </span>
+        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+          {isComplete ? (
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+              ✓ Completed
+            </span>
+          ) : (
+            <span className="text-[11px] font-mono font-medium text-secondary">
+              {purchasedCount} / {items.length}
+            </span>
+          )}
         </div>
       </button>
 
       {/* Group Items (Collapsible) */}
       {isExpanded && (
-        <div className="space-y-2 pl-1 sm:pl-2 animate-in fade-in duration-150">
+        <div className="space-y-1.5 animate-in fade-in duration-150">
           {/* Mobile View: Cards */}
-          <div className="grid grid-cols-1 gap-2.5 md:hidden">
+          <div className="grid grid-cols-1 gap-2 md:hidden">
             {items.map((item) => (
               <GroceryItemCard
                 key={item.id}
@@ -96,7 +90,7 @@ export const GroceryCategoryGroup: React.FC<GroceryCategoryGroupProps> = ({
           </div>
 
           {/* Desktop View: Rows */}
-          <div className="hidden md:flex md:flex-col gap-2">
+          <div className="hidden md:flex md:flex-col gap-1.5">
             {items.map((item) => (
               <GroceryItemRow
                 key={item.id}
@@ -113,3 +107,4 @@ export const GroceryCategoryGroup: React.FC<GroceryCategoryGroupProps> = ({
     </div>
   );
 };
+

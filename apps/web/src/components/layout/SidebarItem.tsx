@@ -168,14 +168,26 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
           </span>
         )}
 
+        {/* Collapsed Badge Indicator */}
+        {isCollapsed && badge && (
+          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900 shadow-[0_0_6px_#f43f5e] animate-pulse" />
+        )}
+
         {/* Badge when expanded */}
         {!isCollapsed && badge && (
-          <span className="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 uppercase tracking-wider">
+          <span
+            className={`px-1.5 py-0.5 rounded-full text-[9.5px] font-extrabold uppercase tracking-wider ${
+              !isNaN(Number(badge))
+                ? 'bg-rose-500 text-white shadow-xs shadow-rose-500/30'
+                : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+            }`}
+          >
             {badge}
           </span>
         )}
       </div>
     </NavLink>
+
   );
 };
 

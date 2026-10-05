@@ -1,7 +1,10 @@
-import React from 'react';
-import { AlertCircle, PhoneCall, Lock, Zap } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { AlertCircle, Shield, Lock, Users, ArrowRight, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleLoginButton } from './GoogleLoginButton';
-import { SecurityBadge } from './SecurityBadge';
+import apiClient from '../../services/apiClient';
+import { useAuthStore } from '../../stores/useAuthStore';
+import { useSettingStore } from '../../stores/useSettingStore';
 
 interface LoginCardProps {
   onGoogleClick: () => void;
@@ -10,8 +13,10 @@ interface LoginCardProps {
   isNative?: boolean;
   loading: boolean;
   error: string;
-  onPhoneClick: () => void;
+  onClearError?: () => void;
+  onPhoneClick?: () => void;
   googleConfigured?: boolean;
+  onSuccess?: (isNewRegistration?: boolean, userName?: string) => void;
 }
 
 export const LoginCard: React.FC<LoginCardProps> = ({
@@ -19,89 +24,446 @@ export const LoginCard: React.FC<LoginCardProps> = ({
   googleButtonRef,
   isGisReady = true,
   isNative = false,
-  loading,
-  error,
-  onPhoneClick,
+  loading: googleLoading,
+  error: parentError,
+  onClearError,
   googleConfigured = true,
+  onSuccess,
 }) => {
+  // Direct in-card phone authentication state
+  const [phoneStep, setPhoneStep] = useState<'PHONE' | 'OTP'>('PHONE');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otp, setOtp] = useState('');
+  const [userName, setUserName] = useState('');
+  const [localError, setLocalError] = useState('');
+  const [localLoading, setLocalLoading] = useState(false);
+  const [devOtp, setDevOtp] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
+  const otpInputRef = useRef<HTMLInputElement>(null);
+
+  const { setAuth } = useAuthStore();
+  const { theme, fetchSettings } = useSettingStore();
+  const isLight = theme === 'light';
+
+  const activeError = parentError || localError;
+
+  // Countdown timer for OTP resend
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (resendTimer > 0) {
+      interval = setInterval(() => setResendTimer((t) => t - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
+  useEffect(() => {
+    if (phoneStep === 'OTP') {
+      setTimeout(() => otpInputRef.current?.focus(), 150);
+    }
+  }, [phoneStep]);
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setPhoneNumber(val);
+    if (localError) setLocalError('');
+    if (onClearError) onClearError();
+  };
+
+  const handleSendOTP = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (onClearError) onClearError();
+    if (phoneNumber.length !== 10) {
+      setLocalError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+
+    setLocalLoading(true);
+    setLocalError('');
+    setInfoMessage('');
+    const fullE164 = `+91${phoneNumber}`;
+
+    try {
+      const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber: fullE164 });
+      setPhoneStep('OTP');
+      setResendTimer(30);
+      setOtp('');
+
+      const returnedCode = res.data.devOtp || res.data.otp;
+      if (returnedCode) {
+        setDevOtp(String(returnedCode));
+        setInfoMessage(`Code sent! (Dev Auto-fill: ${returnedCode})`);
+      } else {
+        setDevOtp(null);
+        setInfoMessage(res.data.message || `Code sent to ${fullE164}`);
+      }
+    } catch (err: any) {
+      console.warn('[Phone Auth] Send OTP failed:', err);
+      setLocalError(err.response?.data?.error || 'Could not send verification code. Please try again.');
+    } finally {
+      setLocalLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length !== 6) {
+      setLocalError('Please enter the 6-digit verification code.');
+      return;
+    }
+
+    setLocalLoading(true);
+    setLocalError('');
+    const fullE164 = `+91${phoneNumber}`;
+
+    try {
+      const res = await apiClient.post('/auth/phone/verify-otp', {
+        phoneNumber: fullE164,
+        otp: otp.trim(),
+        name: userName.trim() || undefined,
+      });
+
+      setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
+      await fetchSettings();
+
+      if (onSuccess) {
+        onSuccess(res.data.isNewRegistration, res.data.user?.name);
+      }
+    } catch (err: any) {
+      console.warn('[Phone Auth] Verify OTP failed:', err);
+      setLocalError(err.response?.data?.error || 'Invalid verification code. Please check and try again.');
+    } finally {
+      setLocalLoading(false);
+    }
+  };
+
+  const handleQuickFillDevOtp = () => {
+    if (devOtp) {
+      setOtp(devOtp);
+      setLocalError('');
+    }
+  };
+
   return (
-    <div className="w-full max-w-[440px] bg-[#0A1128]/85 dark:bg-[#0A1128]/90 backdrop-blur-2xl p-7 sm:p-9 space-y-6 border border-indigo-500/30 dark:border-indigo-400/25 rounded-[30px] shadow-2xl shadow-indigo-950/60 relative z-10 transition-all">
-      {/* Card Header */}
-      <div className="space-y-1.5 text-center">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+    <motion.div
+      initial={{ opacity: 0, x: 25, scale: 0.98 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className={`w-full max-w-[430px] p-5 sm:p-6 lg:p-7 space-y-4 sm:space-y-5 rounded-[28px] relative z-10 transition-colors duration-500 select-none ${
+        isLight
+          ? 'bg-white/85 backdrop-blur-2xl border border-slate-200/90 shadow-2xl shadow-indigo-100/60 text-slate-800'
+          : 'bg-[#070D22]/85 sm:bg-[#070D22]/90 backdrop-blur-2xl border border-white/15 shadow-2xl shadow-black/80 text-white'
+      }`}
+    >
+      {/* Subtle ambient corner edge light */}
+      <div className="absolute top-0 right-1/4 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 w-32 h-32 bg-violet-600/10 rounded-full blur-2xl pointer-events-none" />
+
+      {/* Heading & Subheading */}
+      <div className="space-y-1 text-center relative z-10">
+        <h2 className={`text-2xl sm:text-[26px] font-extrabold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
           Welcome Back 👋
         </h2>
-        <p className="text-sm text-slate-400 font-medium">
-          Sign in to continue
+        <p className={`text-xs sm:text-[13px] font-medium ${isLight ? 'text-slate-500' : 'text-slate-300'}`}>
+          Sign in to continue to HomeMind.AI
         </p>
       </div>
 
-      {/* Error Alert */}
-      {error && (
-        <div className="p-3.5 bg-red-500/10 dark:bg-red-950/40 border border-red-500/30 rounded-2xl flex items-start gap-2.5 text-xs text-red-600 dark:text-red-300 animate-in fade-in">
-          <AlertCircle className="w-4 h-4 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <strong className="font-semibold block text-red-700 dark:text-red-200 mb-0.5">Sign-in failed</strong>
-            <span>{error}</span>
+      {/* Error Alert Banner */}
+      {activeError && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-3 bg-red-500/15 border border-red-500/35 rounded-2xl flex items-start gap-2 text-xs text-red-200"
+        >
+          <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <span className="font-semibold block text-red-100 mb-0.5">Authentication note</span>
+            <span className="leading-relaxed">{activeError}</span>
           </div>
-        </div>
+        </motion.div>
       )}
 
-      {/* Auth Options */}
-      <div className="space-y-3 pt-1">
+      {/* Info / OTP Helper Banner */}
+      {infoMessage && phoneStep === 'OTP' && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-2.5 bg-indigo-500/15 border border-indigo-400/30 rounded-2xl flex items-center justify-between gap-2 text-xs text-indigo-200"
+        >
+          <span className="leading-snug">{infoMessage}</span>
+          {devOtp && (
+            <button
+              type="button"
+              onClick={handleQuickFillDevOtp}
+              className="px-2.5 py-1 rounded-lg bg-indigo-500/30 hover:bg-indigo-500/45 text-white font-bold text-[11px] border border-indigo-400/40 transition-colors flex-shrink-0"
+            >
+              Auto-fill
+            </button>
+          )}
+        </motion.div>
+      )}
+
+      {/* PRIMARY AUTH ACTION 1: Google GIS Button */}
+      <div className="space-y-3 pt-0.5 relative z-10">
         {googleConfigured ? (
-          <GoogleLoginButton
-            buttonRef={googleButtonRef}
-            isReady={isGisReady}
-            loading={loading}
-            isNative={isNative}
-            onClick={onGoogleClick}
-          />
+          <div className="w-full">
+            <GoogleLoginButton
+              buttonRef={googleButtonRef}
+              isReady={isGisReady}
+              loading={googleLoading}
+              isNative={isNative}
+              onClick={onGoogleClick}
+            />
+          </div>
         ) : (
-          <div className="p-3.5 bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/25 rounded-2xl flex items-start gap-2.5 text-xs text-amber-700 dark:text-amber-300">
-            <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-            <span>
-              Google sign-in is not configured. Use your mobile number below.
-            </span>
+          <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center gap-2 text-xs text-amber-200">
+            <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+            <span>Google sign-in is not configured. Use your mobile number below.</span>
           </div>
         )}
 
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-white/10" />
-          <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">OR</span>
-          <div className="flex-1 h-px bg-white/10" />
+        {/* OR Separator */}
+        <div className="flex items-center gap-3 py-0.5">
+          <div className={`flex-1 h-px ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
+          <span className={`text-[10px] uppercase tracking-wider font-bold ${isLight ? 'text-slate-400' : 'text-slate-400'}`}>
+            OR
+          </span>
+          <div className={`flex-1 h-px ${isLight ? 'bg-slate-200' : 'bg-white/10'}`} />
         </div>
 
-        <button
-          type="button"
-          onClick={onPhoneClick}
-          disabled={loading}
-          className="w-full min-h-[48px] bg-slate-900/80 hover:bg-slate-800/90 border border-white/10 hover:border-emerald-500/30 text-slate-100 font-semibold py-3.5 px-5 rounded-2xl text-sm flex items-center justify-center gap-2.5 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 active:scale-[0.98] disabled:opacity-60 group shadow-md"
-        >
-          <PhoneCall className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-          <span>Continue with Mobile Number</span>
-        </button>
+        {/* PRIMARY AUTH ACTION 2: Phone Input Section */}
+        <AnimatePresence mode="wait">
+          {phoneStep === 'PHONE' ? (
+            <motion.form
+              key="step-phone"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              onSubmit={handleSendOTP}
+              className="space-y-2.5"
+            >
+              <label className={`block text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+                Sign in with mobile number
+              </label>
+
+              {/* +91 & Mobile input */}
+              <div
+                className={`flex items-center rounded-2xl border transition-all p-1 shadow-inner ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-200 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20'
+                    : 'bg-[#0F1735]/90 border-white/15 focus-within:border-rose-400/60 focus-within:ring-2 focus-within:ring-rose-500/20'
+                }`}
+              >
+                <div
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-bold flex-shrink-0 ${
+                    isLight
+                      ? 'bg-white border-slate-200 text-slate-700'
+                      : 'bg-white/[0.06] border-white/10 text-slate-200'
+                  }`}
+                >
+                  <span>🇮🇳</span>
+                  <span>+91</span>
+                </div>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="Enter 10-digit number"
+                  value={phoneNumber}
+                  onChange={handlePhoneChange}
+                  disabled={localLoading || googleLoading}
+                  className={`w-full bg-transparent px-3 py-1.5 text-sm focus:outline-none font-medium tracking-wide ${
+                    isLight ? 'text-slate-800 placeholder-slate-400' : 'text-white placeholder-slate-500'
+                  }`}
+                />
+              </div>
+
+              {/* Send OTP Coral / Pink / Violet Button */}
+              <motion.button
+                type="submit"
+                whileHover={{ scale: 1.015 }}
+                whileTap={{ scale: 0.98 }}
+                disabled={localLoading || phoneNumber.length !== 10 || googleLoading}
+                className="w-full min-h-[42px] rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-violet-600 hover:from-rose-400 hover:via-pink-400 hover:to-violet-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-rose-950/30 border border-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
+              >
+                {localLoading ? (
+                  <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <>
+                    <span>Send OTP</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </>
+                )}
+              </motion.button>
+            </motion.form>
+          ) : (
+            <motion.form
+              key="step-otp"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              onSubmit={handleVerifyOTP}
+              className="space-y-2.5"
+            >
+              <div className="flex items-center justify-between text-xs">
+                <span className={isLight ? 'text-slate-600' : 'text-slate-300'}>
+                  Code sent to <strong className={isLight ? 'text-slate-900' : 'text-white'}>+91 {phoneNumber}</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPhoneStep('PHONE');
+                    setLocalError('');
+                  }}
+                  className="text-rose-500 hover:text-rose-400 underline font-semibold transition-colors text-xs"
+                >
+                  Change
+                </button>
+              </div>
+
+              {/* 6-digit OTP Input */}
+              <div
+                className={`rounded-2xl border transition-all p-1 shadow-inner ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-200 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20'
+                    : 'bg-[#0F1735]/90 border-white/15 focus-within:border-rose-400/60 focus-within:ring-2 focus-within:ring-rose-500/20'
+                }`}
+              >
+                <input
+                  ref={otpInputRef}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="Enter 6-digit OTP"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  disabled={localLoading}
+                  className={`w-full bg-transparent px-3 py-2 text-center text-lg sm:text-xl font-mono tracking-[0.35em] focus:outline-none font-bold ${
+                    isLight ? 'text-slate-800 placeholder-slate-400' : 'text-white placeholder-slate-500'
+                  }`}
+                />
+              </div>
+
+              {/* Optional Name for First-time registration */}
+              <input
+                type="text"
+                placeholder="Your Name (Optional)"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                className={`w-full rounded-xl border px-3 py-1.5 text-xs focus:outline-none ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:border-indigo-400'
+                    : 'bg-[#0F1735]/70 border-white/10 text-white placeholder-slate-500 focus:border-indigo-400/50'
+                }`}
+              />
+
+              {/* Verify & Enter Button */}
+              <motion.button
+                type="submit"
+                whileHover={{ scale: 1.015 }}
+                whileTap={{ scale: 0.98 }}
+                disabled={localLoading || otp.length !== 6}
+                className="w-full min-h-[42px] rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-violet-600 hover:from-rose-400 hover:via-pink-400 hover:to-violet-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-rose-950/30 border border-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+              >
+                {localLoading ? (
+                  <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <>
+                    <span>Verify & Continue</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </>
+                )}
+              </motion.button>
+
+              {/* Resend Action */}
+              <div className="text-center pt-0.5">
+                {resendTimer > 0 ? (
+                  <span className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Resend code in <strong className={isLight ? 'text-slate-800' : 'text-slate-200'}>{resendTimer}s</strong>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleSendOTP()}
+                    disabled={localLoading}
+                    className="text-[11px] text-rose-500 hover:text-rose-400 font-semibold underline"
+                  >
+                    Didn't receive code? Resend OTP
+                  </button>
+                )}
+              </div>
+            </motion.form>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Trust Badges */}
-      <div className="grid grid-cols-2 gap-2.5">
-        <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-amber-500/20 text-center space-y-1">
-          <div className="flex items-center justify-center gap-1.5 text-[11px] text-amber-400 font-semibold">
-            <Zap className="w-3.5 h-3.5 text-amber-400" />
-            <span>Instant Access</span>
+      {/* LOGIN TRUST CARDS */}
+      <div className={`pt-2 border-t space-y-2 relative z-10 ${isLight ? 'border-slate-200' : 'border-white/10'}`}>
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+          {/* Trust 1: Data Privacy */}
+          <div
+            className={`p-2 rounded-xl border flex items-center gap-1.5 ${
+              isLight ? 'bg-slate-50/80 border-slate-200' : 'bg-[#0B1430]/70 border-white/10'
+            }`}
+          >
+            <div className="w-5 h-5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-500 dark:text-emerald-400 flex-shrink-0">
+              <Shield className="w-3 h-3" />
+            </div>
+            <div className="min-w-0">
+              <span className={`text-[9.5px] font-bold block truncate leading-tight ${isLight ? 'text-slate-700' : 'text-white'}`}>
+                Your data stays private
+              </span>
+            </div>
           </div>
-          <span className="text-xs text-slate-200 font-bold block">No Password Needed</span>
-        </div>
-        <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-indigo-500/25 text-center space-y-1">
-          <div className="flex items-center justify-center gap-1.5 text-[11px] text-indigo-400 font-semibold">
-            <Lock className="w-3.5 h-3.5 text-indigo-400" />
-            <span>100% Private</span>
+
+          {/* Trust 2: Secure Auth */}
+          <div
+            className={`p-2 rounded-xl border flex items-center gap-1.5 ${
+              isLight ? 'bg-slate-50/80 border-slate-200' : 'bg-[#0B1430]/70 border-white/10'
+            }`}
+          >
+            <div className="w-5 h-5 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-500 dark:text-blue-400 flex-shrink-0">
+              <Lock className="w-3 h-3" />
+            </div>
+            <div className="min-w-0">
+              <span className={`text-[9.5px] font-bold block truncate leading-tight ${isLight ? 'text-slate-700' : 'text-white'}`}>
+                Secure & reliable
+              </span>
+            </div>
           </div>
-          <span className="text-xs text-slate-200 font-bold block">Your Data. Your Home.</span>
+
+          {/* Trust 3: Built for Households */}
+          <div
+            className={`p-2 rounded-xl border flex items-center gap-1.5 ${
+              isLight ? 'bg-slate-50/80 border-slate-200' : 'bg-[#0B1430]/70 border-white/10'
+            }`}
+          >
+            <div className="w-5 h-5 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-500 dark:text-purple-400 flex-shrink-0">
+              <Users className="w-3 h-3" />
+            </div>
+            <div className="min-w-0">
+              <span className={`text-[9.5px] font-bold block truncate leading-tight ${isLight ? 'text-slate-700' : 'text-white'}`}>
+                Built for Indian families
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <SecurityBadge />
-    </div>
+      {/* INDIA / LOCAL IDENTITY CARD */}
+      <div
+        className={`rounded-xl border p-2 text-center relative z-10 ${
+          isLight
+            ? 'bg-amber-50/70 border-amber-200/80'
+            : 'bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-violet-500/10 border-amber-500/20'
+        }`}
+      >
+        <p className={`text-[10.5px] font-semibold tracking-wide flex items-center justify-center gap-1.5 ${
+          isLight ? 'text-amber-800' : 'text-amber-200/90'
+        }`}>
+          <span>Thoughtfully built for modern Indian households 🇮🇳</span>
+        </p>
+      </div>
+    </motion.div>
   );
 };

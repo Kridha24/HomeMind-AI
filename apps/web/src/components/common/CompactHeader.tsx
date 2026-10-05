@@ -12,7 +12,6 @@ export type ModuleAccent =
   | 'analytics'
   | 'settings'
   | 'vision'
-  | 'sustainability'
   | 'neutral';
 
 interface CompactHeaderProps {
@@ -76,11 +75,6 @@ const accentTileStyles: Record<ModuleAccent, { bg: string; text: string; ring: s
     bg: 'bg-gradient-to-br from-cyan-500 to-blue-600',
     text: 'text-white',
     ring: 'border-transparent shadow-xs shadow-cyan-500/25',
-  },
-  sustainability: {
-    bg: 'bg-gradient-to-br from-emerald-600 to-teal-500',
-    text: 'text-white',
-    ring: 'border-transparent shadow-xs shadow-emerald-500/25',
   },
   neutral: {
     bg: 'bg-gradient-to-br from-slate-500 to-slate-700',
