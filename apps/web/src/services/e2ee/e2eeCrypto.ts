@@ -109,13 +109,14 @@ export class E2EEMessagingEngine {
           deviceType: 'web',
           publicKey: this.localPublicKeyJWK,
         });
+        return { deviceId: this.localDeviceId, publicKey: this.localPublicKeyJWK };
       } catch (e: any) {
-        console.error('[E2EE] Could not sync device key with server:', e);
-        const errDetail = e?.response?.data?.error || e?.message || 'Server error';
-        throw new Error(`Device key sync failed: ${errDetail}`);
+        console.warn('[E2EE] Device key mismatch or sync issue on server, auto-refreshing device identity:', e);
+        // If device was registered to another account or rejected, clear local cache and generate a clean keypair
+        this.localDeviceId = null;
+        this.localPrivateKey = null;
+        this.localPublicKeyJWK = null;
       }
-
-      return { deviceId: this.localDeviceId, publicKey: this.localPublicKeyJWK };
     }
 
     // Generate fresh P-256 ECDH Keypair
