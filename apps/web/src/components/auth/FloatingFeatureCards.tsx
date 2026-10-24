@@ -57,7 +57,7 @@ export const FloatingFeatureCards: React.FC = () => {
 
   return (
     <div className="w-full max-w-2xl select-none">
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+      <div className="grid grid-cols-5 gap-1 sm:gap-2">
         {modules.map((m, idx) => (
           <motion.div
             key={m.title}
@@ -65,24 +65,24 @@ export const FloatingFeatureCards: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{
               duration: 0.4,
-              delay: 0.2 + idx * 0.08,
+              delay: 0.1 + idx * 0.05,
               ease: [0.16, 1, 0.3, 1],
             }}
-            whileHover={{ y: -3, scale: 1.02 }}
-            className={`p-2 rounded-xl backdrop-blur-xl border ${m.border} transition-all shadow-sm ${m.glow} flex items-center gap-2 group cursor-default ${
-              idx === 4 ? 'col-span-2 sm:col-span-1' : ''
-            } ${isLight ? 'bg-white/80' : 'bg-[#090F24]/80'}`}
+            whileHover={{ y: -2, scale: 1.02 }}
+            className={`p-1 sm:p-2 rounded-lg sm:rounded-xl backdrop-blur-xl border ${m.border} transition-all shadow-sm ${m.glow} flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-0.5 sm:gap-2 group cursor-default ${
+              isLight ? 'bg-white/80' : 'bg-[#090F24]/80'
+            }`}
           >
             <div
-              className={`w-7 h-7 rounded-lg ${m.bg} flex items-center justify-center ${m.color} group-hover:scale-110 transition-transform flex-shrink-0`}
+              className={`w-5 h-5 sm:w-7 sm:h-7 rounded-md sm:rounded-lg ${m.bg} flex items-center justify-center ${m.color} group-hover:scale-110 transition-transform flex-shrink-0`}
             >
-              <m.icon className="w-3.5 h-3.5" />
+              <m.icon className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
             </div>
             <div className="min-w-0 flex-1">
-              <span className={`text-[11.5px] font-bold block leading-tight truncate ${isLight ? 'text-slate-800' : 'text-white'}`}>
+              <span className={`text-[9px] sm:text-[11.5px] font-bold block leading-tight truncate ${isLight ? 'text-slate-800' : 'text-white'}`}>
                 {m.title}
               </span>
-              <span className={`text-[9.5px] font-medium block truncate leading-tight ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              <span className={`hidden sm:block text-[9.5px] font-medium leading-tight truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                 {m.tag}
               </span>
             </div>

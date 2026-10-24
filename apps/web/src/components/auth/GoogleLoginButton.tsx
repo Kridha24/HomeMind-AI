@@ -74,16 +74,16 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
         <button
           type="button"
           disabled
-          className="w-full bg-white text-slate-950 font-extrabold py-3.5 px-5 rounded-2xl text-sm flex items-center justify-between shadow-md border border-white/90 opacity-70 cursor-not-allowed select-none"
+          className="w-full bg-white text-slate-950 font-extrabold py-2.5 sm:py-3.5 px-3.5 sm:px-5 rounded-2xl text-xs sm:text-sm flex items-center justify-between shadow-md border border-white/90 opacity-70 cursor-not-allowed select-none min-h-[42px]"
           aria-label="Initializing Google Sign-In"
         >
-          <div className="flex items-center gap-3.5">
-            <RefreshCw className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />
-            <span className="tracking-tight text-slate-800 text-xs sm:text-sm font-semibold">
+          <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
+            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin text-blue-600 flex-shrink-0" />
+            <span className="tracking-tight text-slate-800 text-xs sm:text-sm font-semibold truncate">
               Initializing Google Sign-In…
             </span>
           </div>
-          <ArrowRight className="w-4 h-4 text-slate-400" />
+          <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 flex-shrink-0" />
         </button>
       )}
     </div>

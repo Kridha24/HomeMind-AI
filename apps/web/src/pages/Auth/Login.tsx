@@ -389,37 +389,37 @@ export const Login: React.FC = () => {
       </AnimatePresence>
 
       {/* ── 1. MINIMAL TOP HEADER (NO CENTER NAVIGATION LINKS) ── */}
-      <header className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-1 flex items-center justify-between relative z-20 flex-shrink-0">
+      <header className="w-full max-w-7xl mx-auto px-1 sm:px-4 py-1 flex items-center justify-between relative z-20 flex-shrink-0">
         {/* Top-Left: HomeMind.AI Logo + Subtitle */}
         <div
-          className="flex items-center gap-2.5 group cursor-pointer"
+          className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-rose-950/30 border border-white/20 group-hover:scale-105 transition-transform flex-shrink-0">
-            <Home className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-rose-950/30 border border-white/20 group-hover:scale-105 transition-transform flex-shrink-0">
+            <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
           </div>
           <div>
             <span
-              className={`font-extrabold text-base sm:text-lg tracking-tight block leading-tight ${
+              className={`font-extrabold text-sm sm:text-base lg:text-lg tracking-tight block leading-tight ${
                 isLight ? 'text-slate-900' : 'text-white'
               }`}
             >
               HomeMind.AI
             </span>
-            <span className="text-[9.5px] text-rose-500 dark:text-rose-300/90 font-bold tracking-widest uppercase block leading-none">
+            <span className="text-[8.5px] sm:text-[9.5px] text-rose-500 dark:text-rose-300/90 font-bold tracking-widest uppercase block leading-none">
               AI OS FOR SMARTER HOMES
             </span>
           </div>
         </div>
 
         {/* Top-Right: Theme Toggle & Language Dropdown */}
-        <div className="flex items-center gap-2 relative">
+        <div className="flex items-center gap-1.5 sm:gap-2 relative">
           {/* Animated Theme Toggle */}
           <motion.button
             type="button"
             whileTap={{ scale: 0.92 }}
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-all shadow-sm ${
+            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl border flex items-center justify-center transition-all shadow-sm ${
               isLight
                 ? 'bg-white border-slate-200 text-amber-500 hover:border-slate-300'
                 : 'bg-[#090F24]/85 border-white/10 text-indigo-300 hover:border-white/25 hover:text-white'
@@ -434,7 +434,7 @@ export const Login: React.FC = () => {
               exit={{ rotate: 90, scale: 0.7, opacity: 0 }}
               transition={{ duration: 0.25 }}
             >
-              {isLight ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-indigo-300" />}
+              {isLight ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-300" />}
             </motion.div>
           </motion.button>
 
@@ -443,7 +443,7 @@ export const Login: React.FC = () => {
             <button
               type="button"
               onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold shadow-sm transition-all ${
+              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl border text-xs font-semibold shadow-sm transition-all ${
                 isLight
                   ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
                   : 'bg-[#090F24]/85 border-white/10 text-slate-200 hover:border-white/25'
@@ -494,16 +494,16 @@ export const Login: React.FC = () => {
       </header>
 
       {/* ── 2. SINGLE-SCREEN HERO + VISUAL NETWORK + AUTH MAIN CONTENT ── */}
-      <main className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-center relative z-10 flex-1 min-h-0 py-1 sm:py-2">
+      <main className="w-full max-w-7xl mx-auto flex flex-col lg:grid lg:grid-cols-12 gap-2.5 sm:gap-4 lg:gap-8 items-center relative z-10 flex-1 min-h-0 py-1 sm:py-2">
         {/* ── LEFT COLUMN: Emotional Storytelling + Animated Ecosystem + Modules ── */}
-        <section className="lg:col-span-7 xl:col-span-7 flex flex-col justify-center gap-2.5 sm:gap-3 lg:gap-3.5 text-left min-h-0">
+        <section className="w-full lg:col-span-7 xl:col-span-7 flex flex-col justify-center gap-1.5 sm:gap-2.5 lg:gap-3.5 text-center lg:text-left min-h-0">
           {/* Eyebrow Pill + Micro-line */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-1.5 sm:gap-2">
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10.5px] font-bold tracking-widest uppercase w-fit shadow-sm ${
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border text-[9.5px] sm:text-[10.5px] font-bold tracking-widest uppercase w-fit shadow-sm ${
                 isLight
                   ? 'bg-rose-500/10 border-rose-500/25 text-rose-600'
                   : 'bg-rose-500/15 border-rose-400/30 text-rose-300'
@@ -513,7 +513,7 @@ export const Login: React.FC = () => {
               <span>AI-POWERED HOUSEHOLD COMPANION</span>
             </motion.div>
 
-            <span className={`text-[11px] font-semibold tracking-wide uppercase ${isLight ? 'text-amber-800' : 'text-amber-200/90'}`}>
+            <span className={`text-[10.5px] sm:text-[11px] font-semibold tracking-wide uppercase ${isLight ? 'text-amber-800' : 'text-amber-200/90'}`}>
               Your home. Your people. Your rhythm.
             </span>
           </div>
@@ -523,10 +523,10 @@ export const Login: React.FC = () => {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="space-y-1"
+            className="space-y-0.5 sm:space-y-1"
           >
             <h1
-              className={`text-3xl sm:text-4xl lg:text-[42px] xl:text-5xl font-serif font-extrabold tracking-tight leading-[1.1] ${
+              className={`text-2xl sm:text-3xl lg:text-[42px] xl:text-5xl font-serif font-extrabold tracking-tight leading-[1.1] ${
                 isLight ? 'text-slate-900' : 'text-white'
               }`}
             >
@@ -536,7 +536,7 @@ export const Login: React.FC = () => {
               </span>
             </h1>
             <p
-              className={`text-xs sm:text-sm max-w-lg leading-relaxed font-normal pt-0.5 ${
+              className={`text-[11.5px] sm:text-xs lg:text-sm max-w-lg mx-auto lg:mx-0 leading-relaxed font-normal ${
                 isLight ? 'text-slate-600' : 'text-slate-300'
               }`}
             >
@@ -544,12 +544,12 @@ export const Login: React.FC = () => {
             </p>
           </motion.div>
 
-          {/* Primary CTA + Microcopy + Secondary Action */}
+          {/* Primary CTA + Microcopy + Secondary Action (DESKTOP ONLY) */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex flex-wrap items-center gap-3 pt-0.5"
+            className="hidden lg:flex flex-wrap items-center gap-3 pt-0.5"
           >
             <motion.button
               type="button"
@@ -583,19 +583,19 @@ export const Login: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Central Smart-Home AI Visual Network (Connected glowing cards with pulse) */}
-          <div className="pt-0.5">
+          {/* Central Smart-Home AI Visual Network (DESKTOP ONLY) */}
+          <div className="hidden lg:block pt-0.5">
             <HomeMindEcosystem isHighlighted={ecosystemHighlighted} />
           </div>
 
-          {/* Bottom Module Cards Row near bottom-left */}
-          <div className="pt-0.5">
+          {/* Bottom Module Cards Row near bottom-left (DESKTOP ONLY) */}
+          <div className="hidden lg:block pt-0.5">
             <FloatingFeatureCards />
           </div>
         </section>
 
         {/* ── RIGHT COLUMN: Premium Glass Login Card ── */}
-        <section ref={loginSectionRef} className="lg:col-span-5 xl:col-span-5 w-full flex flex-col items-center justify-center">
+        <section ref={loginSectionRef} className="w-full lg:col-span-5 xl:col-span-5 flex flex-col items-center justify-center">
           <LoginCard
             onGoogleClick={triggerGoogleSignIn}
             googleButtonRef={googleButtonRef}
@@ -611,11 +611,16 @@ export const Login: React.FC = () => {
             }}
           />
         </section>
+
+        {/* ── MOBILE-ONLY FEATURE CARDS ROW (Rendered directly under LoginCard on mobile) ── */}
+        <div className="w-full flex lg:hidden justify-center pt-0.5">
+          <FloatingFeatureCards />
+        </div>
       </main>
 
       {/* ── 3. COMPACT FOOTER (SINGLE-LINE NO-OVERFLOW) ── */}
       <footer
-        className={`w-full max-w-7xl mx-auto px-2 sm:px-4 py-1.5 flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] relative z-20 border-t flex-shrink-0 transition-colors duration-700 ${
+        className={`w-full max-w-7xl mx-auto px-2 sm:px-4 py-1 sm:py-1.5 flex flex-col sm:flex-row items-center justify-between gap-0.5 sm:gap-1 text-[10px] sm:text-[11px] relative z-20 border-t flex-shrink-0 transition-colors duration-700 ${
           isLight ? 'text-slate-500 border-slate-200' : 'text-slate-400 border-white/[0.08]'
         }`}
       >
