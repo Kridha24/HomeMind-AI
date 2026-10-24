@@ -3,17 +3,25 @@ import { Home, UserPlus, Settings as SettingsIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { Badge } from './Badge';
+import { FamilyAvatarGroup } from './FamilyAvatarGroup';
+import { HouseholdMember } from '../../types';
 
 interface HouseholdHeaderProps {
   memberCount?: number;
   onInviteClick?: () => void;
   className?: string;
+  members?: HouseholdMember[];
+  onMemberClick?: (member: HouseholdMember) => void;
+  loadingMembers?: boolean;
 }
 
 export const HouseholdHeader: React.FC<HouseholdHeaderProps> = ({
   memberCount = 2,
   onInviteClick,
   className = '',
+  members = [],
+  onMemberClick,
+  loadingMembers = false,
 }) => {
   const navigate = useNavigate();
   const { household, user } = useAuthStore();
@@ -46,26 +54,43 @@ export const HouseholdHeader: React.FC<HouseholdHeaderProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 flex-shrink-0">
-        {onInviteClick && (
+      <div className="flex items-center gap-3 flex-wrap flex-shrink-0">
+        {/* Compact Horizontal Family Members Avatar Group */}
+        {(members.length > 0 || loadingMembers) && (
+          <div className="flex items-center pl-1 sm:pl-0 border-l sm:border-l-0 border-slate-200 dark:border-slate-700">
+            <FamilyAvatarGroup
+              members={members}
+              onInviteClick={onInviteClick}
+              onMemberClick={onMemberClick}
+              maxVisible={4}
+              size="sm"
+              loading={loadingMembers}
+              showAddButton={false}
+            />
+          </div>
+        )}
+
+        <div className="flex items-center gap-2">
+          {onInviteClick && (
+            <button
+              type="button"
+              onClick={onInviteClick}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs shadow-indigo-500/20 transition-all active:scale-95"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Invite Member</span>
+            </button>
+          )}
           <button
             type="button"
-            onClick={onInviteClick}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs shadow-indigo-500/20 transition-all active:scale-95"
+            onClick={() => navigate('/settings?tab=household')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 transition-all active:scale-95 shadow-2xs"
+            title="Household Settings"
           >
-            <UserPlus className="w-3.5 h-3.5" />
-            <span>Invite Member</span>
+            <SettingsIcon className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+            <span className="hidden sm:inline">Settings</span>
           </button>
-        )}
-        <button
-          type="button"
-          onClick={() => navigate('/settings?tab=household')}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 transition-all active:scale-95 shadow-2xs"
-          title="Household Settings"
-        >
-          <SettingsIcon className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-          <span className="hidden sm:inline">Settings</span>
-        </button>
+        </div>
       </div>
     </div>
   );

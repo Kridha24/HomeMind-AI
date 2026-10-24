@@ -55,6 +55,11 @@ import { AddApplianceModal } from '../components/common/AddApplianceModal';
 import { AddTaskModal } from '../components/common/AddTaskModal';
 import { HouseholdHeader } from '../components/common/HouseholdHeader';
 import { InviteMemberModal } from '../features/household/components/InviteMemberModal';
+import { useHousehold } from '../features/household/hooks/useHousehold';
+import { MobileDashboard } from '../components/dashboard/MobileDashboard';
+import { MemberDetailDrawer } from '../features/household/components/MemberDetailDrawer';
+import { useRealtimeNotifications } from '../contexts/RealtimeNotificationContext';
+import { HouseholdMember } from '../types';
 
 const COUNTRY_FLAGS: Record<string, string> = {
   IN: '🇮🇳',
@@ -148,6 +153,35 @@ export const Dashboard: React.FC = () => {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [actionCenterTab, setActionCenterTab] = useState<'bills' | 'tasks'>('tasks');
+
+  // Real Household Members Integration
+  const { members: rawMembers, loadingMembers } = useHousehold();
+  const { totalUnread } = useRealtimeNotifications();
+
+  const [selectedMember, setSelectedMember] = useState<HouseholdMember | null>(null);
+  const [showMemberDetail, setShowMemberDetail] = useState(false);
+
+  const handleMemberClick = (member: HouseholdMember) => {
+    setSelectedMember(member);
+    setShowMemberDetail(true);
+  };
+
+  const membersList: HouseholdMember[] = useMemo(() => {
+    if (rawMembers && rawMembers.length > 0) return rawMembers;
+    if (user) {
+      return [
+        {
+          id: user.id,
+          name: user.name || 'Owner',
+          email: user.email,
+          role: user.role || 'OWNER',
+          avatar: user.avatar,
+          avatarUrl: user.avatarUrl,
+        } as HouseholdMember,
+      ];
+    }
+    return [];
+  }, [rawMembers, user]);
 
   const countryDefaults = COUNTRY_DEFAULTS[country] || COUNTRY_DEFAULTS['US'];
   const flag = COUNTRY_FLAGS[country] || '🌐';
@@ -347,12 +381,35 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-3 sm:space-y-4 animate-in fade-in duration-200 pb-12">
-      {/* 0. Compact Horizontal Household Header */}
-      <HouseholdHeader
-        memberCount={summary?.activeMembersCount || summary?.membersCount || 2}
-        onInviteClick={() => setShowInviteModal(true)}
-      />
+    <>
+      {/* ── MOBILE DASHBOARD (<768px): Strictly matches REFERENCE 2 ── */}
+      <div className="block md:hidden">
+        <MobileDashboard
+          members={membersList}
+          onInviteClick={() => setShowInviteModal(true)}
+          onMemberClick={handleMemberClick}
+          onOpenNotifications={() => {
+            window.dispatchEvent(new CustomEvent('open_notifications'));
+          }}
+          unreadCount={totalUnread}
+          pendingTasks={pendingTasks}
+          upcomingBills={upcomingBills}
+          recentHistory={recentHistory}
+          groceriesList={groceriesList}
+          format={format}
+        />
+      </div>
+
+      {/* ── DESKTOP & TABLET DASHBOARD (>=768px): 100% PRESERVED LAYOUT ── */}
+      <div className="hidden md:block space-y-3 sm:space-y-4 animate-in fade-in duration-200 pb-12">
+        {/* 0. Compact Horizontal Household Header with Family Avatars */}
+        <HouseholdHeader
+          memberCount={summary?.activeMembersCount || summary?.membersCount || membersList.length || 2}
+          onInviteClick={() => setShowInviteModal(true)}
+          members={membersList}
+          onMemberClick={handleMemberClick}
+          loadingMembers={loadingMembers}
+        />
 
       {/* One-time Welcome Home Banner after signature entrance */}
       {welcomeAlert && (
@@ -668,6 +725,7 @@ export const Dashboard: React.FC = () => {
           <RecentActivityCard items={recentHistory} format={format} />
         </div>
       )}
+      </div>
 
       {/* Modals with Edit Support */}
       <AddIncomeModal
@@ -718,7 +776,20 @@ export const Dashboard: React.FC = () => {
         householdName={household?.name || 'Home Residence'}
         inviteCode={household?.inviteCode || ''}
       />
-    </div>
+
+      {/* Member Detail Drawer */}
+      <MemberDetailDrawer
+        member={selectedMember}
+        isOpen={showMemberDetail}
+        onClose={() => setShowMemberDetail(false)}
+        currentUserId={user?.id}
+        currentUserRole={user?.role}
+        activeTasksCount={pendingTasks.filter((t: any) => t.assignedTo === selectedMember?.id).length}
+        onOpenRoleChange={() => {}}
+        onOpenTransferOwnership={() => {}}
+        onOpenRemoveMember={() => {}}
+      />
+    </>
   );
 };
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Bell,
   Search,
@@ -31,6 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenSearch,
   unreadCount = 0,
 }) => {
+  const location = useLocation();
   const { household } = useAuthStore();
   const { sidebarCollapsed } = useSettingStore();
   const { t } = useI18n();
@@ -40,6 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const householdName = household?.name || 'Home Residence';
   const marginClass = sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[220px]';
+  const isMobileDashboard = location.pathname === '/';
 
   React.useEffect(() => {
     if (!isHouseholdMenuOpen) return;
@@ -61,11 +64,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header
       className={`
+        ${isMobileDashboard ? 'hidden md:flex' : 'flex'}
         min-h-[56px] pt-[env(safe-area-inset-top,0px)]
         bg-slate-50/85 dark:bg-slate-950/90 backdrop-blur-xl
         border-b border-slate-200/90 dark:border-slate-800
         sticky top-0 z-30 ${marginClass}
-        flex items-center justify-between
+        items-center justify-between
         px-3 sm:px-5 gap-2 sm:gap-4
         shadow-[0_1px_8px_rgba(0,0,0,0.03)] dark:shadow-none
         transition-all duration-200

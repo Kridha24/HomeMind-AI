@@ -146,7 +146,13 @@ function AppShell() {
       root.classList.remove('compact-mode');
     }
 
-    return () => mediaQuery.removeEventListener('change', handler);
+    const handleOpenNotifications = () => setIsNotificationsOpen(true);
+    window.addEventListener('open_notifications', handleOpenNotifications);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handler);
+      window.removeEventListener('open_notifications', handleOpenNotifications);
+    };
   }, [theme]);
 
   // Global Keyboard Listener for Cmd+K / Ctrl+K
@@ -286,9 +292,13 @@ function AppShell() {
 
         {/* Main content: offset for 72px default / 220px expanded sidebar on desktop */}
         <main
-          className={`flex-1 p-3 sm:p-5 md:p-6 overflow-y-auto ${
+          className={`flex-1 ${
+            p === '/' ? 'p-0 md:p-6 sm:p-4' : 'p-3 sm:p-5 md:p-6'
+          } overflow-y-auto ${
             sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[220px]'
-          } ml-0 transition-all duration-200 pb-24 lg:pb-8`}
+          } ml-0 transition-all duration-200 ${
+            p === '/' ? 'pb-16 md:pb-8' : 'pb-24 lg:pb-8'
+          }`}
         >
           <Routes>
             <Route path="/" element={<Dashboard />} />

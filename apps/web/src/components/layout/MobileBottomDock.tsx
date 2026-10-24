@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  CreditCard,
-  ShoppingBag,
+  Home,
+  Wallet,
+  ShoppingCart,
   CheckSquare,
+  Users,
   Plus,
   X,
+  CreditCard,
   FileText,
+  ShoppingBag,
   Sparkles,
-  Camera,
 } from 'lucide-react';
 
 interface MobileBottomDockProps {
@@ -31,36 +33,37 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
   const location = useLocation();
   const navigate = useNavigate();
 
+  // 5 tabs matching REFERENCE 2: Home, Finance, Groceries, Tasks, Family
   const navItems = [
-    { label: 'Home', path: '/', icon: LayoutDashboard },
-    { label: 'Expenses', path: '/expenses', icon: CreditCard },
-    // Center is '+' Hub
-    { label: 'Groceries', path: '/groceries', icon: ShoppingBag },
+    { label: 'Home', path: '/', icon: Home },
+    { label: 'Finance', path: '/expenses', icon: Wallet },
+    { label: 'Groceries', path: '/groceries', icon: ShoppingCart },
     { label: 'Tasks', path: '/tasks', icon: CheckSquare },
+    { label: 'Family', path: '/family', icon: Users },
   ];
 
   return (
     <>
-      {/* Quick Action Bottom Sheet */}
+      {/* Quick Action Bottom Sheet (available on demand) */}
       {isActionSheetOpen && (
         <div
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex flex-col justify-end p-4 lg:hidden animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col justify-end p-4 md:hidden animate-in fade-in duration-150"
           onClick={() => setIsActionSheetOpen(false)}
         >
           <div
-            className="bg-panel border border-primary/40 rounded-3xl p-6 space-y-4 shadow-2xl animate-in slide-in-from-bottom-8 duration-200"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-2xl animate-in slide-in-from-bottom-8 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-primary/20 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                   <Plus className="w-5 h-5" />
                 </div>
-                <h3 className="text-base font-extrabold text-primary">Quick Household Actions</h3>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Quick Actions</h3>
               </div>
               <button
                 onClick={() => setIsActionSheetOpen(false)}
-                className="text-muted hover:text-primary p-1.5 rounded-xl bg-secondary/50"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -72,11 +75,11 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
                   setIsActionSheetOpen(false);
                   onOpenExpenseModal();
                 }}
-                className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-left space-y-1 hover:bg-blue-500/20 transition-colors"
+                className="p-3.5 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-left space-y-1 hover:bg-teal-500/20 transition-colors"
               >
-                <CreditCard className="w-5 h-5 text-blue-400" />
-                <span className="text-xs font-bold text-primary block">Log Expense</span>
-                <span className="text-[10px] text-muted block">Add daily spend</span>
+                <Wallet className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                <span className="text-xs font-bold text-slate-900 dark:text-white block">Log Expense</span>
+                <span className="text-[10px] text-slate-500 block">Add daily spend</span>
               </button>
 
               <button
@@ -84,11 +87,11 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
                   setIsActionSheetOpen(false);
                   onOpenBillModal();
                 }}
-                className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-left space-y-1 hover:bg-amber-500/20 transition-colors"
+                className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-left space-y-1 hover:bg-blue-500/20 transition-colors"
               >
-                <FileText className="w-5 h-5 text-amber-400" />
-                <span className="text-xs font-bold text-primary block">Add Bill</span>
-                <span className="text-[10px] text-muted block">Utility / Subscription</span>
+                <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs font-bold text-slate-900 dark:text-white block">Add Bill</span>
+                <span className="text-[10px] text-slate-500 block">Utility / Subscription</span>
               </button>
 
               <button
@@ -96,11 +99,11 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
                   setIsActionSheetOpen(false);
                   onOpenGroceryModal();
                 }}
-                className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-left space-y-1 hover:bg-emerald-500/20 transition-colors"
+                className="p-3.5 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-left space-y-1 hover:bg-orange-500/20 transition-colors"
               >
-                <ShoppingBag className="w-5 h-5 text-emerald-400" />
-                <span className="text-xs font-bold text-primary block">Add Pantry</span>
-                <span className="text-[10px] text-muted block">Groceries & items</span>
+                <ShoppingCart className="w-5 h-5 text-orange-500 dark:text-orange-400" />
+                <span className="text-xs font-bold text-slate-900 dark:text-white block">Add Pantry</span>
+                <span className="text-[10px] text-slate-500 block">Groceries & items</span>
               </button>
 
               <button
@@ -110,9 +113,9 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
                 }}
                 className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-left space-y-1 hover:bg-purple-500/20 transition-colors"
               >
-                <CheckSquare className="w-5 h-5 text-purple-400" />
-                <span className="text-xs font-bold text-primary block">Assign Task</span>
-                <span className="text-[10px] text-muted block">Chores & todo</span>
+                <CheckSquare className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <span className="text-xs font-bold text-slate-900 dark:text-white block">Assign Task</span>
+                <span className="text-[10px] text-slate-500 block">Chores & todo</span>
               </button>
             </div>
 
@@ -121,67 +124,47 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
                 setIsActionSheetOpen(false);
                 onOpenAIChat();
               }}
-              className="w-full min-h-[44px] bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold py-3 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+              className="w-full min-h-[44px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Ask HomeMind.AI Assistant</span>
+              <span>Ask HomeMind AI Assistant</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Floating Bottom Navigation Dock */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-panel/90 backdrop-blur-2xl border-t border-primary/20 px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] lg:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.3)]">
-        <div className="flex items-center justify-around max-w-md mx-auto relative">
-          {/* First 2 Tabs */}
-          {navItems.slice(0, 2).map((item) => {
-            const isActive = location.pathname === item.path;
+      {/* ── 7. Fixed White Bottom Navigation Dock ─────────────────────── */}
+      <nav
+        className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800 px-2 py-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] md:hidden shadow-[0_-4px_25px_rgba(0,0,0,0.04)]"
+        aria-label="Mobile Navigation"
+      >
+        <div className="flex items-center justify-around max-w-md mx-auto">
+          {navItems.map((item) => {
+            const isActive =
+              item.path === '/'
+                ? location.pathname === '/'
+                : location.pathname.startsWith(item.path) ||
+                  (item.path === '/expenses' && location.pathname.startsWith('/finance')) ||
+                  (item.path === '/groceries' && location.pathname.startsWith('/inventory'));
+
             const Icon = item.icon;
 
             return (
               <button
                 key={item.path}
+                type="button"
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition-all ${
-                  isActive ? 'text-blue-400 font-bold scale-105' : 'text-muted hover:text-primary'
+                className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all duration-150 active:scale-95 cursor-pointer ${
+                  isActive
+                    ? 'text-blue-600 dark:text-blue-400 font-bold'
+                    : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
+                aria-label={item.label}
               >
-                <Icon className="w-5 h-5" />
-                <span className="text-[10px] tracking-tight">{item.label}</span>
-              </button>
-            );
-          })}
-
-          {/* Center '+' Action Hub */}
-          <div className="relative -top-4 flex items-center justify-center">
-            <button
-              onClick={() => setIsActionSheetOpen((prev) => !prev)}
-              aria-label="Quick Action Hub"
-              className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/40 border-2 border-background active:scale-95 transition-transform"
-            >
-              <Plus
-                className={`w-6 h-6 transition-transform duration-200 ${
-                  isActionSheetOpen ? 'rotate-45' : ''
-                }`}
-              />
-            </button>
-          </div>
-
-          {/* Last 2 Tabs */}
-          {navItems.slice(2, 4).map((item) => {
-            const isActive = location.pathname === item.path || (item.path === '/groceries' && location.pathname === '/inventory');
-            const Icon = item.icon;
-
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition-all ${
-                  isActive ? 'text-blue-400 font-bold scale-105' : 'text-muted hover:text-primary'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-[10px] tracking-tight">{item.label}</span>
+                <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.75]'}`} />
+                <span className={`text-[10px] tracking-tight mt-0.5 ${isActive ? 'font-bold' : 'font-medium'}`}>
+                  {item.label}
+                </span>
               </button>
             );
           })}
