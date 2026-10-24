@@ -159,17 +159,9 @@ export const Login: React.FC = () => {
         client_id: GOOGLE_CLIENT_ID,
         callback: async (response: any) => {
           console.log('[AUTH_UI] google credential callback received');
-          // Guard: Verify that an active, intentional user attempt occurred within the last 120 seconds
-          const attempt = googleAttemptRef.current;
-          const isFreshAttempt = attempt && (Date.now() - attempt.timestamp < 120000);
-
-          if (!isFreshAttempt) {
-            console.warn('[AUTH_UI] ambient google callback ignored (no active user attempt)');
-            return;
-          }
-
           if (response?.credential) {
-            await submitGoogleToken(response.credential, attempt.id);
+            const attemptId = registerGoogleAttempt();
+            await submitGoogleToken(response.credential, attemptId);
           } else {
             console.warn('[AUTH_UI] google callback received without credential');
           }
