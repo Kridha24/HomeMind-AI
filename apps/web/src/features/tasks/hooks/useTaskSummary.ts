@@ -32,10 +32,14 @@ export function useTaskSummary(tasks: Task[], members: HouseholdMember[] = []): 
       unassigned: { name: 'Unassigned', count: 0, avatarUrl: null },
     };
 
+    const safeMembers = Array.isArray(members) ? members : [];
+    const safeTasks = Array.isArray(tasks) ? tasks : [];
+
     // Pre-populate members in workload map
-    members.forEach((m) => {
+    safeMembers.forEach((m) => {
+      if (!m || !m.id) return;
       workloadMap[m.id] = {
-        name: m.name,
+        name: m.name || 'Member',
         count: 0,
         avatarUrl: m.avatarUrl,
       };
@@ -44,7 +48,8 @@ export function useTaskSummary(tasks: Task[], members: HouseholdMember[] = []): 
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    tasks.forEach((task) => {
+    safeTasks.forEach((task) => {
+      if (!task) return;
       const isCompleted = task.status === 'COMPLETED';
       const dueStatus = getDueDateStatus(task.dueDate, now);
 

@@ -202,8 +202,10 @@ export const TasksWorkspace: React.FC = () => {
 
     const overdue: Task[] = [];
     const dueToday: Task[] = [];
+    const safeFiltered = Array.isArray(filteredTasks) ? filteredTasks : [];
 
-    filteredTasks.forEach((task) => {
+    safeFiltered.forEach((task) => {
+      if (!task) return;
       const status = getDueDateStatus(task.dueDate);
       if (status.isOverdue) {
         overdue.push(task);
@@ -223,8 +225,10 @@ export const TasksWorkspace: React.FC = () => {
     const thisWeek: Task[] = [];
     const later: Task[] = [];
     const noDate: Task[] = [];
+    const safeFiltered = Array.isArray(filteredTasks) ? filteredTasks : [];
 
-    filteredTasks.forEach((task) => {
+    safeFiltered.forEach((task) => {
+      if (!task) return;
       const status = getDueDateStatus(task.dueDate);
       if (!task.dueDate) {
         noDate.push(task);

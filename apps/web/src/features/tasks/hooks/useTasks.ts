@@ -21,8 +21,9 @@ export function useTasks() {
     queryKey: ['tasks', householdId],
     queryFn: async () => {
       const res = await apiClient.get('/tasks');
-      const list = Array.isArray(res.data) ? res.data : res.data?.tasks || [];
-      return list;
+      if (Array.isArray(res.data)) return res.data;
+      if (Array.isArray(res.data?.tasks)) return res.data.tasks;
+      return [];
     },
     staleTime: 1000 * 20, // 20 seconds fresh
     enabled: Boolean(householdId),
@@ -33,11 +34,14 @@ export function useTasks() {
     queryKey: ['householdMembers', householdId],
     queryFn: async () => {
       const res = await apiClient.get('/family/members');
-      if (res.data?.household?.members) {
+      if (Array.isArray(res.data?.household?.members)) {
         return res.data.household.members;
       }
       if (Array.isArray(res.data?.members)) {
         return res.data.members;
+      }
+      if (Array.isArray(res.data)) {
+        return res.data;
       }
       return [];
     },
