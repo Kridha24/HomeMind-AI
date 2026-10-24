@@ -22,6 +22,7 @@ import {
   Laptop,
   Smartphone,
   AlertTriangle,
+  ArrowLeft,
 } from 'lucide-react';
 import { socketService } from '../../services/socketService';
 import apiClient from '../../services/apiClient';
@@ -80,12 +81,14 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
     const memberParam = searchParams.get('member');
     return memberParam || 'group';
   });
+  const [mobileShowChat, setMobileShowChat] = useState<boolean>(true);
 
   // Switch channel when URL query changes
   useEffect(() => {
     const memberParam = searchParams.get('member');
     if (memberParam && memberParam !== activeChannel) {
       setActiveChannel(memberParam);
+      setMobileShowChat(true);
     }
   }, [searchParams, activeChannel]);
 
@@ -670,9 +673,9 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
   const typingNames = Object.values(typingUsers);
 
   return (
-    <div className="glass-panel border-primary/80 rounded-3xl overflow-hidden shadow-sm flex flex-col md:flex-row h-[680px]">
+    <div className="glass-panel border-primary/80 rounded-3xl overflow-hidden shadow-sm flex flex-col md:flex-row h-[calc(100dvh-13rem)] min-h-[520px] md:h-[680px]">
       {/* Sidebar: Channel & Family Member List */}
-      <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-primary/80 bg-secondary/30 flex flex-col justify-between">
+      <div className={`${mobileShowChat ? 'hidden md:flex' : 'flex'} w-full md:w-80 border-b md:border-b-0 md:border-r border-primary/80 bg-secondary/30 flex flex-col justify-between`}>
         {/* Header */}
         <div className="p-4 border-b border-primary/80">
           <div className="flex items-center justify-between">
@@ -693,7 +696,10 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
         <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
           {/* Main Household Group Channel */}
           <button
-            onClick={() => setActiveChannel('group')}
+            onClick={() => {
+              setActiveChannel('group');
+              setMobileShowChat(true);
+            }}
             className={`w-full p-3 rounded-2xl text-left flex items-center justify-between transition-all duration-150 ${
               activeChannel === 'group'
                 ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/25'
@@ -747,7 +753,10 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
               return (
                 <button
                   key={member.id}
-                  onClick={() => setActiveChannel(member.id)}
+                  onClick={() => {
+                    setActiveChannel(member.id);
+                    setMobileShowChat(true);
+                  }}
                   className={`w-full p-2.5 rounded-2xl text-left flex items-center justify-between transition-all duration-150 ${
                     isSelected
                       ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/25'
@@ -814,20 +823,30 @@ export const FamilyChat: React.FC<FamilyChatProps> = ({
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col justify-between bg-panel/50">
+      <div className={`${!mobileShowChat ? 'hidden md:flex' : 'flex'} flex-1 flex flex-col justify-between bg-panel/50`}>
         {/* Chat Header */}
-        <div className="p-4 border-b border-primary/80 flex items-center justify-between bg-secondary/20">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-bold flex items-center justify-center text-sm shadow-sm">
+        <div className="p-3 sm:p-4 border-b border-primary/80 flex items-center justify-between bg-secondary/20">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {/* Back to Channels button on mobile */}
+            <button
+              type="button"
+              onClick={() => setMobileShowChat(false)}
+              aria-label="Back to channels"
+              className="md:hidden p-2 -ml-1 rounded-xl text-secondary hover:text-primary hover:bg-secondary/60 flex-shrink-0"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-bold flex items-center justify-center text-sm shadow-sm flex-shrink-0">
               {activeChannel === 'group' ? (
                 <Users className="w-5 h-5" />
               ) : (
                 activeMember?.name.charAt(0)
               )}
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h4 className="font-extrabold text-sm text-primary">
+                <h4 className="font-extrabold text-sm text-primary truncate">
                   {activeChannel === 'group'
                     ? 'Household Group Lounge'
                     : activeMember?.name}

@@ -33,12 +33,13 @@ export const Appliances: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-primary">
-        <div>
-          <h1 className="text-2xl font-extrabold text-primary flex items-center gap-2">
-            <Tv className="w-6 h-6 text-cyan-400" /> Home Appliance Telemetry & Warranty Tracker
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-4 sm:p-6 border-primary rounded-2xl">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold text-primary flex items-center gap-2 tracking-tight">
+            <Tv className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 flex-shrink-0" />
+            <span className="truncate">Home Appliances</span>
           </h1>
-          <p className="text-xs text-muted">Track equipment purchase dates, warranty countdowns & technician service logs</p>
+          <p className="text-xs text-muted mt-0.5">Track purchase dates, warranty countdowns & technician service logs</p>
         </div>
 
         <button

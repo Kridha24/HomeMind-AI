@@ -43,6 +43,9 @@ export default {
         sans: ['Plus Jakarta Sans', 'Inter', 'SF Pro Display', '-apple-system', 'sans-serif'],
         serif: ['Playfair Display', 'Georgia', 'serif'],
       },
+      screens: {
+        xs: '375px',
+      },
     },
   },
   plugins: [],

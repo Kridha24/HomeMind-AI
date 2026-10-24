@@ -3,6 +3,13 @@
 @tailwind utilities;
 
 @layer base {
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100vw;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   :root {
     --bg-background: 244 246 251;       /* soft cool-warm canvas (not flat white) */
     --bg-panel: 255 255 255;            /* pure white clean surface */

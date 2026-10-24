@@ -119,14 +119,14 @@ export const TasksHeader: React.FC<TasksHeaderProps> = ({
             type="text"
             value={quickTitle}
             onChange={(e) => setQuickTitle(e.target.value)}
-            placeholder="Quick add: e.g. Buy cylinder, Clean refrigerator, Pay electricity bill..."
+            placeholder="Quick add chore or task..."
             disabled={isQuickAdding}
-            className="w-full bg-transparent text-xs sm:text-sm text-primary placeholder-muted focus:outline-none"
+            className="w-full bg-transparent text-xs sm:text-sm text-primary placeholder-muted focus:outline-none truncate"
           />
           <button
             type="submit"
             disabled={!quickTitle.trim() || isQuickAdding}
-            className="ml-2 flex items-center gap-1 px-2.5 py-1 rounded-xl bg-secondary/80 text-secondary hover:text-primary hover:bg-secondary border border-primary/60 text-[11px] font-semibold transition-colors disabled:opacity-40"
+            className="ml-2 flex items-center gap-1 px-2.5 py-1 rounded-xl bg-secondary/80 text-secondary hover:text-primary hover:bg-secondary border border-primary/60 text-[11px] font-semibold transition-colors disabled:opacity-40 flex-shrink-0"
           >
             <CornerDownLeft className="w-3 h-3" />
             <span className="hidden sm:inline">Enter</span>

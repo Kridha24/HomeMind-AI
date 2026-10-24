@@ -39,12 +39,13 @@ export const Medicines: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-primary">
-        <div>
-          <h1 className="text-2xl font-extrabold text-primary flex items-center gap-2">
-            <Pill className="w-6 h-6 text-purple-400" /> Family Medicine & Prescription Intake Tracker
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-4 sm:p-6 border-primary rounded-2xl">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold text-primary flex items-center gap-2 tracking-tight">
+            <Pill className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400 flex-shrink-0" />
+            <span className="truncate">Medicines & Prescriptions</span>
           </h1>
-          <p className="text-xs text-muted">Prescription dosages, pill counts, doctor details & daily intake schedules</p>
+          <p className="text-xs text-muted mt-0.5">Dosages, pill counts, doctor details & daily intake schedules</p>
         </div>
 
         <button

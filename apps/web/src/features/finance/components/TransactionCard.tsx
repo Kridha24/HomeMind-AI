@@ -43,10 +43,10 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
           : 'border-primary/40 hover:border-primary/70 bg-surface-elevated/40'
       }`}
     >
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="min-w-0">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-bold text-xs text-primary truncate max-w-[170px] sm:max-w-[240px]">
+            <span className="font-bold text-xs text-primary truncate max-w-[140px] xs:max-w-[200px] sm:max-w-[280px]">
               {displayTitle}
             </span>
             {isNeedsReview && (
@@ -67,7 +67,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
           </div>
 
           {subtitle && (
-            <span className="text-[10px] text-muted truncate max-w-[160px] block mt-1 font-mono">
+            <span className="text-[10px] text-muted truncate max-w-[130px] xs:max-w-[190px] sm:max-w-[260px] block mt-1 font-mono">
               {subtitle}
             </span>
           )}

@@ -297,7 +297,9 @@ function AppShell() {
           } overflow-y-auto ${
             sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[220px]'
           } ml-0 transition-all duration-200 ${
-            p === '/' ? 'pb-16 md:pb-8' : 'pb-24 lg:pb-8'
+            p === '/'
+              ? 'pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-8'
+              : 'pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-8'
           }`}
         >
           <Routes>

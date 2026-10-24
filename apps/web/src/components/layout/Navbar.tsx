@@ -99,15 +99,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           <input
             type="text"
             readOnly
-            placeholder="Search HomeMind.AI... (Expenses, bills, groceries, tasks)"
+            placeholder="Search HomeMind.AI..."
             onFocus={() => {
               setSearchFocused(true);
               if (onOpenSearch) onOpenSearch();
             }}
             onBlur={() => setSearchFocused(false)}
-            className="w-full bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200/90 dark:border-slate-700/80 focus:border-indigo-500/40 rounded-xl pl-8 pr-16 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 cursor-pointer outline-none transition-all duration-180 shadow-2xs"
+            className="w-full bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200/90 dark:border-slate-700/80 focus:border-indigo-500/40 rounded-xl pl-8 pr-3 sm:pr-16 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 cursor-pointer outline-none transition-all duration-180 shadow-2xs truncate"
           />
-          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 pointer-events-none">
+          <div className="hidden sm:flex absolute right-2.5 top-1/2 -translate-y-1/2 items-center gap-0.5 pointer-events-none">
             <kbd className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-500 dark:text-slate-400 shadow-2xs">
               <Command className="w-2.5 h-2.5 text-indigo-500" />K
             </kbd>

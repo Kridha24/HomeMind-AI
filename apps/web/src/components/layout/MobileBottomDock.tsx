@@ -154,7 +154,7 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
                 key={item.path}
                 type="button"
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all duration-150 active:scale-95 cursor-pointer ${
+                className={`flex flex-col items-center justify-center min-h-[44px] min-w-[48px] py-1 px-2.5 rounded-2xl transition-all duration-150 active:scale-95 cursor-pointer ${
                   isActive
                     ? 'text-blue-600 dark:text-blue-400 font-bold'
                     : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'

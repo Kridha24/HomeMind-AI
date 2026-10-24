@@ -225,18 +225,19 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
       </div>
 
       {/* ── 3. Six Quick-Access Tiles in 2-Column, 3-Row Grid ─────────────── */}
-      <section className="px-4 pt-4 pb-2" aria-label="Quick Access Modules">
-        <div className="grid grid-cols-2 gap-3">
+      {/* ── 3. Six Quick-Access Tiles in 2-Column, 3-Row Grid ─────────────── */}
+      <section className="px-3.5 sm:px-4 pt-3.5 sm:pt-4 pb-2" aria-label="Quick Access Modules">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
           {/* Tile 1: Finance (Teal Wallet) */}
           <button
             type="button"
             onClick={() => navigate('/expenses')}
-            className="p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/80 hover:border-teal-300/60 dark:hover:border-teal-700/60 transition-all flex items-center gap-3 text-left group shadow-2xs active:scale-98"
+            className="p-3 sm:p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/80 hover:border-teal-300/60 dark:hover:border-teal-700/60 transition-all flex items-center gap-2.5 sm:gap-3 text-left group shadow-2xs active:scale-98 min-w-0"
           >
-            <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 border border-teal-200/50 dark:border-teal-800/40 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-              <Wallet className="w-5 h-5" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 border border-teal-200/50 dark:border-teal-800/40 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+              <Wallet className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <span className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+            <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors truncate">
               Finance
             </span>
           </button>
@@ -245,12 +246,12 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
           <button
             type="button"
             onClick={() => navigate('/groceries')}
-            className="p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/80 hover:border-orange-300/60 dark:hover:border-orange-700/60 transition-all flex items-center gap-3 text-left group shadow-2xs active:scale-98"
+            className="p-3 sm:p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/80 hover:border-orange-300/60 dark:hover:border-orange-700/60 transition-all flex items-center gap-2.5 sm:gap-3 text-left group shadow-2xs active:scale-98 min-w-0"
           >
-            <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-orange-500 dark:text-orange-400 border border-orange-200/50 dark:border-orange-800/40 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-              <ShoppingCart className="w-5 h-5" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-orange-500 dark:text-orange-400 border border-orange-200/50 dark:border-orange-800/40 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <span className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+            <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors truncate">
               Groceries
             </span>
           </button>
@@ -259,12 +260,12 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
           <button
             type="button"
             onClick={() => navigate('/bills')}
-            className="p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/80 hover:border-blue-300/60 dark:hover:border-blue-700/60 transition-all flex items-center gap-3 text-left group shadow-2xs active:scale-98"
+            className="p-3 sm:p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/80 hover:border-blue-300/60 dark:hover:border-blue-700/60 transition-all flex items-center gap-2.5 sm:gap-3 text-left group shadow-2xs active:scale-98 min-w-0"
           >
-            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/40 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-              <FileText className="w-5 h-5" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/40 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <span className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
               Bills
             </span>
           </button>
@@ -273,12 +274,12 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
           <button
             type="button"
             onClick={() => navigate('/tasks')}
-            className="p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/80 hover:border-purple-300/60 dark:hover:border-purple-700/60 transition-all flex items-center gap-3 text-left group shadow-2xs active:scale-98"
+            className="p-3 sm:p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/80 hover:border-purple-300/60 dark:hover:border-purple-700/60 transition-all flex items-center gap-2.5 sm:gap-3 text-left group shadow-2xs active:scale-98 min-w-0"
           >
-            <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/40 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-              <CheckSquare className="w-5 h-5" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/40 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+              <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <span className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+            <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors truncate">
               Tasks
             </span>
           </button>
@@ -287,12 +288,12 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
           <button
             type="button"
             onClick={() => navigate('/family')}
-            className="p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/80 hover:border-violet-300/60 dark:hover:border-violet-700/60 transition-all flex items-center gap-3 text-left group shadow-2xs active:scale-98"
+            className="p-3 sm:p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/80 hover:border-violet-300/60 dark:hover:border-violet-700/60 transition-all flex items-center gap-2.5 sm:gap-3 text-left group shadow-2xs active:scale-98 min-w-0"
           >
-            <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 border border-violet-200/50 dark:border-violet-800/40 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-              <Users className="w-5 h-5" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 border border-violet-200/50 dark:border-violet-800/40 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <span className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+            <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors truncate">
               Family
             </span>
           </button>
@@ -301,12 +302,12 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
           <button
             type="button"
             onClick={() => navigate('/family?tab=connect')}
-            className="p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/80 hover:border-cyan-300/60 dark:hover:border-cyan-700/60 transition-all flex items-center gap-3 text-left group shadow-2xs active:scale-98"
+            className="p-3 sm:p-3.5 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/80 hover:border-cyan-300/60 dark:hover:border-cyan-700/60 transition-all flex items-center gap-2.5 sm:gap-3 text-left group shadow-2xs active:scale-98 min-w-0"
           >
-            <div className="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 border border-cyan-200/50 dark:border-cyan-800/40 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-              <Phone className="w-5 h-5" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 border border-cyan-200/50 dark:border-cyan-800/40 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+              <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <span className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+            <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors truncate">
               Connect
             </span>
           </button>
@@ -365,7 +366,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
                   onClick={item.onClick}
                   className="flex items-center justify-between p-3 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/70 border border-slate-200/50 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer shadow-2xs group"
                 >
-                  <div className="flex items-center gap-3 min-w-0 pr-2">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 pr-2">
                     <div
                       className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${iconBg}`}
                     >

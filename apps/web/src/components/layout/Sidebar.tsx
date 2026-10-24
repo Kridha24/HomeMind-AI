@@ -144,7 +144,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose, unrea
 
       {/* Main Sidebar Aside */}
       <aside
-        className={`${widthClass} bg-slate-50/90 dark:bg-slate-950/95 backdrop-blur-xl border-r border-slate-200/90 dark:border-slate-800 h-screen fixed left-0 top-0 z-50 flex flex-col justify-between py-2.5 px-1.5 transition-all duration-200 ease-out shadow-xs dark:shadow-none ${
+        className={`${widthClass} bg-slate-50/90 dark:bg-slate-950/95 backdrop-blur-xl border-r border-slate-200/90 dark:border-slate-800 h-[100dvh] pt-[max(0.625rem,env(safe-area-inset-top))] pb-[max(0.625rem,env(safe-area-inset-bottom))] fixed left-0 top-0 z-50 flex flex-col justify-between px-1.5 transition-all duration-200 ease-out shadow-xs dark:shadow-none ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
         aria-label="Household Operating System Navigation"
