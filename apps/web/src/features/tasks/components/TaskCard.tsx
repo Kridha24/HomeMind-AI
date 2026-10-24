@@ -28,7 +28,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const category = inferTaskCategory(task.title, task.description);
   const CategoryIcon = category.icon;
 
-  const assignee = members.find((m) => m.id === task.assigneeId);
+  const safeMembers = Array.isArray(members) ? members : [];
+  const assignee = safeMembers.find((m) => m && m.id === task.assigneeId);
   const isAssignedToMe = currentUserId && task.assigneeId === currentUserId;
 
   return (

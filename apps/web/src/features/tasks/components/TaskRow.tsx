@@ -43,7 +43,8 @@ export const TaskRow: React.FC<TaskRowProps> = ({
   const CategoryIcon = category.icon;
 
   // Find assignee
-  const assignee = members.find((m) => m.id === task.assigneeId);
+  const safeMembers = Array.isArray(members) ? members : [];
+  const assignee = safeMembers.find((m) => m && m.id === task.assigneeId);
   const isAssignedToMe = currentUserId && task.assigneeId === currentUserId;
 
   return (

@@ -191,7 +191,7 @@ export const AddEditTaskModal: React.FC<AddEditTaskModalProps> = ({
               className="w-full bg-secondary/60 border border-primary/80 rounded-xl px-3 py-2.5 text-xs text-primary font-medium focus:outline-none focus:border-purple-500 transition-colors"
             >
               <option value="UNASSIGNED">Unassigned (Anyone in household)</option>
-              {members.map((member) => (
+              {(Array.isArray(members) ? members : []).map((member) => (
                 <option key={member.id} value={member.id}>
                   {member.name} ({member.role || 'Member'})
                 </option>

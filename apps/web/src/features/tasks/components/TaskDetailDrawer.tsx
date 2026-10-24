@@ -57,7 +57,8 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
   const dueStatus = getDueDateStatus(task.dueDate);
   const category = inferTaskCategory(task.title, task.description);
   const CategoryIcon = category.icon;
-  const assignee = members.find((m) => m.id === task.assigneeId);
+  const safeMembers = Array.isArray(members) ? members : [];
+  const assignee = safeMembers.find((m) => m && m.id === task.assigneeId);
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">

@@ -12,7 +12,7 @@ export function useTasks() {
 
   // 1. React Query Fetch Tasks (Strictly household scoped)
   const {
-    data: tasks = [],
+    data: rawTasks = [],
     isLoading,
     isError,
     error,
@@ -29,9 +29,9 @@ export function useTasks() {
     enabled: Boolean(householdId),
   });
 
-  // 2. Fetch Real Household Members for Assignment
-  const { data: members = [] } = useQuery<HouseholdMember[]>({
-    queryKey: ['householdMembers', householdId],
+  // 2. Fetch Real Household Members for Assignment (Dedicated cache key to avoid collisions)
+  const { data: rawMembers = [] } = useQuery<any>({
+    queryKey: ['tasksHouseholdMembers', householdId],
     queryFn: async () => {
       const res = await apiClient.get('/family/members');
       if (Array.isArray(res.data?.household?.members)) {
@@ -49,6 +49,21 @@ export function useTasks() {
     enabled: Boolean(householdId),
   });
 
+  // Strict Array Normalization
+  const tasks: Task[] = Array.isArray(rawTasks)
+    ? rawTasks
+    : Array.isArray((rawTasks as any)?.tasks)
+    ? (rawTasks as any).tasks
+    : [];
+
+  const members: HouseholdMember[] = Array.isArray(rawMembers)
+    ? rawMembers
+    : Array.isArray(rawMembers?.members)
+    ? rawMembers.members
+    : Array.isArray(rawMembers?.household?.members)
+    ? rawMembers.household.members
+    : [];
+
   // 3. Real-time synchronization via Socket.IO
   useEffect(() => {
     if (!householdId) return;
@@ -57,6 +72,7 @@ export function useTasks() {
 
     const handleUpdate = () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', householdId] });
+      queryClient.invalidateQueries({ queryKey: ['tasksHouseholdMembers', householdId] });
       queryClient.invalidateQueries({ queryKey: ['dashboardSummary', householdId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', householdId] });
     };
@@ -71,6 +87,7 @@ export function useTasks() {
   // Helper to invalidate all related queries
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ['tasks', householdId] });
+    queryClient.invalidateQueries({ queryKey: ['tasksHouseholdMembers', householdId] });
     queryClient.invalidateQueries({ queryKey: ['dashboardSummary', householdId] });
     queryClient.invalidateQueries({ queryKey: ['dashboard', householdId] });
   };
@@ -86,9 +103,10 @@ export function useTasks() {
       const previousTasks = queryClient.getQueryData<Task[]>(['tasks', householdId]) || [];
 
       // Optimistically update status
-      queryClient.setQueryData<Task[]>(['tasks', householdId], (old = []) =>
-        old.map((t) => (t.id === taskId ? { ...t, status: nextStatus, updatedAt: new Date().toISOString() } : t))
-      );
+      queryClient.setQueryData<Task[]>(['tasks', householdId], (old) => {
+        const list = Array.isArray(old) ? old : [];
+        return list.map((t) => (t.id === taskId ? { ...t, status: nextStatus, updatedAt: new Date().toISOString() } : t));
+      });
 
       return { previousTasks };
     },
@@ -173,9 +191,10 @@ export function useTasks() {
       await queryClient.cancelQueries({ queryKey: ['tasks', householdId] });
       const previousTasks = queryClient.getQueryData<Task[]>(['tasks', householdId]) || [];
 
-      queryClient.setQueryData<Task[]>(['tasks', householdId], (old = []) =>
-        old.map((t) => (t.id === taskId ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t))
-      );
+      queryClient.setQueryData<Task[]>(['tasks', householdId], (old) => {
+        const list = Array.isArray(old) ? old : [];
+        return list.map((t) => (t.id === taskId ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t));
+      });
 
       return { previousTasks };
     },
@@ -199,9 +218,10 @@ export function useTasks() {
       await queryClient.cancelQueries({ queryKey: ['tasks', householdId] });
       const previousTasks = queryClient.getQueryData<Task[]>(['tasks', householdId]) || [];
 
-      queryClient.setQueryData<Task[]>(['tasks', householdId], (old = []) =>
-        old.filter((t) => t.id !== taskId)
-      );
+      queryClient.setQueryData<Task[]>(['tasks', householdId], (old) => {
+        const list = Array.isArray(old) ? old : [];
+        return list.filter((t) => t.id !== taskId);
+      });
 
       return { previousTasks };
     },

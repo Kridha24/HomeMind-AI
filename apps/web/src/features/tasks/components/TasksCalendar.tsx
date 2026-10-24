@@ -37,8 +37,9 @@ export const TasksCalendar: React.FC<TasksCalendarProps> = ({
   // Group tasks by date string (YYYY-MM-DD)
   const tasksByDate = React.useMemo(() => {
     const map: Record<string, Task[]> = {};
-    tasks.forEach((t) => {
-      if (!t.dueDate) return;
+    const safeTasks = Array.isArray(tasks) ? tasks : [];
+    safeTasks.forEach((t) => {
+      if (!t || !t.dueDate) return;
       const d = new Date(t.dueDate);
       if (isNaN(d.getTime())) return;
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(

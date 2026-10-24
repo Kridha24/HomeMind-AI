@@ -43,6 +43,9 @@ export const TasksWorkspace: React.FC = () => {
     deleteMutation,
   } = useTasks();
 
+  const safeTasks = Array.isArray(tasks) ? tasks : [];
+  const safeMembers = Array.isArray(members) ? members : [];
+
   // 2. Filters & View State
   const {
     activeTab,
@@ -59,10 +62,12 @@ export const TasksWorkspace: React.FC = () => {
     hasActiveFilters,
     filteredTasks,
     totalCount,
-  } = useTaskFilters(tasks, members);
+  } = useTaskFilters(safeTasks, safeMembers);
+
+  const safeFilteredTasks = Array.isArray(filteredTasks) ? filteredTasks : [];
 
   // 3. Summary & Workload Metrics
-  const metrics = useTaskSummary(tasks, members);
+  const metrics = useTaskSummary(safeTasks, safeMembers);
 
   // 4. Local UI states
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
@@ -290,8 +295,8 @@ export const TasksWorkspace: React.FC = () => {
       {/* 5. View Mode: Calendar vs List */}
       {viewMode === 'calendar' ? (
         <TasksCalendar
-          tasks={tasks}
-          members={members}
+          tasks={safeTasks}
+          members={safeMembers}
           onSelectTask={handleSelectTask}
           onToggleStatus={handleToggleStatus}
         />
@@ -302,7 +307,7 @@ export const TasksWorkspace: React.FC = () => {
             activeTab={activeTab}
             onTabChange={setActiveTab}
             metrics={metrics}
-            hasAssigneeSupport={members.length > 0}
+            hasAssigneeSupport={safeMembers.length > 0}
           />
 
           {/* Search & Multi-Factor Filters */}
@@ -315,7 +320,7 @@ export const TasksWorkspace: React.FC = () => {
               onAssigneeChange={setSelectedAssignee}
               sortBy={sortBy}
               onSortByChange={setSortBy}
-              members={members}
+              members={safeMembers}
               onClearFilters={clearFilters}
               hasActiveFilters={hasActiveFilters}
               activeTab={activeTab}
@@ -323,7 +328,7 @@ export const TasksWorkspace: React.FC = () => {
           </div>
 
           {/* Task Items List */}
-          {filteredTasks.length === 0 ? (
+          {safeFilteredTasks.length === 0 ? (
             <TasksEmptyState
               activeTab={activeTab}
               hasFilters={hasActiveFilters}
@@ -338,7 +343,7 @@ export const TasksWorkspace: React.FC = () => {
                   badge="Urgent Attention"
                   badgeColor="bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25"
                   tasks={todayGroups.overdue}
-                  members={members}
+                  members={safeMembers}
                   currentUserId={currentUserId}
                   onToggleStatus={handleToggleStatus}
                   onSelectTask={handleSelectTask}
@@ -354,7 +359,7 @@ export const TasksWorkspace: React.FC = () => {
                   badge="Today"
                   badgeColor="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/25"
                   tasks={todayGroups.dueToday}
-                  members={members}
+                  members={safeMembers}
                   currentUserId={currentUserId}
                   onToggleStatus={handleToggleStatus}
                   onSelectTask={handleSelectTask}
@@ -370,7 +375,7 @@ export const TasksWorkspace: React.FC = () => {
                 <TaskGroup
                   title="Tomorrow"
                   tasks={upcomingGroups.tomorrow}
-                  members={members}
+                  members={safeMembers}
                   currentUserId={currentUserId}
                   onToggleStatus={handleToggleStatus}
                   onSelectTask={handleSelectTask}
@@ -384,7 +389,7 @@ export const TasksWorkspace: React.FC = () => {
                 <TaskGroup
                   title="This Week"
                   tasks={upcomingGroups.thisWeek}
-                  members={members}
+                  members={safeMembers}
                   currentUserId={currentUserId}
                   onToggleStatus={handleToggleStatus}
                   onSelectTask={handleSelectTask}
@@ -398,7 +403,7 @@ export const TasksWorkspace: React.FC = () => {
                 <TaskGroup
                   title="Later"
                   tasks={upcomingGroups.later}
-                  members={members}
+                  members={safeMembers}
                   currentUserId={currentUserId}
                   onToggleStatus={handleToggleStatus}
                   onSelectTask={handleSelectTask}
@@ -412,7 +417,7 @@ export const TasksWorkspace: React.FC = () => {
                 <TaskGroup
                   title="No Due Date"
                   tasks={upcomingGroups.noDate}
-                  members={members}
+                  members={safeMembers}
                   currentUserId={currentUserId}
                   onToggleStatus={handleToggleStatus}
                   onSelectTask={handleSelectTask}
@@ -426,11 +431,11 @@ export const TasksWorkspace: React.FC = () => {
             <div className="space-y-2.5">
               {/* Desktop List */}
               <div className="hidden sm:flex flex-col gap-2">
-                {filteredTasks.map((task) => (
+                {safeFilteredTasks.map((task) => (
                   <TaskRow
                     key={task.id}
                     task={task}
-                    members={members}
+                    members={safeMembers}
                     currentUserId={currentUserId}
                     onToggleStatus={handleToggleStatus}
                     onSelectTask={handleSelectTask}
@@ -443,11 +448,11 @@ export const TasksWorkspace: React.FC = () => {
 
               {/* Mobile Card Grid */}
               <div className="flex sm:hidden flex-col gap-2.5">
-                {filteredTasks.map((task) => (
+                {safeFilteredTasks.map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
-                    members={members}
+                    members={safeMembers}
                     currentUserId={currentUserId}
                     onToggleStatus={handleToggleStatus}
                     onSelectTask={handleSelectTask}
@@ -465,7 +470,7 @@ export const TasksWorkspace: React.FC = () => {
         task={selectedTask}
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        members={members}
+        members={safeMembers}
         onToggleStatus={handleToggleStatus}
         onEdit={(task) => {
           setDrawerOpen(false);
@@ -487,7 +492,7 @@ export const TasksWorkspace: React.FC = () => {
         }}
         onSave={handleSaveTask}
         initialData={editingTask}
-        members={members}
+        members={safeMembers}
       />
 
       {/* 8. Delete Task Modal */}

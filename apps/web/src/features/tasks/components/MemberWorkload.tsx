@@ -13,7 +13,8 @@ export const MemberWorkload: React.FC<MemberWorkloadProps> = ({
   selectedAssignee,
   onSelectAssignee,
 }) => {
-  if (workload.length <= 1) return null; // Don't show if only unassigned or 1 member
+  const safeWorkload = Array.isArray(workload) ? workload : [];
+  if (safeWorkload.length <= 1) return null; // Don't show if only unassigned or 1 member
 
   return (
     <div className="p-3.5 sm:p-4 rounded-2xl bg-panel border border-primary/80 shadow-xs space-y-2.5">
@@ -25,7 +26,7 @@ export const MemberWorkload: React.FC<MemberWorkloadProps> = ({
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
-        {workload.map((m) => {
+        {safeWorkload.map((m) => {
           const isSelected =
             (m.memberId === null && selectedAssignee === 'UNASSIGNED') ||
             (m.memberId && selectedAssignee === m.memberId);

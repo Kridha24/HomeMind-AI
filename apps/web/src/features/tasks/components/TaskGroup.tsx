@@ -30,7 +30,10 @@ export const TaskGroup: React.FC<TaskGroupProps> = ({
   onDeleteTask,
   isMutating = false,
 }) => {
-  if (tasks.length === 0) return null;
+  const safeTasks = Array.isArray(tasks) ? tasks : [];
+  const safeMembers = Array.isArray(members) ? members : [];
+
+  if (safeTasks.length === 0) return null;
 
   return (
     <div className="space-y-2.5">
@@ -44,16 +47,16 @@ export const TaskGroup: React.FC<TaskGroupProps> = ({
             {badge}
           </span>
         )}
-        <span className="text-[11px] text-muted font-medium">({tasks.length})</span>
+        <span className="text-[11px] text-muted font-medium">({safeTasks.length})</span>
       </div>
 
       {/* Desktop List */}
       <div className="hidden sm:flex flex-col gap-2">
-        {tasks.map((task) => (
+        {safeTasks.map((task) => (
           <TaskRow
             key={task.id}
             task={task}
-            members={members}
+            members={safeMembers}
             currentUserId={currentUserId}
             onToggleStatus={onToggleStatus}
             onSelectTask={onSelectTask}
@@ -66,11 +69,11 @@ export const TaskGroup: React.FC<TaskGroupProps> = ({
 
       {/* Mobile Card Grid */}
       <div className="flex sm:hidden flex-col gap-2.5">
-        {tasks.map((task) => (
+        {safeTasks.map((task) => (
           <TaskCard
             key={task.id}
             task={task}
-            members={members}
+            members={safeMembers}
             currentUserId={currentUserId}
             onToggleStatus={onToggleStatus}
             onSelectTask={onSelectTask}

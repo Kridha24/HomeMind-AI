@@ -14,11 +14,20 @@ export const TasksSummary: React.FC<TasksSummaryProps> = ({
   activeTab,
   onTabChange,
 }) => {
+  const safeMetrics = metrics || {
+    todoCount: 0,
+    dueTodayCount: 0,
+    overdueCount: 0,
+    completedThisWeekCount: 0,
+    assignedToMeCount: 0,
+    memberWorkload: [],
+  };
+
   const cards = [
     {
       id: 'all' as TaskTab,
       label: 'To Do',
-      count: metrics.todoCount,
+      count: safeMetrics.todoCount || 0,
       icon: CheckSquare,
       color: 'text-sky-600 dark:text-sky-400',
       bgColor: 'bg-sky-500/12 dark:bg-sky-500/20',
@@ -29,7 +38,7 @@ export const TasksSummary: React.FC<TasksSummaryProps> = ({
     {
       id: 'today' as TaskTab,
       label: 'Due Today',
-      count: metrics.dueTodayCount,
+      count: safeMetrics.dueTodayCount || 0,
       icon: Calendar,
       color: 'text-amber-600 dark:text-amber-400',
       bgColor: 'bg-amber-500/12 dark:bg-amber-500/20',
@@ -40,18 +49,18 @@ export const TasksSummary: React.FC<TasksSummaryProps> = ({
     {
       id: 'today' as TaskTab,
       label: 'Overdue',
-      count: metrics.overdueCount,
+      count: safeMetrics.overdueCount || 0,
       icon: AlertCircle,
-      color: metrics.overdueCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400',
-      bgColor: metrics.overdueCount > 0 ? 'bg-rose-500/15 dark:bg-rose-500/20' : 'bg-slate-500/10 dark:bg-slate-500/15',
-      borderColor: metrics.overdueCount > 0 ? 'border-rose-500/30 dark:border-rose-500/40' : 'border-slate-500/20 dark:border-slate-500/30',
+      color: (safeMetrics.overdueCount || 0) > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400',
+      bgColor: (safeMetrics.overdueCount || 0) > 0 ? 'bg-rose-500/15 dark:bg-rose-500/20' : 'bg-slate-500/10 dark:bg-slate-500/15',
+      borderColor: (safeMetrics.overdueCount || 0) > 0 ? 'border-rose-500/30 dark:border-rose-500/40' : 'border-slate-500/20 dark:border-slate-500/30',
       topBar: 'bg-gradient-to-r from-rose-500 to-red-400',
       activeBorder: 'ring-2 ring-rose-500/50',
     },
     {
       id: 'completed' as TaskTab,
       label: 'Completed This Week',
-      count: metrics.completedThisWeekCount,
+      count: safeMetrics.completedThisWeekCount || 0,
       icon: CheckCircle2,
       color: 'text-emerald-600 dark:text-emerald-400',
       bgColor: 'bg-emerald-500/12 dark:bg-emerald-500/20',
@@ -65,7 +74,7 @@ export const TasksSummary: React.FC<TasksSummaryProps> = ({
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {cards.map((card, idx) => {
         const Icon = card.icon;
-        const isActive = activeTab === card.id && (card.label !== 'Overdue' || metrics.overdueCount > 0);
+        const isActive = activeTab === card.id && (card.label !== 'Overdue' || (safeMetrics.overdueCount || 0) > 0);
 
         return (
           <button

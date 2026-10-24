@@ -68,7 +68,11 @@ export const HouseholdSettings: React.FC = () => {
     enabled: !!household?.id,
   });
 
-  const members: Member[] = Array.isArray(membersData) ? membersData : [];
+  const members: Member[] = Array.isArray(membersData)
+    ? membersData
+    : Array.isArray((membersData as any)?.members)
+    ? (membersData as any).members
+    : [];
 
   const handleCopyInvite = () => {
     if (household?.inviteCode) {

@@ -39,8 +39,12 @@ export function useHousehold() {
     enabled: Boolean(householdId),
   });
 
-  const members = membersData?.members || [];
-  const currentHousehold = membersData?.household || household;
+  const members: HouseholdMember[] = Array.isArray(membersData)
+    ? (membersData as HouseholdMember[])
+    : Array.isArray((membersData as any)?.members)
+    ? (membersData as any).members
+    : [];
+  const currentHousehold = (membersData as any)?.household || household;
 
   // 2. Fetch Real Household Activity Logs
   const {

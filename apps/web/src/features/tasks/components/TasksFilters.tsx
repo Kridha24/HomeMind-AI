@@ -28,10 +28,12 @@ export const TasksFilters: React.FC<TasksFiltersProps> = ({
   hasActiveFilters,
   activeTab,
 }) => {
+  const safeMembers = Array.isArray(members) ? members : [];
+
   const getAssigneeLabel = (id: string) => {
     if (id === 'ALL') return 'All Assignees';
     if (id === 'UNASSIGNED') return 'Unassigned';
-    const member = members.find((m) => m.id === id);
+    const member = safeMembers.find((m) => m && m.id === id);
     return member ? member.name : id;
   };
 
@@ -62,7 +64,7 @@ export const TasksFilters: React.FC<TasksFiltersProps> = ({
             className="bg-secondary/70 border border-primary/80 text-primary text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-purple-500/80 transition-colors"
           >
             <option value="ALL">All Assignees</option>
-            {members.map((member) => (
+            {safeMembers.map((member) => (
               <option key={member.id} value={member.id}>
                 {member.name}
               </option>

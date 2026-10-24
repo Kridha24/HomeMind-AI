@@ -83,8 +83,9 @@ export const FamilyAvatarGroup: React.FC<FamilyAvatarGroupProps> = ({
     );
   }
 
-  const visibleMembers = members.slice(0, maxVisible);
-  const overflowCount = members.length - maxVisible;
+  const safeMembers = Array.isArray(members) ? members : [];
+  const visibleMembers = safeMembers.slice(0, maxVisible);
+  const overflowCount = safeMembers.length - maxVisible;
 
   return (
     <div className={`flex items-center gap-1.5 ${className}`}>

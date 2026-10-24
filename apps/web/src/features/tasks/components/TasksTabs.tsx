@@ -16,30 +16,39 @@ export const TasksTabs: React.FC<TasksTabsProps> = ({
   metrics,
   hasAssigneeSupport = true,
 }) => {
+  const safeMetrics = metrics || {
+    todoCount: 0,
+    dueTodayCount: 0,
+    overdueCount: 0,
+    completedThisWeekCount: 0,
+    assignedToMeCount: 0,
+    memberWorkload: [],
+  };
+
   const tabs = [
     {
       id: 'today' as TaskTab,
       label: 'Today',
       icon: Calendar,
-      count: metrics.dueTodayCount + metrics.overdueCount,
+      count: (safeMetrics.dueTodayCount || 0) + (safeMetrics.overdueCount || 0),
     },
     {
       id: 'upcoming' as TaskTab,
       label: 'Upcoming',
       icon: Clock,
-      count: Math.max(0, metrics.todoCount - metrics.dueTodayCount - metrics.overdueCount),
+      count: Math.max(0, (safeMetrics.todoCount || 0) - (safeMetrics.dueTodayCount || 0) - (safeMetrics.overdueCount || 0)),
     },
     {
       id: 'all' as TaskTab,
       label: 'All Tasks',
       icon: ListChecks,
-      count: metrics.todoCount,
+      count: safeMetrics.todoCount || 0,
     },
     {
       id: 'completed' as TaskTab,
       label: 'Completed',
       icon: CheckCircle2,
-      count: metrics.completedThisWeekCount,
+      count: safeMetrics.completedThisWeekCount || 0,
     },
   ];
 
@@ -48,13 +57,13 @@ export const TasksTabs: React.FC<TasksTabsProps> = ({
       id: 'assigned-me' as TaskTab,
       label: 'Assigned to Me',
       icon: UserCheck,
-      count: metrics.assignedToMeCount,
+      count: safeMetrics.assignedToMeCount || 0,
     });
   }
 
   return (
     <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-primary/60">
-      {tabs.map((tab) => {
+      {(Array.isArray(tabs) ? tabs : []).map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
 
