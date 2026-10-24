@@ -172,11 +172,22 @@ export function createDistributedRateLimiter(
 // PRECONFIGURED RATE LIMITING POLICIES (PHASE 3G)
 // ==========================================
 
-export const generalDistributedLimiter = createDistributedRateLimiter('general', {
-  windowMs: 15 * 60 * 1000,
-  max: 200,
-  message: 'Too many requests. Please try again later.',
-});
+export const generalDistributedLimiter = createDistributedRateLimiter(
+  'general',
+  {
+    windowMs: 15 * 60 * 1000,
+    max: 1000, // Generous limit for modern SPA multi-endpoint dashboards
+    message: 'Too many requests. Please try again later.',
+  },
+  (req: any) => {
+    // If authenticated, rate limit per user/household rather than sharing IP bucket
+    if (req.user?.userId) {
+      return `user:${req.user.userId}`;
+    }
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
+    return `ip:${createHash('sha256').update(ip).digest('hex').substring(0, 16)}`;
+  }
+);
 
 export const loginDistributedLimiter = createDistributedRateLimiter(
   'login',
