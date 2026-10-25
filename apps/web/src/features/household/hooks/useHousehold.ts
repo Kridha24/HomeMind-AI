@@ -16,7 +16,7 @@ export interface AvailableHouseholdItem {
 
 export function useHousehold() {
   const queryClient = useQueryClient();
-  const { household, user, updateHousehold, updateUser } = useAuthStore();
+  const { household, user, updateHousehold, updateUser, updateTokens } = useAuthStore();
   const householdId = household?.id || 'default';
   const userId = user?.id;
 
@@ -279,6 +279,13 @@ export function useHousehold() {
       if (data?.user) {
         updateUser(data.user);
       }
+      if (data?.accessToken) {
+        updateTokens(data.accessToken);
+        socketService.updateAuthToken(data.accessToken);
+      }
+      if (data?.household?.id) {
+        socketService.getSocket()?.emit('join_household', { householdId: data.household.id });
+      }
       queryClient.clear(); // Clear all tenant caches on household switch
       invalidateAll();
     },
@@ -295,6 +302,13 @@ export function useHousehold() {
       }
       if (data?.user) {
         updateUser(data.user);
+      }
+      if (data?.accessToken) {
+        updateTokens(data.accessToken);
+        socketService.updateAuthToken(data.accessToken);
+      }
+      if (data?.household?.id) {
+        socketService.getSocket()?.emit('join_household', { householdId: data.household.id });
       }
       queryClient.clear(); // Clear all tenant caches on household switch
       invalidateAll();

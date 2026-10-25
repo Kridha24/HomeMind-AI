@@ -92,13 +92,38 @@ io.on('connection', (socket) => {
     io.to(`household_${householdId}`).emit('household_online_members', Array.from(onlineHouseholdUsers[householdId]));
   }
 
-  // 1. Join Household manually if requested
-  socket.on('join_household', () => {
+  // 1. Join Household manually or dynamically when switching/joining
+  socket.on('join_household', async (data?: { householdId?: string }) => {
     if (userId) {
       socket.join(`user_${userId}`);
     }
-    if (householdId) {
-      socket.join(`household_${householdId}`);
+    let targetHouseholdId = data?.householdId || socket.data.user?.householdId || householdId;
+
+    if (!targetHouseholdId && userId) {
+      try {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { householdId: true }
+        });
+        if (dbUser?.householdId) {
+          targetHouseholdId = dbUser.householdId;
+        }
+      } catch {}
+    }
+
+    if (targetHouseholdId) {
+      if (socket.data.user) {
+        socket.data.user.householdId = targetHouseholdId;
+      }
+      socket.join(`household_${targetHouseholdId}`);
+
+      if (!onlineHouseholdUsers[targetHouseholdId]) {
+        onlineHouseholdUsers[targetHouseholdId] = new Set();
+      }
+      onlineHouseholdUsers[targetHouseholdId].add(userId);
+
+      io.to(`household_${targetHouseholdId}`).emit('household_online_members', Array.from(onlineHouseholdUsers[targetHouseholdId]));
+      console.log(`[Socket.IO] User ${userId} active in household_${targetHouseholdId}`);
     }
   });
 
@@ -135,7 +160,8 @@ io.on('connection', (socket) => {
     recipientId?: string;
     replyTo?: any;
   }) => {
-    if (!householdId || !userId) return;
+    const activeHouseholdId = socket.data.user?.householdId || householdId;
+    if (!activeHouseholdId || !userId) return;
 
     const messageData = {
       id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
@@ -152,7 +178,7 @@ io.on('connection', (socket) => {
       io.to(`user_${payload.recipientId}`).emit('family_new_message', messageData);
       socket.emit('family_new_message', messageData);
     } else {
-      io.to(`household_${householdId}`).emit('family_new_message', messageData);
+      io.to(`household_${activeHouseholdId}`).emit('family_new_message', messageData);
     }
   });
 
@@ -383,8 +409,9 @@ io.on('connection', (socket) => {
     callerName: string;
     callerAvatar?: string;
   }) => {
-    if (!userId || !householdId) return;
-    await webrtcSignaling.handleCallUser(io, userId, householdId, data);
+    if (!userId) return;
+    const activeHouseholdId = socket.data.user?.householdId || householdId || '';
+    await webrtcSignaling.handleCallUser(io, userId, activeHouseholdId, data);
   });
 
   // Call Answered

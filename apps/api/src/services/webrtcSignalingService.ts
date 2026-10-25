@@ -84,7 +84,22 @@ export class WebRTCSignalingManager {
       return { success: false, error: 'Cannot call yourself' };
     }
 
-    const isHouseholdCall = targetUserId === 'household' || targetUserId === callerHouseholdId;
+    // Fetch live caller and callee profiles from DB to prevent stale token mismatches
+    const [caller, callee] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: callerId },
+        select: { id: true, householdId: true, name: true },
+      }),
+      targetUserId === 'household'
+        ? null
+        : prisma.user.findUnique({
+            where: { id: targetUserId },
+            select: { id: true, householdId: true, name: true },
+          }),
+    ]);
+
+    const effectiveCallerHouseholdId = caller?.householdId || callerHouseholdId;
+    const isHouseholdCall = targetUserId === 'household' || targetUserId === effectiveCallerHouseholdId || targetUserId === callerHouseholdId;
 
     if (isHouseholdCall) {
       // Clean up caller's previous session if any
@@ -110,7 +125,7 @@ export class WebRTCSignalingManager {
           this.activeCalls.delete(callId);
           this.userToCallMap.delete(callerId);
 
-          io.to(`household_${callerHouseholdId}`).emit('webrtc_call_ended', {
+          io.to(`household_${effectiveCallerHouseholdId}`).emit('webrtc_call_ended', {
             callId,
             reason: 'Call invitation timed out',
           });
@@ -119,7 +134,7 @@ export class WebRTCSignalingManager {
 
       const session: CallSession = {
         callId,
-        householdId: callerHouseholdId,
+        householdId: effectiveCallerHouseholdId,
         callerId,
         calleeId: 'household',
         callType: callType || 'video',
@@ -132,10 +147,10 @@ export class WebRTCSignalingManager {
       this.activeCalls.set(callId, session);
       this.userToCallMap.set(callerId, callId);
 
-      console.log(`[WebRTC] Broadcasted Family Group Call to household_${callerHouseholdId} from ${callerId} (${callType})`);
+      console.log(`[WebRTC] Broadcasted Family Group Call to household_${effectiveCallerHouseholdId} from ${callerId} (${callType})`);
 
       // Relay incoming call to all other members in the household simultaneously!
-      io.to(`household_${callerHouseholdId}`).except(`user_${callerId}`).emit('webrtc_incoming_call', {
+      io.to(`household_${effectiveCallerHouseholdId}`).except(`user_${callerId}`).emit('webrtc_incoming_call', {
         callId,
         callerId,
         callerName: `${callerName} (Family Group Call)`,
@@ -148,12 +163,7 @@ export class WebRTCSignalingManager {
       return { success: true, callId };
     }
 
-    // 1. Verify caller and callee belong to the same household (Cross-Household Defense)
-    const callee = await prisma.user.findUnique({
-      where: { id: targetUserId },
-      select: { id: true, householdId: true, name: true },
-    });
-
+    // 1. Verify caller and callee exist (Cross-Household Defense)
     if (!callee || !callee.householdId) {
       io.to(`user_${callerId}`).emit('webrtc_call_error', {
         error: 'Target user not found or has no active household',
@@ -161,15 +171,46 @@ export class WebRTCSignalingManager {
       return { success: false, error: 'Target user not found' };
     }
 
-    if (callee.householdId !== callerHouseholdId) {
+    // Determine authorization:
+    // 1. Do caller and callee share the same household in the live DB?
+    const liveHouseholdMatch = Boolean(caller?.householdId && callee.householdId && caller.householdId === callee.householdId);
+    
+    // 2. Does caller's token match callee's household (or vice versa)?
+    const tokenHouseholdMatch = Boolean(
+      (callerHouseholdId && callee.householdId && callerHouseholdId === callee.householdId) ||
+      (caller?.householdId && callerHouseholdId && caller.householdId === callerHouseholdId)
+    );
+
+    let isAuthorizedFamily = liveHouseholdMatch || tokenHouseholdMatch;
+
+    // 3. Fallback: Do they share any conversation (DIRECT or HOUSEHOLD) in the DB?
+    if (!isAuthorizedFamily && caller && callee) {
+      const sharedMembership = await prisma.conversationMember.findFirst({
+        where: {
+          userId: callerId,
+          conversation: {
+            members: {
+              some: { userId: targetUserId }
+            }
+          }
+        }
+      });
+      if (sharedMembership) {
+        isAuthorizedFamily = true;
+      }
+    }
+
+    if (!isAuthorizedFamily) {
       console.warn(
-        `[WebRTC Security Alert] Cross-household call rejected: caller ${callerId} (HH: ${callerHouseholdId}) attempted to call ${targetUserId} (HH: ${callee.householdId})`
+        `[WebRTC Security Alert] Cross-household call rejected: caller ${callerId} (HH: ${caller?.householdId || callerHouseholdId}) attempted to call ${targetUserId} (HH: ${callee.householdId})`
       );
       io.to(`user_${callerId}`).emit('webrtc_call_error', {
         error: 'Unauthorized: Cross-household calling is strictly prohibited',
       });
       return { success: false, error: 'Cross-household calling prohibited' };
     }
+
+    const effectiveCallHouseholdId = caller?.householdId || callee.householdId || callerHouseholdId;
 
     // 2. Clean up any stale or pending calling sessions for caller or between caller and callee
     const callerCallId = this.userToCallMap.get(callerId);
@@ -219,11 +260,11 @@ export class WebRTCSignalingManager {
       return { success: false, error: 'Caller already engaged in an active call' };
     }
 
-    // 4. Generate unique unpredictable Call ID
+    // 5. Generate unique unpredictable Call ID
     const callId = data.callId || `call_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const expiresAt = Date.now() + 45000; // 45 seconds call invitation window
 
-    // 5. Automatic Call Timeout Handler
+    // 6. Automatic Call Timeout Handler
     const timeoutTimer = setTimeout(() => {
       const active = this.activeCalls.get(callId);
       if (active && active.status === 'calling') {
@@ -246,7 +287,7 @@ export class WebRTCSignalingManager {
 
     const session: CallSession = {
       callId,
-      householdId: callerHouseholdId,
+      householdId: effectiveCallHouseholdId,
       callerId,
       calleeId: targetUserId,
       callType: callType || 'video',
@@ -262,7 +303,7 @@ export class WebRTCSignalingManager {
 
     console.log(`[WebRTC] Call initiated [${callId}]: ${callerId} -> ${targetUserId} (${callType})`);
 
-    // 6. Relay incoming call to callee via Socket.IO
+    // 7. Relay incoming call to callee via Socket.IO
     io.to(`user_${targetUserId}`).emit('webrtc_incoming_call', {
       callId,
       callerId,
@@ -272,7 +313,7 @@ export class WebRTCSignalingManager {
       signalData,
     });
 
-    // 7. Dispatch High-Priority Android/iOS Call Notification
+    // 8. Dispatch High-Priority Android/iOS Call Notification
     // Security Rule: NEVER send SDP, ICE candidates, JWT, or TURN credentials in push notification payload!
     const sanitizedPushPayload = {
       type: 'INCOMING_CALL',
@@ -281,7 +322,7 @@ export class WebRTCSignalingManager {
       callerName,
       callerAvatar,
       callType,
-      householdId: callerHouseholdId,
+      householdId: effectiveCallHouseholdId,
     };
 
     DeviceTokenService.getUserTokens(targetUserId)

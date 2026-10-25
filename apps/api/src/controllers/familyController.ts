@@ -8,6 +8,7 @@ import {
   canViewOtherMemberFinancials,
   canPromoteCoOwner,
 } from '../utils/permissions';
+import { generateAccessToken } from '../utils/jwt';
 
 export const getHouseholdMembers = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -492,9 +493,14 @@ export const joinHouseholdWithCode = async (req: AuthenticatedRequest, res: Resp
           dedupKey: `member-joined-${userId}-${newHousehold.id}`,
         }).catch(() => {});
       })
-      .catch(() => {});
+    const accessToken = generateAccessToken({
+      userId: updatedUser!.id,
+      email: updatedUser!.email || undefined,
+      role: updatedUser!.role,
+      householdId: newHousehold.id,
+    });
 
-    res.json({ user: updatedUser, household: newHousehold });
+    res.json({ user: updatedUser, household: newHousehold, accessToken });
   } catch (err: any) {
     console.error('[joinHouseholdWithCode] Error:', err.message);
     res.status(500).json({ error: 'Failed to join household.' });
@@ -655,13 +661,19 @@ export const switchHousehold = async (req: AuthenticatedRequest, res: Response) 
       emitMemberUpdate(currentHouseholdId, { action: 'member_left', userId });
       await invalidateHouseholdDashboard(currentHouseholdId).catch(() => {});
     }
-    await invalidateHouseholdDashboard(targetHousehold.id).catch(() => {});
+    const accessToken = generateAccessToken({
+      userId: updatedUser.id,
+      email: updatedUser.email || undefined,
+      role: updatedUser.role,
+      householdId: targetHousehold.id,
+    });
 
     res.json({
       success: true,
       message: `Switched to ${targetHousehold.name}`,
       user: updatedUser,
       household: targetHousehold,
+      accessToken,
     });
   } catch (err: any) {
     console.error('[switchHousehold] Error:', err.message);
