@@ -24,6 +24,7 @@ export const AutomaticSmsSettingsSection: React.FC = () => {
   const [autoImport, setAutoImport] = useState(SmsSyncManager.isAutoImportEnabled());
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [permissionState, setPermissionState] = useState<'ALLOWED' | 'DENIED' | 'NOT_REQUESTED' | 'WEB_UNAVAILABLE'>('NOT_REQUESTED');
+  const [notifAccessGranted, setNotifAccessGranted] = useState(false);
   const [lastScanTime, setLastScanTime] = useState<number>(SmsSyncManager.getLastScanTimestamp());
   const [detectedCount, setDetectedCount] = useState<number>(0);
   const [needsReviewCount, setNeedsReviewCount] = useState<number>(0);
@@ -48,6 +49,9 @@ export const AutomaticSmsSettingsSection: React.FC = () => {
         } else {
           setPermissionState('NOT_REQUESTED');
         }
+
+        const notifOk = await SmsPluginBridge.isNotificationAccessGranted();
+        setNotifAccessGranted(notifOk);
       }
 
       const res = await apiClient.get('/transactions/stats');
@@ -243,6 +247,40 @@ export const AutomaticSmsSettingsSection: React.FC = () => {
           />
           <div className="w-10 h-5 bg-secondary/80 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50"></div>
         </label>
+      </div>
+
+      {/* UPI App Direct Detection (PhonePe, GPay, Paytm) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-surface-elevated border border-primary/10">
+        <div>
+          <div className="flex items-center gap-2">
+            <h4 className="text-xs font-bold text-primary">
+              PhonePe, GPay & Paytm Direct Detection
+            </h4>
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                notifAccessGranted
+                  ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30'
+                  : 'bg-amber-500/15 text-amber-500 border border-amber-500/30'
+              }`}
+            >
+              {notifAccessGranted ? 'Active' : 'Setup Required'}
+            </span>
+          </div>
+          <p className="text-[11px] text-secondary mt-0.5">
+            Detects payments even if bank SMS does not arrive. Requires Android Notification Access.
+          </p>
+        </div>
+        {!notifAccessGranted && (
+          <button
+            type="button"
+            onClick={async () => {
+              await SmsPluginBridge.openNotificationAccessSettings();
+            }}
+            className="text-xs font-bold px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-sm transition-all shrink-0 self-start sm:self-auto"
+          >
+            Enable Access
+          </button>
+        )}
       </div>
 
       {/* Feedback status banner */}

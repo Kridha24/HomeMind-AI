@@ -20,6 +20,7 @@ import { AddGroceryModal } from './components/common/AddGroceryModal';
 import { AddTaskModal } from './components/common/AddTaskModal';
 import { AddApplianceModal } from './components/common/AddApplianceModal';
 import { AddMedicineModal } from './components/common/AddMedicineModal';
+import { PermissionsOnboardingModal } from './components/common/PermissionsOnboardingModal';
 
 // Pages
 import { Dashboard } from './pages/Dashboard';
@@ -87,6 +88,9 @@ function AppShell() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isApplianceModalOpen, setIsApplianceModalOpen] = useState(false);
   const [isMedicineModalOpen, setIsMedicineModalOpen] = useState(false);
+  const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(() => {
+    return localStorage.getItem('homemind_permissions_prompted') !== 'true';
+  });
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -413,6 +417,10 @@ function AppShell() {
       <AddMedicineModal
         isOpen={isMedicineModalOpen}
         onClose={() => setIsMedicineModalOpen(false)}
+      />
+      <PermissionsOnboardingModal
+        isOpen={isPermissionsModalOpen}
+        onClose={() => setIsPermissionsModalOpen(false)}
       />
 
       <AIChatDrawer isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />

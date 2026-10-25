@@ -168,6 +168,30 @@ class HomeMindSmsPlugin : Plugin() {
         }
     }
 
+    @PluginMethod
+    fun isNotificationAccessGranted(call: PluginCall) {
+        val packageNames = androidx.core.app.NotificationManagerCompat.getEnabledListenerPackages(context)
+        val granted = packageNames.contains(context.packageName)
+        val ret = JSObject().apply {
+            put("granted", granted)
+            put("status", if (granted) "GRANTED" else "DENIED")
+        }
+        call.resolve(ret)
+    }
+
+    @PluginMethod
+    fun openNotificationAccessSettings(call: PluginCall) {
+        try {
+            val intent = android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            call.resolve(JSObject().put("success", true))
+        } catch (e: Exception) {
+            call.reject("Failed to open notification listener settings: ${e.message}", e)
+        }
+    }
+
     companion object {
         var instance: HomeMindSmsPlugin? = null
 

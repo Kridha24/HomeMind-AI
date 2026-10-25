@@ -11,6 +11,8 @@ export interface HomeMindSmsPluginInterface {
   parseRawSms(options: { body: string; sender?: string; timestamp?: number }): Promise<{ success: boolean; transaction?: ParsedSmsTransaction; error?: string }>;
   getPendingTransactions(): Promise<{ pending: ParsedSmsTransaction[]; count: number }>;
   clearPendingTransactions(): Promise<{ success: boolean }>;
+  isNotificationAccessGranted(): Promise<{ granted: boolean; status: string }>;
+  openNotificationAccessSettings(): Promise<{ success: boolean }>;
   addListener(
     eventName: 'onNewSmsTransaction',
     listenerFunc: (data: { transaction: ParsedSmsTransaction }) => void
@@ -115,6 +117,30 @@ export class SmsPluginBridge {
         console.warn('Failed to clear native pending queue:', e);
       }
     }
+  }
+
+  static async isNotificationAccessGranted(): Promise<boolean> {
+    if (this.isNative()) {
+      try {
+        const res = await NativeSmsPlugin.isNotificationAccessGranted();
+        return res.granted;
+      } catch (e) {
+        console.warn('Native isNotificationAccessGranted error:', e);
+      }
+    }
+    return false;
+  }
+
+  static async openNotificationAccessSettings(): Promise<boolean> {
+    if (this.isNative()) {
+      try {
+        const res = await NativeSmsPlugin.openNotificationAccessSettings();
+        return res.success;
+      } catch (e) {
+        console.warn('Native openNotificationAccessSettings error:', e);
+      }
+    }
+    return false;
   }
 
   static async addTransactionListener(
