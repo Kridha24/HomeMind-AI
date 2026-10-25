@@ -252,12 +252,10 @@ export const Login: React.FC = () => {
       setLoadingState('success');
       setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
       await fetchSettings();
-      setPendingSuccessData({ isNew: !!res.data.isNewRegistration, userName: res.data.user?.name || '' });
-      setTimeout(() => {
-        if (!isMountedRef.current) return;
-        setShowSuccessOverlay(true);
-        setLoadingState('idle');
-      }, 300);
+      navigate(safeRedirect, {
+        replace: true,
+        state: { justLoggedIn: true, welcomeName: res.data.user?.name || '' },
+      });
     } catch (err: any) {
       if (!isMountedRef.current || googleAttemptRef.current?.id !== attemptId) return;
 
@@ -644,8 +642,10 @@ export const Login: React.FC = () => {
             termsAccepted={termsAccepted}
             onTermsChange={setTermsAccepted}
             onSuccess={async (isNew, userName) => {
-              setPendingSuccessData({ isNew: !!isNew, userName: userName || '' });
-              setShowSuccessOverlay(true);
+              navigate(safeRedirect, {
+                replace: true,
+                state: { justLoggedIn: true, welcomeName: userName || '' },
+              });
             }}
           />
         </section>
@@ -678,14 +678,6 @@ export const Login: React.FC = () => {
           <span>🇮🇳</span>
         </span>
       </footer>
-
-      {/* Full-screen Home Entry Animation upon sign-in */}
-      {(showSuccessOverlay || previewTransition) && (
-        <HomeEntryTransition
-          userName={pendingSuccessData?.userName || 'Family'}
-          onFinish={handleOverlayFinish}
-        />
-      )}
     </div>
   );
 };

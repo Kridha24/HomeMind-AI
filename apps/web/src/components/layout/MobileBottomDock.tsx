@@ -33,11 +33,12 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 5 tabs matching REFERENCE 2: Home, Finance, Groceries, Tasks, Family
+  // 6 tabs: Home, Finance, Groceries, AI Chat, Tasks, Family
   const navItems = [
     { label: 'Home', path: '/', icon: Home },
     { label: 'Finance', path: '/expenses', icon: Wallet },
     { label: 'Groceries', path: '/groceries', icon: ShoppingCart },
+    { label: 'AI Chat', path: 'ai_action', icon: Sparkles, isAction: true },
     { label: 'Tasks', path: '/tasks', icon: CheckSquare },
     { label: 'Family', path: '/family', icon: Users },
   ];
@@ -133,13 +134,32 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
         </div>
       )}
 
-      {/* ── 7. Fixed White Bottom Navigation Dock ─────────────────────── */}
+      {/* ── 7. Fixed Bottom Navigation Dock with AI ─────────────────────── */}
       <nav
-        className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800 px-2 py-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] md:hidden shadow-[0_-4px_25px_rgba(0,0,0,0.04)]"
+        className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800 px-1.5 py-1 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] md:hidden shadow-[0_-4px_25px_rgba(0,0,0,0.04)]"
         aria-label="Mobile Navigation"
       >
         <div className="flex items-center justify-around max-w-md mx-auto">
           {navItems.map((item) => {
+            if (item.isAction) {
+              return (
+                <button
+                  key="ai_action"
+                  type="button"
+                  onClick={onOpenAIChat}
+                  className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] py-0.5 px-1 rounded-2xl transition-all duration-150 active:scale-95 cursor-pointer group"
+                  aria-label="Ask HomeMind AI"
+                >
+                  <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-xs shadow-indigo-500/35 group-hover:scale-105 transition-transform">
+                    <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                  </div>
+                  <span className="text-[9.5px] font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight mt-0.5">
+                    {item.label}
+                  </span>
+                </button>
+              );
+            }
+
             const isActive =
               item.path === '/'
                 ? location.pathname === '/'
@@ -154,15 +174,15 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
                 key={item.path}
                 type="button"
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center justify-center min-h-[44px] min-w-[48px] py-1 px-2.5 rounded-2xl transition-all duration-150 active:scale-95 cursor-pointer ${
+                className={`flex flex-col items-center justify-center min-h-[44px] min-w-[44px] py-0.5 px-1 rounded-2xl transition-all duration-150 active:scale-95 cursor-pointer ${
                   isActive
                     ? 'text-blue-600 dark:text-blue-400 font-bold'
                     : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
                 aria-label={item.label}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.75]'}`} />
-                <span className={`text-[10px] tracking-tight mt-0.5 ${isActive ? 'font-bold' : 'font-medium'}`}>
+                <Icon className={`w-4.5 h-4.5 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.75]'}`} />
+                <span className={`text-[9.5px] tracking-tight mt-0.5 ${isActive ? 'font-bold' : 'font-medium'}`}>
                   {item.label}
                 </span>
               </button>

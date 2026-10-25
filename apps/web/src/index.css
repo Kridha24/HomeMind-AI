@@ -367,3 +367,32 @@
   animation: hm-ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
+/* =====================================================================
+   Mobile GPU & WebView Rendering Optimization (Zero-Lag Performance)
+   ===================================================================== */
+@media (max-width: 640px) {
+  /* Hardware acceleration & smooth touch scrolling */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Disable expensive multi-layered radial gradient repaints on mobile WebViews */
+  .hm-ambient {
+    display: none !important;
+  }
+
+  /* Cap heavy backdrop-filter blurs to prevent mobile GPU frame-drops */
+  .backdrop-blur-2xl,
+  .backdrop-blur-xl,
+  .backdrop-blur-lg {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+
+  /* Fast, responsive tap feedback */
+  button, a {
+    touch-action: manipulation;
+  }
+}
+
+

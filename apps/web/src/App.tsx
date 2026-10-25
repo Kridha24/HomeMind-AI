@@ -181,11 +181,18 @@ function AppShell() {
     }
 
     const handleOpenNotifications = () => setIsNotificationsOpen(true);
+    const handleToggleMobileSidebar = () => setIsMobileSidebarOpen((p) => !p);
+    const handleOpenMobileSidebar = () => setIsMobileSidebarOpen(true);
+
     window.addEventListener('open_notifications', handleOpenNotifications);
+    window.addEventListener('toggle_mobile_sidebar', handleToggleMobileSidebar);
+    window.addEventListener('open_mobile_sidebar', handleOpenMobileSidebar);
 
     return () => {
       mediaQuery.removeEventListener('change', handler);
       window.removeEventListener('open_notifications', handleOpenNotifications);
+      window.removeEventListener('toggle_mobile_sidebar', handleToggleMobileSidebar);
+      window.removeEventListener('open_mobile_sidebar', handleOpenMobileSidebar);
     };
   }, [theme]);
 

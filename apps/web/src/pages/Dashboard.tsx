@@ -388,6 +388,9 @@ export const Dashboard: React.FC = () => {
           members={membersList}
           onInviteClick={() => setShowInviteModal(true)}
           onMemberClick={handleMemberClick}
+          onToggleSidebar={() => {
+            window.dispatchEvent(new CustomEvent('toggle_mobile_sidebar'));
+          }}
           onOpenNotifications={() => {
             window.dispatchEvent(new CustomEvent('open_notifications'));
           }}

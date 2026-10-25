@@ -53,6 +53,7 @@ export const FamilyWorkspace: React.FC = () => {
 
   // Active View Tab: 'workspace' (Control Center) or 'communication' (Chat & WebRTC Calls)
   const [activeView, setActiveView] = useState<'workspace' | 'communication'>('workspace');
+  const [mobileSection, setMobileSection] = useState<'members' | 'workload' | 'activity'>('members');
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -223,33 +224,74 @@ export const FamilyWorkspace: React.FC = () => {
             unpaidBillsCount={bills.filter((b) => b.status === 'UNPAID' || b.status === 'OVERDUE').length}
           />
 
+          {/* Mobile-Only Segmented Switcher (<640px) */}
+          <div className="flex sm:hidden items-center p-1 bg-surface-elevated rounded-2xl border border-primary/20">
+            <button
+              type="button"
+              onClick={() => setMobileSection('members')}
+              className={`flex-1 py-1.5 px-2 text-center text-xs font-bold rounded-xl transition-all ${
+                mobileSection === 'members'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-secondary hover:text-primary'
+              }`}
+            >
+              Members ({members.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileSection('workload')}
+              className={`flex-1 py-1.5 px-2 text-center text-xs font-bold rounded-xl transition-all ${
+                mobileSection === 'workload'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-secondary hover:text-primary'
+              }`}
+            >
+              Workload
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileSection('activity')}
+              className={`flex-1 py-1.5 px-2 text-center text-xs font-bold rounded-xl transition-all ${
+                mobileSection === 'activity'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-secondary hover:text-primary'
+              }`}
+            >
+              Activity
+            </button>
+          </div>
+
           {/* Main Content Grid: 60% Left (Members & Responsibilities) / 40% Right (Recent Activity) */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Column (60% on desktop) */}
-            <div className="lg:col-span-7 space-y-6">
+            <div className={`lg:col-span-7 space-y-6 ${mobileSection === 'activity' ? 'hidden sm:block' : 'block'}`}>
               {members.length <= 1 && (
                 <FamilyWorkspaceEmptyState
                   onInviteMember={() => setIsInviteOpen(true)}
                   canInvite={user?.role === 'OWNER' || user?.role === 'ADMIN'}
                 />
               )}
-              <MemberGrid
-                members={members}
-                currentUserId={user?.id}
-                currentUserRole={user?.role}
-                memberTaskCounts={memberTaskCounts}
-                onSelectMember={(m) => setDetailMember(m)}
-                onOpenRoleChange={(m) => setRoleMember(m)}
-                onOpenTransferOwnership={(m) => setTransferTarget(m)}
-                onOpenRemoveMember={(m) => setRemovalMember(m)}
-                onViewMemberTasks={(m) => navigate(`/tasks?assignee=${encodeURIComponent(m.id)}`)}
-                onInvite={() => setIsInviteOpen(true)}
-              />
-              <HouseholdResponsibilities members={members} tasks={tasks} />
+              <div className={mobileSection === 'workload' ? 'hidden sm:block' : 'block'}>
+                <MemberGrid
+                  members={members}
+                  currentUserId={user?.id}
+                  currentUserRole={user?.role}
+                  memberTaskCounts={memberTaskCounts}
+                  onSelectMember={(m) => setDetailMember(m)}
+                  onOpenRoleChange={(m) => setRoleMember(m)}
+                  onOpenTransferOwnership={(m) => setTransferTarget(m)}
+                  onOpenRemoveMember={(m) => setRemovalMember(m)}
+                  onViewMemberTasks={(m) => navigate(`/tasks?assignee=${encodeURIComponent(m.id)}`)}
+                  onInvite={() => setIsInviteOpen(true)}
+                />
+              </div>
+              <div className={mobileSection === 'members' ? 'hidden sm:block' : 'block'}>
+                <HouseholdResponsibilities members={members} tasks={tasks} />
+              </div>
             </div>
 
             {/* Right Column (40% on desktop) */}
-            <div className="lg:col-span-5 space-y-6">
+            <div className={`lg:col-span-5 space-y-6 ${mobileSection === 'activity' ? 'block' : 'hidden sm:block'}`}>
               <HouseholdActivity activities={activity} isLoading={loadingActivity} />
             </div>
           </div>
