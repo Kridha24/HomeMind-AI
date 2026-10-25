@@ -134,29 +134,30 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
         </div>
       )}
 
-      {/* ── 7. Fixed Bottom Navigation Dock with AI ─────────────────────── */}
+      {/* ── Fixed Bottom Navigation Dock with AI (Dribbble/Figma Minimalist 6-Section UI) ── */}
       <nav
-        className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800 px-1.5 py-1 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] md:hidden shadow-[0_-4px_25px_rgba(0,0,0,0.04)]"
+        className="fixed bottom-0 inset-x-0 z-40 bg-white/98 dark:bg-slate-900/98 backdrop-blur-xl border-t border-slate-100/90 dark:border-slate-800/80 px-2 pt-1 pb-[calc(0.55rem+env(safe-area-inset-bottom,0px))] md:hidden shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)] transition-colors"
         aria-label="Mobile Navigation"
       >
-        <div className="flex items-center justify-around max-w-md mx-auto">
+        <div className="grid grid-cols-6 items-end w-full max-w-md mx-auto">
           {navItems.map((item) => {
             if (item.isAction) {
               return (
-                <button
-                  key="ai_action"
-                  type="button"
-                  onClick={onOpenAIChat}
-                  className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] py-0.5 px-1 rounded-2xl transition-all duration-150 active:scale-95 cursor-pointer group"
-                  aria-label="Ask HomeMind AI"
-                >
-                  <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-xs shadow-indigo-500/35 group-hover:scale-105 transition-transform">
-                    <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                  </div>
-                  <span className="text-[9.5px] font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight mt-0.5">
-                    {item.label}
-                  </span>
-                </button>
+                <div key="ai_action" className="col-span-1 flex flex-col items-center justify-end relative">
+                  <button
+                    type="button"
+                    onClick={onOpenAIChat}
+                    className="flex flex-col items-center justify-center -translate-y-2.5 active:scale-95 transition-all duration-200 cursor-pointer group focus:outline-none"
+                    aria-label="Ask HomeMind AI"
+                  >
+                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 via-purple-600 to-fuchsia-500 text-white flex items-center justify-center shadow-[0_8px_20px_rgba(147,51,234,0.38)] group-hover:scale-105 group-hover:shadow-[0_10px_24px_rgba(147,51,234,0.5)] transition-all">
+                      <Sparkles className="w-5 h-5 stroke-[1.8] text-white" />
+                    </div>
+                    <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 tracking-tight mt-1 font-sans">
+                      {item.label}
+                    </span>
+                  </button>
+                </div>
               );
             }
 
@@ -164,28 +165,37 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
               item.path === '/'
                 ? location.pathname === '/'
                 : location.pathname.startsWith(item.path) ||
-                  (item.path === '/expenses' && location.pathname.startsWith('/finance')) ||
+                  (item.path === '/expenses' && (location.pathname.startsWith('/finance') || location.pathname.startsWith('/income'))) ||
                   (item.path === '/groceries' && location.pathname.startsWith('/inventory'));
 
             const Icon = item.icon;
 
             return (
-              <button
-                key={item.path}
-                type="button"
-                onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center justify-center min-h-[44px] min-w-[44px] py-0.5 px-1 rounded-2xl transition-all duration-150 active:scale-95 cursor-pointer ${
-                  isActive
-                    ? 'text-blue-600 dark:text-blue-400 font-bold'
-                    : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                }`}
-                aria-label={item.label}
-              >
-                <Icon className={`w-4.5 h-4.5 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.75]'}`} />
-                <span className={`text-[9.5px] tracking-tight mt-0.5 ${isActive ? 'font-bold' : 'font-medium'}`}>
-                  {item.label}
-                </span>
-              </button>
+              <div key={item.path} className="col-span-1 flex flex-col items-center justify-end">
+                <button
+                  type="button"
+                  onClick={() => navigate(item.path)}
+                  className={`w-full flex flex-col items-center justify-center py-1 transition-all duration-150 active:scale-95 cursor-pointer focus:outline-none ${
+                    isActive
+                      ? 'text-purple-600 dark:text-purple-400'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                  aria-label={item.label}
+                >
+                  <Icon
+                    className={`w-5 h-5 transition-transform ${
+                      isActive ? 'stroke-[2] scale-105' : 'stroke-[1.6]'
+                    }`}
+                  />
+                  <span
+                    className={`text-[10px] tracking-tight mt-1 font-sans ${
+                      isActive ? 'font-bold' : 'font-medium'
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                </button>
+              </div>
             );
           })}
         </div>
