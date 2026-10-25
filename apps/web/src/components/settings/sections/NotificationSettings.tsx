@@ -27,6 +27,7 @@ import { SettingsCard } from '../primitives/SettingsCard';
 import { SettingsRow } from '../primitives/SettingsRow';
 import { SettingsToggle } from '../primitives/SettingsToggle';
 import { webPushService, DeviceInfo } from '../../../services/webPushService';
+import { firebaseConfig } from '../../../config/firebase';
 
 export const NotificationSettings: React.FC = () => {
   const { pushNotifications, emailAlerts, updateSettings } = useSettingStore();
@@ -304,6 +305,18 @@ export const NotificationSettings: React.FC = () => {
               Notifications are currently blocked for this site in your browser. Click the lock or settings
               icon next to the URL in your browser's address bar to reset permission and re-enable notifications.
             </span>
+          </div>
+        )}
+
+        {!firebaseConfig.apiKey && (
+          <div className="mt-4 p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-[11px] text-indigo-700 dark:text-indigo-300 flex items-start gap-2">
+            <Info className="w-4 h-4 shrink-0 mt-0.5 text-indigo-500" />
+            <div className="space-y-0.5">
+              <span className="font-semibold block">Push Notification Notice:</span>
+              <span>
+                Firebase Cloud Messaging keys are currently optional and not set in environment variables. WebSockets, live audio calling, and in-app family updates are active and functioning.
+              </span>
+            </div>
           </div>
         )}
       </div>

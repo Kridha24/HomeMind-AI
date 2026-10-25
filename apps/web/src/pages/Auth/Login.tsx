@@ -40,6 +40,7 @@ export const Login: React.FC = () => {
   const [ecosystemHighlighted, setEcosystemHighlighted] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [selectedLang, setSelectedLang] = useState('en-IN');
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const googleButtonRef = useRef<HTMLDivElement>(null);
   const loginSectionRef = useRef<HTMLDivElement>(null);
@@ -204,6 +205,12 @@ export const Login: React.FC = () => {
 
   const submitGoogleToken = async (googleToken: string, attemptId: string) => {
     if (!isMountedRef.current) return;
+    if (!termsAccepted) {
+      setError('Please accept the Terms of Service & Privacy Policy before signing in.');
+      setLoadingGoogle(false);
+      setLoadingState('idle');
+      return;
+    }
     if (googleAttemptRef.current?.id !== attemptId) {
       console.warn('[AUTH_UI] ignoring stale google token response');
       return;
@@ -255,6 +262,10 @@ export const Login: React.FC = () => {
 
   const triggerGoogleSignIn = async () => {
     setError('');
+    if (!termsAccepted) {
+      setError('Please accept the Terms of Service & Privacy Policy before signing in.');
+      return;
+    }
     if (!GOOGLE_CLIENT_ID) {
       setError('Google sign-in is not configured. Use phone login or set VITE_GOOGLE_CLIENT_ID.');
       return;
@@ -605,6 +616,8 @@ export const Login: React.FC = () => {
             error={error}
             onClearError={() => setError('')}
             googleConfigured={!!GOOGLE_CLIENT_ID}
+            termsAccepted={termsAccepted}
+            onTermsChange={setTermsAccepted}
             onSuccess={async (isNew, userName) => {
               setPendingSuccessData({ isNew: !!isNew, userName: userName || '' });
               setShowSuccessOverlay(true);

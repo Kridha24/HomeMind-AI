@@ -18,6 +18,8 @@ interface LoginCardProps {
   onPhoneClick?: () => void;
   googleConfigured?: boolean;
   onSuccess?: (isNewRegistration?: boolean, userName?: string) => void;
+  termsAccepted?: boolean;
+  onTermsChange?: (accepted: boolean) => void;
 }
 
 export const LoginCard: React.FC<LoginCardProps> = ({
@@ -30,6 +32,8 @@ export const LoginCard: React.FC<LoginCardProps> = ({
   onClearError,
   googleConfigured = true,
   onSuccess,
+  termsAccepted: propTermsAccepted,
+  onTermsChange,
 }) => {
   // Direct in-card phone authentication state
   const [phoneStep, setPhoneStep] = useState<'PHONE' | 'OTP'>('PHONE');
@@ -42,6 +46,26 @@ export const LoginCard: React.FC<LoginCardProps> = ({
   const [infoMessage, setInfoMessage] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
   const otpInputRef = useRef<HTMLInputElement>(null);
+
+  // Mandatory Terms & Conditions acceptance
+  const [internalTerms, setInternalTerms] = useState(false);
+  const isTermsAccepted = propTermsAccepted !== undefined ? propTermsAccepted : internalTerms;
+  const [termsError, setTermsError] = useState(false);
+
+  const setTermsAccepted = (val: boolean) => {
+    setInternalTerms(val);
+    if (onTermsChange) onTermsChange(val);
+    if (val) {
+      setTermsError(false);
+      if (localError.includes('Terms')) setLocalError('');
+      if (onClearError) onClearError();
+    }
+  };
+
+  const triggerTermsNotice = () => {
+    setTermsError(true);
+    setLocalError('Please accept the Terms of Service & Privacy Policy to sign in.');
+  };
 
   const { setAuth } = useAuthStore();
   const { theme, fetchSettings } = useSettingStore();
@@ -74,6 +98,10 @@ export const LoginCard: React.FC<LoginCardProps> = ({
   const handleSendOTP = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (onClearError) onClearError();
+    if (!isTermsAccepted) {
+      triggerTermsNotice();
+      return;
+    }
     if (phoneNumber.length !== 10) {
       setLocalError('Please enter a valid 10-digit mobile number.');
       return;
@@ -108,6 +136,10 @@ export const LoginCard: React.FC<LoginCardProps> = ({
 
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isTermsAccepted) {
+      triggerTermsNotice();
+      return;
+    }
     if (otp.length !== 6) {
       setLocalError('Please enter the 6-digit verification code.');
       return;
@@ -205,17 +237,90 @@ export const LoginCard: React.FC<LoginCardProps> = ({
         </motion.div>
       )}
 
+      {/* MANDATORY TERMS & PRIVACY CONSENT CHECKBOX (Big App Standard - Enforced on all sign-in flows) */}
+      <motion.div
+        animate={termsError ? { x: [-4, 4, -4, 4, 0] } : {}}
+        transition={{ duration: 0.35 }}
+        className={`p-2.5 sm:p-3 rounded-2xl border transition-all ${
+          termsError
+            ? 'bg-rose-500/15 border-rose-500/60 shadow-md shadow-rose-500/20 ring-2 ring-rose-500/30'
+            : isTermsAccepted
+            ? isLight
+              ? 'bg-emerald-50/80 border-emerald-300 text-slate-800'
+              : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
+            : isLight
+            ? 'bg-slate-50 border-slate-200 hover:border-slate-300'
+            : 'bg-[#0F1735]/80 border-white/10 hover:border-white/20'
+        }`}
+      >
+        <label className="flex items-start gap-2.5 cursor-pointer text-[11px] sm:text-xs select-none">
+          <input
+            type="checkbox"
+            id="mandatory-terms-checkbox"
+            checked={isTermsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            className="mt-0.5 w-4 h-4 rounded border-slate-300 text-rose-500 focus:ring-rose-500 cursor-pointer accent-rose-500 flex-shrink-0"
+          />
+          <span className={`leading-snug ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+            I accept the{' '}
+            <Link
+              to="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="underline font-bold text-rose-500 hover:text-rose-400 transition-colors"
+            >
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link
+              to="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="underline font-bold text-rose-500 hover:text-rose-400 transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            <span className="text-rose-500 font-extrabold ml-1" title="Required to sign in">*</span>
+          </span>
+        </label>
+        {termsError && (
+          <p className="mt-1 text-[10.5px] font-semibold text-rose-500 pl-6 animate-in fade-in">
+            Required: Please check this box to agree before continuing.
+          </p>
+        )}
+      </motion.div>
+
       {/* PRIMARY AUTH ACTION 1: Google GIS Button */}
       <div className="space-y-3 pt-0.5 relative z-10">
         {googleConfigured ? (
-          <div className="w-full">
+          <div className="w-full relative">
             <GoogleLoginButton
               buttonRef={googleButtonRef}
               isReady={isGisReady}
               loading={googleLoading}
               isNative={isNative}
-              onClick={onGoogleClick}
+              onClick={() => {
+                if (!isTermsAccepted) {
+                  triggerTermsNotice();
+                  return;
+                }
+                onGoogleClick();
+              }}
             />
+            {/* Transparent click barrier when terms not accepted to intercept GIS iframe */}
+            {!isTermsAccepted && !isNative && (
+              <div
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  triggerTermsNotice();
+                }}
+                className="absolute inset-0 z-20 cursor-pointer rounded-full"
+                title="Please accept the Terms of Service & Privacy Policy to sign in"
+              />
+            )}
           </div>
         ) : (
           <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center gap-2 text-xs text-amber-200">
@@ -451,17 +556,9 @@ export const LoginCard: React.FC<LoginCardProps> = ({
         </div>
       </div>
 
-      {/* EXPLICIT LEGAL TERMS & PRIVACY CONSENT (Big App Standard) */}
+      {/* EXPLICIT LEGAL TERMS & PRIVACY CONSENT NOTICE */}
       <p className={`text-[10px] sm:text-[10.5px] text-center px-1 leading-normal ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-        By continuing, you agree to our{' '}
-        <Link to="/terms" className="underline hover:text-blue-500 font-semibold transition-colors">
-          Terms of Service
-        </Link>{' '}
-        and{' '}
-        <Link to="/privacy" className="underline hover:text-blue-500 font-semibold transition-colors">
-          Privacy Policy
-        </Link>
-        .
+        Consent is mandatory under DPDP regulations to protect household and financial data.
       </p>
 
       {/* INDIA / LOCAL IDENTITY CARD */}

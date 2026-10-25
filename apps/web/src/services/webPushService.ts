@@ -199,6 +199,13 @@ class WebPushService {
     try {
       const messaging = await this.initMessaging();
       if (!messaging) {
+        if (!firebaseConfig.apiKey) {
+          return {
+            success: false,
+            error:
+              'Push notification service is not configured (Firebase credentials missing in environment variables). In-app alerts, chat, and calling continue to work via live WebSockets.',
+          };
+        }
         return { success: false, error: 'Firebase messaging could not be initialized.' };
       }
 
