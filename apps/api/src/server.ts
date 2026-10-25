@@ -74,9 +74,13 @@ io.on('connection', (socket) => {
 
   console.log(`[Socket.IO] Authenticated client connected: ${socket.id} (user: ${userId})`);
 
-  if (userId && householdId) {
-    // Join personal user room and household room
+  if (userId) {
+    // Unconditionally join personal user room for direct calls and messages
     socket.join(`user_${userId}`);
+  }
+
+  if (userId && householdId) {
+    // Join household room
     socket.join(`household_${householdId}`);
 
     if (!onlineHouseholdUsers[householdId]) {
@@ -90,9 +94,12 @@ io.on('connection', (socket) => {
 
   // 1. Join Household manually if requested
   socket.on('join_household', () => {
-    if (!householdId) return;
-    socket.join(`household_${householdId}`);
-    socket.join(`user_${userId}`);
+    if (userId) {
+      socket.join(`user_${userId}`);
+    }
+    if (householdId) {
+      socket.join(`household_${householdId}`);
+    }
   });
 
   // Conversation Room Handlers (for targeted conversation-level delivery)

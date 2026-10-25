@@ -89,6 +89,8 @@ function AppShell() {
   const [isApplianceModalOpen, setIsApplianceModalOpen] = useState(false);
   const [isMedicineModalOpen, setIsMedicineModalOpen] = useState(false);
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(() => {
+    // Android/iOS native permissions only; never show on desktop browser
+    if (!Capacitor.isNativePlatform()) return false;
     return localStorage.getItem('homemind_permissions_prompted') !== 'true';
   });
 
@@ -112,10 +114,12 @@ function AppShell() {
   } = useCallStore();
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     const socket = socketService.getSocket();
     if (!socket) return;
 
     const handleIncomingCall = (data: any) => {
+      console.log('[App] Incoming call received:', data);
       receiveCall(data);
     };
 
@@ -123,10 +127,13 @@ function AppShell() {
     return () => {
       socket.off('webrtc_incoming_call', handleIncomingCall);
     };
-  }, [receiveCall]);
+  }, [receiveCall, isAuthenticated]);
 
   useEffect(() => {
-    if (isAuthenticated) fetchSettings();
+    if (isAuthenticated) {
+      fetchSettings();
+      socketService.connect();
+    }
   }, [isAuthenticated]);
 
   useEffect(() => {

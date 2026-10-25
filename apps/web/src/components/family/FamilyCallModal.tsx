@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Phone,
   Video,
@@ -105,6 +106,15 @@ export const FamilyCallModal: React.FC<FamilyCallModalProps> = ({
   const [callState, setCallState] = useState<CallState>(
     isIncoming ? 'RINGING' : 'INITIATING'
   );
+
+  // Sync state whenever an incoming/outgoing call modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setCallState(isIncoming ? 'RINGING' : 'INITIATING');
+      setCallDuration(0);
+      setErrorMessage('');
+    }
+  }, [isOpen, isIncoming, callId]);
 
   // Local Media states
   const [isAudioMuted, setIsAudioMuted] = useState(false);
@@ -690,8 +700,8 @@ export const FamilyCallModal: React.FC<FamilyCallModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-200">
+  const modalContent = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-200 pointer-events-auto">
       <div className="relative w-full max-w-4xl h-[85vh] max-h-[720px] bg-slate-900 border border-slate-700/80 rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between">
         {/* Top Floating Bar */}
         <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
@@ -986,6 +996,10 @@ export const FamilyCallModal: React.FC<FamilyCallModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined'
+    ? createPortal(modalContent, document.body)
+    : modalContent;
 };
 
 export default FamilyCallModal;

@@ -107,7 +107,39 @@ export class WebRTCSignalingManager {
       return { success: false, error: 'Cross-household calling prohibited' };
     }
 
-    // 2. Check if Callee is already BUSY
+    // 2. Clean up any stale or pending calling sessions for caller or between caller and callee
+    const callerCallId = this.userToCallMap.get(callerId);
+    if (callerCallId) {
+      const callerSession = this.activeCalls.get(callerCallId);
+      if (callerSession && callerSession.status === 'calling') {
+        if (callerSession.timeoutTimer) clearTimeout(callerSession.timeoutTimer);
+        this.activeCalls.delete(callerCallId);
+        this.userToCallMap.delete(callerSession.callerId);
+        this.userToCallMap.delete(callerSession.calleeId);
+        console.log(`[WebRTC] Cleared caller's previous unanswered call [${callerCallId}]`);
+      }
+    }
+
+    const calleeCallId = this.userToCallMap.get(targetUserId);
+    if (calleeCallId) {
+      const calleeSession = this.activeCalls.get(calleeCallId);
+      if (calleeSession && calleeSession.status === 'calling') {
+        // If the pending call on callee was with THIS caller, or older than 8 seconds, clear it so new call proceeds
+        if (
+          calleeSession.callerId === callerId ||
+          calleeSession.calleeId === callerId ||
+          Date.now() - calleeSession.startedAt > 8000
+        ) {
+          if (calleeSession.timeoutTimer) clearTimeout(calleeSession.timeoutTimer);
+          this.activeCalls.delete(calleeCallId);
+          this.userToCallMap.delete(calleeSession.callerId);
+          this.userToCallMap.delete(calleeSession.calleeId);
+          console.log(`[WebRTC] Cleared callee's previous calling session [${calleeCallId}] between same users`);
+        }
+      }
+    }
+
+    // 3. Check if Callee is already BUSY
     if (this.isUserInCall(targetUserId)) {
       console.log(`[WebRTC] Callee ${targetUserId} is currently busy in another call`);
       io.to(`user_${callerId}`).emit('webrtc_call_busy', {
@@ -118,7 +150,7 @@ export class WebRTCSignalingManager {
       return { success: false, error: 'Callee is busy' };
     }
 
-    // 3. Check if Caller is already in a call
+    // 4. Check if Caller is already in a call
     if (this.isUserInCall(callerId)) {
       return { success: false, error: 'Caller already engaged in an active call' };
     }

@@ -1,5 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../stores/useAuthStore';
+import { useCallStore } from '../stores/useCallStore';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -52,6 +53,13 @@ class SocketService {
       this.socket.on('connect', () => {
         console.log('[Socket] Connected to HomeMind Realtime Gateway:', this.socket?.id);
         this.socket?.emit('join_household');
+      });
+
+      // Global WebRTC incoming call listener (always active across app lifecycle)
+      this.socket.off('webrtc_incoming_call');
+      this.socket.on('webrtc_incoming_call', (data: any) => {
+        console.log('[Socket] Global incoming call event received:', data);
+        useCallStore.getState().receiveCall(data);
       });
 
       this.socket.on('connect_error', (err) => {
