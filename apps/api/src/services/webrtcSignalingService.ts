@@ -84,6 +84,70 @@ export class WebRTCSignalingManager {
       return { success: false, error: 'Cannot call yourself' };
     }
 
+    const isHouseholdCall = targetUserId === 'household' || targetUserId === callerHouseholdId;
+
+    if (isHouseholdCall) {
+      // Clean up caller's previous session if any
+      const callerCallId = this.userToCallMap.get(callerId);
+      if (callerCallId) {
+        const callerSession = this.activeCalls.get(callerCallId);
+        if (callerSession && callerSession.status === 'calling') {
+          if (callerSession.timeoutTimer) clearTimeout(callerSession.timeoutTimer);
+          this.activeCalls.delete(callerCallId);
+          this.userToCallMap.delete(callerSession.callerId);
+          this.userToCallMap.delete(callerSession.calleeId);
+        }
+      }
+
+      const callId = data.callId || `call_group_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const expiresAt = Date.now() + 45000;
+
+      const timeoutTimer = setTimeout(() => {
+        const active = this.activeCalls.get(callId);
+        if (active && active.status === 'calling') {
+          console.log(`[WebRTC] Household group call invitation timed out [${callId}]`);
+          active.status = 'expired';
+          this.activeCalls.delete(callId);
+          this.userToCallMap.delete(callerId);
+
+          io.to(`household_${callerHouseholdId}`).emit('webrtc_call_ended', {
+            callId,
+            reason: 'Call invitation timed out',
+          });
+        }
+      }, 45000);
+
+      const session: CallSession = {
+        callId,
+        householdId: callerHouseholdId,
+        callerId,
+        calleeId: 'household',
+        callType: callType || 'video',
+        status: 'calling',
+        startedAt: Date.now(),
+        expiresAt,
+        timeoutTimer,
+      };
+
+      this.activeCalls.set(callId, session);
+      this.userToCallMap.set(callerId, callId);
+
+      console.log(`[WebRTC] Broadcasted Family Group Call to household_${callerHouseholdId} from ${callerId} (${callType})`);
+
+      // Relay incoming call to all other members in the household simultaneously!
+      io.to(`household_${callerHouseholdId}`).except(`user_${callerId}`).emit('webrtc_incoming_call', {
+        callId,
+        callerId,
+        callerName: `${callerName} (Family Group Call)`,
+        callerAvatar,
+        callType,
+        signalData,
+        isGroupCall: true,
+      });
+
+      return { success: true, callId };
+    }
+
     // 1. Verify caller and callee belong to the same household (Cross-Household Defense)
     const callee = await prisma.user.findUnique({
       where: { id: targetUserId },
@@ -269,9 +333,21 @@ export class WebRTCSignalingManager {
       return false;
     }
 
-    if (session.calleeId !== responderId || session.callerId !== targetUserId) {
+    const isHouseholdCall = session.calleeId === 'household';
+
+    if (!isHouseholdCall && (session.calleeId !== responderId || session.callerId !== targetUserId)) {
       console.warn(`[WebRTC Security Alert] Forged answer rejected for call ${callId}`);
       return false;
+    }
+
+    if (isHouseholdCall) {
+      session.calleeId = responderId;
+      this.userToCallMap.set(responderId, callId);
+      // Cancel ringing on other household members' devices since call was picked up
+      io.to(`household_${session.householdId}`).except(`user_${responderId}`).except(`user_${session.callerId}`).emit('webrtc_call_ended', {
+        callId,
+        reason: 'Call answered on another device',
+      });
     }
 
     // Cancel expiration timer upon answer
@@ -285,7 +361,7 @@ export class WebRTCSignalingManager {
 
     console.log(`[WebRTC] Call accepted [${callId}]: ${responderId} answered ${targetUserId}`);
 
-    io.to(`user_${targetUserId}`).emit('webrtc_call_accepted', {
+    io.to(`user_${session.callerId}`).emit('webrtc_call_accepted', {
       callId,
       signalData,
       fromUserId: responderId,
@@ -389,6 +465,11 @@ export class WebRTCSignalingManager {
     if (activeCallId) {
       const session = this.activeCalls.get(activeCallId);
       if (session) {
+        if (session.calleeId === 'household') {
+          // If a member declines a group call, do not cancel for other household members
+          console.log(`[WebRTC] Group call declined by member ${responderId}`);
+          return;
+        }
         if (session.timeoutTimer) clearTimeout(session.timeoutTimer);
         this.activeCalls.delete(activeCallId);
         this.userToCallMap.delete(session.callerId);
