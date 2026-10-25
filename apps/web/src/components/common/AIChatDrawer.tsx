@@ -209,7 +209,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-background/70 backdrop-blur-sm animate-in fade-in duration-200 select-none">
-      <div className="w-full max-w-md bg-background border-l border-primary shadow-2xl flex flex-col h-full animate-in slide-in-from-right duration-200">
+      <div className="w-full max-w-md bg-background border-l border-primary shadow-2xl flex flex-col h-[100dvh] animate-in slide-in-from-right duration-200">
         
         {/* Header */}
         <div className="p-4 border-b border-primary bg-panel/60 backdrop-blur flex items-center justify-between">
@@ -407,7 +407,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
             e.preventDefault();
             handleSend();
           }}
-          className="p-3 border-t border-primary bg-panel/90 backdrop-blur"
+          className="p-2.5 sm:p-3 border-t border-primary bg-panel/90 backdrop-blur pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]"
         >
           <div className="flex items-center gap-2 bg-surface-input border border-input focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 rounded-xl p-1.5 transition-all shadow-inner">
             <input

@@ -34,16 +34,16 @@ export const GroceriesFilters: React.FC<GroceriesFiltersProps> = ({
   metrics,
 }) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5 sm:space-y-2">
       {/* 5. Unified Control Bar */}
-      <div className="p-2 sm:p-2.5 rounded-2xl glass-panel border border-primary/70 shadow-xs flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-2.5">
+      <div className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl glass-panel border border-primary/70 shadow-xs flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-2 sm:gap-2.5">
         {/* LEFT: Status Tabs */}
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-secondary/30 dark:bg-slate-900/60 border border-primary/50 overflow-x-auto no-scrollbar shrink-0">
+        <div className="flex items-center gap-1 p-0.5 sm:p-1 rounded-lg sm:rounded-xl bg-secondary/30 dark:bg-slate-900/60 border border-primary/50 overflow-x-auto no-scrollbar shrink-0">
           {/* All Items */}
           <button
             type="button"
             onClick={() => onStatusChange('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
               statusFilter === 'all'
                 ? 'bg-panel text-primary shadow-xs border border-primary/60'
                 : 'text-secondary hover:text-primary'

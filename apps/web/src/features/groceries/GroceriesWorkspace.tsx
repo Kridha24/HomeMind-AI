@@ -190,7 +190,7 @@ export const GroceriesWorkspace: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-200">
+    <div className="space-y-2.5 sm:space-y-4 animate-in fade-in duration-200">
       {/* 1. Header with Integrated Quick Add */}
       <GroceriesHeader
         onAddItem={() => {

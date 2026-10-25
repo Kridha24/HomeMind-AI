@@ -57,7 +57,7 @@ export const HouseholdSummary: React.FC<HouseholdSummaryProps> = ({
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
       {cards.map((card, idx) => {
         const Icon = card.icon;
 
@@ -66,29 +66,29 @@ export const HouseholdSummary: React.FC<HouseholdSummaryProps> = ({
             key={idx}
             type="button"
             onClick={card.action}
-            className="group relative overflow-hidden p-4 rounded-2xl bg-panel border border-primary/80 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md flex items-center justify-between gap-3 shadow-2xs"
+            className="group relative overflow-hidden p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-panel border border-primary/80 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md flex items-center justify-between gap-2 sm:gap-3 shadow-2xs"
           >
             {/* Top Micro-Gradient Line */}
             <div
-              className={`absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r ${card.gradient} opacity-80 group-hover:opacity-100 transition-opacity`}
+              className={`absolute top-0 left-0 right-0 h-[2px] sm:h-[2.5px] bg-gradient-to-r ${card.gradient} opacity-80 group-hover:opacity-100 transition-opacity`}
             />
 
-            <div className="space-y-1 min-w-0">
-              <span className="text-xs font-semibold text-secondary block truncate">
+            <div className="space-y-0.5 sm:space-y-1 min-w-0">
+              <span className="text-[10px] sm:text-xs font-semibold text-secondary block truncate">
                 {card.label}
               </span>
-              <span className="text-2xl sm:text-3xl font-black text-primary font-mono block">
+              <span className="text-base sm:text-3xl font-black text-primary font-mono block">
                 {card.count}
               </span>
-              <span className="text-[11px] text-muted block truncate font-medium">
+              <span className="text-[9px] sm:text-[11px] text-muted block truncate font-medium">
                 {card.secondaryText}
               </span>
             </div>
 
             <div
-              className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border transition-transform duration-200 group-hover:scale-105 shadow-2xs ${card.badgeColor}`}
+              className={`w-7 h-7 sm:w-11 sm:h-11 rounded-lg sm:rounded-2xl flex items-center justify-center shrink-0 border transition-transform duration-200 group-hover:scale-105 shadow-2xs ${card.badgeColor}`}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
             </div>
           </button>
         );

@@ -323,13 +323,13 @@ function AppShell() {
         {/* Main content: offset for 72px default / 220px expanded sidebar on desktop */}
         <main
           className={`flex-1 ${
-            p === '/' ? 'p-0 md:p-6 sm:p-4' : 'p-3 sm:p-5 md:p-6'
+            p === '/' ? 'p-0 md:p-6 sm:p-4' : 'p-2 sm:p-4 md:p-6'
           } overflow-y-auto ${
             sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[220px]'
           } ml-0 transition-all duration-200 ${
             p === '/'
-              ? 'pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-8'
-              : 'pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-8'
+              ? 'pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))] md:pb-8'
+              : 'pb-[calc(4.75rem+env(safe-area-inset-bottom,0px))] lg:pb-8'
           }`}
         >
           <Routes>

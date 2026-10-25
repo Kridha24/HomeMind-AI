@@ -156,7 +156,7 @@ export const SettingsNav: React.FC<SettingsNavProps> = ({
   };
 
   return (
-    <nav className="space-y-3" aria-label="Settings Categories">
+    <nav className="space-y-2 sm:space-y-3" aria-label="Settings Categories">
       {/* Search Input for Settings Navigation */}
       <div className="relative">
         <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -204,7 +204,7 @@ export const SettingsNav: React.FC<SettingsNavProps> = ({
       </div>
 
       {/* Mobile / Tablet Horizontal Scrollable Pills */}
-      <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1" role="tablist">
+      <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5" role="tablist">
         {filteredItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -214,7 +214,7 @@ export const SettingsNav: React.FC<SettingsNavProps> = ({
               role="tab"
               aria-selected={isActive}
               onClick={() => onSelectTab(item.id)}
-              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 min-h-[44px] ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 min-h-[38px] sm:min-h-[44px] ${
                 isActive
                   ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25'
                   : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'

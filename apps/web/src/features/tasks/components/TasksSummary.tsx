@@ -71,7 +71,7 @@ export const TasksSummary: React.FC<TasksSummaryProps> = ({
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
       {cards.map((card, idx) => {
         const Icon = card.icon;
         const isActive = activeTab === card.id && (card.label !== 'Overdue' || (safeMetrics.overdueCount || 0) > 0);
@@ -81,24 +81,24 @@ export const TasksSummary: React.FC<TasksSummaryProps> = ({
             key={idx}
             type="button"
             onClick={() => onTabChange(card.id)}
-            className={`p-3.5 sm:p-4 rounded-2xl bg-panel border text-left transition-all duration-150 hover:bg-secondary/40 shadow-xs flex items-center justify-between gap-3 relative overflow-hidden ${
+            className={`p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-panel border text-left transition-all duration-150 hover:bg-secondary/40 shadow-xs flex items-center justify-between gap-2 sm:gap-3 relative overflow-hidden ${
               card.borderColor
             } ${isActive ? card.activeBorder : ''}`}
           >
-            <div className={`h-[2.5px] w-full ${card.topBar} absolute top-0 left-0 right-0 opacity-80`} />
-            <div className="space-y-1 pt-0.5">
-              <span className={`text-xs font-bold block ${card.color}`}>
+            <div className={`h-[2px] sm:h-[2.5px] w-full ${card.topBar} absolute top-0 left-0 right-0 opacity-80`} />
+            <div className="space-y-0.5 sm:space-y-1 pt-0.5 min-w-0">
+              <span className={`text-[10px] sm:text-xs font-bold block truncate ${card.color}`}>
                 {card.label}
               </span>
-              <span className="text-xl sm:text-2xl font-black text-primary font-mono block">
+              <span className="text-base sm:text-2xl font-black text-primary font-mono block">
                 {card.count}
               </span>
             </div>
 
             <div
-              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 border transition-transform group-hover:scale-105 ${card.bgColor} ${card.color} ${card.borderColor}`}
+              className={`w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 border transition-transform group-hover:scale-105 ${card.bgColor} ${card.color} ${card.borderColor}`}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
             </div>
           </button>
         );

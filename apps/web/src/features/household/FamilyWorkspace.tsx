@@ -140,7 +140,7 @@ export const FamilyWorkspace: React.FC = () => {
 
   if (loadingMembers && !household) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 py-3 sm:py-8">
         <FamilyWorkspaceSkeleton />
       </div>
     );
@@ -148,14 +148,14 @@ export const FamilyWorkspace: React.FC = () => {
 
   if (isMembersError && !household) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 py-3 sm:py-8">
         <FamilyWorkspaceErrorState onRetry={refetchMembers} />
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 animate-fadeIn">
+    <div className="max-w-7xl mx-auto px-2 sm:px-6 py-2.5 sm:py-8 space-y-2.5 sm:space-y-6 animate-fadeIn">
       {/* 1. Compact Premium Household Hero Card */}
       <HouseholdHero
         household={household}
@@ -208,7 +208,7 @@ export const FamilyWorkspace: React.FC = () => {
           />
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-2.5 sm:space-y-6">
           {/* Quick Actions Row */}
           <HouseholdQuickActions
             currentUserRole={user?.role}

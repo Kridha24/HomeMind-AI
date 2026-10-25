@@ -17,15 +17,15 @@ export const MemberWorkload: React.FC<MemberWorkloadProps> = ({
   if (safeWorkload.length <= 1) return null; // Don't show if only unassigned or 1 member
 
   return (
-    <div className="p-3.5 sm:p-4 rounded-2xl bg-panel border border-primary/80 shadow-xs space-y-2.5">
+    <div className="p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-panel border border-primary/80 shadow-xs space-y-1.5 sm:space-y-2.5">
       <div className="flex items-center gap-2">
-        <Users className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-        <h4 className="text-xs font-bold uppercase tracking-wider text-secondary">
+        <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 dark:text-purple-400" />
+        <h4 className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-secondary">
           Household Chore Distribution
         </h4>
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
         {safeWorkload.map((m) => {
           const isSelected =
             (m.memberId === null && selectedAssignee === 'UNASSIGNED') ||
@@ -42,7 +42,7 @@ export const MemberWorkload: React.FC<MemberWorkloadProps> = ({
                   onSelectAssignee(m.memberId || 'UNASSIGNED');
                 }
               }}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs transition-all ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border text-[11px] sm:text-xs transition-all ${
                 isSelected
                   ? 'bg-purple-500/15 border-purple-500/40 text-purple-600 dark:text-purple-400 font-bold'
                   : 'bg-secondary/60 border-primary/60 text-secondary hover:text-primary hover:bg-secondary'

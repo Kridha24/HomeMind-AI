@@ -258,7 +258,7 @@ export const TasksWorkspace: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200 pb-16">
+    <div className="space-y-2.5 sm:space-y-6 animate-in fade-in duration-200 pb-8 sm:pb-16">
       {/* 1. Header (Title, Subtitle, Quick Add, + Add Task, Calendar Toggle) */}
       <TasksHeader
         onAddTask={handleOpenAdd}
@@ -301,7 +301,7 @@ export const TasksWorkspace: React.FC = () => {
           onToggleStatus={handleToggleStatus}
         />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2.5 sm:space-y-4">
           {/* Main Task View Tabs */}
           <TasksTabs
             activeTab={activeTab}

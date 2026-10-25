@@ -15,16 +15,16 @@ export const TasksProgress: React.FC<TasksProgressProps> = ({ completedCount, to
   const percentage = Math.round((completedCount / totalCount) * 100);
 
   return (
-    <div className="p-3.5 sm:p-4 rounded-2xl bg-panel border border-primary/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-      <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-          <CheckCircle2 className="w-4 h-4" />
+    <div className="p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-panel border border-primary/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+          <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </div>
         <div>
           <span className="text-xs font-bold text-primary block">
             Weekly Chore Completion
           </span>
-          <span className="text-[11px] text-secondary">
+          <span className="text-[10px] sm:text-[11px] text-secondary">
             {completedCount} of {totalCount} tasks completed ({percentage}%)
           </span>
         </div>

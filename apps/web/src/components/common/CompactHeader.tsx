@@ -97,23 +97,23 @@ export const CompactHeader: React.FC<CompactHeaderProps> = ({
 
   return (
     <div
-      className={`w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-3 border-b border-slate-200/80 dark:border-slate-800 ${className}`}
+      className={`w-full flex items-center justify-between gap-2.5 pb-2 mb-2 sm:pb-3 sm:mb-3 border-b border-slate-200/80 dark:border-slate-800 ${className}`}
     >
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
         <div
-          className={`w-10 h-10 rounded-xl flex items-center justify-center border shadow-xs flex-shrink-0 transition-transform ${styles.bg} ${styles.text} ${styles.ring}`}
+          className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center border shadow-xs flex-shrink-0 transition-transform ${styles.bg} ${styles.text} ${styles.ring}`}
         >
-          <Icon className="w-5 h-5 text-white" />
+          <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
         </div>
         <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white truncate">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <h1 className="text-base sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white truncate">
               {title}
             </h1>
             {badge}
           </div>
           {description && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-xl font-medium">
+            <p className="hidden xs:block text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate max-w-xl font-medium">
               {description}
             </p>
           )}
@@ -121,7 +121,7 @@ export const CompactHeader: React.FC<CompactHeaderProps> = ({
       </div>
 
       {(actions || children) && (
-        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {actions}
           {children}
         </div>

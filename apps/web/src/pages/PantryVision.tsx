@@ -74,29 +74,29 @@ export const PantryVision: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto animate-in fade-in duration-200">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 shadow-xs">
-          <Camera className="w-5 h-5 text-violet-500" />
+    <div className="p-2.5 sm:p-6 space-y-3 sm:space-y-6 max-w-4xl mx-auto animate-in fade-in duration-200">
+      <div className="flex items-center gap-2.5 sm:gap-3">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 shadow-xs">
+          <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-violet-500" />
         </div>
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-primary flex items-center gap-2">
+          <h1 className="text-base sm:text-2xl font-extrabold text-primary flex items-center gap-2">
             Scan Groceries & Receipts
           </h1>
-          <p className="text-xs text-secondary">
+          <p className="hidden xs:block text-xs text-secondary">
             Upload a photo of your fridge, pantry, or store receipt to automatically add items.
           </p>
         </div>
       </div>
 
       {!aiOcr && (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-amber-300 flex items-center justify-between gap-4">
+        <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-amber-300 flex items-center justify-between gap-3 sm:gap-4">
           <div className="flex items-center gap-2 text-xs font-semibold">
             <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
             <span>Smart Receipt and Pantry OCR Digitization is disabled in Settings.</span>
           </div>
-          <Link to="/settings" className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-colors">
-            Open Settings
+          <Link to="/settings" className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-colors shrink-0">
+            Settings
           </Link>
         </div>
       )}
@@ -111,52 +111,52 @@ export const PantryVision: React.FC = () => {
         className="hidden"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-6">
         {/* Shelf Photo Scanner Box */}
-        <div className="group relative overflow-hidden glass-panel p-6 space-y-4 text-center rounded-2xl border border-violet-500/25 bg-violet-500/5 hover:border-violet-500/40 hover:-translate-y-px transition-all duration-200 shadow-2xs">
-          <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-violet-500 to-indigo-500 opacity-80 group-hover:opacity-100 transition-opacity" />
-          <div className="w-12 h-12 rounded-2xl bg-violet-500/15 border border-violet-500/30 text-violet-600 dark:text-violet-400 flex items-center justify-center mx-auto shadow-xs">
-            <Camera className="w-6 h-6" />
+        <div className="group relative overflow-hidden glass-panel p-3 sm:p-6 space-y-2 sm:space-y-4 text-center rounded-xl sm:rounded-2xl border border-violet-500/25 bg-violet-500/5 hover:border-violet-500/40 hover:-translate-y-px transition-all duration-200 shadow-2xs">
+          <div className="absolute top-0 left-0 right-0 h-[2px] sm:h-[2.5px] bg-gradient-to-r from-violet-500 to-indigo-500 opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-violet-500/15 border border-violet-500/30 text-violet-600 dark:text-violet-400 flex items-center justify-center mx-auto shadow-xs">
+            <Camera className="w-4 h-4 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-primary">Scan Fridge or Pantry</h3>
-            <p className="text-xs text-muted mt-1">Take a photo of your shelves to automatically list your groceries.</p>
+            <h3 className="font-bold text-xs sm:text-sm text-primary">Fridge & Pantry</h3>
+            <p className="hidden xs:block text-[11px] sm:text-xs text-muted mt-0.5 sm:mt-1">Take a photo of your shelves to automatically list your groceries.</p>
           </div>
           <button
             onClick={() => triggerFileInput('shelf')}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-violet-600/25 active:scale-95 transition-all cursor-pointer"
+            className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs flex items-center justify-center gap-1.5 sm:gap-2 shadow-md shadow-violet-600/25 active:scale-95 transition-all cursor-pointer"
           >
             {loading && activeScanType === 'shelf' ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
+              <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
             ) : (
-              <Camera className="w-4 h-4" />
+              <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             )}
-            Take Photo / Upload
+            <span>Scan Pantry</span>
           </button>
         </div>
 
         {/* Receipt Scanner Box */}
-        <div className="group relative overflow-hidden glass-panel p-6 space-y-4 text-center rounded-2xl border border-cyan-500/25 bg-cyan-500/5 hover:border-cyan-500/40 hover:-translate-y-px transition-all duration-200 shadow-2xs">
-          <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-cyan-500 to-teal-400 opacity-80 group-hover:opacity-100 transition-opacity" />
-          <div className="w-12 h-12 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mx-auto shadow-xs">
-            <Receipt className="w-6 h-6" />
+        <div className="group relative overflow-hidden glass-panel p-3 sm:p-6 space-y-2 sm:space-y-4 text-center rounded-xl sm:rounded-2xl border border-cyan-500/25 bg-cyan-500/5 hover:border-cyan-500/40 hover:-translate-y-px transition-all duration-200 shadow-2xs">
+          <div className="absolute top-0 left-0 right-0 h-[2px] sm:h-[2.5px] bg-gradient-to-r from-cyan-500 to-teal-400 opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mx-auto shadow-xs">
+            <Receipt className="w-4 h-4 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-primary">Scan Bill Receipt</h3>
-            <p className="text-xs text-muted mt-1">Upload a store paper receipt to automatically add prices & items.</p>
+            <h3 className="font-bold text-xs sm:text-sm text-primary">Bill Receipt</h3>
+            <p className="hidden xs:block text-[11px] sm:text-xs text-muted mt-0.5 sm:mt-1">Upload a store paper receipt to automatically add prices & items.</p>
           </div>
           <button
             onClick={() => triggerFileInput('receipt')}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-cyan-600/25 active:scale-95 transition-all cursor-pointer"
+            className="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-semibold py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs flex items-center justify-center gap-1.5 sm:gap-2 shadow-md shadow-cyan-600/25 active:scale-95 transition-all cursor-pointer"
           >
             {loading && activeScanType === 'receipt' ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
+              <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
             ) : (
-              <Receipt className="w-4 h-4" />
+              <Receipt className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             )}
-            Upload Receipt Photo
+            <span>Scan Receipt</span>
           </button>
         </div>
       </div>

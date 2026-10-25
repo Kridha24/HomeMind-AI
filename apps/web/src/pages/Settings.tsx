@@ -77,9 +77,9 @@ export const Settings: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-200">
+    <div className="max-w-7xl mx-auto space-y-2.5 sm:space-y-6 animate-in fade-in duration-200">
       {/* Mobile Top Navigation Header */}
-      <div className="flex items-center justify-between sm:hidden pb-2 border-b border-slate-200/80 dark:border-slate-800">
+      <div className="flex items-center justify-between sm:hidden pb-1.5 border-b border-slate-200/80 dark:border-slate-800">
         <button
           type="button"
           onClick={handleMobileBack}
@@ -122,10 +122,10 @@ export const Settings: React.FC = () => {
       </div>
 
       {/* Main Settings Body: Two-Column Desktop Layout (240px nav + fluid content) */}
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+      <div className="flex flex-col lg:flex-row gap-2.5 sm:gap-6 lg:gap-8 items-start">
         {/* Left Navigation: Sticky on Desktop, 240px width */}
         <aside className="w-full lg:w-[240px] flex-shrink-0 lg:sticky lg:top-20">
-          <div className="p-3 sm:p-4 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+          <div className="p-2 sm:p-4 rounded-xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
             <SettingsNav
               activeTab={activeTab}
               onSelectTab={handleSelectTab}

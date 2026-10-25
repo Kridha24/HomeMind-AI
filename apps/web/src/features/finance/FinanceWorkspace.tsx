@@ -332,7 +332,7 @@ export const FinanceWorkspace: React.FC = () => {
   };
 
   return (
-    <div className={`space-y-5 animate-in fade-in duration-200 ${compactMode ? 'compact-density' : ''}`}>
+    <div className={`space-y-2.5 sm:space-y-5 animate-in fade-in duration-200 ${compactMode ? 'compact-density' : ''}`}>
       {/* 1. Header */}
       <FinanceHeader
         onAddExpense={() => setIsAddExpenseOpen(true)}
@@ -345,7 +345,7 @@ export const FinanceWorkspace: React.FC = () => {
 
       {/* SMS Scan notification toast if present */}
       {scanMessage && (
-        <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/25 text-blue-600 dark:text-blue-400 text-xs font-semibold flex items-center justify-between">
+        <div className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-500/10 border border-blue-500/25 text-blue-600 dark:text-blue-400 text-xs font-semibold flex items-center justify-between">
           <span>{scanMessage}</span>
           <button type="button" onClick={() => setScanMessage(null)} className="text-xs font-bold hover:underline">
             Dismiss
@@ -365,8 +365,8 @@ export const FinanceWorkspace: React.FC = () => {
       />
 
       {/* 3. Navigation Tabs & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-primary/20 pb-2">
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 border-b border-primary/20 pb-1.5 sm:pb-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 sm:py-1">
           <button
             type="button"
             onClick={() => handleTabChange('all')}

@@ -55,7 +55,7 @@ export const HouseholdQuickActions: React.FC<HouseholdQuickActionsProps> = ({
   ].filter((a) => a.visible);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
       {actions.map((act) => {
         const Icon = act.icon;
         return (
@@ -63,20 +63,20 @@ export const HouseholdQuickActions: React.FC<HouseholdQuickActionsProps> = ({
             key={act.label}
             type="button"
             onClick={act.onClick}
-            className={`h-full p-3.5 rounded-2xl border text-left transition-all duration-200 hover:-translate-y-0.5 flex items-center justify-between group shadow-xs hover:shadow-md bg-panel ${act.color}`}
+            className={`h-full p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border text-left transition-all duration-200 hover:-translate-y-0.5 flex items-center justify-between group shadow-xs hover:shadow-md bg-panel ${act.color}`}
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className={`p-2.5 rounded-xl shrink-0 ${act.iconBg} transition-transform duration-200 group-hover:scale-105`}>
-                <Icon className="w-4 h-4" />
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className={`p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl shrink-0 ${act.iconBg} transition-transform duration-200 group-hover:scale-105`}>
+                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-primary group-hover:text-primary transition-colors truncate">
+                <p className="text-[11px] sm:text-xs font-bold text-primary group-hover:text-primary transition-colors truncate">
                   {act.label}
                 </p>
-                <p className="text-[11px] text-muted truncate">{act.description}</p>
+                <p className="hidden sm:block text-[11px] text-muted truncate">{act.description}</p>
               </div>
             </div>
-            <ArrowRight className="w-4 h-4 text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 ml-1 sm:ml-2" />
           </button>
         );
       })}

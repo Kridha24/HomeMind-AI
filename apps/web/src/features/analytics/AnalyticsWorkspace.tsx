@@ -35,6 +35,8 @@ export const AnalyticsWorkspace: React.FC = () => {
   });
 
 
+  const [mobileTab, setMobileTab] = useState<'overview' | 'cashflow' | 'household'>('overview');
+
   const handlePeriodChange = (newPeriod: AnalyticsPeriod) => {
     setPeriod(newPeriod);
   };
@@ -45,8 +47,8 @@ export const AnalyticsWorkspace: React.FC = () => {
 
   if (!isAuthorized) {
     return (
-      <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
-        <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 space-y-2">
+      <div className="p-3 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-4">
+        <div className="p-4 sm:p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 space-y-2">
           <div className="flex items-center gap-2 font-bold text-sm">
             <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             <span>Household Analytics Restricted</span>
@@ -65,7 +67,7 @@ export const AnalyticsWorkspace: React.FC = () => {
 
   if (isError || !data) {
     return (
-      <div className="p-6 md:p-8 max-w-7xl mx-auto">
+      <div className="p-3 sm:p-6 md:p-8 max-w-7xl mx-auto">
         <AnalyticsErrorState
           message={(error as Error)?.message || 'Failed to load household analytics.'}
           onRetry={() => refetch()}
@@ -83,7 +85,7 @@ export const AnalyticsWorkspace: React.FC = () => {
     data.counts.groceriesCount === 0;
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-2.5 sm:p-4 md:p-8 max-w-7xl mx-auto space-y-2.5 sm:space-y-6">
       {/* Workspace Header */}
       <AnalyticsHeader
         transactionCount={data.finance.transactionCount}
@@ -99,6 +101,45 @@ export const AnalyticsWorkspace: React.FC = () => {
         onDateChange={handleDateChange}
       />
 
+      {/* Mobile-Only Category Tabs to avoid 3000px vertical scrolling */}
+      {!isCompletelyEmpty && (
+        <div className="flex md:hidden items-center gap-1 p-1 rounded-xl bg-panel border border-primary/70 overflow-x-auto no-scrollbar">
+          <button
+            type="button"
+            onClick={() => setMobileTab('overview')}
+            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all text-center whitespace-nowrap ${
+              mobileTab === 'overview'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-secondary hover:text-primary'
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab('cashflow')}
+            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all text-center whitespace-nowrap ${
+              mobileTab === 'cashflow'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-secondary hover:text-primary'
+            }`}
+          >
+            Cash Flow
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab('household')}
+            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all text-center whitespace-nowrap ${
+              mobileTab === 'household'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-secondary hover:text-primary'
+            }`}
+          >
+            Household
+          </button>
+        </div>
+      )}
+
       {isCompletelyEmpty ? (
         <AnalyticsEmptyState
           isFiltered={period !== 'all'}
@@ -106,14 +147,18 @@ export const AnalyticsWorkspace: React.FC = () => {
         />
       ) : (
         <>
-          {/* Top 4 Summary Cards */}
-          <AnalyticsSummary data={data} />
+          {/* Top 4 Summary Cards (Visible on desktop OR mobile 'overview') */}
+          <div className={mobileTab === 'overview' ? 'block' : 'hidden md:block'}>
+            <AnalyticsSummary data={data} />
+          </div>
 
-          {/* Cash Flow Trends */}
-          <CashFlowTrend data={data.trends.monthlyCashFlow} />
+          {/* Cash Flow Trends (Visible on desktop OR mobile 'cashflow') */}
+          <div className={mobileTab === 'cashflow' ? 'block' : 'hidden md:block'}>
+            <CashFlowTrend data={data.trends.monthlyCashFlow} />
+          </div>
 
-          {/* Categorical Breakdowns Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Categorical Breakdowns Grid (Visible on desktop OR mobile 'cashflow') */}
+          <div className={`grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 ${mobileTab === 'cashflow' ? 'grid' : 'hidden md:grid'}`}>
             <ExpenseCategoryChart
               categories={data.categories.expenses}
               totalAmount={data.finance.periodExpenses}
@@ -124,15 +169,17 @@ export const AnalyticsWorkspace: React.FC = () => {
             />
           </div>
 
-          {/* Household Telemetry Grid (Bills, Tasks, Groceries) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Household Telemetry Grid (Visible on desktop OR mobile 'household') */}
+          <div className={`grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6 ${mobileTab === 'household' ? 'grid' : 'hidden md:grid'}`}>
             <BillsAnalytics bills={data.bills} />
             <TasksAnalytics tasks={data.tasks} />
             <GroceriesAnalytics groceries={data.groceries} />
           </div>
 
-          {/* Deterministic Household Insights */}
-          <AnalyticsInsight insights={data.insights} />
+          {/* Deterministic Household Insights (Visible on desktop OR mobile 'overview') */}
+          <div className={mobileTab === 'overview' ? 'block' : 'hidden md:block'}>
+            <AnalyticsInsight insights={data.insights} />
+          </div>
         </>
       )}
     </div>

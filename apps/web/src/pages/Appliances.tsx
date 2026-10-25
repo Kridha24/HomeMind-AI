@@ -31,23 +31,24 @@ export const Appliances: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-2.5 sm:space-y-6 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-4 sm:p-6 border-primary rounded-2xl">
+      <div className="flex items-center justify-between gap-2 glass-panel p-2.5 sm:p-6 border-primary rounded-xl sm:rounded-2xl">
         <div className="min-w-0">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold text-primary flex items-center gap-2 tracking-tight">
-            <Tv className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 flex-shrink-0" />
+          <h1 className="text-sm xs:text-base sm:text-xl md:text-2xl font-extrabold text-primary flex items-center gap-1.5 sm:gap-2 tracking-tight">
+            <Tv className="w-4 h-4 sm:w-5 sm:h-6 text-cyan-400 flex-shrink-0" />
             <span className="truncate">Home Appliances</span>
           </h1>
-          <p className="text-xs text-muted mt-0.5">Track purchase dates, warranty countdowns & technician service logs</p>
+          <p className="hidden xs:block text-xs text-muted mt-0.5">Track purchase dates, warranty countdowns & technician service logs</p>
         </div>
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-cyan-600/25 transition-all"
+          className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-[11px] sm:text-xs font-semibold px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl shadow-lg shadow-cyan-600/25 transition-all shrink-0"
         >
-          <Plus className="w-4 h-4" />
-          <span>Register Appliance</span>
+          <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span className="hidden xs:inline">Register Appliance</span>
+          <span className="xs:hidden">Register</span>
         </button>
       </div>
 

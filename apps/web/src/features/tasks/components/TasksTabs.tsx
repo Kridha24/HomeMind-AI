@@ -72,16 +72,16 @@ export const TasksTabs: React.FC<TasksTabsProps> = ({
             key={tab.id}
             type="button"
             onClick={() => onTabChange(tab.id)}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap border ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap border ${
               isActive
                 ? 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30 shadow-xs'
                 : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
             }`}
           >
-            <Icon className="w-4 h-4 flex-shrink-0 text-sky-500" />
+            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 text-sky-500" />
             <span>{tab.label}</span>
             <span
-              className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+              className={`text-[9px] sm:text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
                 isActive
                   ? 'bg-sky-500/20 text-sky-700 dark:text-sky-300 font-extrabold'
                   : 'bg-secondary text-muted'

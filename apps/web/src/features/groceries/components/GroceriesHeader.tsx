@@ -38,57 +38,57 @@ export const GroceriesHeader: React.FC<GroceriesHeaderProps> = ({
   };
 
   return (
-    <div className="glass-panel p-4 sm:p-5 rounded-2xl border border-primary/70 shadow-xs space-y-3.5">
+    <div className="glass-panel p-2.5 sm:p-5 rounded-2xl border border-primary/70 shadow-xs space-y-2 sm:space-y-3.5">
       {/* 1. Header Bar: Title, Subtitle, Household Badge & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-2">
         {/* Left: Icon, Title, Subtitle & Household Badge */}
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/20 shadow-2xs">
-            <ShoppingBag className="w-5 h-5" />
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/20 shadow-2xs">
+            <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-lg sm:text-xl font-black text-primary tracking-tight">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <h1 className="text-sm xs:text-base sm:text-xl font-black text-primary tracking-tight">
                 Grocery Inventory
               </h1>
               {household?.name && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 max-w-[200px] sm:max-w-none truncate">
+                <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 max-w-[120px] sm:max-w-none truncate">
                   {household.name}
                 </span>
               )}
             </div>
-            <p className="text-xs text-secondary truncate sm:overflow-visible">
+            <p className="hidden xs:block text-[11px] sm:text-xs text-secondary truncate">
               Plan, shop, and keep your household pantry organized.
             </p>
           </div>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Refresh sync button */}
           <button
             type="button"
             onClick={onRefresh}
             disabled={isRefreshing}
             title="Refresh household groceries"
-            className="p-2 sm:p-2.5 rounded-xl border border-primary/70 bg-panel text-secondary hover:text-primary hover:bg-secondary/60 active:scale-95 transition-all"
+            className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl border border-primary/70 bg-panel text-secondary hover:text-primary hover:bg-secondary/60 active:scale-95 transition-all"
             aria-label="Refresh list"
           >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-emerald-500' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isRefreshing ? 'animate-spin text-emerald-500' : ''}`} />
           </button>
 
           {/* Shopping Mode Button */}
           <button
             type="button"
             onClick={onOpenShoppingMode}
-            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 text-xs font-bold active:scale-95 transition-all shadow-xs"
+            className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 text-[11px] sm:text-xs font-bold active:scale-95 transition-all shadow-xs"
             title="Open distraction-free shopping mode"
           >
-            <ShoppingCart className="w-4 h-4" />
+            <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span className="hidden xs:inline">Shopping Mode</span>
             <span className="xs:hidden">Shop</span>
             {totalPending > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-mono leading-none">
+              <span className="px-1.5 py-0.5 rounded-full bg-indigo-600 text-white text-[9px] sm:text-[10px] font-mono leading-none">
                 {totalPending}
               </span>
             )}
@@ -98,10 +98,11 @@ export const GroceriesHeader: React.FC<GroceriesHeaderProps> = ({
           <button
             type="button"
             onClick={onAddItem}
-            className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
+            className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-bold shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
           >
-            <Plus className="w-4 h-4" />
-            <span>+ Add Item</span>
+            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden xs:inline">+ Add Item</span>
+            <span className="xs:hidden">Add</span>
           </button>
         </div>
       </div>

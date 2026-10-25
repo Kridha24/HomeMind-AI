@@ -155,7 +155,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-background/60 backdrop-blur-sm select-none">
-      <div className="w-full max-w-md bg-panel border-l border-primary h-full p-5 sm:p-6 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-200">
+      <div className="w-full max-w-md bg-panel border-l border-primary h-[100dvh] p-3.5 sm:p-6 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-200 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
         <div className="space-y-4 flex-1 flex flex-col min-h-0">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-primary/80 pb-3.5">

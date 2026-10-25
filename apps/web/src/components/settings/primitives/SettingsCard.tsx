@@ -25,16 +25,16 @@ export const SettingsCard: React.FC<SettingsCardProps> = ({
     <section
       id={id}
       aria-labelledby={id && title ? `${id}-heading` : undefined}
-      className={`rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden p-4 sm:p-6 transition-all duration-200 ${className}`}
+      className={`rounded-xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden p-3 sm:p-6 transition-all duration-200 ${className}`}
     >
       {(title || action || badge) && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-2.5 pb-2.5 sm:pb-4 border-b border-slate-100 dark:border-slate-800/80">
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
               {title && (
                 <h2
                   id={id ? `${id}-heading` : undefined}
-                  className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight"
+                  className="text-sm xs:text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight"
                 >
                   {title}
                 </h2>
@@ -50,7 +50,7 @@ export const SettingsCard: React.FC<SettingsCardProps> = ({
               )}
             </div>
             {description && (
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
                 {description}
               </p>
             )}
@@ -59,7 +59,7 @@ export const SettingsCard: React.FC<SettingsCardProps> = ({
         </div>
       )}
 
-      <div className="space-y-4 pt-2">{children}</div>
+      <div className="space-y-3 sm:space-y-4 pt-2">{children}</div>
 
       {footer && (
         <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400">
