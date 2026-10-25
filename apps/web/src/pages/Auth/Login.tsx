@@ -40,13 +40,29 @@ export const Login: React.FC = () => {
   const [ecosystemHighlighted, setEcosystemHighlighted] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [selectedLang, setSelectedLang] = useState('en-IN');
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsAccepted, setTermsAcceptedState] = useState<boolean>(() => {
+    return typeof localStorage !== 'undefined' && localStorage.getItem('homemind_terms_accepted') === 'true';
+  });
+  const termsAcceptedRef = useRef<boolean>(termsAccepted);
+
+  const setTermsAccepted = (val: boolean) => {
+    termsAcceptedRef.current = val;
+    setTermsAcceptedState(val);
+    try {
+      localStorage.setItem('homemind_terms_accepted', val ? 'true' : 'false');
+    } catch {}
+  };
+
+  useEffect(() => {
+    termsAcceptedRef.current = termsAccepted;
+  }, [termsAccepted]);
 
   const googleButtonRef = useRef<HTMLDivElement>(null);
   const loginSectionRef = useRef<HTMLDivElement>(null);
   const langDropdownRef = useRef<HTMLDivElement>(null);
   const isMountedRef = useRef(true);
   const googleAttemptRef = useRef<{ id: string; timestamp: number } | null>(null);
+  const submitGoogleTokenRef = useRef<((token: string, attemptId: string) => Promise<void>) | null>(null);
 
   const [isGisReady, setIsGisReady] = useState<boolean>(() => {
     if (Capacitor.isNativePlatform()) return true;
@@ -150,6 +166,11 @@ export const Login: React.FC = () => {
     }
   }, []);
 
+  // Keep submitGoogleTokenRef always current across re-renders
+  submitGoogleTokenRef.current = async (googleToken: string, attemptId: string) => {
+    return submitGoogleToken(googleToken, attemptId);
+  };
+
   // Initialize GIS and render official Google Sign-In button on Web
   useEffect(() => {
     if (Capacitor.isNativePlatform()) return;
@@ -162,7 +183,9 @@ export const Login: React.FC = () => {
           console.log('[AUTH_UI] google credential callback received');
           if (response?.credential) {
             const attemptId = registerGoogleAttempt();
-            await submitGoogleToken(response.credential, attemptId);
+            if (submitGoogleTokenRef.current) {
+              await submitGoogleTokenRef.current(response.credential, attemptId);
+            }
           } else {
             console.warn('[AUTH_UI] google callback received without credential');
           }
@@ -205,7 +228,8 @@ export const Login: React.FC = () => {
 
   const submitGoogleToken = async (googleToken: string, attemptId: string) => {
     if (!isMountedRef.current) return;
-    if (!termsAccepted) {
+    const isAccepted = termsAcceptedRef.current || (typeof localStorage !== 'undefined' && localStorage.getItem('homemind_terms_accepted') === 'true');
+    if (!isAccepted) {
       setError('Please accept the Terms of Service & Privacy Policy before signing in.');
       setLoadingGoogle(false);
       setLoadingState('idle');
@@ -262,7 +286,8 @@ export const Login: React.FC = () => {
 
   const triggerGoogleSignIn = async () => {
     setError('');
-    if (!termsAccepted) {
+    const isAccepted = termsAcceptedRef.current || (typeof localStorage !== 'undefined' && localStorage.getItem('homemind_terms_accepted') === 'true');
+    if (!isAccepted) {
       setError('Please accept the Terms of Service & Privacy Policy before signing in.');
       return;
     }

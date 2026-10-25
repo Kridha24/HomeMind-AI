@@ -48,12 +48,17 @@ export const LoginCard: React.FC<LoginCardProps> = ({
   const otpInputRef = useRef<HTMLInputElement>(null);
 
   // Mandatory Terms & Conditions acceptance
-  const [internalTerms, setInternalTerms] = useState(false);
+  const [internalTerms, setInternalTerms] = useState<boolean>(() => {
+    return propTermsAccepted ?? (typeof localStorage !== 'undefined' && localStorage.getItem('homemind_terms_accepted') === 'true');
+  });
   const isTermsAccepted = propTermsAccepted !== undefined ? propTermsAccepted : internalTerms;
   const [termsError, setTermsError] = useState(false);
 
   const setTermsAccepted = (val: boolean) => {
     setInternalTerms(val);
+    try {
+      localStorage.setItem('homemind_terms_accepted', val ? 'true' : 'false');
+    } catch {}
     if (onTermsChange) onTermsChange(val);
     if (val) {
       setTermsError(false);
