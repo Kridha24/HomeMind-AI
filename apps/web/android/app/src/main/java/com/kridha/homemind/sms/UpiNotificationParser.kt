@@ -29,9 +29,12 @@ object UpiNotificationParser {
 
     private val DEBIT_PATTERNS = listOf(
         Pattern.compile("""(?:paid|sent|payment of)\s*(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)\s*(?:to|for)?\s*([a-zA-Z0-9\s&.'\-]+)""", Pattern.CASE_INSENSITIVE),
-        Pattern.compile("""(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)\s*(?:paid|sent|transferred)\s*(?:to|for)?\s*([a-zA-Z0-9\s&.'\-]+)""", Pattern.CASE_INSENSITIVE),
+        Pattern.compile("""(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)\s*(?:paid|sent|transferred|debited)\s*(?:to|for)?\s*([a-zA-Z0-9\s&.'\-]+)""", Pattern.CASE_INSENSITIVE),
         Pattern.compile("""transferred\s*(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)\s*(?:to)?\s*([a-zA-Z0-9\s&.'\-]+)""", Pattern.CASE_INSENSITIVE),
-        Pattern.compile("""(?:successful|completed)\s*payment\s*of\s*(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)\s*(?:to)?\s*([a-zA-Z0-9\s&.'\-]*)""", Pattern.CASE_INSENSITIVE)
+        Pattern.compile("""(?:successful|completed)\s*payment\s*of\s*(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)\s*(?:to)?\s*([a-zA-Z0-9\s&.'\-]*)""", Pattern.CASE_INSENSITIVE),
+        Pattern.compile("""payment\s*(?:to\s+([a-zA-Z0-9\s&.'\-]+)\s+)?(?:successful|completed).*?(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)""", Pattern.CASE_INSENSITIVE),
+        Pattern.compile("""(?:debited|paid)\s*(?:by|with|of)?\s*(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)""", Pattern.CASE_INSENSITIVE),
+        Pattern.compile("""(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)\s*(?:debited|paid)""", Pattern.CASE_INSENSITIVE)
     )
 
     private val CREDIT_PATTERNS = listOf(
@@ -49,16 +52,28 @@ object UpiNotificationParser {
         for (pattern in DEBIT_PATTERNS) {
             val matcher = pattern.matcher(combined)
             if (matcher.find()) {
-                val amountStr = matcher.group(1)?.replace(",", "") ?: continue
-                val amount = amountStr.toDoubleOrNull() ?: continue
-                if (amount <= 0.0) continue
+                val g1 = matcher.group(1)?.replace(",", "")
+                val g2 = if (matcher.groupCount() >= 2) matcher.group(2)?.trim() else null
 
-                var merchant = matcher.group(2)?.trim()?.replace(Regex("""(?i)\s*(via|using|from|successful|completed|ref|upi).*"""), "")?.trim()
-                if (merchant.isNullOrBlank() || merchant.length < 2) {
-                    merchant = title?.trim() ?: appName
+                val a1 = g1?.toDoubleOrNull()
+                val a2 = g2?.replace(",", "")?.toDoubleOrNull()
+
+                val amount = when {
+                    a1 != null && a1 > 0.0 -> a1
+                    a2 != null && a2 > 0.0 -> a2
+                    else -> continue
                 }
-                if (merchant.equals("successful", ignoreCase = true) || merchant.equals("completed", ignoreCase = true)) {
-                    merchant = appName
+
+                var merchant = when {
+                    a1 != null && g2 != null && g2.length > 1 -> g2
+                    a2 != null && g1 != null && g1.length > 1 -> g1
+                    else -> title?.trim() ?: appName
+                }
+
+                merchant = merchant.replace(Regex("""(?i)\s*(via|using|from|successful|completed|ref|upi|debited).*"""), "").trim()
+                if (merchant.isBlank() || merchant.length < 2 || merchant.equals("successful", ignoreCase = true) || merchant.equals("completed", ignoreCase = true)) {
+                    merchant = title?.replace(Regex("""(?i)\s*(successful|completed|paid|sent).*"""), "")?.trim() ?: appName
+                    if (merchant.isBlank()) merchant = appName
                 }
 
                 val occurredAt = ParsedSmsTransaction.formatIsoDate(timestampMs)

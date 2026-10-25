@@ -47,6 +47,7 @@ import { useSettingStore } from './stores/useSettingStore';
 import { useCallStore } from './stores/useCallStore';
 import { FamilyCallModal } from './components/family/FamilyCallModal';
 import { socketService } from './services/socketService';
+import { SmsSyncManager } from './services/sms/smsSyncManager';
 import apiClient from './services/apiClient';
 
 // ─── Protected Route ─────────────────────────────────────────────────────────
@@ -133,8 +134,22 @@ function AppShell() {
     if (isAuthenticated) {
       fetchSettings();
       socketService.connect();
+
+      if (Capacitor.isNativePlatform()) {
+        SmsSyncManager.initRealtimeListener();
+        SmsSyncManager.drainNativeQueue().catch(() => {});
+      }
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const handleResume = () => {
+      SmsSyncManager.drainNativeQueue().catch(() => {});
+    };
+    window.addEventListener('focus', handleResume);
+    return () => window.removeEventListener('focus', handleResume);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;

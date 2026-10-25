@@ -15,7 +15,8 @@ export class SmsSyncManager {
   private static listenerHandle: any = null;
 
   static isTrackingEnabled(): boolean {
-    return localStorage.getItem(STORAGE_KEYS.TRACKING_ENABLED) === 'true';
+    const val = localStorage.getItem(STORAGE_KEYS.TRACKING_ENABLED);
+    return val === null ? true : val === 'true';
   }
 
   static setTrackingEnabled(enabled: boolean): void {
@@ -225,14 +226,16 @@ export class SmsSyncManager {
     this.savePendingQueue(remaining);
   }
 
-  private static async drainNativeQueue(): Promise<void> {
+  static async drainNativeQueue(): Promise<void> {
     try {
       const nativeItems = await SmsPluginBridge.getPendingNativeQueue();
       if (nativeItems.length > 0) {
+        console.log(`[SmsSync] Draining ${nativeItems.length} transactions from native queue`);
         for (const tx of nativeItems) {
           try {
             await this.importSingleTransaction(tx);
-          } catch {
+          } catch (e) {
+            console.warn('[SmsSync] Failed to import queued item, will retry:', e);
             this.enqueuePending(tx);
           }
         }
