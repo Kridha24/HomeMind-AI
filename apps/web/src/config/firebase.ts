@@ -35,7 +35,9 @@ try {
 }
 
 export {
+  app,
   auth,
+  firebaseConfig,
   RecaptchaVerifier,
   signInWithPhoneNumber,
   GoogleAuthProvider,

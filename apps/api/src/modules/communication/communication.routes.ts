@@ -7,9 +7,13 @@ const router = Router();
 // ICE config for WebRTC STUN/TURN
 router.get('/ice-config', sensitiveEndpointLimiter, CommunicationController.getIceConfig);
 
-// Push device token management
+// Push device token & multi-device management
+router.get('/devices', CommunicationController.getRegisteredDevices);
 router.post('/device-token', sensitiveEndpointLimiter, CommunicationController.registerDeviceToken);
 router.delete('/device-token', sensitiveEndpointLimiter, CommunicationController.unregisterDeviceToken);
+router.delete('/device-token/:token', sensitiveEndpointLimiter, CommunicationController.unregisterDeviceToken);
+router.put('/device-preferences', sensitiveEndpointLimiter, CommunicationController.updateDevicePreferences);
+router.post('/test-push', sensitiveEndpointLimiter, CommunicationController.sendTestNotification);
 
 // Device identity key management (E2EE)
 router.post('/device-key', sensitiveEndpointLimiter, CommunicationController.registerDeviceKey);

@@ -90,6 +90,20 @@ export const createGroceryItem = async (req: AuthenticatedRequest, res: Response
 
     emitGroceryUpdate(householdId, { action: 'CREATED', item });
 
+    import('../modules/notifications/notificationDispatcher')
+      .then(({ NotificationDispatcher }) => {
+        NotificationDispatcher.dispatchEvent({
+          householdId,
+          actorId: req.user?.userId,
+          category: 'GROCERIES',
+          title: 'Grocery Item Added',
+          body: `"${item.name}" was added to household groceries`,
+          link: '/groceries',
+          dedupKey: `grocery-created-${item.id}`,
+        }).catch(() => {});
+      })
+      .catch(() => {});
+
     res.status(201).json({ item });
   } catch (err: any) {
     console.error('[createGroceryItem] Error:', err.message);
@@ -140,6 +154,21 @@ export const updateGroceryItem = async (req: AuthenticatedRequest, res: Response
     });
 
     emitGroceryUpdate(householdId, { action: 'UPDATED', item: updated });
+
+    if (updated.quantity <= updated.minThreshold) {
+      import('../modules/notifications/notificationDispatcher')
+        .then(({ NotificationDispatcher }) => {
+          NotificationDispatcher.dispatchEvent({
+            householdId,
+            category: 'GROCERIES',
+            title: 'Low Stock Alert',
+            body: `"${updated.name}" is running low on stock`,
+            link: '/groceries',
+            dedupKey: `grocery-low-${updated.id}`,
+          }).catch(() => {});
+        })
+        .catch(() => {});
+    }
 
     res.json({ success: true, item: updated });
   } catch (err: any) {

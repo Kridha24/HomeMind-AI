@@ -31,6 +31,7 @@ model User {
   sentMessages   Message[]      @relation("SentMessages")
   messageReceipts MessageReceipt[]
   deviceKeys     DeviceKey[]
+  deviceRegistrations DeviceRegistration[]
   isVerified     Boolean        @default(true)
   isActive       Boolean        @default(true)
   lastLogin      DateTime?
@@ -704,4 +705,23 @@ model DeviceKey {
   @@index([userId, revokedAt])
 }
 
+model DeviceRegistration {
+  id               String    @id @default(uuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token            String    @unique
+  deviceId         String?
+  platform         String    @default("web") // web, android, ios
+  deviceName       String?
+  browser          String?
+  userAgent        String?
+  isActive         Boolean   @default(true)
+  permissionStatus String    @default("granted") // granted, denied, default
+  preferences      Json?
+  lastSeenAt       DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
+  @@index([userId, isActive])
+  @@index([token])
+}

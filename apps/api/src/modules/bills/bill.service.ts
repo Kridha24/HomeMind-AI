@@ -15,6 +15,22 @@ export class BillService {
 
     const bill = await BillRepository.createAtomic(householdId, userId, dto);
     await invalidateHouseholdDashboard(householdId);
+
+    // Dispatch Bills reminder notification to household members (actor excluded)
+    import('../../modules/notifications/notificationDispatcher')
+      .then(({ NotificationDispatcher }) => {
+        NotificationDispatcher.dispatchEvent({
+          householdId,
+          actorId: userId,
+          category: 'BILLS',
+          title: 'Upcoming Bill Added',
+          body: `"${dto.title}" has been scheduled in upcoming bills`,
+          link: '/bills',
+          dedupKey: `bill-created-${bill.id}`,
+        }).catch(() => {});
+      })
+      .catch(() => {});
+
     return bill;
   }
 
@@ -53,6 +69,22 @@ export class BillService {
 
     const result = await BillRepository.markPaidAtomic(id, householdId, userId, payload);
     await invalidateHouseholdDashboard(householdId);
+
+    // Dispatch notification to household members
+    import('../../modules/notifications/notificationDispatcher')
+      .then(({ NotificationDispatcher }) => {
+        NotificationDispatcher.dispatchEvent({
+          householdId,
+          actorId: userId,
+          category: 'BILLS',
+          title: 'Bill Paid',
+          body: `"${existing.title}" was marked as paid`,
+          link: '/bills',
+          dedupKey: `bill-paid-${id}`,
+        }).catch(() => {});
+      })
+      .catch(() => {});
+
     return result.bill;
   }
 }

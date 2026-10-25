@@ -26,8 +26,27 @@ export class CommunicationController {
   }
 
   /**
+   * GET /api/v1/communication/devices
+   * List all registered devices for the authenticated user
+   */
+  public static async getRegisteredDevices(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const devices = await DeviceTokenService.getUserDevices(userId);
+      return res.json({ success: true, devices });
+    } catch (err: any) {
+      console.error('[Communication] Error listing devices:', err);
+      return res.status(500).json({ error: 'Failed to retrieve registered devices' });
+    }
+  }
+
+  /**
    * POST /api/v1/communication/device-token
-   * Registers an FCM push device token for Android/iOS background calling
+   * Registers or updates a device push token with platform & metadata
    */
   public static async registerDeviceToken(req: AuthenticatedRequest, res: Response) {
     try {
@@ -36,15 +55,23 @@ export class CommunicationController {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      const { token, platform } = req.body;
-      if (!token || typeof token !== 'string') {
+      const { token, platform, deviceId, deviceName, browser, userAgent, preferences } = req.body;
+      if (!token || typeof token !== 'string' || token.trim().length < 10) {
         return res.status(400).json({ error: 'Valid device token is required' });
       }
 
-      const validPlatform = ['android', 'ios', 'web'].includes(platform) ? platform : 'android';
-      await DeviceTokenService.registerToken(userId, token, validPlatform);
+      const validPlatform = ['android', 'ios', 'web'].includes(platform) ? platform : 'web';
+      const registration = await DeviceTokenService.registerToken(userId, {
+        token: token.trim(),
+        platform: validPlatform,
+        deviceId,
+        deviceName,
+        browser,
+        userAgent,
+        preferences,
+      });
 
-      return res.status(200).json({ success: true, message: 'Device token registered' });
+      return res.status(200).json({ success: true, message: 'Device registered successfully', registration });
     } catch (err: any) {
       console.error('[Communication] Error registering device token:', err);
       return res.status(500).json({ error: 'Failed to register device token' });
@@ -53,7 +80,8 @@ export class CommunicationController {
 
   /**
    * DELETE /api/v1/communication/device-token
-   * Unregisters a device token on logout or app uninstall
+   * DELETE /api/v1/communication/device-token/:token
+   * Unregisters a device token
    */
   public static async unregisterDeviceToken(req: AuthenticatedRequest, res: Response) {
     try {
@@ -62,16 +90,73 @@ export class CommunicationController {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      const { token } = req.body;
+      const token = req.params.token || req.body.token;
       if (!token || typeof token !== 'string') {
         return res.status(400).json({ error: 'Token is required' });
       }
 
-      await DeviceTokenService.unregisterToken(userId, token);
-      return res.status(200).json({ success: true, message: 'Device token unregistered' });
+      const success = await DeviceTokenService.unregisterToken(userId, token);
+      return res.status(200).json({ success, message: 'Device token unregistered' });
     } catch (err: any) {
       console.error('[Communication] Error unregistering device token:', err);
       return res.status(500).json({ error: 'Failed to unregister device token' });
+    }
+  }
+
+  /**
+   * PUT /api/v1/communication/device-preferences
+   * Update category preferences for user devices
+   */
+  public static async updateDevicePreferences(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const { preferences, deviceId } = req.body;
+      if (!preferences || typeof preferences !== 'object') {
+        return res.status(400).json({ error: 'Valid preferences object required' });
+      }
+
+      const success = await DeviceTokenService.updatePreferences(userId, preferences, deviceId);
+      return res.status(200).json({ success, message: 'Preferences updated' });
+    } catch (err: any) {
+      console.error('[Communication] Error updating preferences:', err);
+      return res.status(500).json({ error: 'Failed to update preferences' });
+    }
+  }
+
+  /**
+   * POST /api/v1/communication/test-push
+   * Test push notification delivery to the caller's registered devices
+   */
+  public static async sendTestNotification(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      const householdId = req.user?.householdId || 'default-household';
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const { NotificationDispatcher } = await import('../notifications/notificationDispatcher');
+      const result = await NotificationDispatcher.dispatchEvent({
+        householdId,
+        recipientUserIds: [userId],
+        category: 'GENERAL',
+        title: 'HomeMind.AI Test Notification',
+        body: 'Push notifications are successfully configured and active on this device!',
+        link: '/settings',
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: `Test notification dispatched to ${result.deviceCount} registered device(s)`,
+        ...result,
+      });
+    } catch (err: any) {
+      console.error('[Communication] Error sending test notification:', err);
+      return res.status(500).json({ error: 'Failed to send test notification' });
     }
   }
 

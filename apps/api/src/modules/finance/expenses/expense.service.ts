@@ -23,6 +23,21 @@ export class ExpenseService {
     // Invalidate cached dashboard for this household
     await invalidateHouseholdDashboard(householdId);
 
+    // Dispatch privacy-conscious Finance notification to other members
+    import('../../../modules/notifications/notificationDispatcher')
+      .then(({ NotificationDispatcher }) => {
+        NotificationDispatcher.dispatchEvent({
+          householdId,
+          actorId: userId,
+          category: 'FINANCE',
+          title: 'New Shared Expense',
+          body: `A new shared expense was added: "${dto.title}"`,
+          link: '/finance',
+          dedupKey: `expense-created-${expense.id}`,
+        }).catch(() => {});
+      })
+      .catch(() => {});
+
     return expense;
   }
 

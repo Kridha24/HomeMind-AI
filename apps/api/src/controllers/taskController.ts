@@ -110,6 +110,34 @@ export const createTask = async (req: AuthenticatedRequest, res: Response) => {
     await invalidateHouseholdDashboard(householdId).catch(() => {});
     emitTaskUpdate(householdId, { action: 'CREATED', task });
 
+    // Dispatch Tasks push notification
+    import('../modules/notifications/notificationDispatcher')
+      .then(({ NotificationDispatcher }) => {
+        if (assigneeId && assigneeId !== creatorId) {
+          NotificationDispatcher.dispatchEvent({
+            householdId,
+            actorId: creatorId,
+            recipientUserIds: [assigneeId],
+            category: 'TASKS',
+            title: 'Task Assigned',
+            body: `You have been assigned to task: "${task.title}"`,
+            link: '/tasks',
+            dedupKey: `task-assigned-${task.id}`,
+          }).catch(() => {});
+        } else {
+          NotificationDispatcher.dispatchEvent({
+            householdId,
+            actorId: creatorId,
+            category: 'TASKS',
+            title: 'New Task Created',
+            body: `"${task.title}" was added to family tasks`,
+            link: '/tasks',
+            dedupKey: `task-created-${task.id}`,
+          }).catch(() => {});
+        }
+      })
+      .catch(() => {});
+
     res.status(201).json({ task });
   } catch (err: any) {
     console.error('[createTask] Error:', err.message);
@@ -190,6 +218,23 @@ export const updateTaskStatus = async (req: AuthenticatedRequest, res: Response)
 
     await invalidateHouseholdDashboard(householdId).catch(() => {});
     emitTaskUpdate(householdId, { action: 'STATUS_CHANGED', task });
+
+    if (status === 'COMPLETED' && task.creatorId && task.creatorId !== req.user?.userId) {
+      import('../modules/notifications/notificationDispatcher')
+        .then(({ NotificationDispatcher }) => {
+          NotificationDispatcher.dispatchEvent({
+            householdId,
+            actorId: req.user?.userId,
+            recipientUserIds: [task.creatorId],
+            category: 'TASKS',
+            title: 'Task Completed',
+            body: `"${task.title}" has been completed!`,
+            link: '/tasks',
+            dedupKey: `task-completed-${task.id}`,
+          }).catch(() => {});
+        })
+        .catch(() => {});
+    }
 
     res.json({ task });
   } catch (err: any) {

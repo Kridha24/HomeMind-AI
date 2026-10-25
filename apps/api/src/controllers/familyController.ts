@@ -121,6 +121,21 @@ export const updateMemberRole = async (req: AuthenticatedRequest, res: Response)
     emitMemberUpdate(householdId, { action: 'role_updated', userId: targetUserId, newRole: role, member: user });
     await invalidateHouseholdDashboard(householdId).catch(() => {});
 
+    import('../modules/notifications/notificationDispatcher')
+      .then(({ NotificationDispatcher }) => {
+        NotificationDispatcher.dispatchEvent({
+          householdId,
+          actorId: requesterId,
+          recipientUserIds: [targetUserId],
+          category: 'FAMILY',
+          title: 'Role Updated',
+          body: `Your family workspace role has been updated to ${role}`,
+          link: '/family',
+          dedupKey: `role-updated-${targetUserId}-${role}`,
+        }).catch(() => {});
+      })
+      .catch(() => {});
+
     res.json({ user });
   } catch (err: any) {
     console.error('[updateMemberRole] Error:', err.message);
@@ -464,6 +479,20 @@ export const joinHouseholdWithCode = async (req: AuthenticatedRequest, res: Resp
       await invalidateHouseholdDashboard(currentHouseholdId).catch(() => {});
     }
     await invalidateHouseholdDashboard(newHousehold.id).catch(() => {});
+
+    import('../modules/notifications/notificationDispatcher')
+      .then(({ NotificationDispatcher }) => {
+        NotificationDispatcher.dispatchEvent({
+          householdId: newHousehold.id,
+          actorId: userId,
+          category: 'FAMILY',
+          title: 'New Family Member',
+          body: `${updatedUser?.name || 'A new member'} joined your family workspace`,
+          link: '/family',
+          dedupKey: `member-joined-${userId}-${newHousehold.id}`,
+        }).catch(() => {});
+      })
+      .catch(() => {});
 
     res.json({ user: updatedUser, household: newHousehold });
   } catch (err: any) {

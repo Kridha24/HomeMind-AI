@@ -1,4 +1,5 @@
 import { DeviceTokenService } from './deviceTokenService';
+import { fcmProvider } from '../../infrastructure/notifications/fcmProvider';
 
 export interface MessagePushDispatchParams {
   recipientUserIds: string[];
@@ -48,14 +49,14 @@ export class PushNotificationService {
       if (!recipientUserId || recipientUserId === senderId) continue;
 
       try {
-        const tokens = await DeviceTokenService.getUserTokens(recipientUserId);
+        const tokens = await DeviceTokenService.getActiveTokensForUser(recipientUserId, 'FAMILY');
         if (!tokens || tokens.length === 0) continue;
 
         deviceCount += tokens.length;
         dispatchedCount++;
 
         // Sanitized payload containing ONLY safe metadata
-        const pushPayload = {
+        const pushPayload: Record<string, string> = {
           type: 'NEW_MESSAGE',
           conversationId,
           conversationType,
@@ -65,9 +66,17 @@ export class PushNotificationService {
           timestamp,
         };
 
-        // If FCM server credentials or native push client are configured, dispatch here
+        await fcmProvider.sendMulticastPush(tokens, {
+          title: 'New Message',
+          body: `${senderName || 'A family member'} sent a message`,
+          link: '/messages',
+          category: 'FAMILY',
+          tag: `msg-${conversationId}`,
+          data: pushPayload,
+        });
+
         console.log(
-          `[PushNotificationService] Dispatched NEW_MESSAGE notification to ${tokens.length} device(s) for user ${recipientUserId} (conv=${conversationId}, type=${conversationType})`
+          `[PushNotificationService] Dispatched NEW_MESSAGE notification to ${tokens.length} device(s) for user ${recipientUserId} (conv=${conversationId})`
         );
       } catch (err) {
         console.warn(`[PushNotificationService] Failed to dispatch push for user ${recipientUserId}:`, err);
