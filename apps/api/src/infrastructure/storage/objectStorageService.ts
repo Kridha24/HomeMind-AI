@@ -108,7 +108,13 @@ export class LocalStorageProvider implements StorageProvider {
   }
 
   getFilePath(key: string): string {
-    return path.join(this.baseDir, key);
+    const normalizedKey = key.replace(/\\/g, '/');
+    const resolvedBase = path.resolve(this.baseDir);
+    const resolvedPath = path.resolve(this.baseDir, normalizedKey);
+    if (!resolvedPath.startsWith(resolvedBase + path.sep) && resolvedPath !== resolvedBase) {
+      throw new Error('Access denied: Invalid object key path traversal');
+    }
+    return resolvedPath;
   }
 }
 

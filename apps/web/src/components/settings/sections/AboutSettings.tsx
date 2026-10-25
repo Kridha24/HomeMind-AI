@@ -141,43 +141,45 @@ export const AboutSettings: React.FC = () => {
             <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
           </a>
 
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 text-left">
+          <Link
+            to="/privacy"
+            className="group flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-left transition-all"
+          >
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-500 transition-colors">
                   Privacy Policy
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Zero data selling & on-device encryption
+                  Data governance, tenant isolation & right to erasure
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              Compliant
-            </span>
-          </div>
+            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
+          </Link>
 
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 text-left">
+          <Link
+            to="/terms"
+            className="group flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-left transition-all"
+          >
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center">
                 <FileText className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-violet-500 transition-colors">
                   Terms of Service
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Household operating license
+                  Household workspace license & agreements
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              Active
-            </span>
-          </div>
+            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
+          </Link>
         </div>
       </SettingsCard>
     </div>

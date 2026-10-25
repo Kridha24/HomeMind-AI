@@ -1265,6 +1265,18 @@ export const deleteAccount = async (req: AuthenticatedRequest, res: Response) =>
     // Revoke all refresh tokens
     await prisma.refreshToken.deleteMany({ where: { userId } });
 
+    // Deactivate push notification device registrations
+    await prisma.deviceRegistration.updateMany({
+      where: { userId },
+      data: { isActive: false },
+    });
+
+    // Revoke E2EE device identity keys
+    await prisma.deviceKey.updateMany({
+      where: { userId },
+      data: { revokedAt: new Date() },
+    });
+
     // Anonymize personal AI memories
     await prisma.aIMemory.deleteMany({ where: { userId } });
 

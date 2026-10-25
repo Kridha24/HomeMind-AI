@@ -38,6 +38,8 @@ import { Reports } from './pages/Reports';
 import { Profile } from './pages/Profile';
 import { Settings } from './pages/Settings';
 import { UserManual } from './pages/UserManual';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { TermsOfService } from './pages/TermsOfService';
 import { Login } from './pages/Auth/Login';
 import { useAuthStore } from './stores/useAuthStore';
 import { useSettingStore } from './stores/useSettingStore';
@@ -322,6 +324,8 @@ function AppShell() {
             <Route path="/profile" element={<Navigate to="/settings?tab=profile" replace />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/manual" element={<UserManual />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
@@ -420,6 +424,8 @@ export function App() {
       <NativeAppBridge />
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
         <Route
           path="/*"
           element={

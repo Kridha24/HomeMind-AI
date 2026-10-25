@@ -165,6 +165,14 @@ export const getThreadMessages = async (req: AuthenticatedRequest, res: Response
     const { threadId } = req.params;
     if (!householdId) return res.status(401).json({ error: 'Unauthorized' });
 
+    // Enforce tenant isolation: verify thread belongs to this household
+    const thread = await prisma.aIThread.findFirst({
+      where: { id: threadId, householdId },
+    });
+    if (!thread) {
+      return res.status(404).json({ error: 'Thread not found' });
+    }
+
     const messages = await prisma.aIMessage.findMany({
       where: { threadId },
       orderBy: { createdAt: 'asc' },
