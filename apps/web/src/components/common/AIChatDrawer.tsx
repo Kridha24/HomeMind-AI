@@ -298,7 +298,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ isOpen, onClose }) =
                   className={`p-3 rounded-2xl text-xs leading-relaxed ${
                     m.sender === 'user'
                       ? 'bg-blue-600 text-white rounded-tr-none shadow-md'
-                      : 'bg-panel border border-primary text-primary rounded-tl-none shadow-sm'
+                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-tl-none shadow-xs'
                   }`}
                 >
                   <div>{formatMarkdown(m.text)}</div>

@@ -8,13 +8,6 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: 'rgb(var(--bg-background) / <alpha-value>)',
-        panel: 'rgb(var(--bg-panel) / <alpha-value>)',
-        secondary: 'rgb(var(--bg-secondary) / <alpha-value>)',
-        surface: 'rgb(var(--bg-surface) / <alpha-value>)',
-        'surface-elevated': 'rgb(var(--bg-surface-elevated) / <alpha-value>)',
-        'surface-input': 'rgb(var(--bg-surface-input) / <alpha-value>)',
-        primary: 'rgb(var(--border-primary) / <alpha-value>)', // using this for border
         brand: {
           50: '#f0f7ff',
           100: '#e0effe',
@@ -28,6 +21,14 @@ export default {
           900: '#0f172a',
           950: '#020617',
         }
+      },
+      backgroundColor: {
+        background: 'rgb(var(--bg-background) / <alpha-value>)',
+        panel: 'rgb(var(--bg-panel) / <alpha-value>)',
+        secondary: 'rgb(var(--bg-secondary) / <alpha-value>)',
+        surface: 'rgb(var(--bg-surface) / <alpha-value>)',
+        'surface-elevated': 'rgb(var(--bg-surface-elevated) / <alpha-value>)',
+        'surface-input': 'rgb(var(--bg-surface-input) / <alpha-value>)',
       },
       textColor: {
         primary: 'rgb(var(--text-primary) / <alpha-value>)',

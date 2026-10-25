@@ -77,7 +77,7 @@ export const FamilyWorkspace: React.FC = () => {
     const conv = searchParams.get('conversation');
     const member = searchParams.get('member');
 
-    if (tab === 'communication' || conv || member) {
+    if (tab === 'communication' || tab === 'connect' || conv || member) {
       setActiveView('communication');
     }
 
@@ -176,32 +176,7 @@ export const FamilyWorkspace: React.FC = () => {
 
       {/* 2. Workspace View vs Communication View */}
       {activeView === 'communication' ? (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-3xl bg-panel border border-primary/80 shadow-xs">
-            <div>
-              <h2 className="text-base font-bold text-primary">
-                Family Communication & Calling
-              </h2>
-              <p className="text-xs text-muted">
-                Direct messaging and real-time audio/video calls with household members
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {members
-                .filter((m) => m.id !== user?.id)
-                .slice(0, 3)
-                .map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => handleStartCall(m, 'video')}
-                    className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-primary/80 bg-secondary/50 hover:bg-secondary text-primary transition-colors"
-                  >
-                    Call {m.name.split(' ')[0]}
-                  </button>
-                ))}
-            </div>
-          </div>
+        <div className="w-full">
           <FamilyChat
             members={members}
             onlineUserIds={onlineUserIds}

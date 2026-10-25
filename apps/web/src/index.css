@@ -52,6 +52,17 @@
     color: rgb(var(--text-primary));
   }
 
+  /* High-contrast text clarity across light and dark themes */
+  .text-primary {
+    color: rgb(var(--text-primary));
+  }
+  .text-secondary {
+    color: rgb(var(--text-secondary));
+  }
+  .text-muted {
+    color: rgb(var(--text-muted));
+  }
+
   /* Dropdown option styles for light and dark */
   select option {
     background-color: #ffffff;
