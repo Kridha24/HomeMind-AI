@@ -57,6 +57,7 @@ router.put('/auth/profile', authController.updateProfile);
 router.post('/auth/logout-all', authController.logoutAllDevices);
 router.get('/auth/sessions', authController.getActiveSessions);
 router.delete('/auth/sessions/:sessionId', authController.revokeSession);
+router.get('/auth/export-data', authController.exportPersonalData);
 router.delete('/auth/account', authController.deleteAccount);
 
 // Household Settings & Currency Engine

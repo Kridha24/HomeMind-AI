@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AlertCircle, Shield, Lock, Users, ArrowRight, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { GoogleLoginButton } from './GoogleLoginButton';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -449,6 +450,19 @@ export const LoginCard: React.FC<LoginCardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* EXPLICIT LEGAL TERMS & PRIVACY CONSENT (Big App Standard) */}
+      <p className={`text-[10px] sm:text-[10.5px] text-center px-1 leading-normal ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+        By continuing, you agree to our{' '}
+        <Link to="/terms" className="underline hover:text-blue-500 font-semibold transition-colors">
+          Terms of Service
+        </Link>{' '}
+        and{' '}
+        <Link to="/privacy" className="underline hover:text-blue-500 font-semibold transition-colors">
+          Privacy Policy
+        </Link>
+        .
+      </p>
 
       {/* INDIA / LOCAL IDENTITY CARD */}
       <div

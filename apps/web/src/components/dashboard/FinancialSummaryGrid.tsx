@@ -1,13 +1,15 @@
-import React from 'react';
 import {
   Wallet,
   CreditCard,
   BadgeDollarSign,
   PiggyBank,
   Landmark,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { FinancialSummaryCard } from './FinancialSummaryCard';
 import { useI18n } from '../../utils/i18n';
+import { useSettingStore } from '../../stores/useSettingStore';
 
 interface FinancialSummaryGridProps {
   monthlyIncome: number;
@@ -29,9 +31,33 @@ export const FinancialSummaryGrid: React.FC<FinancialSummaryGridProps> = ({
   dateRangeStr,
 }) => {
   const { t } = useI18n();
+  const { hideFinancialBalances, toggleHideFinancialBalances } = useSettingStore();
 
   return (
-    <section aria-label="Financial Snapshot">
+    <section aria-label="Financial Snapshot" className="space-y-1.5">
+      <div className="flex items-center justify-between px-0.5">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Financial Snapshot
+        </span>
+        <button
+          type="button"
+          onClick={toggleHideFinancialBalances}
+          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 transition-colors"
+          title={hideFinancialBalances ? 'Show Balances' : 'Privacy Mode: Hide Balances'}
+        >
+          {hideFinancialBalances ? (
+            <>
+              <EyeOff className="w-3.5 h-3.5 text-amber-500" />
+              <span>Hidden</span>
+            </>
+          ) : (
+            <>
+              <Eye className="w-3.5 h-3.5 text-slate-500" />
+              <span>Privacy Mode</span>
+            </>
+          )}
+        </button>
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
         {/* 1. Monthly Income */}
         <FinancialSummaryCard

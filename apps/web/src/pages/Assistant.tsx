@@ -16,6 +16,7 @@ import {
   Check,
   Copy,
   ShieldAlert,
+  Lock,
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import apiClient from '../services/apiClient';
@@ -316,7 +317,14 @@ export const Assistant: React.FC = () => {
       {/* 2. CONVERSATION AREA (ONE SCREEN) */}
       {/* ========================================================================= */}
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 scrollbar-thin">
-        
+        {/* WhatsApp/Enterprise Style Household Privacy Notice */}
+        <div className="flex items-center justify-center pt-0.5 pb-1">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-white/[0.08] text-[10.5px] text-slate-500 dark:text-slate-400 max-w-md text-center">
+            <Lock className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+            <span>Household Encrypted & Isolated • Zero External Model Training</span>
+          </div>
+        </div>
+
         {/* Clean Empty State: Dynamic Real User Greeting & 4 Quick Actions */}
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full min-h-[380px] text-center space-y-6 animate-in fade-in duration-200 my-auto">

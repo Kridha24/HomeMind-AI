@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Sparkles, AlertCircle, Moon, Sun, ArrowRight, ChevronDown, Check, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Capacitor } from '@capacitor/core';
@@ -620,11 +620,21 @@ export const Login: React.FC = () => {
 
       {/* ── 3. COMPACT FOOTER (SINGLE-LINE NO-OVERFLOW) ── */}
       <footer
-        className={`w-full max-w-7xl mx-auto px-2 sm:px-4 py-1 sm:py-1.5 flex flex-col sm:flex-row items-center justify-between gap-0.5 sm:gap-1 text-[10px] sm:text-[11px] relative z-20 border-t flex-shrink-0 transition-colors duration-700 ${
+        className={`w-full max-w-7xl mx-auto px-2 sm:px-4 py-1 sm:py-1.5 flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] relative z-20 border-t flex-shrink-0 transition-colors duration-700 ${
           isLight ? 'text-slate-500 border-slate-200' : 'text-slate-400 border-white/[0.08]'
         }`}
       >
-        <span>© {new Date().getFullYear()} HomeMind.AI • All rights reserved</span>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span>© {new Date().getFullYear()} HomeMind.AI</span>
+          <span>•</span>
+          <Link to="/privacy" className="hover:text-blue-500 hover:underline transition-colors">
+            Privacy Policy
+          </Link>
+          <span>•</span>
+          <Link to="/terms" className="hover:text-blue-500 hover:underline transition-colors">
+            Terms of Service
+          </Link>
+        </div>
         <span className="flex items-center gap-1.5">
           <span>Thoughtfully crafted for modern Indian families</span>
           <span>🇮🇳</span>

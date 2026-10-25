@@ -1311,3 +1311,87 @@ export const deleteAccount = async (req: AuthenticatedRequest, res: Response) =>
     res.status(500).json({ error: 'Failed to delete account. Please try again.' });
   }
 };
+
+/**
+ * 12. Export Personal Data (GDPR Art. 20 / DPDP Act Data Portability)
+ */
+export const exportPersonalData = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const householdId = req.user?.householdId;
+    if (!userId || !householdId) return res.status(401).json({ error: 'Unauthenticated' });
+
+    const [user, household, tasks, expenses, bills, groceries, devices] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phoneNumber: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      prisma.household.findUnique({
+        where: { id: householdId },
+        select: {
+          id: true,
+          name: true,
+          createdAt: true,
+        },
+      }),
+      prisma.task.findMany({
+        where: { householdId, softDelete: false },
+        select: { id: true, title: true, priority: true, status: true, dueDate: true, createdAt: true },
+      }),
+      prisma.expense.findMany({
+        where: { householdId, softDelete: false },
+        select: { id: true, title: true, amount: true, category: true, date: true, createdAt: true },
+      }),
+      prisma.bill.findMany({
+        where: { householdId, softDelete: false },
+        select: { id: true, title: true, amount: true, category: true, dueDate: true, status: true },
+      }),
+      prisma.groceryItem.findMany({
+        where: { householdId, softDelete: false },
+        select: { id: true, name: true, quantity: true, unit: true, category: true, minThreshold: true },
+      }),
+      prisma.deviceRegistration.count({
+        where: { userId, isActive: true },
+      }),
+    ]);
+
+    if (!user) return res.status(404).json({ error: 'User record not found' });
+
+    const archive = {
+      archiveFormat: 'HomeMind Personal Data Export v1.0',
+      exportedAt: new Date().toISOString(),
+      governance: 'GDPR Article 20 / India DPDP Act Data Portability',
+      user,
+      household,
+      summary: {
+        totalTasks: tasks.length,
+        totalExpenses: expenses.length,
+        totalBills: bills.length,
+        totalGroceries: groceries.length,
+        activeRegisteredDevices: devices,
+      },
+      records: {
+        tasks,
+        expenses,
+        bills,
+        groceries,
+      },
+    };
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="homemind-data-${userId}-${Date.now()}.json"`);
+    res.json(archive);
+  } catch (err: any) {
+    console.error('[exportPersonalData] Error:', err.message);
+    res.status(500).json({ error: 'Failed to generate personal data export.' });
+  }
+};
+

@@ -21,6 +21,7 @@ interface SettingState {
   sidebarCollapsed: boolean;
   reducedMotion: boolean;
   compactMode: boolean;
+  hideFinancialBalances: boolean;
   
   // Actions
   setCountry: (countryCode: string) => void;
@@ -32,12 +33,13 @@ interface SettingState {
   setUnitSystem: (unit: 'Metric' | 'Imperial') => void;
   setReducedMotion: (reduced: boolean) => void;
   setCompactMode: (compact: boolean) => void;
+  toggleHideFinancialBalances: () => void;
   saveSettings: () => Promise<void>;
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   updateSettings: (newSettings: Partial<SettingState>) => Promise<void>;
   fetchSettings: () => Promise<void>;
-  format: (amount: number) => string;
+  format: (amount: number, forceShow?: boolean) => string;
 }
 
 function applyThemeToDOM(theme: 'dark' | 'light' | 'glass' | 'system') {
@@ -86,6 +88,13 @@ export const useSettingStore = create<SettingState>((set, get) => ({
   sidebarCollapsed: false,
   reducedMotion: localStorage.getItem('hm_reducedMotion') === 'true',
   compactMode: localStorage.getItem('hm_compactMode') === 'true',
+  hideFinancialBalances: localStorage.getItem('hm_hide_balances') === 'true',
+
+  toggleHideFinancialBalances: () => {
+    const next = !get().hideFinancialBalances;
+    localStorage.setItem('hm_hide_balances', String(next));
+    set({ hideFinancialBalances: next });
+  },
 
   setReducedMotion: (reduced: boolean) => {
     localStorage.setItem('hm_reducedMotion', String(reduced));
@@ -185,7 +194,11 @@ export const useSettingStore = create<SettingState>((set, get) => ({
     set({ theme });
   },
 
-  format: (amount: number) => {
+  format: (amount: number, forceShow = false) => {
+    if (get().hideFinancialBalances && !forceShow) {
+      const sym = get().currencySymbol || '₹';
+      return `${sym} ••••••`;
+    }
     const { currency, currencySymbol } = get();
     return formatCurrency(amount, currency, currencySymbol);
   },

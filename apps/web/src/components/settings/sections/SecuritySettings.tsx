@@ -12,8 +12,14 @@ import {
   Globe,
   Radio,
   Check,
+  Download,
+  Eye,
+  EyeOff,
+  FileJson,
+  Lock,
 } from 'lucide-react';
 import { useAuthStore } from '../../../stores/useAuthStore';
+import { useSettingStore } from '../../../stores/useSettingStore';
 import apiClient from '../../../services/apiClient';
 import { SettingsCard } from '../primitives/SettingsCard';
 import { SettingsStatusBadge } from '../primitives/SettingsStatusBadge';
@@ -37,6 +43,28 @@ export const SecuritySettings: React.FC = () => {
   const [showLogoutAllModal, setShowLogoutAllModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const { hideFinancialBalances, toggleHideFinancialBalances } = useSettingStore();
+  const [downloadingData, setDownloadingData] = useState(false);
+
+  const handleExportPersonalData = async () => {
+    setDownloadingData(true);
+    try {
+      const res = await apiClient.get('/auth/export-data');
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(res.data, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', `homemind-data-export-${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      setActionMessage({ type: 'success', text: 'Personal data archive downloaded successfully.' });
+      setTimeout(() => setActionMessage(null), 4000);
+    } catch (err: any) {
+      setActionMessage({ type: 'error', text: err?.response?.data?.error || 'Failed to export data.' });
+    } finally {
+      setDownloadingData(false);
+    }
+  };
 
   // Parse browser/OS details for current device display
   const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown Browser';
@@ -412,6 +440,84 @@ export const SecuritySettings: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      </SettingsCard>
+
+      {/* 4. Financial Privacy & UPI Peeking Mode */}
+      <SettingsCard
+        id="financial-privacy"
+        title="Financial Privacy & Peeking Mode"
+        description="Mask household expenses, income, and bills across the platform to prevent shoulder surfing in public or shared spaces."
+        badge={hideFinancialBalances ? 'Masking Active' : 'Revealed'}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 gap-3">
+          <div className="flex items-center gap-3.5">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border ${
+              hideFinancialBalances
+                ? 'bg-amber-500/10 border-amber-500/25 text-amber-500'
+                : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-500'
+            }`}>
+              {hideFinancialBalances ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </div>
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                {hideFinancialBalances ? 'Balances are Masked (Privacy Mode)' : 'Standard Visibility Mode'}
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                {hideFinancialBalances
+                  ? 'All financial figures display as ₹ •••••• until toggled.'
+                  : 'Balances and transactions are displayed normally.'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={toggleHideFinancialBalances}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
+              hideFinancialBalances
+                ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-600'
+            }`}
+          >
+            {hideFinancialBalances ? 'Disable Masking' : 'Enable Privacy Mode'}
+          </button>
+        </div>
+      </SettingsCard>
+
+      {/* 5. Personal Data Portability (Download My Data) */}
+      <SettingsCard
+        id="data-portability"
+        title="Personal Data Portability (Download My Data)"
+        description="Exercise your statutory right to data portability under the Indian DPDP Act and GDPR Article 20. Download a machine-readable JSON archive of all your personal and household records."
+        badge="Data Rights"
+      >
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
+              <FileJson className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                Household Data Archive (.json)
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Includes tasks, expenses, bills, grocery history, household configuration, and registered devices.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleExportPersonalData}
+            disabled={downloadingData}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs active:scale-95 disabled:opacity-50 transition-all self-end sm:self-auto cursor-pointer"
+          >
+            {downloadingData ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Download className="w-3.5 h-3.5" />
+            )}
+            <span>{downloadingData ? 'Generating Archive...' : 'Download My Data'}</span>
+          </button>
         </div>
       </SettingsCard>
 
