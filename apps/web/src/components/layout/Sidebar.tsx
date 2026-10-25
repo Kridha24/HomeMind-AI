@@ -157,9 +157,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose, unrea
             aria-label="Go to Dashboard"
             className="flex items-center gap-2.5 overflow-hidden group cursor-pointer p-1 rounded-xl hover:bg-white/80 dark:hover:bg-slate-800/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-xs shadow-blue-500/25 flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
+            <img
+              src="/favicon.png"
+              alt="HomeMind.AI"
+              className="w-8 h-8 rounded-xl shadow-xs object-contain flex-shrink-0 group-hover:scale-105 transition-transform duration-200"
+            />
             {!isCollapsed && (
               <div className="min-w-0">
                 <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white block leading-none tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">

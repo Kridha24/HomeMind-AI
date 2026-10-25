@@ -429,9 +429,11 @@ export const Login: React.FC = () => {
           className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-rose-950/30 border border-white/20 group-hover:scale-105 transition-transform flex-shrink-0">
-            <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
-          </div>
+          <img
+            src="/favicon.png"
+            alt="HomeMind.AI"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl shadow-md object-contain border border-white/20 group-hover:scale-105 transition-transform flex-shrink-0"
+          />
           <div>
             <span
               className={`font-extrabold text-sm sm:text-base lg:text-lg tracking-tight block leading-tight ${

@@ -160,9 +160,11 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
             </button>
           )}
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-xs shadow-indigo-500/25">
-              <Home className="w-3.5 h-3.5 text-white" />
-            </div>
+            <img
+              src="/favicon.png"
+              alt="HomeMind.AI"
+              className="w-7 h-7 rounded-xl shadow-xs object-contain"
+            />
             <div className="flex items-center">
               <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white">
                 HomeMind
