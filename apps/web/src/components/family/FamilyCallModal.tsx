@@ -17,6 +17,7 @@ import { Capacitor } from '@capacitor/core';
 import { socketService } from '../../services/socketService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import apiClient from '../../services/apiClient';
+import { callAudioService } from '../../utils/callAudio';
 
 export type CallState =
   | 'IDLE'
@@ -139,6 +140,29 @@ export const FamilyCallModal: React.FC<FamilyCallModalProps> = ({
     }
   }, [callId]);
 
+  // Web Audio Ringtone (Incoming) & Dial Ringback (Outgoing)
+  useEffect(() => {
+    if (!isOpen) {
+      callAudioService.stopCallAudio();
+      return;
+    }
+
+    if (callState === 'RINGING') {
+      // Incoming call: Play repeating melodic ringtone chime
+      callAudioService.playIncomingRingtone();
+    } else if (callState === 'CONNECTING' && !isIncoming) {
+      // Outgoing call: Play repeating dial ringback tone
+      callAudioService.playOutgoingRingback();
+    } else {
+      // Connected, Ended, Rejected, or Busy: Silence immediately
+      callAudioService.stopCallAudio();
+    }
+
+    return () => {
+      callAudioService.stopCallAudio();
+    };
+  }, [isOpen, callState, isIncoming]);
+
   // Screen share availability check (Unsupported on Android native WebViews)
   const isScreenShareSupported =
     !Capacitor.isNativePlatform() &&
@@ -227,6 +251,7 @@ export const FamilyCallModal: React.FC<FamilyCallModalProps> = ({
     pendingIceCandidatesRef.current = [];
     setIsScreenSharing(false);
     setCallDuration(0);
+    callAudioService.stopCallAudio();
   }, [stopTimer]);
 
   // Request Local User Media (Microphone & Camera)

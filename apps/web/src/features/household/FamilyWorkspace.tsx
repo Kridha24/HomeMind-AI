@@ -21,7 +21,7 @@ import { FamilyWorkspaceSkeleton } from './components/FamilyWorkspaceSkeleton';
 import { FamilyWorkspaceErrorState } from './components/FamilyWorkspaceErrorState';
 import { FamilyWorkspaceEmptyState } from './components/FamilyWorkspaceEmptyState';
 import { FamilyChat } from '../../components/family/FamilyChat';
-import { FamilyCallModal } from '../../components/family/FamilyCallModal';
+import { useCallStore } from '../../stores/useCallStore';
 
 export const FamilyWorkspace: React.FC = () => {
   const navigate = useNavigate();
@@ -65,14 +65,9 @@ export const FamilyWorkspace: React.FC = () => {
   const [removalMember, setRemovalMember] = useState<HouseholdMember | null>(null);
 
   // Online members for FamilyChat
+  // Online members for FamilyChat
   const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
-
-  // WebRTC Calling State
-  const [showCallModal, setShowCallModal] = useState(false);
-  const [callType, setCallType] = useState<'audio' | 'video'>('video');
-  const [activeCallTarget, setActiveCallTarget] = useState<any>(null);
-  const [isIncomingCall, setIsIncomingCall] = useState(false);
-  const [incomingSignalData, setIncomingSignalData] = useState<any>(null);
+  const { startCall } = useCallStore();
 
   // Auto-open modals or switch view based on URL query param (e.g. ?action=invite or ?conversation=...)
   useEffect(() => {
@@ -94,9 +89,7 @@ export const FamilyWorkspace: React.FC = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const [incomingCallId, setIncomingCallId] = useState<string | undefined>(undefined);
-
-  // WebRTC Incoming Call Socket Listener & Online Members
+  // Online Members Socket Listener
   useEffect(() => {
     const socket = socketService.getSocket();
     if (!socket) return;
@@ -107,42 +100,15 @@ export const FamilyWorkspace: React.FC = () => {
       setOnlineUserIds(userIds || []);
     };
 
-    const handleIncomingCall = (data: {
-      callId?: string;
-      callerId: string;
-      callerName: string;
-      callerAvatar?: string;
-      callType: 'audio' | 'video';
-      signalData: any;
-    }) => {
-      setActiveCallTarget({
-        id: data.callerId,
-        name: data.callerName,
-        avatar: data.callerAvatar,
-      });
-      setCallType(data.callType || 'video');
-      setIncomingSignalData(data.signalData);
-      setIncomingCallId(data.callId);
-      setIsIncomingCall(true);
-      setShowCallModal(true);
-    };
-
     socket.on('household_online_members', handleOnlineMembers);
-    socket.on('webrtc_incoming_call', handleIncomingCall);
 
     return () => {
       socket.off('household_online_members', handleOnlineMembers);
-      socket.off('webrtc_incoming_call', handleIncomingCall);
     };
   }, []);
 
   const handleStartCall = (target: any, type: 'audio' | 'video') => {
-    setActiveCallTarget(target);
-    setCallType(type);
-    setIsIncomingCall(false);
-    setIncomingSignalData(null);
-    setIncomingCallId(undefined);
-    setShowCallModal(true);
+    startCall(target, type);
   };
 
   const handleRefreshAll = async () => {
@@ -384,19 +350,6 @@ export const FamilyWorkspace: React.FC = () => {
         }}
         isLoading={removeMemberMutation.isPending}
       />
-
-      {/* WebRTC Audio / Video Call Modal */}
-      {showCallModal && (
-        <FamilyCallModal
-          isOpen={showCallModal}
-          onClose={() => setShowCallModal(false)}
-          targetUser={activeCallTarget}
-          callType={callType}
-          isIncoming={isIncomingCall}
-          incomingSignal={incomingSignalData}
-          callId={incomingCallId}
-        />
-      )}
     </div>
   );
 };

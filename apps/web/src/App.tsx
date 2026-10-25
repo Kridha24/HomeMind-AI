@@ -43,6 +43,9 @@ import { TermsOfService } from './pages/TermsOfService';
 import { Login } from './pages/Auth/Login';
 import { useAuthStore } from './stores/useAuthStore';
 import { useSettingStore } from './stores/useSettingStore';
+import { useCallStore } from './stores/useCallStore';
+import { FamilyCallModal } from './components/family/FamilyCallModal';
+import { socketService } from './services/socketService';
 import apiClient from './services/apiClient';
 
 // ─── Protected Route ─────────────────────────────────────────────────────────
@@ -92,6 +95,31 @@ function AppShell() {
   const { isAuthenticated } = useAuthStore();
   const { totalUnread } = useRealtimeNotifications();
 
+  // Global WebRTC Call Manager & Incoming Listener
+  const {
+    isOpen: isCallOpen,
+    targetUser: callTargetUser,
+    callType,
+    isIncoming: isIncomingCall,
+    incomingSignal,
+    callId: activeCallId,
+    receiveCall,
+    closeCall,
+  } = useCallStore();
+
+  useEffect(() => {
+    const socket = socketService.getSocket();
+    if (!socket) return;
+
+    const handleIncomingCall = (data: any) => {
+      receiveCall(data);
+    };
+
+    socket.on('webrtc_incoming_call', handleIncomingCall);
+    return () => {
+      socket.off('webrtc_incoming_call', handleIncomingCall);
+    };
+  }, [receiveCall]);
 
   useEffect(() => {
     if (isAuthenticated) fetchSettings();
@@ -389,6 +417,19 @@ function AppShell() {
 
       <AIChatDrawer isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />
       <NotificationDrawer isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
+
+      {/* Global WebRTC Audio / Video Call Modal */}
+      {isCallOpen && callTargetUser && (
+        <FamilyCallModal
+          isOpen={isCallOpen}
+          onClose={closeCall}
+          targetUser={callTargetUser}
+          callType={callType}
+          isIncoming={isIncomingCall}
+          incomingSignal={incomingSignal}
+          callId={activeCallId}
+        />
+      )}
     </div>
   );
 }
