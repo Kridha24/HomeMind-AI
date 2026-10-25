@@ -5,6 +5,8 @@ const config: CapacitorConfig = {
   appName: 'HomeMind.AI',
   webDir: 'dist',
   server: {
+    url: 'https://home-mind-ai-iota.vercel.app',
+    cleartext: true,
     androidScheme: 'https',
   },
   plugins: {
