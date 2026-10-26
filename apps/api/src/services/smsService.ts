@@ -29,6 +29,12 @@ export function generateCryptographicOTP(): string {
 /**
  * Dispatches an SMS to the user's mobile number via Fast2SMS, Twilio, or fallback generator.
  */
+function maskPhone(phone: string): string {
+  const digits = phone.replace(/[^0-9]/g, '');
+  if (digits.length <= 4) return '****';
+  return '*'.repeat(digits.length - 4) + digits.slice(-4);
+}
+
 export async function sendMobileSMS(
   phoneNumber: string,
   otpCode: string
@@ -46,7 +52,7 @@ export async function sendMobileSMS(
       });
       const data = await response.json().catch(() => ({}));
       if (data.return === true) {
-        console.log(`[FAST2SMS] OTP dispatched to ${phoneNumber}`);
+        console.log(`[FAST2SMS] OTP dispatched to ${maskPhone(phoneNumber)}`);
         return { success: true, provider: 'FAST2SMS', message: 'SMS delivered to phone' };
       } else {
         console.warn('[FAST2SMS] Dispatch warning:', data.message || data);
@@ -65,18 +71,36 @@ export async function sendMobileSMS(
         from: twilioFrom,
         to: formattedTo,
       });
-      console.log(`[TWILIO] OTP dispatched to ${formattedTo} (SID: ${message.sid})`);
+      console.log(`[TWILIO] OTP dispatched to ${maskPhone(formattedTo)} (SID: ${message.sid})`);
       return { success: true, provider: 'TWILIO', message: 'SMS delivered via Twilio' };
     } catch (err: any) {
       console.warn('[TWILIO] Dispatch error:', err.message);
     }
   }
 
-  // 3. Fallback: Log to console and allow instant verification so auth never breaks
-  console.log(`🔑 [MOBILE OTP] Phone: ${phoneNumber} | Code: ${otpCode}`);
+  // 3. Fallback handling
+  const isProd = process.env.NODE_ENV === 'production';
+  const allowDevConsole = !isProd && (process.env.ALLOW_OTP_CONSOLE === 'true' || allowOtpConsole);
+
+  if (isProd) {
+    console.error(`[SMS Service] Production SMS dispatch failed or no SMS gateway configured for ${maskPhone(phoneNumber)}.`);
+    return {
+      success: false,
+      provider: 'NONE',
+      message: 'SMS delivery service is currently unavailable. Please try again later.'
+    };
+  }
+
+  // Safe development/testing fallback ONLY when NOT in production
+  if (allowDevConsole) {
+    console.log(`🔑 [DEV-ONLY OTP] Phone: ${phoneNumber} | Code: ${otpCode}`);
+  } else {
+    console.log(`[DEV-ONLY SMS] Simulated dispatch to ${phoneNumber} (set ALLOW_OTP_CONSOLE=true to view code)`);
+  }
+
   return {
     success: true,
     provider: 'SYSTEM_OTP',
-    message: `Verification code generated for ${phoneNumber}`
+    message: `[DEV ONLY] Verification code generated for ${phoneNumber}`
   };
 }

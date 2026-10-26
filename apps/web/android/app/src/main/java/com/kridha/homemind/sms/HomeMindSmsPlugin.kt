@@ -1,30 +1,15 @@
 package com.kridha.homemind.sms
 
-import android.Manifest
 import android.content.Context
 import com.getcapacitor.JSArray
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
-import com.getcapacitor.PermissionState
 import com.getcapacitor.annotation.CapacitorPlugin
-import com.getcapacitor.annotation.Permission
-import com.getcapacitor.annotation.PermissionCallback
 import org.json.JSONArray
 
-@CapacitorPlugin(
-    name = "HomeMindSms",
-    permissions = [
-        Permission(
-            alias = "sms",
-            strings = [
-                Manifest.permission.READ_SMS,
-                Manifest.permission.RECEIVE_SMS
-            ]
-        )
-    ]
-)
+@CapacitorPlugin(name = "HomeMindSms")
 class HomeMindSmsPlugin : Plugin() {
 
     override fun load() {
@@ -34,62 +19,29 @@ class HomeMindSmsPlugin : Plugin() {
 
     @PluginMethod
     fun getSmsPermissionStatus(call: PluginCall) {
-        val readGranted = getPermissionState("sms") == PermissionState.GRANTED
         val ret = JSObject().apply {
-            put("granted", readGranted)
-            put("status", if (readGranted) "GRANTED" else "DENIED")
+            put("granted", false)
+            put("status", "UNSUPPORTED")
         }
         call.resolve(ret)
     }
 
     @PluginMethod
     fun requestSmsPermissions(call: PluginCall) {
-        if (getPermissionState("sms") == PermissionState.GRANTED) {
-            val ret = JSObject().apply {
-                put("granted", true)
-                put("status", "GRANTED")
-            }
-            call.resolve(ret)
-        } else {
-            requestPermissionForAlias("sms", call, "smsPermsCallback")
-        }
-    }
-
-    @PermissionCallback
-    private fun smsPermsCallback(call: PluginCall) {
-        val granted = getPermissionState("sms") == PermissionState.GRANTED
         val ret = JSObject().apply {
-            put("granted", granted)
-            put("status", if (granted) "GRANTED" else "DENIED")
+            put("granted", false)
+            put("status", "UNSUPPORTED")
         }
         call.resolve(ret)
     }
 
     @PluginMethod
     fun scanFinancialSms(call: PluginCall) {
-        if (getPermissionState("sms") != PermissionState.GRANTED) {
-            call.reject("SMS permission not granted")
-            return
+        val ret = JSObject().apply {
+            put("transactions", JSArray())
+            put("count", 0)
         }
-
-        val sinceTimestamp = call.getLong("sinceTimestamp") ?: 0L
-        val limit = call.getInt("limit") ?: 100
-
-        try {
-            val transactions = SmsReader.scanFinancialInbox(context, sinceTimestamp, limit)
-            val jsonArray = JSArray()
-            for (tx in transactions) {
-                jsonArray.put(tx.toJSObject())
-            }
-
-            val ret = JSObject().apply {
-                put("transactions", jsonArray)
-                put("count", transactions.size)
-            }
-            call.resolve(ret)
-        } catch (e: Exception) {
-            call.reject("Failed to scan SMS: ${e.message}", e)
-        }
+        call.resolve(ret)
     }
 
     @PluginMethod

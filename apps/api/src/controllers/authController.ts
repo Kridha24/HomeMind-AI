@@ -440,7 +440,8 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
       return res.status(503).json({ error: 'Failed to send verification code. Please try again in a moment.' });
     }
 
-    const showCodeInResponse = process.env.NODE_ENV !== 'production' || process.env.ALLOW_OTP_CONSOLE === 'true' || smsResult.provider === 'SYSTEM_OTP';
+    const isProd = process.env.NODE_ENV === 'production';
+    const showCodeInResponse = !isProd && (process.env.ALLOW_OTP_CONSOLE === 'true' || smsResult.provider === 'SYSTEM_OTP');
 
     res.json({
       success: true,
