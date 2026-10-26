@@ -33,12 +33,13 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 4 Main Sections on Bottom Dock: Home, Finance, Add (+), Family
+  // 5 Main Sections on Bottom Dock: Home, Finance, Add (+ in center), Groceries, Tasks
   const navItems = [
     { label: 'Home', path: '/', icon: Home },
     { label: 'Finance', path: '/expenses', icon: Wallet },
     { label: 'Add', path: 'add_action', icon: Plus, isAction: true },
-    { label: 'Family', path: '/family', icon: Users },
+    { label: 'Groceries', path: '/groceries', icon: ShoppingCart },
+    { label: 'Tasks', path: '/tasks', icon: CheckSquare },
   ];
 
   // Remaining sections accessible inside + Action Sheet
@@ -58,6 +59,14 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
       icon: CheckSquare,
       color: 'text-emerald-500 dark:text-emerald-400',
       bgColor: 'bg-emerald-500/10 border-emerald-500/20',
+    },
+    {
+      label: 'Family',
+      subtitle: 'Members & household room',
+      path: '/family',
+      icon: Users,
+      color: 'text-purple-500 dark:text-purple-400',
+      bgColor: 'bg-purple-500/10 border-purple-500/20',
     },
     {
       label: 'Bills',
@@ -218,12 +227,12 @@ export const MobileBottomDock: React.FC<MobileBottomDockProps> = ({
         </div>
       )}
 
-      {/* ── Fixed Bottom Navigation Dock (4 Sections: Home, Finance, +, Family) ── */}
+      {/* ── Fixed Bottom Navigation Dock (5 Sections: Home, Finance, +, Groceries, Tasks) ── */}
       <nav
-        className="fixed bottom-0 inset-x-0 z-40 bg-white/98 dark:bg-slate-900/98 backdrop-blur-xl border-t border-slate-100/90 dark:border-slate-800/80 px-3 pt-1.5 pb-[calc(0.55rem+env(safe-area-inset-bottom,0px))] md:hidden shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)] transition-colors"
+        className="fixed bottom-0 inset-x-0 z-40 bg-white/98 dark:bg-slate-900/98 backdrop-blur-xl border-t border-slate-100/90 dark:border-slate-800/80 px-2 sm:px-3 pt-1.5 pb-[calc(0.55rem+env(safe-area-inset-bottom,0px))] md:hidden shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)] transition-colors"
         aria-label="Mobile Navigation"
       >
-        <div className="grid grid-cols-4 items-end w-full max-w-sm sm:max-w-md mx-auto">
+        <div className="grid grid-cols-5 items-end w-full max-w-sm sm:max-w-md mx-auto">
           {navItems.map((item) => {
             if (item.isAction) {
               return (

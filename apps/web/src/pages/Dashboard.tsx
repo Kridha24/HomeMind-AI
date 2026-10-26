@@ -371,6 +371,38 @@ export const Dashboard: React.FC = () => {
   };
 
 
+  // Compute Today, Weekly, Monthly Expenses for Mobile Dashboard Overview
+  const expenseMetrics = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const weekStart = todayStart - 7 * 86400000;
+
+    let todayExp = 0;
+    let weekExp = 0;
+
+    recentHistory.forEach((h: any) => {
+      const isExpense = h.type === 'EXPENSE' || (h.amount && !h.isIncome);
+      if (!isExpense) return;
+      const amt = Math.abs(Number(h.amount) || 0);
+      const time = new Date(h.date || h.createdAt).getTime();
+      if (!isNaN(time)) {
+        if (time >= todayStart) {
+          todayExp += amt;
+        }
+        if (time >= weekStart) {
+          weekExp += amt;
+        }
+      }
+    });
+
+    const monthExp = summary?.monthlyExpenses || summary?.thisMonthSpent || 0;
+    return {
+      today: todayExp,
+      weekly: weekExp,
+      monthly: monthExp,
+    };
+  }, [recentHistory, summary]);
+
   // Prevent flash of owner financials during initial load (Part 46)
   if (loading) {
     return <DashboardSkeleton showFinancials={isOwnerOrCoOwner} />;
@@ -386,6 +418,12 @@ export const Dashboard: React.FC = () => {
       <div className="block md:hidden">
         <MobileDashboard
           members={membersList}
+          householdName={household?.name || 'My Family Home'}
+          adminName={membersList.find((m) => m.role === 'OWNER' || m.role === 'ADMIN')?.name || user?.name || 'Family Leader'}
+          todayExpenses={expenseMetrics.today}
+          weeklyExpenses={expenseMetrics.weekly}
+          monthlyExpenses={expenseMetrics.monthly}
+          currentUser={user}
           onInviteClick={() => setShowInviteModal(true)}
           onMemberClick={handleMemberClick}
           onToggleSidebar={() => {

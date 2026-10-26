@@ -22,6 +22,7 @@ import { FamilyWorkspaceErrorState } from './components/FamilyWorkspaceErrorStat
 import { FamilyWorkspaceEmptyState } from './components/FamilyWorkspaceEmptyState';
 import { JoinHouseholdModal } from './components/JoinHouseholdModal';
 import { LeaveRoomModal } from './components/LeaveRoomModal';
+import { AlertOctagon, X } from 'lucide-react';
 import { canLeaveHousehold } from './utils/householdPermissions';
 import { toast } from './utils/toast';
 import { FamilyChat } from '../../components/family/FamilyChat';
@@ -66,6 +67,8 @@ export const FamilyWorkspace: React.FC = () => {
   const [isJoinOpen, setIsJoinOpen] = useState(false);
   const [isLeaveRoomOpen, setIsLeaveRoomOpen] = useState(false);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [detailMember, setDetailMember] = useState<HouseholdMember | null>(null);
   const [roleMember, setRoleMember] = useState<HouseholdMember | null>(null);
   const [transferTarget, setTransferTarget] = useState<HouseholdMember | null>(null);
@@ -176,6 +179,15 @@ export const FamilyWorkspace: React.FC = () => {
         onInvite={() => setIsInviteOpen(true)}
         onOpenJoin={() => setIsJoinOpen(true)}
         onOpenLeave={() => setIsLeaveRoomOpen(true)}
+        onOpenDelete={() => setShowDeleteModal(true)}
+        onOpenTransfer={() => {
+          const eligibleTarget = members.find((m) => m.id !== user?.id);
+          if (eligibleTarget) {
+            setTransferTarget(eligibleTarget);
+          } else {
+            toast.info('To transfer ownership, please invite another member first.');
+          }
+        }}
         onOpenSwitcher={() => setIsSwitcherOpen(true)}
         onRefresh={handleRefreshAll}
         isRefreshing={loadingMembers || loadingActivity}
@@ -282,31 +294,6 @@ export const FamilyWorkspace: React.FC = () => {
               <HouseholdActivity activities={activity} isLoading={loadingActivity} />
             </div>
           </div>
-
-          {/* 3-Section Danger Zone at the Very Bottom */}
-          <HouseholdDangerZone
-            currentUserRole={user?.role}
-            householdName={household?.name || 'Household'}
-            householdId={household?.id || ''}
-            ownersCount={ownersCount}
-            membersCount={members.length}
-            onLeaveHousehold={async () => {
-              await leaveHouseholdMutation.mutateAsync();
-            }}
-            onDeleteHousehold={async (id: string) => {
-              await deleteHouseholdMutation.mutateAsync(id);
-            }}
-            onTransferOwnership={() => {
-              const eligibleTarget = members.find((m) => m.id !== user?.id);
-              if (eligibleTarget) {
-                setTransferTarget(eligibleTarget);
-              } else {
-                toast.info('Ownership transfer karne ke liye pehle kisi dusre sadasya ko invite karein.');
-              }
-            }}
-            isLeaving={leaveHouseholdMutation.isPending}
-            isDeleting={deleteHouseholdMutation.isPending}
-          />
         </div>
       )}
 
@@ -415,6 +402,76 @@ export const FamilyWorkspace: React.FC = () => {
           }
         }}
       />
+
+      {/* Delete Household Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-rose-500/30 rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-rose-500/20">
+              <div className="flex items-center gap-2 text-rose-500 font-bold">
+                <AlertOctagon className="w-5 h-5" />
+                <span>Delete Household</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmText('');
+                }}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              This action is permanent and cannot be undone. All shared expenses, groceries, and tasks in this household will be deleted.
+            </p>
+            <div className="space-y-2">
+              <p className="text-xs text-slate-500">
+                Type <strong className="text-slate-800 dark:text-slate-200">{household?.name}</strong> to confirm:
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={household?.name}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm focus:outline-hidden focus:ring-2 focus:ring-rose-500"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmText('');
+                }}
+                className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteConfirmText.trim() !== (household?.name || '').trim() || deleteHouseholdMutation.isPending}
+                onClick={async () => {
+                  if (household?.id) {
+                    try {
+                      await deleteHouseholdMutation.mutateAsync(household.id);
+                      setShowDeleteModal(false);
+                      setDeleteConfirmText('');
+                      toast.success(`Deleted ${household.name}`);
+                    } catch (err: any) {
+                      toast.error(err?.response?.data?.error || 'Failed to delete household');
+                    }
+                  }
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold disabled:opacity-50 transition-colors"
+              >
+                {deleteHouseholdMutation.isPending ? 'Deleting...' : 'Delete Household'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

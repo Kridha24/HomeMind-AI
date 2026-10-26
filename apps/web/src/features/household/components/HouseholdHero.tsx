@@ -15,6 +15,8 @@ import {
   MoreVertical,
   LogIn,
   LogOut,
+  Trash2,
+  ShieldAlert,
 } from 'lucide-react';
 import { Household, HouseholdMember } from '../../../types';
 import { canRenameHousehold } from '../utils/householdPermissions';
@@ -28,6 +30,8 @@ interface HouseholdHeroProps {
   onInvite: () => void;
   onOpenJoin?: () => void;
   onOpenLeave?: () => void;
+  onOpenDelete?: () => void;
+  onOpenTransfer?: () => void;
   onOpenSwitcher: () => void;
   onRefresh: () => void;
   isRefreshing?: boolean;
@@ -44,6 +48,8 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
   onInvite,
   onOpenJoin,
   onOpenLeave,
+  onOpenDelete,
+  onOpenTransfer,
   onOpenSwitcher,
   onRefresh,
   isRefreshing = false,
@@ -319,7 +325,22 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
 
                 <div className="my-1.5 border-t border-slate-700/60" />
 
-                {/* 4. Left from existing room */}
+                {/* 4. Transfer Ownership (Owner only) */}
+                {currentUserRole === 'OWNER' && onOpenTransfer && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      onOpenTransfer();
+                    }}
+                    className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-left text-amber-400 hover:text-amber-300 hover:bg-amber-500/15 font-bold transition-colors"
+                  >
+                    <ShieldAlert className="w-4 h-4 text-amber-400" />
+                    <span>Transfer Ownership</span>
+                  </button>
+                )}
+
+                {/* 5. Leave Household */}
                 <button
                   type="button"
                   onClick={() => {
@@ -329,8 +350,23 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
                   className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-left text-rose-400 hover:text-rose-300 hover:bg-rose-500/15 font-bold transition-colors"
                 >
                   <LogOut className="w-4 h-4 text-rose-400" />
-                  <span>Left from existing room</span>
+                  <span>Leave Household</span>
                 </button>
+
+                {/* 6. Delete Household (Owner only) */}
+                {currentUserRole === 'OWNER' && onOpenDelete && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      onOpenDelete();
+                    }}
+                    className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-left text-rose-500 hover:text-rose-400 hover:bg-rose-500/20 font-bold transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-500" />
+                    <span>Delete Household</span>
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -403,7 +439,26 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
               <span>Join Another Household</span>
             </button>
 
-            {/* 4. Left from existing room */}
+            <div className="my-1 border-t border-slate-800" />
+
+            {/* 4. Transfer Ownership (Owner only) */}
+            {currentUserRole === 'OWNER' && onOpenTransfer && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onOpenTransfer();
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl bg-amber-500/10 active:bg-amber-500/20 text-left text-amber-300 font-bold text-sm min-h-[48px]"
+              >
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                  <ShieldAlert className="w-4 h-4" />
+                </div>
+                <span>Transfer Ownership</span>
+              </button>
+            )}
+
+            {/* 5. Leave Household */}
             <button
               type="button"
               onClick={() => {
@@ -415,8 +470,25 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
               <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
                 <LogOut className="w-4 h-4" />
               </div>
-              <span>Left from existing room</span>
+              <span>Leave Household</span>
             </button>
+
+            {/* 6. Delete Household (Owner only) */}
+            {currentUserRole === 'OWNER' && onOpenDelete && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onOpenDelete();
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl bg-rose-600/20 active:bg-rose-600/30 text-left text-rose-400 font-bold text-sm min-h-[48px]"
+              >
+                <div className="w-8 h-8 rounded-xl bg-rose-600/30 text-rose-400 flex items-center justify-center">
+                  <Trash2 className="w-4 h-4" />
+                </div>
+                <span>Delete Household</span>
+              </button>
+            )}
           </div>
         </div>
       )}

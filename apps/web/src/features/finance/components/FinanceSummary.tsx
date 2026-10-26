@@ -38,12 +38,12 @@ export const FinanceSummary: React.FC<FinanceSummaryProps> = ({
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3.5">
-      {/* 1. Is Mahine Ka Kharcha (Spent) */}
+      {/* 1. This Month Spent */}
       <div className="relative overflow-hidden p-2.5 sm:p-5 border border-rose-500/30 dark:border-rose-500/35 bg-gradient-to-br from-rose-500/[0.08] via-rose-500/[0.03] to-white dark:from-rose-500/[0.14] dark:via-rose-950/20 dark:to-slate-900 rounded-xl sm:rounded-2xl flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-200 group">
         <div className="h-[2px] sm:h-[3px] w-full bg-gradient-to-r from-rose-500 via-pink-500 to-rose-400 absolute top-0 left-0 right-0 opacity-90" />
         <div className="flex items-center justify-between pt-0.5">
           <span className="text-[10px] sm:text-[11.5px] font-black text-rose-700 dark:text-rose-300 uppercase tracking-wider truncate">
-            Is Mahine Ka Kharcha
+            This Month Spent
           </span>
           <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center justify-center shadow-2xs group-hover:bg-rose-600 group-hover:text-white transition-colors flex-shrink-0">
             <ArrowDownRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -54,17 +54,17 @@ export const FinanceSummary: React.FC<FinanceSummaryProps> = ({
             -{formatINR(thisMonthSpent)}
           </span>
           <span className="text-[9.5px] sm:text-[10.5px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5 block truncate">
-            Kul kharch hui rashi
+            Total expenses
           </span>
         </div>
       </div>
 
-      {/* 2. Is Mahine Ki Kamai (Income) */}
+      {/* 2. This Month Income */}
       <div className="relative overflow-hidden p-2.5 sm:p-5 border border-emerald-500/30 dark:border-emerald-500/35 bg-gradient-to-br from-emerald-500/[0.08] via-emerald-500/[0.03] to-white dark:from-emerald-500/[0.14] dark:via-emerald-950/20 dark:to-slate-900 rounded-xl sm:rounded-2xl flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-200 group">
         <div className="h-[2px] sm:h-[3px] w-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 absolute top-0 left-0 right-0 opacity-90" />
         <div className="flex items-center justify-between pt-0.5">
           <span className="text-[10px] sm:text-[11.5px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-wider truncate">
-            Is Mahine Ki Kamai
+            This Month Income
           </span>
           <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center shadow-2xs group-hover:bg-emerald-600 group-hover:text-white transition-colors flex-shrink-0">
             <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -75,12 +75,12 @@ export const FinanceSummary: React.FC<FinanceSummaryProps> = ({
             +{formatINR(thisMonthIncome)}
           </span>
           <span className="text-[9.5px] sm:text-[10.5px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5 block truncate">
-            Salary & jama rashi
+            Salary & deposits
           </span>
         </div>
       </div>
 
-      {/* 3. Bachi Hui Bachat (Net Savings) */}
+      {/* 3. Net Savings */}
       <div className={`relative overflow-hidden p-2.5 sm:p-5 border rounded-xl sm:rounded-2xl flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-200 group ${
         isNetPositive
           ? 'border-teal-500/30 dark:border-teal-500/35 bg-gradient-to-br from-teal-500/[0.08] via-teal-500/[0.03] to-white dark:from-teal-500/[0.14] dark:via-teal-950/20 dark:to-slate-900'
@@ -93,7 +93,7 @@ export const FinanceSummary: React.FC<FinanceSummaryProps> = ({
           <span className={`text-[10px] sm:text-[11.5px] font-black uppercase tracking-wider truncate ${
             isNetPositive ? 'text-teal-700 dark:text-teal-300' : 'text-rose-700 dark:text-rose-300'
           }`}>
-            Bachi Hui Bachat
+            Net Savings
           </span>
           <div
             className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center border shadow-2xs transition-colors flex-shrink-0 ${
@@ -114,17 +114,17 @@ export const FinanceSummary: React.FC<FinanceSummaryProps> = ({
             {isNetPositive ? `+${formatINR(netCashFlow)}` : formatINR(netCashFlow)}
           </span>
           <span className="text-[9.5px] sm:text-[10.5px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5 block truncate">
-            {isNetPositive ? 'Surplus bachat hui' : 'Zyada kharcha hua'}
+            {isNetPositive ? 'Surplus savings' : 'Over budget'}
           </span>
         </div>
       </div>
 
-      {/* 4. Kul Hisab Entries (Transactions) */}
+      {/* 4. Transactions */}
       <div className="relative overflow-hidden p-2.5 sm:p-5 border border-indigo-500/30 dark:border-indigo-500/35 bg-gradient-to-br from-indigo-500/[0.08] via-indigo-500/[0.03] to-white dark:from-indigo-500/[0.14] dark:via-indigo-950/20 dark:to-slate-900 rounded-xl sm:rounded-2xl flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-200 group">
         <div className="h-[2px] sm:h-[3px] w-full bg-gradient-to-r from-indigo-500 via-blue-500 to-indigo-400 absolute top-0 left-0 right-0 opacity-90" />
         <div className="flex items-center justify-between pt-0.5">
           <span className="text-[10px] sm:text-[11.5px] font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-wider truncate">
-            Kul Hisab Entries
+            Transactions
           </span>
           <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 flex items-center justify-center shadow-2xs group-hover:bg-indigo-600 group-hover:text-white transition-colors flex-shrink-0">
             <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -138,22 +138,22 @@ export const FinanceSummary: React.FC<FinanceSummaryProps> = ({
             {needsReviewCount > 0 && (
               <span className="inline-flex items-center gap-0.5 text-[8.5px] sm:text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                 <AlertCircle className="w-2.5 h-2.5" />
-                {needsReviewCount} naye
+                {needsReviewCount} new
               </span>
             )}
           </div>
           <span className="text-[9.5px] sm:text-[10.5px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5 block truncate">
-            Total transactions
+            Total entries
           </span>
         </div>
       </div>
 
-      {/* 5. Sabse Bada Kharcha */}
+      {/* 5. Largest Expense */}
       <div className="col-span-2 sm:col-span-2 md:col-span-4 lg:col-span-1 relative overflow-hidden p-2.5 sm:p-5 border border-purple-500/30 dark:border-purple-500/35 bg-gradient-to-br from-purple-500/[0.08] via-purple-500/[0.03] to-white dark:from-purple-500/[0.14] dark:via-purple-950/20 dark:to-slate-900 rounded-xl sm:rounded-2xl flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-200 group">
         <div className="h-[2px] sm:h-[3px] w-full bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-400 absolute top-0 left-0 right-0 opacity-90" />
         <div className="flex items-center justify-between pt-0.5">
           <span className="text-[10px] sm:text-[11.5px] font-black text-purple-700 dark:text-purple-300 uppercase tracking-wider truncate">
-            Sabse Bada Kharcha
+            Largest Expense
           </span>
           <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 flex items-center justify-center shadow-2xs group-hover:bg-purple-600 group-hover:text-white transition-colors flex-shrink-0">
             <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />

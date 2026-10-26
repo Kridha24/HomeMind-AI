@@ -180,58 +180,209 @@ export class CopilotService {
 
     const validActionParts = parsedParts.filter((p) => Boolean(p.routed.intent));
 
-    // 4. ROUTE D: CONVERSATION LAYER (DETERMINISTIC CONVERSATIONAL RESPONDER)
-    // If no clear Action, Household Query, or Ambiguous Action was detected, route to conversational responder.
+    // 4. ROUTE D: INTELLIGENT CAPABILITIES & CONVERSATION LAYER
     if (validActionParts.length === 0) {
-      let activeThreadId = threadId;
+      // 4A. Salary-based Monthly Budget Planner
+      if (
+        /\b(monthly\s+budget|salary\s+pe\s+budget|budget\s+bna|budget\s+banao|salary\s+budget|budget\s+plan|budget\s+banake|salary\s+pe|budget\s+bana\s+do)\b/i.test(message) ||
+        (/\b(budget)\b/i.test(message) && /\b(salary|in-hand|kamai|income)\b/i.test(message))
+      ) {
+        let salaryAmount = 0;
+        const salaryMatch = message.match(/(\d+(?:\.\d+)?)\s*(k|lakh|thousand|lac)?/i);
+        if (salaryMatch) {
+          let num = parseFloat(salaryMatch[1]);
+          const mult = (salaryMatch[2] || '').toLowerCase();
+          if (mult === 'k' || mult === 'thousand') num *= 1000;
+          else if (mult === 'lakh' || mult === 'lac') num *= 100000;
+          if (num >= 5000) salaryAmount = num;
+        }
+
+        if (!salaryAmount) {
+          try {
+            const lastIncome = await prisma.income.findFirst({
+              where: { householdId, softDelete: false },
+              orderBy: { date: 'desc' },
+            });
+            if (lastIncome && Number(lastIncome.amount) > 0) {
+              salaryAmount = Number(lastIncome.amount);
+            }
+          } catch {}
+        }
+
+        const benchmarkSalary = salaryAmount || 50000;
+        const needs = Math.round(benchmarkSalary * 0.5);
+        const wants = Math.round(benchmarkSalary * 0.3);
+        const savings = Math.round(benchmarkSalary * 0.2);
+        const dailyAllowance = Math.round(wants / 30);
+        const isCustomSalary = Boolean(salaryAmount);
+        const sym = ctx.currencySymbol || '₹';
+
+        const reply =
+          `📊 **Monthly Budget Plan (${sym}${benchmarkSalary.toLocaleString('en-IN')}${isCustomSalary ? '' : ' benchmark'})**\n\n` +
+          `Here is your recommended **50/30/20 financial roadmap**:\n\n` +
+          `1. **Essential Needs (50%) — ${sym}${needs.toLocaleString('en-IN')}**\n` +
+          `   • Rent, utility bills (electricity, water, Wi-Fi)\n` +
+          `   • Essential groceries, kitchen ration & healthcare\n\n` +
+          `2. **Flexible Wants (30%) — ${sym}${wants.toLocaleString('en-IN')}**\n` +
+          `   • Dining out, shopping, subscriptions & weekend fun\n` +
+          `   • *Suggested daily discretionary limit: ${sym}${dailyAllowance.toLocaleString('en-IN')}/day*\n\n` +
+          `3. **Savings & Future Security (20%) — ${sym}${savings.toLocaleString('en-IN')}**\n` +
+          `   • Emergency fund & SIP / mutual funds deposits\n\n` +
+          `${
+            isCustomSalary
+              ? `💡 *Tip: Log your daily expenses here in HomeMind to stay under your ${sym}${dailyAllowance}/day limit!*`
+              : `💡 *If your monthly salary is different, just tell me e.g. "My salary is 40,000, make a budget" and I will tailor it immediately!*`
+          }`;
+
+        return await CopilotService.persistAndReturnConversational(householdId, userId, message, threadId, reply, [
+          'How much did I spend this month?',
+          'Show my pending tasks',
+          'Add 500 to groceries',
+        ]);
+      }
+
+      // 4B. Actionable Daily Routine & Chores Builder
+      if (
+        /\b(routine\s+bna|routine\s+banao|kaam\s+bna|kaam\s+banao|kaam\s+ya\s+routine|daily\s+routine|chores\s+routine|routine\s+chahiye|schedule\s+bna|routine\s+bna\s+de)\b/i.test(
+          message
+        )
+      ) {
+        const reply =
+          `🗓️ **Actionable Household & Daily Routine**\n\n` +
+          `Here is an efficient, stress-free routine designed for your home:\n\n` +
+          `🌅 **Morning (7:00 AM – 9:30 AM)**\n` +
+          `• Morning hydration & kitchen/breakfast prep\n` +
+          `• Quick 5-min check of urgent chores & pantry items\n\n` +
+          `☀️ **Afternoon (1:00 PM – 2:30 PM)**\n` +
+          `• Lunch & quick walk or break\n` +
+          `• Check any pending utility bill due dates\n\n` +
+          `🌆 **Evening (6:30 PM – 8:30 PM)**\n` +
+          `• Dinner preparation & dining\n` +
+          `• Quick 10-minute tidy up of shared living spaces\n` +
+          `• **Log today's daily expenses in HomeMind**\n\n` +
+          `🌙 **Night (9:30 PM)**\n` +
+          `• Review tomorrow's chores & family assignments\n` +
+          `• Unwind & rest\n\n` +
+          `💡 *Would you like me to create any of these as tasks for your family? Just say "Add task: Morning kitchen prep" or "Remind me to log expenses at 8 PM".*`;
+
+        return await CopilotService.persistAndReturnConversational(householdId, userId, message, threadId, reply, [
+          'Add task: Morning kitchen prep',
+          'Add task: Evening expense logging',
+          'Show my pending tasks',
+        ]);
+      }
+
+      // 4C. Weekly Spending & Highest Spending Category Analysis
+      if (
+        /\b(week\s+me\s+kaha|weekly\s+expense|kaha\s+kaha\s+paisa|kaha\s+kharch|konse\s+section|highest\s+spending|paisa\s+kharch\s+ho\s+rha|weekly\s+spending|spending\s+breakdown|kaha\s+paisa\s+gaya)\b/i.test(
+          message
+        )
+      ) {
+        const now = new Date();
+        const weekAgo = new Date(now.getTime() - 7 * 86400000);
+
+        let recentExpenses: any[] = [];
+        try {
+          recentExpenses = await prisma.expense.findMany({
+            where: {
+              householdId,
+              softDelete: false,
+              date: { gte: weekAgo },
+            },
+            orderBy: { date: 'desc' },
+          });
+        } catch {}
+
+        const sym = ctx.currencySymbol || '₹';
+
+        if (recentExpenses.length === 0) {
+          const reply =
+            `📉 **Weekly Expense Summary (Last 7 Days)**\n\n` +
+            `No expenses have been recorded for your household this week yet! 🎉\n\n` +
+            `• Total spent this week: **${sym}0**\n` +
+            `• Current budget health: **Excellent**\n\n` +
+            `Whenever you spend money, simply tell me (e.g. *"Spent 350 on groceries"*) and I'll track and analyze it for you!`;
+
+          return await CopilotService.persistAndReturnConversational(householdId, userId, message, threadId, reply, [
+            'Add expense 500 for groceries',
+            'How much did I spend this month?',
+            'Show upcoming bills',
+          ]);
+        }
+
+        let totalWeekly = 0;
+        const categoryTotals: Record<string, number> = {};
+
+        recentExpenses.forEach((exp) => {
+          const amt = Math.abs(Number(exp.amount) || 0);
+          totalWeekly += amt;
+          const cat = exp.category || 'General';
+          categoryTotals[cat] = (categoryTotals[cat] || 0) + amt;
+        });
+
+        let highestCat = 'General';
+        let highestAmt = 0;
+        Object.entries(categoryTotals).forEach(([cat, amt]) => {
+          if (amt > highestAmt) {
+            highestAmt = amt;
+            highestCat = cat;
+          }
+        });
+
+        const highestPercent = totalWeekly > 0 ? Math.round((highestAmt / totalWeekly) * 100) : 0;
+        const sortedCategories = Object.entries(categoryTotals)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5);
+
+        const categoryIcons: Record<string, string> = {
+          Food: '🍲',
+          Groceries: '🛒',
+          Utilities: '⚡',
+          Bills: '🧾',
+          Shopping: '🛍️',
+          Entertainment: '🎬',
+          Transport: '🚗',
+          Health: '💊',
+          General: '📌',
+        };
+
+        const breakdownText = sortedCategories
+          .map(([cat, amt]) => {
+            const icon = categoryIcons[cat] || '📌';
+            const pct = Math.round((amt / totalWeekly) * 100);
+            return `   ${icon} **${cat}**: ${sym}${amt.toLocaleString('en-IN')} (${pct}%)`;
+          })
+          .join('\n');
+
+        const reply =
+          `📊 **Weekly Spending Report (Last 7 Days)**\n\n` +
+          `• **Total Spent**: ${sym}${totalWeekly.toLocaleString('en-IN')}\n` +
+          `• **Highest Spending Section**: **${highestCat}** (${sym}${highestAmt.toLocaleString('en-IN')}, **${highestPercent}%** of weekly total)\n\n` +
+          `**Category Breakdown:**\n` +
+          `${breakdownText}\n\n` +
+          `💡 *Insight: You're spending the most on **${highestCat}** this week. Setting a slight cap here will save the most money by month-end!*`;
+
+        return await CopilotService.persistAndReturnConversational(householdId, userId, message, threadId, reply, [
+          'How much did I spend this month?',
+          'Show my pending tasks',
+          'Show grocery list',
+        ]);
+      }
+
+      // 4D. Small Talk / Capabilities fallback
       const smallTalk = CopilotService.detectSmallTalk(message);
       const conversationReply =
         smallTalk.reply ||
         "I'm here to help with your home! 😊 You can chat naturally with me in English, Hindi, or Hinglish, or ask me to log expenses, check chores, manage groceries, or track upcoming bills.";
 
-      try {
-        if (!activeThreadId) {
-          const thread = await prisma.aIThread.create({
-            data: {
-              householdId,
-              userId,
-              title: message.slice(0, 45) + (message.length > 45 ? '...' : ''),
-            },
-          });
-          activeThreadId = thread.id;
-        }
-
-        // Persist conversation messages
-        await prisma.aIMessage.create({
-          data: {
-            threadId: activeThreadId,
-            role: 'user',
-            content: message,
-          },
-        });
-
-        await prisma.aIMessage.create({
-          data: {
-            threadId: activeThreadId,
-            role: 'assistant',
-            content: conversationReply,
-            toolCalls: null, // conversational message (does not overwrite previousAction)
-          },
-        });
-      } catch (err: any) {
-        console.warn('[CopilotService] Failed to persist conversational message:', err);
-      }
-
-      return {
-        type: 'conversation',
-        message: conversationReply,
-        threadId: activeThreadId || threadId || randomUUID(),
-        answer: conversationReply,
-        actionsExecuted: [],
-        cards: [],
-        suggestions: smallTalk.suggestions || [], // no repetitive command spam after normal chat
-        invalidatedDomains: [],
-      };
+      return await CopilotService.persistAndReturnConversational(
+        householdId,
+        userId,
+        message,
+        threadId,
+        conversationReply,
+        smallTalk.suggestions || []
+      );
     }
 
     // 5. ACTION / QUERY / AMBIGUITY EXECUTION PIPELINE
@@ -463,4 +614,61 @@ export class CopilotService {
 
     return ActionExecutor.execute(targetTool as any, targetArgs, execCtx);
   }
+
+  /**
+   * Helper to persist conversation message thread and return typed response
+   */
+  private static async persistAndReturnConversational(
+    householdId: string,
+    userId: string,
+    message: string,
+    threadId: string | undefined,
+    reply: string,
+    suggestions: string[]
+  ): Promise<CopilotResponse> {
+    let activeThreadId = threadId;
+    try {
+      if (!activeThreadId) {
+        const thread = await prisma.aIThread.create({
+          data: {
+            householdId,
+            userId,
+            title: message.slice(0, 45) + (message.length > 45 ? '...' : ''),
+          },
+        });
+        activeThreadId = thread.id;
+      }
+
+      await prisma.aIMessage.create({
+        data: {
+          threadId: activeThreadId,
+          role: 'user',
+          content: message,
+        },
+      });
+
+      await prisma.aIMessage.create({
+        data: {
+          threadId: activeThreadId,
+          role: 'assistant',
+          content: reply,
+          toolCalls: null,
+        },
+      });
+    } catch (err: any) {
+      console.warn('[CopilotService] Failed to persist conversational response:', err);
+    }
+
+    return {
+      type: 'conversation',
+      message: reply,
+      threadId: activeThreadId || threadId || randomUUID(),
+      answer: reply,
+      actionsExecuted: [],
+      cards: [],
+      suggestions,
+      invalidatedDomains: [],
+    };
+  }
 }
+

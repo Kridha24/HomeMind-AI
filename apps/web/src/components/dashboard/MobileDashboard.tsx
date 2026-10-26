@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell,
@@ -7,23 +7,39 @@ import {
   ShoppingCart,
   FileText,
   CheckSquare,
-  Users,
-  Phone,
   ArrowRight,
   CheckCircle2,
   Clock,
-  Home,
-  Check,
-  ShoppingBag,
-  CreditCard,
   Menu,
   Settings,
+  X,
+  Sparkles,
+  TrendingUp,
+  Send,
+  Eye,
+  Camera,
 } from 'lucide-react';
 import { HouseholdMember } from '../../types';
 import { getPastelInitialsClass, getMemberInitials } from '../common/FamilyAvatarGroup';
 
+export interface UserStory {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  caption: string;
+  timestamp: string;
+  color?: string;
+}
+
 interface MobileDashboardProps {
   members: HouseholdMember[];
+  householdName?: string;
+  adminName?: string;
+  todayExpenses?: number;
+  weeklyExpenses?: number;
+  monthlyExpenses?: number;
+  currentUser?: any;
   onInviteClick: () => void;
   onMemberClick: (member: HouseholdMember) => void;
   onOpenNotifications: () => void;
@@ -36,8 +52,22 @@ interface MobileDashboardProps {
   format: (amount: number) => string;
 }
 
+const DEFAULT_STORY_COLORS = [
+  'from-indigo-600 to-purple-700',
+  'from-emerald-600 to-teal-700',
+  'from-rose-600 to-pink-700',
+  'from-amber-500 to-orange-700',
+  'from-blue-600 to-cyan-700',
+];
+
 export const MobileDashboard: React.FC<MobileDashboardProps> = ({
   members = [],
+  householdName = 'Family Household',
+  adminName = 'Family Leader',
+  todayExpenses = 0,
+  weeklyExpenses = 0,
+  monthlyExpenses = 0,
+  currentUser,
   onInviteClick,
   onMemberClick,
   onOpenNotifications,
@@ -51,8 +81,114 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  // 1. Build unified "Today" items list from real data
-  const todayItems = React.useMemo(() => {
+  // ── Stories State (WhatsApp-style stories for family members) ──────────────
+  const [stories, setStories] = useState<UserStory[]>([]);
+  const [activeStoryMember, setActiveStoryMember] = useState<{
+    member: HouseholdMember;
+    story: UserStory;
+  } | null>(null);
+  const [isAddingStory, setIsAddingStory] = useState(false);
+  const [newStoryCaption, setNewStoryCaption] = useState('');
+  const [storyProgress, setStoryProgress] = useState(0);
+
+  // Initialize or fetch stories from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('homemind_family_stories_v1');
+      if (stored) {
+        setStories(JSON.parse(stored));
+      } else {
+        // Seed default initial stories for realism
+        const initialStories: UserStory[] = [];
+        if (members.length > 0) {
+          const firstMember = members[0];
+          initialStories.push({
+            id: 'story-seed-1',
+            userId: firstMember.id,
+            userName: firstMember.name,
+            userAvatar: firstMember.avatar || firstMember.avatarUrl,
+            caption: 'Bought fresh fruits & groceries for the kitchen! 🍎🥦',
+            timestamp: 'Today, 10:30 AM',
+            color: DEFAULT_STORY_COLORS[0],
+          });
+        }
+        if (members.length > 1) {
+          const secondMember = members[1];
+          initialStories.push({
+            id: 'story-seed-2',
+            userId: secondMember.id,
+            userName: secondMember.name,
+            userAvatar: secondMember.avatar || secondMember.avatarUrl,
+            caption: 'Electricity bill is settled for this month. All clear! ⚡',
+            timestamp: 'Today, 1:15 PM',
+            color: DEFAULT_STORY_COLORS[1],
+          });
+        }
+        setStories(initialStories);
+        localStorage.setItem('homemind_family_stories_v1', JSON.stringify(initialStories));
+      }
+    } catch {
+      // Fallback gracefully
+    }
+  }, [members]);
+
+  // Story Viewer Timer (auto-advance & close after 6 seconds)
+  useEffect(() => {
+    if (!activeStoryMember) {
+      setStoryProgress(0);
+      return;
+    }
+
+    setStoryProgress(0);
+    const interval = 50; // update every 50ms
+    const totalTime = 5500; // 5.5s
+    const step = (interval / totalTime) * 100;
+
+    const timer = setInterval(() => {
+      setStoryProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(timer);
+          setActiveStoryMember(null);
+          return 0;
+        }
+        return prev + step;
+      });
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [activeStoryMember]);
+
+  const handleCreateStory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStoryCaption.trim()) return;
+
+    const newStory: UserStory = {
+      id: `story-${Date.now()}`,
+      userId: currentUser?.id || 'current-user',
+      userName: currentUser?.name || 'You',
+      userAvatar: currentUser?.avatar || currentUser?.avatarUrl,
+      caption: newStoryCaption.trim(),
+      timestamp: 'Just now',
+      color: DEFAULT_STORY_COLORS[Math.floor(Math.random() * DEFAULT_STORY_COLORS.length)],
+    };
+
+    const updated = [newStory, ...stories.filter((s) => s.userId !== newStory.userId)];
+    setStories(updated);
+    try {
+      localStorage.setItem('homemind_family_stories_v1', JSON.stringify(updated));
+    } catch {}
+
+    setNewStoryCaption('');
+    setIsAddingStory(false);
+  };
+
+  // Find story for a member
+  const getMemberStory = (memberId: string) => {
+    return stories.find((s) => s.userId === memberId);
+  };
+
+  // ── Unified "Today" items list ───────────────────────────────────────────
+  const todayItems = useMemo(() => {
     const items: Array<{
       id: string;
       title: string;
@@ -63,12 +199,12 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
       onClick: () => void;
     }> = [];
 
-    // Pending tasks (priority to today/upcoming)
+    // Pending tasks
     pendingTasks.slice(0, 3).forEach((task, index) => {
-      // Find assigned member
-      const assigned = members.find(
-        (m) => m.id === task.assignedTo || m.name?.toLowerCase() === task.assignedTo?.toLowerCase()
-      ) || members[index % Math.max(1, members.length)];
+      const assigned =
+        members.find(
+          (m) => m.id === task.assignedTo || m.name?.toLowerCase() === task.assignedTo?.toLowerCase()
+        ) || members[index % Math.max(1, members.length)];
 
       const dueDate = task.dueDate ? new Date(task.dueDate) : null;
       let timeStr = 'Today';
@@ -123,7 +259,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
       });
     });
 
-    // Recent activities fallback if todayItems is sparse
+    // Fallback recent history
     if (items.length < 3 && recentHistory.length > 0) {
       recentHistory.slice(0, 3 - items.length).forEach((hist, index) => {
         const assigned = members.find((m) => m.name === hist.user?.name) || members[0];
@@ -145,10 +281,10 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
   }, [pendingTasks, upcomingBills, groceriesList, recentHistory, members, format, navigate]);
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-b from-[#f8fafd] via-[#f1f5f9] to-[#eef2f6] dark:from-[#080c1b] dark:via-[#0c1228] dark:to-[#090d1c] text-slate-900 dark:text-slate-100 flex flex-col font-sans pb-24">
-      {/* ── 1. Clean Atmospheric Header with Menu & Settings ─────────────────── */}
-      <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-indigo-100/60 dark:border-indigo-950/60 px-3.5 py-2.5 pt-[calc(0.625rem+env(safe-area-inset-top,0px))] flex items-center justify-between shadow-[0_2px_12px_rgba(99,102,241,0.04)]">
-        <div className="flex items-center gap-1.5">
+    <div className="w-full min-h-screen bg-slate-50 dark:bg-[#0B0F17] text-slate-900 dark:text-slate-100 flex flex-col font-sans pb-24 selection:bg-indigo-500/20">
+      {/* ── 1. Minimal Sleek Header ─────────────────────────────────────────── */}
+      <header className="sticky top-0 z-30 bg-white/95 dark:bg-[#0E131F]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 px-4 py-2.5 pt-[calc(0.625rem+env(safe-area-inset-top,0px))] flex items-center justify-between shadow-xs">
+        <div className="flex items-center gap-2">
           {onToggleSidebar && (
             <button
               type="button"
@@ -166,10 +302,10 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
               className="w-7 h-7 rounded-xl shadow-xs object-contain"
             />
             <div className="flex items-center">
-              <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white">
+              <span className="font-black text-sm tracking-tight text-slate-900 dark:text-white">
                 HomeMind
               </span>
-              <span className="font-extrabold text-sm sm:text-base tracking-tight ml-1 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="font-black text-sm tracking-tight ml-1 text-indigo-600 dark:text-indigo-400">
                 AI
               </span>
             </div>
@@ -199,349 +335,523 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
         </div>
       </header>
 
-      {/* ── 2. Family Members Card Row with User Name & Family Workshop Status ─────────────── */}
-      <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3.5 sm:px-4 py-3 border-b border-indigo-100/50 dark:border-indigo-950/60 shadow-2xs">
-        <div className="flex items-center justify-between pb-2">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              Family Members ({members.length})
-            </span>
+      {/* ── 2. Family Household Header & WhatsApp-style Story Row ───────────── */}
+      <div className="bg-white dark:bg-[#0E131F] px-4 py-3 border-b border-slate-200/80 dark:border-slate-800/80">
+        {/* Household Name & Leader Header */}
+        <div className="flex items-center justify-between pb-2.5">
+          <div className="min-w-0 pr-2">
+            <h1 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight truncate">
+              {householdName}
+            </h1>
+            <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
+              Led by {adminName}
+            </p>
           </div>
-          <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-full border border-indigo-200/50 dark:border-indigo-800/40">
-            Connected Room
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Connected
           </span>
         </div>
 
+        {/* WhatsApp-Style Stories Row */}
         <div className="flex items-start gap-3 overflow-x-auto no-scrollbar py-1">
+          {/* + Add Story / My Status */}
+          <button
+            type="button"
+            onClick={() => setIsAddingStory(true)}
+            className="flex flex-col items-center shrink-0 group cursor-pointer w-[72px] text-center"
+            title="Add your status / story"
+          >
+            <div className="relative w-12 h-12 rounded-full p-0.5 border-2 border-dashed border-indigo-400/80 dark:border-indigo-500/60 bg-indigo-50/50 dark:bg-indigo-950/30 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Camera className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs ring-2 ring-white dark:ring-slate-900 shadow-xs">
+                +
+              </span>
+            </div>
+            <span className="mt-1.5 font-bold text-[11px] text-indigo-600 dark:text-indigo-400 truncate w-full">
+              My Status
+            </span>
+            <span className="text-[9.5px] text-slate-400 dark:text-slate-500">
+              Add story
+            </span>
+          </button>
+
+          {/* Existing Family Members with Story Ring */}
           {members.map((member) => {
             const initials = getMemberInitials(member.name, member.email);
             const colorClass = getPastelInitialsClass(member.name || member.id);
             const photoUrl = member.avatar || member.avatarUrl;
-            const role = (member.role || 'MEMBER').toUpperCase();
-            const roleLabel =
-              role === 'OWNER'
-                ? 'Room Owner'
-                : role === 'ADMIN'
-                ? 'Admin'
-                : 'Family Member';
+            const story = getMemberStory(member.id);
+            const hasStory = Boolean(story);
 
             return (
               <button
                 key={member.id}
                 type="button"
-                onClick={() => onMemberClick(member)}
-                className="flex flex-col items-center flex-shrink-0 group focus:outline-none cursor-pointer w-[76px] sm:w-[84px] p-1.5 rounded-2xl hover:bg-indigo-50/50 dark:hover:bg-slate-800/50 transition-all active:scale-95"
-                title={`${member.name} (${roleLabel})`}
-                aria-label={`View ${member.name}`}
+                onClick={() => {
+                  if (hasStory && story) {
+                    setActiveStoryMember({ member, story });
+                  } else {
+                    onMemberClick(member);
+                  }
+                }}
+                className="flex flex-col items-center shrink-0 group cursor-pointer w-[72px] text-center"
+                title={hasStory ? `View ${member.name}'s story` : member.name}
               >
-                {/* Avatar with subtle ring */}
-                <div className="relative w-12 h-12 rounded-full ring-2 ring-indigo-500/25 dark:ring-indigo-400/30 p-0.5 bg-white dark:bg-slate-900 shadow-xs group-hover:scale-105 transition-transform overflow-hidden">
-                  {photoUrl ? (
-                    <img
-                      src={photoUrl}
-                      alt={member.name}
-                      className="w-full h-full rounded-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <div
-                      className={`w-full h-full rounded-full flex items-center justify-center font-black text-xs border ${colorClass}`}
-                    >
-                      {initials}
-                    </div>
-                  )}
-                  {/* Active online dot */}
-                  <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 shadow-2xs" />
-                </div>
-
-                {/* Member Name */}
-                <span className="mt-1.5 font-bold text-xs text-slate-900 dark:text-slate-100 truncate w-full text-center">
-                  {member.name || 'Member'}
-                </span>
-
-                {/* Family Workshop Role Tag */}
-                <span
-                  className={`mt-0.5 text-[9.5px] font-extrabold px-1.5 py-0.2 rounded-full truncate max-w-full text-center ${
-                    role === 'OWNER'
-                      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30'
-                      : role === 'ADMIN'
-                      ? 'bg-violet-500/15 text-violet-700 dark:text-violet-300 border border-violet-500/30'
-                      : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
+                {/* Avatar with WhatsApp green ring if has story */}
+                <div
+                  className={`relative w-12 h-12 rounded-full p-0.5 transition-transform group-hover:scale-105 ${
+                    hasStory
+                      ? 'ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-[#0E131F] shadow-xs'
+                      : 'ring-1 ring-slate-200 dark:ring-slate-800'
                   }`}
                 >
-                  {roleLabel}
+                  <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-slate-900 flex items-center justify-center">
+                    {photoUrl ? (
+                      <img
+                        src={photoUrl}
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className={`w-full h-full flex items-center justify-center font-black text-xs border ${colorClass}`}
+                      >
+                        {initials}
+                      </div>
+                    )}
+                  </div>
+                  {/* Status dot or Story indicator */}
+                  {hasStory ? (
+                    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
+                  ) : (
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
+                  )}
+                </div>
+
+                <span className="mt-1.5 font-bold text-[11px] text-slate-800 dark:text-slate-200 truncate w-full">
+                  {member.name || 'Member'}
+                </span>
+                <span className="text-[9.5px] font-semibold text-slate-400 dark:text-slate-500 truncate w-full">
+                  {hasStory ? 'View status' : member.role?.toLowerCase() || 'member'}
                 </span>
               </button>
             );
           })}
 
-          {/* Add / Invite Member Control */}
+          {/* + Invite Member Button */}
           <button
             type="button"
             onClick={onInviteClick}
-            aria-label="Add Family Member"
-            className="flex flex-col items-center flex-shrink-0 group focus:outline-none cursor-pointer w-[76px] sm:w-[84px] p-1.5 rounded-2xl transition-all active:scale-95"
-            title="Invite New Family Member"
+            className="flex flex-col items-center shrink-0 group cursor-pointer w-[72px] text-center"
+            title="Invite new member"
           >
-            <div className="w-12 h-12 rounded-full border-2 border-dashed border-indigo-300 dark:border-indigo-700 hover:border-indigo-500 dark:hover:border-indigo-400 bg-indigo-50/50 dark:bg-slate-800/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-all shadow-2xs">
+            <div className="w-12 h-12 rounded-full border border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-400 flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:scale-105 transition-all">
               <Plus className="w-5 h-5" />
             </div>
-            <span className="mt-1.5 font-bold text-xs text-indigo-600 dark:text-indigo-400 truncate w-full text-center">
-              + Naya Jodein
+            <span className="mt-1.5 font-bold text-[11px] text-slate-600 dark:text-slate-400 truncate w-full">
+              + Invite
             </span>
-            <span className="mt-0.5 text-[9.5px] font-semibold text-slate-400 dark:text-slate-500">
-              Invite
+            <span className="text-[9.5px] text-slate-400 dark:text-slate-500">
+              Add user
             </span>
           </button>
         </div>
       </div>
 
-      {/* ── 3. Six Quick-Access Sections in Simple, Clear Language with Colorful Icons ─────────────── */}
-      <section className="px-3.5 sm:px-4 pt-3.5 sm:pt-4 pb-2" aria-label="Quick Access Modules">
-        <div className="flex items-center justify-between pb-2.5 px-0.5">
+      {/* ── 3. Dedicated Expenses Overview Card (Today, Weekly, Monthly) ──────── */}
+      <section className="px-4 pt-3.5 pb-2" aria-label="Expenses Overview">
+        <button
+          type="button"
+          onClick={() => navigate('/expenses')}
+          className="w-full text-left rounded-2xl bg-white dark:bg-[#0E131F] border border-slate-200/80 dark:border-slate-800/80 p-3.5 shadow-xs hover:border-indigo-500/40 transition-all active:scale-[0.99] group"
+        >
+          <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800/60">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+              <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Expenses Overview
+              </span>
+            </div>
+            <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+              Details <ArrowRight className="w-3 h-3" />
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 pt-2 text-center divide-x divide-slate-100 dark:divide-slate-800/80">
+            {/* Today */}
+            <div className="px-1">
+              <span className="text-[10.5px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-tight block">
+                Today
+              </span>
+              <span className="text-sm font-black text-rose-600 dark:text-rose-400 font-mono tracking-tight block mt-0.5 truncate">
+                {format(todayExpenses)}
+              </span>
+              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium block truncate">
+                Daily spend
+              </span>
+            </div>
+
+            {/* This Week */}
+            <div className="px-1">
+              <span className="text-[10.5px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-tight block">
+                This Week
+              </span>
+              <span className="text-sm font-black text-amber-600 dark:text-amber-400 font-mono tracking-tight block mt-0.5 truncate">
+                {format(weeklyExpenses)}
+              </span>
+              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium block truncate">
+                Last 7 days
+              </span>
+            </div>
+
+            {/* This Month */}
+            <div className="px-1">
+              <span className="text-[10.5px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-tight block">
+                This Month
+              </span>
+              <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 font-mono tracking-tight block mt-0.5 truncate">
+                {format(monthlyExpenses)}
+              </span>
+              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium block truncate">
+                Month total
+              </span>
+            </div>
+          </div>
+        </button>
+      </section>
+
+      {/* ── 4. Core 4 Modules in Simple English (2x2 Grid) ────────────────────── */}
+      <section className="px-4 pt-1.5 pb-2" aria-label="Core Modules">
+        <div className="flex items-center justify-between pb-2 px-0.5">
           <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Daily Household Modules (Rozana Sevayein)
+            Household Modules
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-          {/* Tile 1: Ghar Ka Kharcha (Expenses & Finance) */}
+        <div className="grid grid-cols-2 gap-2.5">
+          {/* Tile 1: Expenses */}
           <button
             type="button"
             onClick={() => navigate('/expenses')}
-            className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-emerald-200/60 dark:border-emerald-800/40 hover:border-emerald-400/80 transition-all flex items-center gap-2.5 sm:gap-3 text-left group shadow-sm active:scale-98 min-w-0 min-h-[64px]"
+            className="p-3.5 rounded-2xl bg-white dark:bg-[#0E131F] border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-500/40 transition-all flex items-center gap-3 text-left group shadow-xs active:scale-98 min-h-[64px]"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-white shadow-md shadow-emerald-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <Wallet className="w-5 h-5" />
             </div>
             <div className="min-w-0">
               <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white block group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
-                Ghar Kharcha
+                Expenses
               </span>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block truncate">
-                Paisa & Hisab
+                Money & Accounts
               </span>
             </div>
           </button>
 
-          {/* Tile 2: Rashan & Saman (Groceries & Pantry) */}
+          {/* Tile 2: Groceries */}
           <button
             type="button"
             onClick={() => navigate('/groceries')}
-            className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-amber-200/60 dark:border-amber-800/40 hover:border-amber-400/80 transition-all flex items-center gap-2.5 sm:gap-3 text-left group shadow-sm active:scale-98 min-w-0 min-h-[64px]"
+            className="p-3.5 rounded-2xl bg-white dark:bg-[#0E131F] border border-slate-200/80 dark:border-slate-800/80 hover:border-amber-500/40 transition-all flex items-center gap-3 text-left group shadow-xs active:scale-98 min-h-[64px]"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-orange-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <ShoppingCart className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white block group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors truncate">
-                Rashan Saman
+              <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white block group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors truncate">
+                Groceries
               </span>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block truncate">
-                Kitchen & Pantry
+                Pantry & Shopping
               </span>
             </div>
           </button>
 
-          {/* Tile 3: Ghar Ke Bills (Electricity, Water, Wi-Fi) */}
+          {/* Tile 3: Bills */}
           <button
             type="button"
             onClick={() => navigate('/bills')}
-            className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-blue-200/60 dark:border-blue-800/40 hover:border-blue-400/80 transition-all flex items-center gap-2.5 sm:gap-3 text-left group shadow-sm active:scale-98 min-w-0 min-h-[64px]"
+            className="p-3.5 rounded-2xl bg-white dark:bg-[#0E131F] border border-slate-200/80 dark:border-slate-800/80 hover:border-blue-500/40 transition-all flex items-center gap-3 text-left group shadow-xs active:scale-98 min-h-[64px]"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-md shadow-blue-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <FileText className="w-5 h-5" />
             </div>
             <div className="min-w-0">
               <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white block group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
-                Ghar Ke Bills
+                Bills
               </span>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block truncate">
-                Bijli, Pani, Wifi
+                Utilities & Dues
               </span>
             </div>
           </button>
 
-          {/* Tile 4: Roz Ke Kaam (Chores & Tasks) */}
+          {/* Tile 4: Tasks */}
           <button
             type="button"
             onClick={() => navigate('/tasks')}
-            className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-purple-200/60 dark:border-purple-800/40 hover:border-purple-400/80 transition-all flex items-center gap-2.5 sm:gap-3 text-left group shadow-sm active:scale-98 min-w-0 min-h-[64px]"
+            className="p-3.5 rounded-2xl bg-white dark:bg-[#0E131F] border border-slate-200/80 dark:border-slate-800/80 hover:border-purple-500/40 transition-all flex items-center gap-3 text-left group shadow-xs active:scale-98 min-h-[64px]"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-purple-400 to-violet-600 text-white shadow-md shadow-purple-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <CheckSquare className="w-5 h-5" />
             </div>
             <div className="min-w-0">
               <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white block group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors truncate">
-                Roz Ke Kaam
+                Tasks
               </span>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block truncate">
-                Daily Tasks & Chores
-              </span>
-            </div>
-          </button>
-
-          {/* Tile 5: Parivaar Sadasya (Family Members) */}
-          <button
-            type="button"
-            onClick={() => navigate('/family')}
-            className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-rose-200/60 dark:border-rose-800/40 hover:border-rose-400/80 transition-all flex items-center gap-2.5 sm:gap-3 text-left group shadow-sm active:scale-98 min-w-0 min-h-[64px]"
-          >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-rose-400 to-pink-600 text-white shadow-md shadow-rose-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-              <Users className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white block group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors truncate">
-                Parivaar
-              </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block truncate">
-                Ghar Ke Sadasya
-              </span>
-            </div>
-          </button>
-
-          {/* Tile 6: Baat-Cheet (Chat & Calls) */}
-          <button
-            type="button"
-            onClick={() => navigate('/family?tab=connect')}
-            className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-cyan-200/60 dark:border-cyan-800/40 hover:border-cyan-400/80 transition-all flex items-center gap-2.5 sm:gap-3 text-left group shadow-sm active:scale-98 min-w-0 min-h-[64px]"
-          >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-cyan-400 to-teal-500 text-white shadow-md shadow-cyan-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-              <Phone className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white block group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors truncate">
-                Baat-Cheet
-              </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block truncate">
-                Call & Charcha
+                Daily Chores & Todos
               </span>
             </div>
           </button>
         </div>
       </section>
 
-      {/* ── 4. Today Section Heading & View All Link ─────────────────────── */}
-      <section className="px-4 pt-4 pb-2" aria-label="Today Activities">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Today
+      {/* ── 5. Today's Schedule & Chores ─────────────────────────────────────── */}
+      <section className="px-4 pt-3 pb-2" aria-label="Today Activities">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Today's Schedule & Chores
           </h2>
           <button
             type="button"
             onClick={() => navigate('/tasks')}
-            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1 group active:scale-95 transition-all"
+            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1 group active:scale-95 transition-all"
           >
             <span>View all</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
 
-        {/* ── 5. Compact Real Activity / Task List ───────────────────────── */}
-        {todayItems.length > 0 ? (
-          <div className="space-y-2.5">
-            {todayItems.map((item) => {
-              // Status icon styling based on item type
-              let iconNode = <Check className="w-3.5 h-3.5" />;
-              let iconBg = 'bg-blue-500/15 text-blue-600 dark:text-blue-400';
-
-              if (item.type === 'task') {
-                iconNode = <Check className="w-3.5 h-3.5" />;
-                iconBg = item.completed
-                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                  : 'bg-purple-500/15 text-purple-600 dark:text-purple-400';
-              } else if (item.type === 'bill') {
-                iconNode = <FileText className="w-3.5 h-3.5" />;
-                iconBg = 'bg-blue-500/15 text-blue-600 dark:text-blue-400';
-              } else if (item.type === 'grocery') {
-                iconNode = <ShoppingCart className="w-3.5 h-3.5" />;
-                iconBg = 'bg-orange-500/15 text-orange-500 dark:text-orange-400';
-              } else {
-                iconNode = <Phone className="w-3.5 h-3.5" />;
-                iconBg = 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400';
-              }
-
-              // Assigned member details
-              const memberName = item.member?.name || 'Member';
-              const memberInitials = getMemberInitials(item.member?.name, item.member?.email);
-              const memberColorClass = getPastelInitialsClass(item.member?.name || item.id);
-              const memberPhoto = item.member?.avatar || item.member?.avatarUrl;
-
-              return (
-                <div
-                  key={item.id}
-                  onClick={item.onClick}
-                  className="flex items-center justify-between p-3 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/70 border border-slate-200/50 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer shadow-2xs group"
-                >
-                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 pr-2">
-                    <div
-                      className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${iconBg}`}
-                    >
-                      {iconNode}
-                    </div>
-                    <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                      {item.title}
-                    </span>
+        <div className="space-y-2">
+          {todayItems.length === 0 ? (
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#0E131F] border border-slate-200/80 dark:border-slate-800/80 text-center py-6">
+              <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-1.5 opacity-80" />
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                All caught up for today!
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                No overdue bills or pending chores.
+              </p>
+            </div>
+          ) : (
+            todayItems.map((item) => (
+              <div
+                key={item.id}
+                onClick={item.onClick}
+                className="p-3 rounded-2xl bg-white dark:bg-[#0E131F] border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-500/40 flex items-center justify-between gap-3 shadow-xs cursor-pointer active:scale-[0.99] transition-all"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                      item.type === 'bill'
+                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                        : item.type === 'grocery'
+                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                        : 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                    }`}
+                  >
+                    {item.type === 'bill' ? (
+                      <FileText className="w-4 h-4" />
+                    ) : item.type === 'grocery' ? (
+                      <ShoppingCart className="w-4 h-4" />
+                    ) : (
+                      <CheckSquare className="w-4 h-4" />
+                    )}
                   </div>
-
-                  <div className="flex items-center gap-2.5 flex-shrink-0">
-                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
-                      {item.timeStr}
-                    </span>
-
-                    {/* Member Avatar */}
-                    <div
-                      className="w-6 h-6 rounded-full ring-1 ring-slate-200 dark:ring-slate-700 overflow-hidden flex-shrink-0 shadow-2xs"
-                      title={`Assigned: ${memberName}`}
-                    >
-                      {memberPhoto ? (
-                        <img
-                          src={memberPhoto}
-                          alt={memberName}
-                          className="w-full h-full object-cover rounded-full"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <div
-                          className={`w-full h-full flex items-center justify-center text-[9px] font-bold ${memberColorClass}`}
-                        >
-                          {memberInitials}
-                        </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                      {item.title}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {item.timeStr}
+                      </span>
+                      {item.member && (
+                        <span className="text-[9.5px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                          • {item.member.name}
+                        </span>
                       )}
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="p-6 rounded-2xl bg-[#F8F9FA] dark:bg-slate-900/60 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-2">
-            <div className="w-9 h-9 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-            <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              All caught up for today!
-            </p>
-            <p className="text-[11px] text-slate-400">
-              No urgent tasks or overdue bills pending.
-            </p>
-            <button
-              type="button"
-              onClick={() => navigate('/tasks')}
-              className="mt-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
-            >
-              + Add a new chore
-            </button>
-          </div>
-        )}
+
+                <div className="shrink-0">
+                  {item.completed ? (
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                      Done
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                      Pending
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </section>
+
+      {/* ── WhatsApp-Style Story Viewer Modal ─────────────────────────────────── */}
+      {activeStoryMember && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col justify-between p-4 animate-in fade-in duration-200"
+          onClick={() => setActiveStoryMember(null)}
+        >
+          {/* Top Progress Bar & Header */}
+          <div
+            className="w-full max-w-md mx-auto space-y-3 pt-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Animated Progress Bar */}
+            <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-emerald-400 transition-all duration-75 ease-linear rounded-full"
+                style={{ width: `${storyProgress}%` }}
+              />
+            </div>
+
+            {/* Story Header */}
+            <div className="flex items-center justify-between text-white">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full ring-2 ring-emerald-400 overflow-hidden bg-slate-800 flex items-center justify-center font-bold text-xs">
+                  {activeStoryMember.story.userAvatar ? (
+                    <img
+                      src={activeStoryMember.story.userAvatar}
+                      alt={activeStoryMember.story.userName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    getMemberInitials(activeStoryMember.story.userName)
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold leading-tight">
+                    {activeStoryMember.story.userName}
+                  </h4>
+                  <p className="text-[10px] text-white/60">
+                    {activeStoryMember.story.timestamp}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setActiveStoryMember(null)}
+                className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Story Content Card */}
+          <div
+            className="w-full max-w-md mx-auto my-auto p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-indigo-950/80 via-slate-900/90 to-purple-950/80 border border-white/10 shadow-2xl text-center space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-14 h-14 rounded-2xl bg-white/10 mx-auto flex items-center justify-center text-emerald-400 shadow-inner">
+              <Sparkles className="w-7 h-7" />
+            </div>
+            <p className="text-base sm:text-lg font-bold text-white leading-relaxed">
+              "{activeStoryMember.story.caption}"
+            </p>
+            <div className="pt-2 text-xs text-white/40 font-mono">
+              Family Status Update
+            </div>
+          </div>
+
+          {/* Bottom Tap Indicator */}
+          <div className="w-full max-w-md mx-auto pb-4 text-center">
+            <span className="text-[11px] text-white/50 bg-white/10 px-3 py-1 rounded-full">
+              Tap anywhere to close
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ── WhatsApp-Style Story Composer Modal ───────────────────────────────── */}
+      {isAddingStory && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex flex-col justify-end p-3 sm:p-4 animate-in fade-in duration-200"
+          onClick={() => setIsAddingStory(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 space-y-4 shadow-2xl max-w-md w-full mx-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Camera className="w-4 h-4 text-indigo-500" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Share Status / Story
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddingStory(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateStory} className="space-y-3">
+              <textarea
+                value={newStoryCaption}
+                onChange={(e) => setNewStoryCaption(e.target.value)}
+                placeholder="What's happening? (e.g. Bought vegetables for dinner 🥦, bills paid ⚡)"
+                rows={3}
+                className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              />
+
+              {/* Quick suggestions */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {[
+                  'Groceries bought 🛒',
+                  'Cooked lunch 🍲',
+                  'Electricity bill paid ⚡',
+                  'Home clean & tidy ✨',
+                ].map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setNewStoryCaption(s)}
+                    className="text-[10.5px] px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 font-medium"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddingStory(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!newStoryCaption.trim()}
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20"
+                >
+                  Post Story
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
-export default MobileDashboard;
