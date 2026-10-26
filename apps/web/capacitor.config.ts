@@ -1,19 +1,13 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-const isDev = process.env.NODE_ENV !== 'production';
-const isLiveReload = isDev && process.env.CAPACITOR_LIVE_RELOAD === 'true';
-const liveReloadUrl = process.env.CAPACITOR_LIVE_RELOAD_URL || 'http://localhost:3000';
-
 const config: CapacitorConfig = {
   appId: 'com.kridha.homemind',
   appName: 'HomeMind.AI',
   webDir: 'dist',
   server: {
+    url: 'https://home-mind-ai-iota.vercel.app',
+    cleartext: true,
     androidScheme: 'https',
-    ...(isLiveReload && {
-      url: liveReloadUrl,
-      cleartext: true,
-    }),
   },
   plugins: {
     CapacitorHttp: {
