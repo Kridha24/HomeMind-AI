@@ -48,6 +48,7 @@ import { useCallStore } from './stores/useCallStore';
 import { FamilyCallModal } from './components/family/FamilyCallModal';
 import { socketService } from './services/socketService';
 import { SmsSyncManager } from './services/sms/smsSyncManager';
+import { nativePushService } from './services/nativePushService';
 import apiClient from './services/apiClient';
 
 // ─── Protected Route ─────────────────────────────────────────────────────────
@@ -138,6 +139,7 @@ function AppShell() {
       if (Capacitor.isNativePlatform()) {
         SmsSyncManager.initRealtimeListener();
         SmsSyncManager.drainNativeQueue().catch(() => {});
+        nativePushService.init().catch(() => {});
       }
     }
   }, [isAuthenticated]);
