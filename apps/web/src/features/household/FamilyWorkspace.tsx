@@ -283,7 +283,7 @@ export const FamilyWorkspace: React.FC = () => {
             </div>
           </div>
 
-          {/* Compact Danger Zone at the Very Bottom */}
+          {/* 3-Section Danger Zone at the Very Bottom */}
           <HouseholdDangerZone
             currentUserRole={user?.role}
             householdName={household?.name || 'Household'}
@@ -295,6 +295,14 @@ export const FamilyWorkspace: React.FC = () => {
             }}
             onDeleteHousehold={async (id: string) => {
               await deleteHouseholdMutation.mutateAsync(id);
+            }}
+            onTransferOwnership={() => {
+              const eligibleTarget = members.find((m) => m.id !== user?.id);
+              if (eligibleTarget) {
+                setTransferTarget(eligibleTarget);
+              } else {
+                toast.info('Ownership transfer karne ke liye pehle kisi dusre sadasya ko invite karein.');
+              }
             }}
             isLeaving={leaveHouseholdMutation.isPending}
             isDeleting={deleteHouseholdMutation.isPending}

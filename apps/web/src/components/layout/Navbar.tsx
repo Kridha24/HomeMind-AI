@@ -12,7 +12,6 @@ import {
   Check,
 } from 'lucide-react';
 import { ProfileMenu } from '../common/ProfileMenu';
-import { LanguageSelector } from '../common/LanguageSelector';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSettingStore } from '../../stores/useSettingStore';
 import { useI18n } from '../../utils/i18n';
@@ -117,9 +116,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Right Controls */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
-        {/* Language Selector */}
-        <LanguageSelector />
-
         {/* Dynamic Household Selector Dropdown */}
         <div className="relative hidden sm:block">
           <button

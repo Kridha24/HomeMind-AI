@@ -518,9 +518,9 @@ export const FinanceWorkspace: React.FC = () => {
           </div>
         </div>
 
-        {/* Clean Search & Filter Control Bar */}
-        <div className="flex items-center gap-2">
-          <div className="flex-1">
+        {/* Clean Search & Filter Control Bar (Clearly Separated & Touch-Reliable) */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 p-1.5 sm:p-2 rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+          <div className="flex-1 min-w-0">
             <TransactionSearch
               value={filters.search}
               onChange={(search) => {
@@ -529,29 +529,32 @@ export const FinanceWorkspace: React.FC = () => {
               }}
             />
           </div>
-          <button
-            type="button"
-            onClick={() => setIsFilterTrayOpen(!isFilterTrayOpen)}
-            className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all border shrink-0 ${
-              isFilterTrayOpen || activeFilterCount > 0
-                ? 'bg-blue-600/15 text-blue-700 dark:text-blue-300 border-blue-500/40 shadow-xs'
-                : 'bg-surface-elevated/80 border-primary/20 text-muted hover:text-primary hover:border-primary/40'
-            }`}
-            title="Toggle Filters"
-          >
-            <SlidersHorizontal className="w-4 h-4 text-blue-500" />
-            <span className="hidden xs:inline">Filters</span>
-            {activeFilterCount > 0 && (
-              <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center">
-                {activeFilterCount}
-              </span>
-            )}
-            {isFilterTrayOpen ? (
-              <ChevronUp className="w-3.5 h-3.5 opacity-70" />
-            ) : (
-              <ChevronDown className="w-3.5 h-3.5 opacity-70" />
-            )}
-          </button>
+          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setIsFilterTrayOpen(!isFilterTrayOpen)}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all border min-h-[44px] shadow-2xs ${
+                isFilterTrayOpen || activeFilterCount > 0
+                  ? 'bg-blue-600/15 text-blue-700 dark:text-blue-300 border-blue-500/40 shadow-xs'
+                  : 'bg-white dark:bg-slate-800/90 border-slate-300/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-blue-500/50'
+              }`}
+              title="Toggle Filters"
+              aria-label="Filter transactions"
+            >
+              <SlidersHorizontal className="w-4 h-4 text-blue-500" />
+              <span>Chhantein (Filter)</span>
+              {activeFilterCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-black flex items-center justify-center shadow-xs">
+                  {activeFilterCount}
+                </span>
+              )}
+              {isFilterTrayOpen ? (
+                <ChevronUp className="w-4 h-4 opacity-70 ml-0.5" />
+              ) : (
+                <ChevronDown className="w-4 h-4 opacity-70 ml-0.5" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Collapsible Filter Tray */}

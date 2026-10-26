@@ -93,26 +93,29 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
     : 'Aug 2026';
 
   return (
-    <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c132c] via-[#090e24] to-[#050816] text-white border border-indigo-500/20 shadow-xl shadow-indigo-950/30">
-      {/* Ambient Top Glow Line */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-violet-400 to-sky-400 opacity-80" />
+    <div className="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c132c] via-[#090e24] to-[#050816] text-white border border-indigo-500/20 shadow-xl shadow-indigo-950/30">
+      {/* Contained Glow & Ambient Elements inside inner overflow-hidden wrapper */}
+      <div className="absolute inset-0 overflow-hidden rounded-2xl sm:rounded-3xl pointer-events-none">
+        {/* Ambient Top Glow Line */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-violet-400 to-sky-400 opacity-80" />
 
-      {/* Subtle Background Radial Highlights */}
-      <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-violet-600/10 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+        {/* Subtle Background Radial Highlights */}
+        <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-violet-600/10 blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-indigo-500/10 blur-3xl" />
 
-      {/* Decorative Subtle Home Ambient Pattern (Far Right) */}
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden xl:flex items-center opacity-[0.07] pointer-events-none select-none">
-        <svg width="240" height="160" viewBox="0 0 240 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M20 140V70L120 15L220 70V140H150V95H90V140H20Z"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinejoin="round"
-          />
-          <circle cx="120" cy="55" r="14" stroke="currentColor" strokeWidth="2.5" />
-          <path d="M10 140H230" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-        </svg>
+        {/* Decorative Subtle Home Ambient Pattern (Far Right) */}
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden xl:flex items-center opacity-[0.07] select-none">
+          <svg width="240" height="160" viewBox="0 0 240 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M20 140V70L120 15L220 70V140H150V95H90V140H20Z"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinejoin="round"
+            />
+            <circle cx="120" cy="55" r="14" stroke="currentColor" strokeWidth="2.5" />
+            <path d="M10 140H230" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          </svg>
+        </div>
       </div>
 
       <div className="relative z-10 p-3.5 sm:p-7 flex flex-col xl:flex-row xl:items-center justify-between gap-3 sm:gap-6">
@@ -149,7 +152,7 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
                 <button
                   type="submit"
                   disabled={isSavingName || !nameInput.trim()}
-                  className="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors disabled:opacity-50"
+                  className="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors disabled:opacity-50 min-h-[44px]"
                 >
                   {isSavingName ? 'Saving...' : 'Save'}
                 </button>
@@ -159,7 +162,7 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
                     setNameInput(household?.name || '');
                     setIsEditingName(false);
                   }}
-                  className="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 text-xs font-medium transition-colors"
+                  className="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 text-xs font-medium transition-colors min-h-[44px]"
                 >
                   Cancel
                 </button>
@@ -176,7 +179,7 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
                       setNameInput(household?.name || '');
                       setIsEditingName(true);
                     }}
-                    className="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                    className="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
                     title="Rename household"
                     aria-label="Rename household"
                   >
@@ -209,35 +212,34 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
           </div>
         </div>
 
-        {/* Right Side Actions: Workspace, Chat & Calls, Switch, Invite */}
-        <div className="flex flex-row flex-wrap items-center gap-1.5 sm:gap-3 shrink-0">
+        {/* Right Side Actions: Workspace, Chat & Calls, and 3-Dot Room Menu */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Workspace Tab Button */}
           <button
             type="button"
             onClick={() => onToggleView('workspace')}
-            className={`flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-bold transition-all duration-200 ${
+            className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-bold transition-all min-h-[44px] ${
               activeView === 'workspace'
                 ? 'bg-white/15 text-white border border-white/20 shadow-inner'
                 : 'bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 border border-transparent'
             }`}
             aria-label="Open Workspace view"
           >
-            <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400" />
+            <Home className="w-4 h-4 text-indigo-400" />
             <span>Workspace</span>
           </button>
 
-          {/* SPECIAL CHAT & CALLS BUTTON (Section 3) */}
+          {/* Chat & Calls Button */}
           <button
             type="button"
             onClick={() => onToggleView('communication')}
             aria-label="Open Chat and Calls"
-            className={`group relative overflow-hidden flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-bold transition-all duration-200 active:scale-95 ${
+            className={`group relative overflow-hidden flex items-center justify-center gap-2 sm:gap-2.5 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-bold transition-all duration-200 active:scale-95 min-h-[44px] ${
               activeView === 'communication'
                 ? 'bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30 border border-indigo-400/40 ring-2 ring-violet-400/30'
                 : 'bg-gradient-to-r from-indigo-950/80 via-purple-950/70 to-violet-950/80 hover:from-indigo-600 hover:to-violet-600 text-white border border-violet-500/30 hover:border-violet-400/50 hover:shadow-lg hover:shadow-violet-600/25'
             }`}
           >
-            {/* Expressive Soft-3D Style Icon Set */}
             <div className="relative flex items-center shrink-0">
               <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg sm:rounded-xl bg-gradient-to-br from-violet-400 to-indigo-500 flex items-center justify-center shadow-xs transition-transform duration-200 group-hover:-translate-y-0.5">
                 <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white fill-white/20" />
@@ -246,60 +248,36 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
                 <Phone className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white fill-white" />
               </div>
             </div>
-
             <span className="tracking-wide">Chat & Calls</span>
           </button>
 
-          {/* Switch Household Button */}
-          <button
-            type="button"
-            onClick={onOpenSwitcher}
-            className="flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white border border-white/10 hover:border-white/20 text-[11px] sm:text-xs font-bold transition-all shadow-2xs"
-            title="Switch household"
-            aria-label="Switch household"
-          >
-            <ArrowLeftRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-300" />
-            <span>Switch</span>
-          </button>
-
-          {/* Invite Member Button */}
-          <button
-            type="button"
-            onClick={onInvite}
-            className="flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-[11px] sm:text-xs font-bold shadow-md shadow-violet-600/30 border border-violet-400/30 transition-all active:scale-95"
-            aria-label="Invite new member to household"
-          >
-            <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden xs:inline">Invite Member</span>
-            <span className="xs:hidden">Invite</span>
-          </button>
-
-          {/* Refresh Button */}
+          {/* Refresh Button (Desktop) */}
           <button
             type="button"
             onClick={onRefresh}
             disabled={isRefreshing}
-            className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors disabled:opacity-50 hidden sm:flex items-center justify-center"
+            className="p-2.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors disabled:opacity-50 hidden sm:flex items-center justify-center min-h-[44px] min-w-[44px]"
             title="Refresh household data"
             aria-label="Refresh household data"
           >
-            <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
 
-          {/* 3-Dot Options Dropdown (Invite, Join, Left from existing room) */}
+          {/* 3-Dot Options Button */}
           <div className="relative" ref={menuRef}>
             <button
               type="button"
               onClick={() => setIsMenuOpen((prev) => !prev)}
-              className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-all flex items-center justify-center active:scale-95 shadow-2xs"
+              className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all flex items-center justify-center active:scale-95 shadow-md min-h-[44px] min-w-[44px]"
               title="Room options"
               aria-label="Room options"
             >
-              <MoreVertical className="w-4 h-4 text-slate-200" />
+              <MoreVertical className="w-5 h-5 text-white" />
             </button>
 
+            {/* Desktop / Large Screen Dropdown */}
             {isMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-slate-700/80 shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 text-xs">
+              <div className="hidden sm:block absolute right-0 top-full mt-2 w-60 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 text-xs">
                 {/* 1. Invite */}
                 <button
                   type="button"
@@ -307,35 +285,48 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
                     setIsMenuOpen(false);
                     onInvite();
                   }}
-                  className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-left text-slate-200 hover:text-white hover:bg-white/10 font-bold transition-colors"
+                  className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-left text-slate-200 hover:text-white hover:bg-white/10 font-bold transition-colors"
                 >
                   <UserPlus className="w-4 h-4 text-violet-400" />
-                  <span>Invite</span>
+                  <span>Invite Family Member</span>
                 </button>
 
-                {/* 2. Join */}
+                {/* 2. Switch Household */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onOpenSwitcher();
+                  }}
+                  className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-left text-slate-200 hover:text-white hover:bg-white/10 font-bold transition-colors"
+                >
+                  <ArrowLeftRight className="w-4 h-4 text-indigo-400" />
+                  <span>Switch Household</span>
+                </button>
+
+                {/* 3. Join Household */}
                 <button
                   type="button"
                   onClick={() => {
                     setIsMenuOpen(false);
                     if (onOpenJoin) onOpenJoin();
                   }}
-                  className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-left text-slate-200 hover:text-white hover:bg-white/10 font-bold transition-colors"
+                  className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-left text-slate-200 hover:text-white hover:bg-white/10 font-bold transition-colors"
                 >
-                  <LogIn className="w-4 h-4 text-indigo-400" />
-                  <span>Join</span>
+                  <LogIn className="w-4 h-4 text-emerald-400" />
+                  <span>Join Another Household</span>
                 </button>
 
-                <div className="my-1 border-t border-slate-700/60" />
+                <div className="my-1.5 border-t border-slate-700/60" />
 
-                {/* 3. Left from existing room */}
+                {/* 4. Left from existing room */}
                 <button
                   type="button"
                   onClick={() => {
                     setIsMenuOpen(false);
                     if (onOpenLeave) onOpenLeave();
                   }}
-                  className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-left text-rose-400 hover:text-rose-300 hover:bg-rose-500/15 font-bold transition-colors"
+                  className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-left text-rose-400 hover:text-rose-300 hover:bg-rose-500/15 font-bold transition-colors"
                 >
                   <LogOut className="w-4 h-4 text-rose-400" />
                   <span>Left from existing room</span>
@@ -345,6 +336,90 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Mobile Fixed Full-Overlay Bottom Sheet for 3-Dot (Never gets clipped by containers!) */}
+      {isMenuOpen && (
+        <div className="sm:hidden fixed inset-0 z-50 flex flex-col justify-end bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div
+            className="w-full bg-slate-900 border-t border-slate-700/80 rounded-t-3xl p-5 space-y-2 shadow-2xl animate-in slide-in-from-bottom-5 duration-200"
+            style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
+          >
+            <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-3" />
+            <div className="flex items-center justify-between pb-2 mb-1 border-b border-slate-800">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                Household Options
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen(false)}
+                className="text-xs text-slate-400 hover:text-white px-2 py-1 font-bold"
+              >
+                Close
+              </button>
+            </div>
+
+            {/* 1. Invite */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsMenuOpen(false);
+                onInvite();
+              }}
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl bg-white/5 active:bg-white/10 text-left text-white font-bold text-sm min-h-[48px]"
+            >
+              <div className="w-8 h-8 rounded-xl bg-violet-500/20 text-violet-400 flex items-center justify-center">
+                <UserPlus className="w-4 h-4" />
+              </div>
+              <span>Invite Family Member</span>
+            </button>
+
+            {/* 2. Switch Household */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsMenuOpen(false);
+                onOpenSwitcher();
+              }}
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl bg-white/5 active:bg-white/10 text-left text-white font-bold text-sm min-h-[48px]"
+            >
+              <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                <ArrowLeftRight className="w-4 h-4" />
+              </div>
+              <span>Switch Household</span>
+            </button>
+
+            {/* 3. Join Household */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsMenuOpen(false);
+                if (onOpenJoin) onOpenJoin();
+              }}
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl bg-white/5 active:bg-white/10 text-left text-white font-bold text-sm min-h-[48px]"
+            >
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <LogIn className="w-4 h-4" />
+              </div>
+              <span>Join Another Household</span>
+            </button>
+
+            {/* 4. Left from existing room */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsMenuOpen(false);
+                if (onOpenLeave) onOpenLeave();
+              }}
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl bg-rose-500/15 active:bg-rose-500/25 text-left text-rose-300 font-bold text-sm min-h-[48px]"
+            >
+              <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
+                <LogOut className="w-4 h-4" />
+              </div>
+              <span>Left from existing room</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

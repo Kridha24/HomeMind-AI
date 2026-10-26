@@ -11,7 +11,7 @@ interface TransactionSearchProps {
 export const TransactionSearch: React.FC<TransactionSearchProps> = ({
   value,
   onChange,
-  placeholder = 'Search merchant, note, reference, category...',
+  placeholder = 'Search kharcha, dukan ya hisab...',
   className = '',
 }) => {
   return (
@@ -20,7 +20,7 @@ export const TransactionSearch: React.FC<TransactionSearchProps> = ({
       onChange={onChange}
       placeholder={placeholder}
       className={className}
-      inputClassName="py-2.5 rounded-2xl"
+      inputClassName="py-2.5 rounded-2xl min-h-[44px] text-xs font-medium"
       enableSlashKey
       shortcutBadge="/"
     />
