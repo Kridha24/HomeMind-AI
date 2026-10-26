@@ -327,7 +327,8 @@ export class WebRTCSignalingManager {
     };
 
     DeviceTokenService.getUserTokens(targetUserId)
-      .then(async (tokens) => {
+      .then(async (devices) => {
+        const tokens = devices.map((d) => d.token).filter(Boolean);
         if (tokens.length > 0) {
           console.log(
             `[WebRTC Push] Dispatching high-priority call notification for [${callId}] to ${tokens.length} devices`
