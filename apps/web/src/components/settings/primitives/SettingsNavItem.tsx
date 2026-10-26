@@ -1,4 +1,5 @@
 import React from 'react';
+import { ChevronRight } from 'lucide-react';
 import { SemanticColor, semanticColorMap } from '../../common/IconTile';
 
 interface SettingsNavItemProps {
@@ -71,6 +72,8 @@ export const SettingsNavItem: React.FC<SettingsNavItemProps> = ({
           {badge}
         </span>
       )}
+
+      <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all lg:hidden" />
     </button>
   );
 };

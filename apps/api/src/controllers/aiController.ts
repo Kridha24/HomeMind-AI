@@ -82,6 +82,9 @@ export const chatWithAI = async (req: AuthenticatedRequest, res: Response) => {
     const { query } = req.body;
 
     const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
@@ -109,7 +112,19 @@ export const chatWithAI = async (req: AuthenticatedRequest, res: Response) => {
       prisma.setting.findFirst({ where: { householdId, softDelete: false } })
     ]);
 
-    // Live Metrics Calculations
+    // Live Metrics Calculations (Daily, Weekly, Monthly, Lifetime)
+    const todayExpensesItems = expenses.filter(e => new Date(e.date) >= startOfToday);
+    const todayExpenses = todayExpensesItems.reduce((acc, curr) => acc + curr.amount, 0);
+
+    const yesterdayExpensesItems = expenses.filter(e => {
+      const d = new Date(e.date);
+      return d >= startOfYesterday && d < startOfToday;
+    });
+    const yesterdayExpenses = yesterdayExpensesItems.reduce((acc, curr) => acc + curr.amount, 0);
+
+    const weekExpensesItems = expenses.filter(e => new Date(e.date) >= startOfWeek);
+    const thisWeekExpenses = weekExpensesItems.reduce((acc, curr) => acc + curr.amount, 0);
+
     const monthlyExpenses = expenses
       .filter(e => new Date(e.date) >= startOfMonth)
       .reduce((acc, curr) => acc + curr.amount, 0);
@@ -157,6 +172,17 @@ export const chatWithAI = async (req: AuthenticatedRequest, res: Response) => {
       householdName: household?.name || 'My Household',
       currencySymbol,
       currency: currencyCode,
+      todayExpenses,
+      todayExpensesCount: todayExpensesItems.length,
+      todayExpensesList: todayExpensesItems.map(e => ({
+        title: e.title,
+        amount: e.amount,
+        category: e.category,
+        time: new Date(e.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      })),
+      yesterdayExpenses,
+      yesterdayExpensesCount: yesterdayExpensesItems.length,
+      thisWeekExpenses,
       monthlyIncome,
       monthlyExpenses,
       monthlySavings: monthlyIncome - monthlyExpenses,

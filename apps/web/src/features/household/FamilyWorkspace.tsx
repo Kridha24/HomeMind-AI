@@ -20,6 +20,10 @@ import { RemoveMemberModal } from './components/RemoveMemberModal';
 import { FamilyWorkspaceSkeleton } from './components/FamilyWorkspaceSkeleton';
 import { FamilyWorkspaceErrorState } from './components/FamilyWorkspaceErrorState';
 import { FamilyWorkspaceEmptyState } from './components/FamilyWorkspaceEmptyState';
+import { JoinHouseholdModal } from './components/JoinHouseholdModal';
+import { LeaveRoomModal } from './components/LeaveRoomModal';
+import { canLeaveHousehold } from './utils/householdPermissions';
+import { toast } from './utils/toast';
 import { FamilyChat } from '../../components/family/FamilyChat';
 import { useCallStore } from '../../stores/useCallStore';
 
@@ -59,6 +63,8 @@ export const FamilyWorkspace: React.FC = () => {
 
   // Modal & Drawer States
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [isJoinOpen, setIsJoinOpen] = useState(false);
+  const [isLeaveRoomOpen, setIsLeaveRoomOpen] = useState(false);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const [detailMember, setDetailMember] = useState<HouseholdMember | null>(null);
   const [roleMember, setRoleMember] = useState<HouseholdMember | null>(null);
@@ -155,6 +161,10 @@ export const FamilyWorkspace: React.FC = () => {
     );
   }
 
+  const otherOwners = user?.role === 'OWNER' ? ownersCount - 1 : ownersCount;
+  const otherMembers = members.length - 1;
+  const leaveCheck = canLeaveHousehold(user?.role, otherOwners, otherMembers);
+
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-6 py-2.5 sm:py-8 space-y-2.5 sm:space-y-6 animate-fadeIn">
       {/* 1. Compact Premium Household Hero Card */}
@@ -164,6 +174,8 @@ export const FamilyWorkspace: React.FC = () => {
         memberCount={members.length}
         currentUserRole={user?.role}
         onInvite={() => setIsInviteOpen(true)}
+        onOpenJoin={() => setIsJoinOpen(true)}
+        onOpenLeave={() => setIsLeaveRoomOpen(true)}
         onOpenSwitcher={() => setIsSwitcherOpen(true)}
         onRefresh={handleRefreshAll}
         isRefreshing={loadingMembers || loadingActivity}
@@ -366,6 +378,34 @@ export const FamilyWorkspace: React.FC = () => {
           await removeMemberMutation.mutateAsync(memberId);
         }}
         isLoading={removeMemberMutation.isPending}
+      />
+
+      {/* Join Household Modal */}
+      <JoinHouseholdModal
+        isOpen={isJoinOpen}
+        onClose={() => setIsJoinOpen(false)}
+        onJoin={async (code: string) => {
+          await joinHouseholdMutation.mutateAsync(code);
+        }}
+      />
+
+      {/* Leave Room Modal */}
+      <LeaveRoomModal
+        isOpen={isLeaveRoomOpen}
+        onClose={() => setIsLeaveRoomOpen(false)}
+        householdName={household?.name}
+        canLeave={leaveCheck.canLeave}
+        leaveReason={leaveCheck.reason}
+        isLeaving={leaveHouseholdMutation.isPending}
+        onConfirm={async () => {
+          try {
+            await leaveHouseholdMutation.mutateAsync();
+            setIsLeaveRoomOpen(false);
+            toast.success(`Left ${household?.name || 'household'}`);
+          } catch (err: any) {
+            toast.error(err?.response?.data?.error || 'Failed to leave household');
+          }
+        }}
       />
     </div>
   );

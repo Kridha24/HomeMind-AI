@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Users,
   UserPlus,
@@ -12,6 +12,9 @@ import {
   Sparkles,
   Phone,
   MessageCircle,
+  MoreVertical,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
 import { Household, HouseholdMember } from '../../../types';
 import { canRenameHousehold } from '../utils/householdPermissions';
@@ -23,6 +26,8 @@ interface HouseholdHeroProps {
   memberCount: number;
   currentUserRole?: string;
   onInvite: () => void;
+  onOpenJoin?: () => void;
+  onOpenLeave?: () => void;
   onOpenSwitcher: () => void;
   onRefresh: () => void;
   isRefreshing?: boolean;
@@ -37,6 +42,8 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
   memberCount,
   currentUserRole,
   onInvite,
+  onOpenJoin,
+  onOpenLeave,
   onOpenSwitcher,
   onRefresh,
   isRefreshing = false,
@@ -47,6 +54,19 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(household?.name || '');
   const [isSavingName, setIsSavingName] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMenuOpen]);
 
   const allowRename = canRenameHousehold(currentUserRole);
 
@@ -265,6 +285,64 @@ export const HouseholdHero: React.FC<HouseholdHeroProps> = ({
           >
             <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
+
+          {/* 3-Dot Options Dropdown (Invite, Join, Left from existing room) */}
+          <div className="relative" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+              className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-all flex items-center justify-center active:scale-95 shadow-2xs"
+              title="Room options"
+              aria-label="Room options"
+            >
+              <MoreVertical className="w-4 h-4 text-slate-200" />
+            </button>
+
+            {isMenuOpen && (
+              <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-slate-700/80 shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 text-xs">
+                {/* 1. Invite */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onInvite();
+                  }}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-left text-slate-200 hover:text-white hover:bg-white/10 font-bold transition-colors"
+                >
+                  <UserPlus className="w-4 h-4 text-violet-400" />
+                  <span>Invite</span>
+                </button>
+
+                {/* 2. Join */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    if (onOpenJoin) onOpenJoin();
+                  }}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-left text-slate-200 hover:text-white hover:bg-white/10 font-bold transition-colors"
+                >
+                  <LogIn className="w-4 h-4 text-indigo-400" />
+                  <span>Join</span>
+                </button>
+
+                <div className="my-1 border-t border-slate-700/60" />
+
+                {/* 3. Left from existing room */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    if (onOpenLeave) onOpenLeave();
+                  }}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-left text-rose-400 hover:text-rose-300 hover:bg-rose-500/15 font-bold transition-colors"
+                >
+                  <LogOut className="w-4 h-4 text-rose-400" />
+                  <span>Left from existing room</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

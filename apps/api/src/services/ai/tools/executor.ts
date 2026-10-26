@@ -248,6 +248,8 @@ export class ToolExecutor {
         // ==========================================
         case 'get_spending_summary': {
           const now = new Date();
+          const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
           const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
           const [expenses, incomes, bills] = await Promise.all([
@@ -255,6 +257,14 @@ export class ToolExecutor {
             prisma.income.findMany({ where: { householdId, softDelete: false } }),
             prisma.bill.findMany({ where: { householdId, softDelete: false } }),
           ]);
+
+          const todayExpenses = expenses
+            .filter((e) => new Date(e.date) >= startOfToday)
+            .reduce((acc, curr) => acc + curr.amount, 0);
+
+          const thisWeekExpenses = expenses
+            .filter((e) => new Date(e.date) >= startOfWeek)
+            .reduce((acc, curr) => acc + curr.amount, 0);
 
           const monthlyExpenses = expenses
             .filter((e) => new Date(e.date) >= startOfMonth)
@@ -277,8 +287,10 @@ export class ToolExecutor {
           return {
             tool: toolName,
             success: true,
-            message: `Monthly income: ${currencySymbol}${monthlyIncome.toLocaleString()}, Monthly expenses: ${currencySymbol}${monthlyExpenses.toLocaleString()}, Net savings: ${currencySymbol}${(monthlyIncome - monthlyExpenses).toLocaleString()}.`,
+            message: `Financial Summary: Today's expenses: ${currencySymbol}${todayExpenses.toLocaleString()}, This week: ${currencySymbol}${thisWeekExpenses.toLocaleString()}, Monthly expenses: ${currencySymbol}${monthlyExpenses.toLocaleString()}, Monthly income: ${currencySymbol}${monthlyIncome.toLocaleString()}, Net monthly savings: ${currencySymbol}${(monthlyIncome - monthlyExpenses).toLocaleString()}.`,
             data: {
+              todayExpenses,
+              thisWeekExpenses,
               monthlyIncome,
               monthlyExpenses,
               monthlySavings: monthlyIncome - monthlyExpenses,

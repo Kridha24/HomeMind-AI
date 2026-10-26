@@ -180,8 +180,8 @@ export const SettingsNav: React.FC<SettingsNavProps> = ({
         )}
       </div>
 
-      {/* Desktop List Navigation */}
-      <div className="hidden lg:flex flex-col space-y-1" role="tablist" aria-orientation="vertical">
+      {/* Vertical Settings List Navigation (WhatsApp style on mobile & desktop) */}
+      <div className="flex flex-col space-y-1" role="tablist" aria-orientation="vertical">
         {filteredItems.length > 0 ? (
           filteredItems.map((item) => (
             <SettingsNavItem
@@ -201,30 +201,6 @@ export const SettingsNav: React.FC<SettingsNavProps> = ({
             No matching settings section found.
           </div>
         )}
-      </div>
-
-      {/* Mobile / Tablet Horizontal Scrollable Pills */}
-      <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5" role="tablist">
-        {filteredItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              role="tab"
-              aria-selected={isActive}
-              onClick={() => onSelectTab(item.id)}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 min-h-[38px] sm:min-h-[44px] ${
-                isActive
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25'
-                  : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
       </div>
     </nav>
   );

@@ -772,6 +772,17 @@ export class ActionExecutor {
             prisma.bill.findMany({ where: { householdId, softDelete: false } }),
           ]);
 
+          const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+          const todayExpenses = expenses
+            .filter((e) => new Date(e.date) >= startOfToday)
+            .reduce((acc, curr) => acc + curr.amount, 0);
+
+          const thisWeekExpenses = expenses
+            .filter((e) => new Date(e.date) >= startOfWeek)
+            .reduce((acc, curr) => acc + curr.amount, 0);
+
           const monthlyExpenses = expenses
             .filter((e) => new Date(e.date) >= startOfMonth)
             .reduce((acc, curr) => acc + curr.amount, 0);
@@ -786,8 +797,10 @@ export class ActionExecutor {
           return {
             tool: toolName,
             success: true,
-            message: `Here is your household summary for this month:\n• **Income:** ${fmt(monthlyIncome)}\n• **Expenses:** ${fmt(monthlyExpenses)}\n• **Net Savings:** ${fmt(monthlyIncome - monthlyExpenses)}${unpaidBills.length > 0 ? `\n• **Unpaid Bills:** ${unpaidBills.length} totaling ${fmt(unpaidTotal)}` : ''}`,
+            message: `Here is your household financial summary:\n• **Today's Expenses:** ${fmt(todayExpenses)}\n• **This Week:** ${fmt(thisWeekExpenses)}\n• **This Month's Expenses:** ${fmt(monthlyExpenses)}\n• **This Month's Income:** ${fmt(monthlyIncome)}\n• **Net Monthly Savings:** ${fmt(monthlyIncome - monthlyExpenses)}${unpaidBills.length > 0 ? `\n• **Unpaid Bills:** ${unpaidBills.length} totaling ${fmt(unpaidTotal)}` : ''}`,
             data: {
+              todayExpenses,
+              thisWeekExpenses,
               monthlyIncome,
               monthlyExpenses,
               netSavings: monthlyIncome - monthlyExpenses,

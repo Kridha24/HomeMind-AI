@@ -213,19 +213,67 @@ export class AIClientService {
     const mSav = ctx.monthlySavings || (mInc - mExp);
     const oSav = ctx.overallSavings || (oInc - oExp);
 
+    const tExp = ctx.todayExpenses || 0;
+    const yExp = ctx.yesterdayExpenses || 0;
+    const wExp = ctx.thisWeekExpenses || 0;
+    const tCount = ctx.todayExpensesCount || 0;
+    const tList = ctx.todayExpensesList || [];
+
     let answer = '';
     const suggestions: string[] = [];
 
-    // 1. Expenses & Spending
+    // 1. Expenses & Spending (Timeframe Aware: Today, Yesterday, This Week, This Month, Lifetime)
     if (q.includes('expense') || q.includes('spend') || q.includes('kharch') || q.includes('kharcha') || q.includes('paisa gaya')) {
-      answer = `Aapka is mahine ka total kharcha **${sym}${mExp.toLocaleString()}** hai. Overall total kharcha **${sym}${oExp.toLocaleString()}** hai.`;
-      if (ctx.categoryBreakdown && Object.keys(ctx.categoryBreakdown).length > 0) {
-        const topCat = Object.entries(ctx.categoryBreakdown).sort((a: any, b: any) => b[1] - a[1])[0];
-        if (topCat) {
-          answer += ` Sabse jyada kharcha **${topCat[0]}** category mein huva hai (${sym}${Number(topCat[1]).toLocaleString()}).`;
+      if (q.includes('aaj') || q.includes('today')) {
+        // Today's Expense
+        if (tExp > 0) {
+          answer = `Aapka **aaj ka total kharcha ${sym}${tExp.toLocaleString()}** hua hai (${tCount} transaction${tCount > 1 ? 's' : ''}).`;
+          if (tList.length > 0) {
+            answer += `\n\n**Aaj ke kharche:**\n` + tList.map((e: any) => `• **${e.title}**: ${sym}${Number(e.amount).toLocaleString()} *(${e.category} - ${e.time || ''})*`).join('\n');
+          }
+          answer += `\n\n*(Is mahine ka total kharcha abhi tak **${sym}${mExp.toLocaleString()}** hai)*`;
+        } else {
+          answer = `Aapka **aaj abhi tak koi kharcha record nahi hua hai** (${sym}0).\n\nIs mahine ka total kharcha abhi tak **${sym}${mExp.toLocaleString()}** hai.`;
         }
+        suggestions.push('Is mahine kitna kharcha hua?', 'Unpaid bills kitne hain?');
+      } else if (q.includes('kal') || q.includes('yesterday')) {
+        // Yesterday's Expense
+        if (yExp > 0) {
+          answer = `Aapka **kal ka total kharcha ${sym}${yExp.toLocaleString()}** hua tha.`;
+        } else {
+          answer = `Aapka **kal koi kharcha record nahi hua tha** (${sym}0).`;
+        }
+        answer += `\n\n*(Aaj ka kharcha: **${sym}${tExp.toLocaleString()}**, Is mahine ka total: **${sym}${mExp.toLocaleString()}**)*`;
+        suggestions.push('Aaj kitna kharch hua?', 'Is hafte kitna kharcha hua?');
+      } else if (q.includes('hafte') || q.includes('week') || q.includes('weekly')) {
+        // Weekly Expense
+        answer = `Aapka **is hafte ka total kharcha ${sym}${wExp.toLocaleString()}** hua hai.`;
+        answer += `\n\n*(Aaj: **${sym}${tExp.toLocaleString()}** | Is mahine: **${sym}${mExp.toLocaleString()}**)*`;
+        suggestions.push('Aaj kitna kharch hua?', 'Mera net savings kitna hai?');
+      } else if (q.includes('mahine') || q.includes('month') || q.includes('monthly')) {
+        // Monthly Expense
+        answer = `Aapka **is mahine ka total kharcha ${sym}${mExp.toLocaleString()}** hai. Overall lifetime kharcha **${sym}${oExp.toLocaleString()}** hai.`;
+        if (ctx.categoryBreakdown && Object.keys(ctx.categoryBreakdown).length > 0) {
+          const topCat = Object.entries(ctx.categoryBreakdown).sort((a: any, b: any) => (b[1] as number) - (a[1] as number))[0];
+          if (topCat) {
+            answer += ` Sabse jyada kharcha **${topCat[0]}** category mein hua hai (${sym}${Number(topCat[1]).toLocaleString()}).`;
+          }
+        }
+        suggestions.push('Aaj ka kharcha kitna hua?', 'Unpaid bills kitne hain?');
+      } else {
+        // General query: Provide both Today and Monthly so user gets immediate daily context
+        answer = `Aapka **aaj ka kharcha ${sym}${tExp.toLocaleString()}** hai, aur **is mahine ka total kharcha ${sym}${mExp.toLocaleString()}** hai.`;
+        if (tList.length > 0) {
+          answer += `\n\n**Aaj ka spend:** ` + tList.map((e: any) => `${e.title} (${sym}${e.amount})`).join(', ');
+        }
+        if (ctx.categoryBreakdown && Object.keys(ctx.categoryBreakdown).length > 0) {
+          const topCat = Object.entries(ctx.categoryBreakdown).sort((a: any, b: any) => (b[1] as number) - (a[1] as number))[0];
+          if (topCat) {
+            answer += `\nSabse jyada kharcha **${topCat[0]}** category mein hua hai (${sym}${Number(topCat[1]).toLocaleString()}).`;
+          }
+        }
+        suggestions.push('Aaj ka kharcha details', 'Is mahine ka total kharcha kitna hai?');
       }
-      suggestions.push('Unpaid bills kitne hain?', 'Mera total monthly income kitna hai?');
     }
     // 2. Income & Salary
     else if (q.includes('income') || q.includes('earn') || q.includes('kamai') || q.includes('aaya') || q.includes('salary')) {

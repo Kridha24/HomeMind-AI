@@ -5,6 +5,8 @@ export interface HouseholdAIContext {
   householdName: string;
   currencySymbol: string;
   currencyCode: string;
+  todayExpenses: number;
+  thisWeekExpenses: number;
   monthlyIncome: number;
   monthlyExpenses: number;
   monthlySavings: number;
@@ -36,6 +38,8 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 export class ContextManager {
   static async getHouseholdContext(householdId: string, userId: string): Promise<HouseholdAIContext> {
     const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const [
@@ -66,6 +70,14 @@ export class ContextManager {
       prisma.medicine.count({ where: { householdId, softDelete: false } }),
     ]);
 
+    const todayExpenses = expenses
+      .filter((e) => new Date(e.date) >= startOfToday)
+      .reduce((acc, curr) => acc + curr.amount, 0);
+
+    const thisWeekExpenses = expenses
+      .filter((e) => new Date(e.date) >= startOfWeek)
+      .reduce((acc, curr) => acc + curr.amount, 0);
+
     const monthlyExpenses = expenses
       .filter((e) => new Date(e.date) >= startOfMonth)
       .reduce((acc, curr) => acc + curr.amount, 0);
@@ -90,6 +102,8 @@ export class ContextManager {
       householdName: household?.name || 'HomeMind Household',
       currencySymbol,
       currencyCode,
+      todayExpenses,
+      thisWeekExpenses,
       monthlyIncome,
       monthlyExpenses,
       monthlySavings: monthlyIncome - monthlyExpenses,
@@ -136,7 +150,7 @@ HOUSEHOLD TELEMETRY & LIVE STATE:
 - User: ${ctx.userName}
 - Household: ${ctx.householdName}
 - Currency: ${ctx.currencySymbol} (${ctx.currencyCode})
-- Monthly Financials: Income ${ctx.currencySymbol}${ctx.monthlyIncome.toLocaleString()} | Expenses ${ctx.currencySymbol}${ctx.monthlyExpenses.toLocaleString()} | Net Savings ${ctx.currencySymbol}${ctx.monthlySavings.toLocaleString()}
+- Financial Telemetry: Today's Expenses: ${ctx.currencySymbol}${ctx.todayExpenses.toLocaleString()} | This Week's Expenses: ${ctx.currencySymbol}${ctx.thisWeekExpenses.toLocaleString()} | Monthly Expenses: ${ctx.currencySymbol}${ctx.monthlyExpenses.toLocaleString()} | Monthly Income: ${ctx.currencySymbol}${ctx.monthlyIncome.toLocaleString()} | Net Savings: ${ctx.currencySymbol}${ctx.monthlySavings.toLocaleString()}
 - Total Unpaid Dues: ${ctx.currencySymbol}${ctx.unpaidBillsTotal.toLocaleString()}
 - Active Appliances: ${ctx.appliancesCount} | Active Prescriptions: ${ctx.medicinesCount}
 
