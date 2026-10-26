@@ -1,6 +1,7 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { prisma } from '../repositories/db';
 import { DeviceTokenService } from '../modules/communication/deviceTokenService';
+import { fcmProvider } from '../infrastructure/notifications/fcmProvider';
 
 export interface CallSession {
   callId: string;
@@ -326,11 +327,27 @@ export class WebRTCSignalingManager {
     };
 
     DeviceTokenService.getUserTokens(targetUserId)
-      .then((tokens) => {
+      .then(async (tokens) => {
         if (tokens.length > 0) {
           console.log(
-            `[WebRTC Push] Dispatched high-priority call notification for [${callId}] to ${tokens.length} devices`
+            `[WebRTC Push] Dispatching high-priority call notification for [${callId}] to ${tokens.length} devices`
           );
+          await fcmProvider.sendMulticastPush(tokens, {
+            title: `Incoming ${callType === 'video' ? 'Video' : 'Audio'} Call`,
+            body: `${callerName || 'Family member'} is calling...`,
+            link: '/calling',
+            category: 'FAMILY',
+            tag: `call-${callId}`,
+            data: {
+              type: 'INCOMING_CALL',
+              callId,
+              callerId,
+              callerName: callerName || 'Family Member',
+              callerAvatar: callerAvatar || '',
+              callType: callType || 'video',
+              householdId: effectiveCallHouseholdId,
+            },
+          });
         }
       })
       .catch((err) => {

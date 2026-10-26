@@ -1,4 +1,6 @@
 import { GoogleAuth } from 'google-auth-library';
+import fs from 'fs';
+import path from 'path';
 
 export interface PushNotificationPayload {
   title: string;
@@ -40,7 +42,8 @@ export class FcmProvider {
   }
 
   private initClient(): void {
-    const rawServiceKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    const defaultLocalKeyPath = path.resolve(__dirname, '../../../firebase-service-account.json');
+    const rawServiceKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY || (fs.existsSync(defaultLocalKeyPath) ? defaultLocalKeyPath : undefined);
     const explicitProjectId = process.env.FIREBASE_PROJECT_ID;
 
     if (rawServiceKey) {
