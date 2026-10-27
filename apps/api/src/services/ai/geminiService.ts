@@ -210,6 +210,46 @@ Key Guidelines:
               initialAnswer = `Added **"${fnArgs.name}"** to your household grocery checklist! 📝`;
             } else if (fnName === 'create_task') {
               initialAnswer = `Scheduled task **"${fnArgs.title}"** for you! ⏰`;
+            } else if (fnName === 'get_spending_summary') {
+              const d = toolResult.data || {};
+              const today = d.todayExpenses || 0;
+              const week = d.thisWeekExpenses || 0;
+              const month = d.monthlyExpenses || 0;
+              const todayCats = d.todayCategories || {};
+              const topCats = d.topCategories || {};
+
+              const lowerMsg = message.toLowerCase();
+              let specificMention = '';
+
+              if (lowerMsg.includes('grocer') || lowerMsg.includes('ration') || lowerMsg.includes('kirana')) {
+                const todayGroc = todayCats['Groceries'] || 0;
+                const monthGroc = topCats['Groceries'] || 0;
+                specificMention = `\n• **Groceries (Aaj):** ${currencySymbol}${todayGroc.toLocaleString()}\n• **Groceries (Is Mahine):** ${currencySymbol}${monthGroc.toLocaleString()}`;
+              } else if (lowerMsg.includes('food') || lowerMsg.includes('dinner') || lowerMsg.includes('lunch') || lowerMsg.includes('khana') || lowerMsg.includes('egg')) {
+                const todayFood = todayCats['Food & Dining'] || 0;
+                const monthFood = topCats['Food & Dining'] || 0;
+                specificMention = `\n• **Food & Dining (Aaj):** ${currencySymbol}${todayFood.toLocaleString()}\n• **Food & Dining (Is Mahine):** ${currencySymbol}${monthFood.toLocaleString()}`;
+              }
+
+              let topCatList = '';
+              if (Object.keys(topCats).length > 0) {
+                topCatList = '\n\n**Categories Breakdown (Is Month):**\n' + Object.entries(topCats)
+                  .sort((a: any, b: any) => b[1] - a[1])
+                  .slice(0, 4)
+                  .map(([cat, amt]) => `• ${cat}: ${currencySymbol}${Number(amt).toLocaleString()}`)
+                  .join('\n');
+              }
+
+              initialAnswer = `Bhai, yeh raha spending summary 💰:\n\n• **Aaj ka total kharcha:** ${currencySymbol}${today.toLocaleString()}${specificMention}\n• **Is hafte ka kharcha:** ${currencySymbol}${week.toLocaleString()}\n• **Is mahine ka total:** ${currencySymbol}${month.toLocaleString()}${topCatList}`;
+            } else if (fnName === 'get_bills') {
+              const bills = toolResult.data || [];
+              if (bills.length === 0) {
+                initialAnswer = `Bhai, abhi koi upcoming ya overdue bills pending nahi hain! Sab cleared hai 🎉`;
+              } else {
+                initialAnswer = `Bhai, yeh hain aapke pending bills ⚡:\n\n` + bills.map((b: any) => `• **${b.title}**: ${currencySymbol}${b.amount} (Due: ${b.dueDate?.split('T')[0] || 'Soon'})`).join('\n');
+              }
+            } else if (toolResult.message) {
+              initialAnswer = toolResult.message;
             }
           } catch (toolErr) {
             console.error(`[GeminiService] tool execution failed for ${fnName}:`, toolErr);
@@ -218,7 +258,7 @@ Key Guidelines:
       }
 
       return {
-        answer: initialAnswer || "Bilkul bhai! Maine update kar diya hai. Kuch aur chahiye toh batao!",
+        answer: initialAnswer || "Bhai, main aapke ghar ke kharche, bills aur grocery manage karne ke liye ready hoon! Aap batao kya check karna hai?",
         toolCallsExecuted,
         suggestions: [
           'Show my spending this month',

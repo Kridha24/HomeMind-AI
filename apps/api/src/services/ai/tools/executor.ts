@@ -278,6 +278,14 @@ export class ToolExecutor {
           const unpaidTotal = unpaidBills.reduce((acc, curr) => acc + curr.amount, 0);
 
           const categories: Record<string, number> = {};
+          const todayCategories: Record<string, number> = {};
+
+          expenses
+            .filter((e) => new Date(e.date) >= startOfToday)
+            .forEach((e) => {
+              todayCategories[e.category] = (todayCategories[e.category] || 0) + e.amount;
+            });
+
           expenses
             .filter((e) => new Date(e.date) >= startOfMonth)
             .forEach((e) => {
@@ -297,6 +305,7 @@ export class ToolExecutor {
               unpaidBillsTotal: unpaidTotal,
               unpaidBillsCount: unpaidBills.length,
               topCategories: categories,
+              todayCategories,
             },
           };
         }
