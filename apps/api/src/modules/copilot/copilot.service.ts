@@ -174,6 +174,25 @@ export class CopilotService {
 
     // Real Generative AI Companion: Google Gemini (Real-time dynamic conversational intelligence)
     if (GeminiService.isConfigured()) {
+      let history: Array<{ role: 'user' | 'model'; text: string }> = [];
+      if (threadId) {
+        try {
+          const pastMsgs = await prisma.aIMessage.findMany({
+            where: { threadId },
+            orderBy: { createdAt: 'desc' },
+            take: 6,
+          });
+          history = pastMsgs
+            .reverse()
+            .map((m) => ({
+              role: (m.role === 'assistant' ? 'model' : 'user') as 'user' | 'model',
+              text: m.content,
+            }));
+        } catch (e) {
+          console.warn('[CopilotService] Failed to load history for thread:', e);
+        }
+      }
+
       const todayItemsStr = ctx.todayRecentExpenses.length > 0
         ? ctx.todayRecentExpenses.map((e, idx) => `${idx + 1}. ${e.title}: ${ctx.currencySymbol}${e.amount} (${e.category})`).join('\n')
         : 'None recorded yet today';
@@ -208,12 +227,58 @@ ${catBreakdownStr}
         userName: ctx.userName,
         currencySymbol: ctx.currencySymbol || '₹',
         householdContextSummary: summary,
+        history,
       });
 
       if (geminiRes) {
+        let activeThreadId = threadId;
+        try {
+          if (!activeThreadId) {
+            const thread = await prisma.aIThread.create({
+              data: {
+                householdId,
+                userId,
+                title: message.slice(0, 45) + (message.length > 45 ? '...' : ''),
+              },
+            });
+            activeThreadId = thread.id;
+          } else {
+            const existing = await prisma.aIThread.findUnique({ where: { id: activeThreadId } });
+            if (!existing) {
+              await prisma.aIThread.create({
+                data: {
+                  id: activeThreadId,
+                  householdId,
+                  userId,
+                  title: message.slice(0, 45) + (message.length > 45 ? '...' : ''),
+                },
+              });
+            }
+          }
+
+          await prisma.aIMessage.create({
+            data: {
+              threadId: activeThreadId,
+              role: 'user',
+              content: message,
+            },
+          });
+
+          await prisma.aIMessage.create({
+            data: {
+              threadId: activeThreadId,
+              role: 'assistant',
+              content: geminiRes.answer,
+              toolCalls: geminiRes.toolCallsExecuted.length > 0 ? JSON.stringify(geminiRes.toolCallsExecuted) : null,
+            },
+          });
+        } catch (err) {
+          console.warn('[CopilotService] Failed to persist thread/messages for Gemini:', err);
+        }
+
         return {
           answer: geminiRes.answer,
-          threadId: threadId || randomUUID(),
+          threadId: activeThreadId || randomUUID(),
           actionsExecuted: geminiRes.toolCallsExecuted.map((t) => ({
             tool: t.tool as any,
             success: t.success,

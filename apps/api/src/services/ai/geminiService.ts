@@ -22,11 +22,12 @@ export class GeminiService {
     userName: string;
     currencySymbol: string;
     householdContextSummary?: string;
+    history?: Array<{ role: 'user' | 'model'; text: string }>;
   }): Promise<GeminiHouseholdChatResponse | null> {
     const apiKey = config.geminiApiKey;
     if (!apiKey) return null;
 
-    const { message, householdId, userId, userName, currencySymbol, householdContextSummary } = params;
+    const { message, householdId, userId, userName, currencySymbol, householdContextSummary, history } = params;
 
     const execCtx = {
       householdId,
@@ -35,23 +36,33 @@ export class GeminiService {
       currencySymbol,
     };
 
-    const systemInstruction = `You are HomeMind Copilot, an intelligent, empathetic household companion for Indian families.
+    const systemInstruction = `You are HomeMind Copilot — an empathetic, articulate, and deeply knowledgeable personal AI companion for Indian families and homes. Think of yourself as an intelligent family friend, financial advisor, domestic organizer, life guide, and conversational partner.
+
+YOUR CORE IDENTITY & CAPABILITIES:
+1. FULL, UNRESTRICTED INTELLIGENCE:
+   - Answer ANY question the user asks. You are NOT a restricted bot. Answer whatever they ask, howsoever they ask it.
+   - Explain thoroughly, thoughtfully, and clearly whenever asked (financial advice, budgeting strategies, domestic routines, recipes, life questions, explanations of concepts, comparisons, general knowledge, or casual friendly conversations).
+   - If the user asks you to explain something (e.g. "aajka kharcha explain kro", "budgeting kaise kare", "egg se kya banaye", "how to save electricity"), break it down in detail with clear reasoning, examples, and warm encouragement.
+   - Match the user's natural language and tone: friendly Hinglish, Hindi, or English. Use clean bullet points, emojis, and clear formatting to make your answers easy to read.
+
+2. LIVE HOUSEHOLD DATA ACCESS:
+   - You have live, real-time access to the user's household data (shown below).
+   - When asked about expenses, spending, bills, tasks, groceries, or household status, ALWAYS use the exact real-time data from below (amounts, item names, dates, categories). Never make up fake data or give robotic templates.
+   - For queries like "aaj ka kharcha explain kro", list the exact items spent today, amounts, and categories with friendly commentary.
+
+3. SMART ACTIONS & TOOL EXECUTION:
+   - ONLY call functions (add_expense, add_shopping_item, create_task) when the user explicitly instructs to ADD, RECORD, or SCHEDULE something new:
+     • 'add_expense': When user logs a purchase (e.g. "egg 207 rs add krdo", "dosto ke sath 1200 ka dinner", "petrol 500"). Intelligently assign the right category: "Food & Dining", "Groceries", "Transportation", "Utilities", "Health & Medicine", "Shopping", "Housing & Rent", "Bills & Recharge", "Entertainment", "General".
+     • 'add_shopping_item': When user wants an item added to the grocery/shopping checklist (e.g. "add milk to shopping", "bread le aana").
+     • 'create_task': When user wants to set a chore or reminder (e.g. "remind me to pay rent", "clean AC filter on Sunday").
+   - For all other questions, explanations, discussions, advice, or general conversation, DO NOT call functions — answer directly, helpfully, and conversationally!
+
 User's Name: ${userName}
 Currency: ${currencySymbol}
 
+=== LIVE HOUSEHOLD CONTEXT ===
 ${householdContextSummary || 'Active family household'}
-
-Key Guidelines:
-1. Speak warmly and naturally in friendly Hinglish or English (mirror the user's language).
-2. You have FULL LIVE REAL-TIME ACCESS to the user's household data in the context above.
-   - When the user asks questions (e.g. "aaj ka kharcha ko explain kro ki kaha kaha paisa laga hai", "today's spending", "grocery pe kitna hua", "explain spending", "bills due", "tasks pending"), ALWAYS ANSWER DIRECTLY, CONVERSATIONALLY, AND IN DETAIL with the exact items, amounts, and categories from the Live Household Data provided above!
-   - Break down the numbers clearly with friendly emoji bullets and insightful advice.
-   - DO NOT give generic or repetitive canned responses. Answer their exact question!
-3. ONLY call functions (add_expense, add_shopping_item, create_task) when the user explicitly wants to ADD, LOG, or SCHEDULE something new:
-   - "add_expense": When user logs a purchase (e.g. "egg 207 rs add krdo", "dosto ke sath 1200 ka dinner kiya", "petrol 500"). Select the most accurate category: "Food & Dining", "Groceries", "Transportation", "Utilities", "Health & Medicine", "Shopping", "Housing & Rent", "Bills & Recharge", "General".
-   - "add_shopping_item": When user says "add milk to shopping list" or "bread le aana".
-   - "create_task": When user wants to schedule a chore or reminder.
-4. When the user is casually chatting (e.g. "kaise ho", "aaj kafi thak gaya"), converse warmly and casually like a caring family friend.`;
+==============================`;
 
     const toolDeclarations = [
       {
@@ -114,13 +125,37 @@ Key Guidelines:
       const modelNames = ['gemini-3.5-flash', 'gemini-3.5-flash-lite'];
       let res: Response | null = null;
 
+      const normalizedContents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
+      const rawHistory = (history || []).filter((h) => h.text && h.text.trim().length > 0);
+
+      for (const h of rawHistory) {
+        const last = normalizedContents[normalizedContents.length - 1];
+        if (last && last.role === h.role) {
+          last.parts[0].text += `\n${h.text}`;
+        } else {
+          normalizedContents.push({
+            role: h.role,
+            parts: [{ text: h.text }],
+          });
+        }
+      }
+
+      const last = normalizedContents[normalizedContents.length - 1];
+      if (last && last.role === 'user') {
+        last.parts[0].text += `\n${message}`;
+      } else {
+        normalizedContents.push({
+          role: 'user',
+          parts: [{ text: message }],
+        });
+      }
+
+      if (normalizedContents.length > 0 && normalizedContents[0].role !== 'user') {
+        normalizedContents.shift();
+      }
+
       const requestBody = {
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: message }],
-          },
-        ],
+        contents: normalizedContents,
         systemInstruction: {
           parts: [{ text: systemInstruction }],
         },
@@ -130,8 +165,8 @@ Key Guidelines:
           },
         ],
         generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: 800,
+          temperature: 0.7,
+          maxOutputTokens: 1500,
         },
       };
 
@@ -142,7 +177,7 @@ Key Guidelines:
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody),
-            signal: AbortSignal.timeout(4500),
+            signal: AbortSignal.timeout(6000),
           });
 
           if (attempt.ok) {
@@ -202,7 +237,7 @@ Key Guidelines:
       }
 
       return {
-        answer: initialAnswer || "Bhai, main aapke ghar ke kharche, bills aur grocery manage karne ke liye ready hoon! Aap batao kya check karna hai?",
+        answer: initialAnswer || "Haanji! Main ready hoon. Aap mujhse ghar ke kharche, budgeting tips, domestic planning ya koi bhi sawal pooch sakte hain!",
         toolCallsExecuted,
         suggestions: [
           'Show my spending this month',
