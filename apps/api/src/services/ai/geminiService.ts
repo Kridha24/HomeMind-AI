@@ -39,23 +39,19 @@ export class GeminiService {
 User's Name: ${userName}
 Currency: ${currencySymbol}
 
-Household Context:
 ${householdContextSummary || 'Active family household'}
 
 Key Guidelines:
 1. Speak warmly and naturally in friendly Hinglish or English (mirror the user's language).
-2. When the user mentions an expense (e.g. "egg 207 rs add krdo", "dosto ke sath 1200 ka dinner kiya", "petrol 500"), DO NOT just talk about it. ALWAYS call the function 'add_expense' with the accurate category:
-   - "Food & Dining": eggs, milk, dinner, lunch, breakfast, snacks, coffee, chai, restaurant, swiggy, zomato, pizza, burger, biryani.
-   - "Groceries": ration, atta, rice, dal, oil, sabzi, vegetables, fruits, kirana.
-   - "Transportation": petrol, diesel, cab, uber, ola, auto, metro, bus, parking, toll.
-   - "Utilities": electricity, bijli, gas, cylinder, wifi, recharge, water.
-   - "Health & Medicine": doctor, clinic, medicine, dawai, pharmacy.
-   - "Shopping": clothes, shoes, amazon, flipkart, shopping.
-   - "Housing & Rent": rent, maintenance, pg.
-3. When the user wants grocery items added (e.g. "milk aur bread le aana", "add to shopping"), call 'add_shopping_item'.
-4. When the user wants a reminder or task, call 'create_task'.
-5. When the user asks for financial summaries or bills, call 'get_spending_summary' or 'get_bills'.
-6. When the user is just casually chatting (e.g. "kaise ho", "aaj bahut thak gaya", "tips for saving"), converse warmly and casually like a caring family friend.`;
+2. You have FULL LIVE REAL-TIME ACCESS to the user's household data in the context above.
+   - When the user asks questions (e.g. "aaj ka kharcha ko explain kro ki kaha kaha paisa laga hai", "today's spending", "grocery pe kitna hua", "explain spending", "bills due", "tasks pending"), ALWAYS ANSWER DIRECTLY, CONVERSATIONALLY, AND IN DETAIL with the exact items, amounts, and categories from the Live Household Data provided above!
+   - Break down the numbers clearly with friendly emoji bullets and insightful advice.
+   - DO NOT give generic or repetitive canned responses. Answer their exact question!
+3. ONLY call functions (add_expense, add_shopping_item, create_task) when the user explicitly wants to ADD, LOG, or SCHEDULE something new:
+   - "add_expense": When user logs a purchase (e.g. "egg 207 rs add krdo", "dosto ke sath 1200 ka dinner kiya", "petrol 500"). Select the most accurate category: "Food & Dining", "Groceries", "Transportation", "Utilities", "Health & Medicine", "Shopping", "Housing & Rent", "Bills & Recharge", "General".
+   - "add_shopping_item": When user says "add milk to shopping list" or "bread le aana".
+   - "create_task": When user wants to schedule a chore or reminder.
+4. When the user is casually chatting (e.g. "kaise ho", "aaj kafi thak gaya"), converse warmly and casually like a caring family friend.`;
 
     const toolDeclarations = [
       {
@@ -110,22 +106,6 @@ Key Guidelines:
             priority: { type: 'STRING', enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] },
           },
           required: ['title'],
-        },
-      },
-      {
-        name: 'get_spending_summary',
-        description: 'Fetches today, weekly, and monthly expense rollups and category breakdowns.',
-        parameters: {
-          type: 'OBJECT',
-          properties: {},
-        },
-      },
-      {
-        name: 'get_bills',
-        description: 'Fetches upcoming and overdue recurring utility bills.',
-        parameters: {
-          type: 'OBJECT',
-          properties: {},
         },
       },
     ];
@@ -204,52 +184,16 @@ Key Guidelines:
             const toolResult = await ToolExecutor.execute(fnName, fnArgs, execCtx);
             toolCallsExecuted.push(toolResult);
 
-            if (fnName === 'add_expense') {
-              initialAnswer = `Done bhai! Recorded **${currencySymbol}${fnArgs.amount}** for **"${fnArgs.title}"** under **${fnArgs.category}** 🛒✨`;
-            } else if (fnName === 'add_shopping_item') {
-              initialAnswer = `Added **"${fnArgs.name}"** to your household grocery checklist! 📝`;
-            } else if (fnName === 'create_task') {
-              initialAnswer = `Scheduled task **"${fnArgs.title}"** for you! ⏰`;
-            } else if (fnName === 'get_spending_summary') {
-              const d = toolResult.data || {};
-              const today = d.todayExpenses || 0;
-              const week = d.thisWeekExpenses || 0;
-              const month = d.monthlyExpenses || 0;
-              const todayCats = d.todayCategories || {};
-              const topCats = d.topCategories || {};
-
-              const lowerMsg = message.toLowerCase();
-              let specificMention = '';
-
-              if (lowerMsg.includes('grocer') || lowerMsg.includes('ration') || lowerMsg.includes('kirana')) {
-                const todayGroc = todayCats['Groceries'] || 0;
-                const monthGroc = topCats['Groceries'] || 0;
-                specificMention = `\n• **Groceries (Aaj):** ${currencySymbol}${todayGroc.toLocaleString()}\n• **Groceries (Is Mahine):** ${currencySymbol}${monthGroc.toLocaleString()}`;
-              } else if (lowerMsg.includes('food') || lowerMsg.includes('dinner') || lowerMsg.includes('lunch') || lowerMsg.includes('khana') || lowerMsg.includes('egg')) {
-                const todayFood = todayCats['Food & Dining'] || 0;
-                const monthFood = topCats['Food & Dining'] || 0;
-                specificMention = `\n• **Food & Dining (Aaj):** ${currencySymbol}${todayFood.toLocaleString()}\n• **Food & Dining (Is Mahine):** ${currencySymbol}${monthFood.toLocaleString()}`;
+            if (!initialAnswer) {
+              if (fnName === 'add_expense') {
+                initialAnswer = `Done bhai! Recorded **${currencySymbol}${fnArgs.amount}** for **"${fnArgs.title}"** under **${fnArgs.category}** 🛒✨`;
+              } else if (fnName === 'add_shopping_item') {
+                initialAnswer = `Added **"${fnArgs.name}"** to your household grocery checklist! 📝`;
+              } else if (fnName === 'create_task') {
+                initialAnswer = `Scheduled task **"${fnArgs.title}"** for you! ⏰`;
+              } else if (toolResult.message) {
+                initialAnswer = toolResult.message;
               }
-
-              let topCatList = '';
-              if (Object.keys(topCats).length > 0) {
-                topCatList = '\n\n**Categories Breakdown (Is Month):**\n' + Object.entries(topCats)
-                  .sort((a: any, b: any) => b[1] - a[1])
-                  .slice(0, 4)
-                  .map(([cat, amt]) => `• ${cat}: ${currencySymbol}${Number(amt).toLocaleString()}`)
-                  .join('\n');
-              }
-
-              initialAnswer = `Bhai, yeh raha spending summary 💰:\n\n• **Aaj ka total kharcha:** ${currencySymbol}${today.toLocaleString()}${specificMention}\n• **Is hafte ka kharcha:** ${currencySymbol}${week.toLocaleString()}\n• **Is mahine ka total:** ${currencySymbol}${month.toLocaleString()}${topCatList}`;
-            } else if (fnName === 'get_bills') {
-              const bills = toolResult.data || [];
-              if (bills.length === 0) {
-                initialAnswer = `Bhai, abhi koi upcoming ya overdue bills pending nahi hain! Sab cleared hai 🎉`;
-              } else {
-                initialAnswer = `Bhai, yeh hain aapke pending bills ⚡:\n\n` + bills.map((b: any) => `• **${b.title}**: ${currencySymbol}${b.amount} (Due: ${b.dueDate?.split('T')[0] || 'Soon'})`).join('\n');
-              }
-            } else if (toolResult.message) {
-              initialAnswer = toolResult.message;
             }
           } catch (toolErr) {
             console.error(`[GeminiService] tool execution failed for ${fnName}:`, toolErr);

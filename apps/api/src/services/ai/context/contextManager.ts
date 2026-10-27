@@ -14,6 +14,9 @@ export interface HouseholdAIContext {
   unpaidBills: Array<{ title: string; amount: number; dueDate: string; category: string }>;
   pendingTasks: Array<{ id: string; title: string; priority: string; dueDate: string }>;
   lowStockGroceries: Array<{ name: string; quantity: number; unit: string }>;
+  todayRecentExpenses: Array<{ title: string; amount: number; category: string }>;
+  recentExpenses: Array<{ title: string; amount: number; category: string; date: string }>;
+  monthlyCategoryBreakdown: Record<string, number>;
   familyMembers: Array<{ name: string; role: string }>;
   activeMemories: Array<{ type: string; content: string }>;
   appliancesCount: number;
@@ -97,6 +100,24 @@ export class ContextManager {
     const currencyCode = settings?.currency || 'INR';
     const currencySymbol = CURRENCY_SYMBOLS[currencyCode] || '₹';
 
+    const monthlyCategoryBreakdown: Record<string, number> = {};
+    expenses
+      .filter((e) => new Date(e.date) >= startOfMonth)
+      .forEach((e) => {
+        monthlyCategoryBreakdown[e.category] = (monthlyCategoryBreakdown[e.category] || 0) + e.amount;
+      });
+
+    const recentExpenses = expenses
+      .slice()
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 10)
+      .map((e) => ({
+        title: e.title,
+        amount: e.amount,
+        category: e.category,
+        date: new Date(e.date).toISOString().split('T')[0],
+      }));
+
     return {
       userName: user?.name || 'Household User',
       householdName: household?.name || 'HomeMind Household',
@@ -121,6 +142,11 @@ export class ContextManager {
         dueDate: t.dueDate.toISOString().split('T')[0],
       })),
       lowStockGroceries,
+      todayRecentExpenses: expenses
+        .filter((e) => new Date(e.date) >= startOfToday)
+        .map((e) => ({ title: e.title, amount: e.amount, category: e.category })),
+      recentExpenses,
+      monthlyCategoryBreakdown,
       familyMembers: members,
       activeMemories: memories,
       appliancesCount,

@@ -172,9 +172,35 @@ export class CopilotService {
       }
     }
 
-    // Real Generative AI Companion: Google Gemini 1.5 Flash (Option 2)
+    // Real Generative AI Companion: Google Gemini (Real-time dynamic conversational intelligence)
     if (GeminiService.isConfigured()) {
-      const summary = `User: ${ctx.userName}. Monthly Income: ${ctx.monthlyIncome}, Monthly Spent: ${ctx.monthlyExpenses}. Pending Tasks: ${ctx.pendingTasks.length}. Low stock items: ${ctx.lowStockGroceries.length}.`;
+      const todayItemsStr = ctx.todayRecentExpenses.length > 0
+        ? ctx.todayRecentExpenses.map((e, idx) => `${idx + 1}. ${e.title}: ${ctx.currencySymbol}${e.amount} (${e.category})`).join('\n')
+        : 'None recorded yet today';
+
+      const recentItemsStr = ctx.recentExpenses.length > 0
+        ? ctx.recentExpenses.map((e, idx) => `${idx + 1}. ${e.title}: ${ctx.currencySymbol}${e.amount} (${e.category}) [${e.date}]`).join('\n')
+        : 'None';
+
+      const catBreakdownStr = Object.keys(ctx.monthlyCategoryBreakdown).length > 0
+        ? Object.entries(ctx.monthlyCategoryBreakdown).map(([c, a]) => `• ${c}: ${ctx.currencySymbol}${a.toLocaleString()}`).join('\n')
+        : 'None';
+
+      const summary = `User: ${ctx.userName}. Household: ${ctx.householdName}.
+Live Real-Time Household Financial Data:
+- Today's Total Spending: ${ctx.currencySymbol}${ctx.todayExpenses.toLocaleString()}
+- Today's Individual Expense Items:
+${todayItemsStr}
+- Recent Expenses (Last 7 Days):
+${recentItemsStr}
+- This Week's Total Spending: ${ctx.currencySymbol}${ctx.thisWeekExpenses.toLocaleString()}
+- This Month's Total Spending: ${ctx.currencySymbol}${ctx.monthlyExpenses.toLocaleString()}
+- This Month's Spending by Category:
+${catBreakdownStr}
+- Monthly Income: ${ctx.currencySymbol}${ctx.monthlyIncome.toLocaleString()}
+- Pending Bills: ${ctx.unpaidBills.length} unpaid (Total: ${ctx.currencySymbol}${ctx.unpaidBillsTotal.toLocaleString()})
+- Pending Tasks: ${ctx.pendingTasks.map((t) => t.title).join(', ') || 'None'}
+- Low Stock Groceries: ${ctx.lowStockGroceries.map((g) => `${g.name} (${g.quantity} ${g.unit})`).join(', ') || 'None'}`;
       const geminiRes = await GeminiService.processMessage({
         message,
         householdId,
