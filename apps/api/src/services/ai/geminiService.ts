@@ -51,11 +51,17 @@ YOUR CORE IDENTITY & CAPABILITIES:
    - For queries like "aaj ka kharcha explain kro", list the exact items spent today, amounts, and categories with friendly commentary.
 
 3. SMART ACTIONS & TOOL EXECUTION:
-   - ONLY call functions (add_expense, add_shopping_item, create_task) when the user explicitly instructs to ADD, RECORD, or SCHEDULE something new:
+   - ONLY call functions (add_expense, add_shopping_item, create_task, save_memory) when appropriate:
      • 'add_expense': When user logs a purchase (e.g. "egg 207 rs add krdo", "dosto ke sath 1200 ka dinner", "petrol 500"). Intelligently assign the right category: "Food & Dining", "Groceries", "Transportation", "Utilities", "Health & Medicine", "Shopping", "Housing & Rent", "Bills & Recharge", "Entertainment", "General".
      • 'add_shopping_item': When user wants an item added to the grocery/shopping checklist (e.g. "add milk to shopping", "bread le aana").
      • 'create_task': When user wants to set a chore or reminder (e.g. "remind me to pay rent", "clean AC filter on Sunday").
+     • 'save_memory': When the user shares any personal preference, habit, household rule, diet, salary/income, family detail, or future goal (e.g. "meri salary 35k hai", "hum vegetarian hai", "mujhe black coffee pasand hai", "sunday ko market jaate hai", "note karlo ki mera goal 10k save karna hai"). Call this so it is permanently remembered in the database for all future sessions!
    - For all other questions, explanations, discussions, advice, or general conversation, DO NOT call functions — answer directly, helpfully, and conversationally!
+
+4. LONG-TERM MEMORY & DEEP USER UNDERSTANDING:
+   - You have a persistent long-term memory! Review the "Permanent Long-Term Memories & User Preferences" in the live context below.
+   - Use these memories to deeply understand the user — remember their tastes, diet, financial targets, habits, and family members. Treat them like someone you truly know and care about.
+   - If the user asks "what do you remember about me?" or "kya yaad hai mere baare me?", list their stored memories warmly.
 
 User's Name: ${userName}
 Currency: ${currencySymbol}
@@ -117,6 +123,30 @@ ${householdContextSummary || 'Active family household'}
             priority: { type: 'STRING', enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] },
           },
           required: ['title'],
+        },
+      },
+      {
+        name: 'save_memory',
+        description: 'Saves an important fact, personal preference, habit, household rule, diet, salary, family detail, or goal learned about the user into persistent long-term memory so you remember it forever across all sessions.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            content: {
+              type: 'STRING',
+              description: 'The specific fact or preference learned (e.g., "User earns ₹35,000/month", "Prefers drinking black coffee", "Vegetarian except eggs", "Family has 4 members", "Target: Save ₹5000/month").',
+            },
+            type: {
+              type: 'STRING',
+              enum: ['PREFERENCE', 'ROUTINE', 'HOUSEHOLD_RULE', 'NOTE'],
+              description: 'Category of memory.',
+            },
+            importance: {
+              type: 'STRING',
+              enum: ['LOW', 'MEDIUM', 'HIGH'],
+              description: 'Importance level of this memory.',
+            },
+          },
+          required: ['content'],
         },
       },
     ];
@@ -226,6 +256,8 @@ ${householdContextSummary || 'Active family household'}
                 initialAnswer = `Added **"${fnArgs.name}"** to your household grocery checklist! 📝`;
               } else if (fnName === 'create_task') {
                 initialAnswer = `Scheduled task **"${fnArgs.title}"** for you! ⏰`;
+              } else if (fnName === 'save_memory') {
+                initialAnswer = `Got it bhai! Maine yeh hamesha ke liye yaad rakh liya: **"${fnArgs.content}"** 🧠✨ Ab se main iska dhyan rakhunga!`;
               } else if (toolResult.message) {
                 initialAnswer = toolResult.message;
               }

@@ -205,6 +205,36 @@ export class CopilotService {
         ? Object.entries(ctx.monthlyCategoryBreakdown).map(([c, a]) => `• ${c}: ${ctx.currencySymbol}${a.toLocaleString()}`).join('\n')
         : 'None';
 
+      const memoriesStr = ctx.activeMemories && ctx.activeMemories.length > 0
+        ? ctx.activeMemories.map((m, idx) => `${idx + 1}. [${m.type}]: ${m.content}`).join('\n')
+        : 'None recorded yet';
+
+      // Autonomous Memory Extractor Safety-Net:
+      // If user says "yaad rakhna ki...", "note karlo ki...", "meri salary ... hai", extract and remember permanently
+      const explicitMemMatch = message.match(/\b(yaad\s+rakhna|remember\s+that|note\s+karlo|ye\s+yaad\s+rakho|dhyan\s+rakhna|hamesha\s+yaad\s+rakhna)\s*[:,-]?\s*(.+)/i);
+      if (explicitMemMatch && explicitMemMatch[2]) {
+        const memText = explicitMemMatch[2].trim();
+        if (memText.length >= 3) {
+          prisma.aIMemory.findFirst({
+            where: { householdId, isActive: true, content: { equals: memText, mode: 'insensitive' } },
+          }).then((exists) => {
+            if (!exists) {
+              prisma.aIMemory.create({
+                data: {
+                  householdId,
+                  userId,
+                  type: 'NOTE',
+                  content: memText,
+                  importance: 'HIGH',
+                  source: 'CHAT',
+                  isActive: true,
+                },
+              }).catch(() => {});
+            }
+          }).catch(() => {});
+        }
+      }
+
       const summary = `User: ${ctx.userName}. Household: ${ctx.householdName}.
 Live Real-Time Household Financial Data:
 - Today's Total Spending: ${ctx.currencySymbol}${ctx.todayExpenses.toLocaleString()}
@@ -219,7 +249,9 @@ ${catBreakdownStr}
 - Monthly Income: ${ctx.currencySymbol}${ctx.monthlyIncome.toLocaleString()}
 - Pending Bills: ${ctx.unpaidBills.length} unpaid (Total: ${ctx.currencySymbol}${ctx.unpaidBillsTotal.toLocaleString()})
 - Pending Tasks: ${ctx.pendingTasks.map((t) => t.title).join(', ') || 'None'}
-- Low Stock Groceries: ${ctx.lowStockGroceries.map((g) => `${g.name} (${g.quantity} ${g.unit})`).join(', ') || 'None'}`;
+- Low Stock Groceries: ${ctx.lowStockGroceries.map((g) => `${g.name} (${g.quantity} ${g.unit})`).join(', ') || 'None'}
+Permanent Long-Term Memories & User Preferences:
+${memoriesStr}`;
       const geminiRes = await GeminiService.processMessage({
         message,
         householdId,

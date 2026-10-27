@@ -563,12 +563,30 @@ export class ToolExecutor {
             return { tool: toolName, success: false, message: 'Memory content is required.' };
           }
 
+          const trimmed = args.content.trim();
+          const existing = await prisma.aIMemory.findFirst({
+            where: {
+              householdId,
+              isActive: true,
+              content: { equals: trimmed, mode: 'insensitive' },
+            },
+          });
+
+          if (existing) {
+            return {
+              tool: toolName,
+              success: true,
+              message: `Memory already known: "${existing.content}"`,
+              data: existing,
+            };
+          }
+
           const memory = await prisma.aIMemory.create({
             data: {
               householdId,
               userId,
               type: args.type || 'PREFERENCE',
-              content: args.content.trim(),
+              content: trimmed,
               importance: args.importance || 'MEDIUM',
               source: 'CHAT',
               isActive: true,
