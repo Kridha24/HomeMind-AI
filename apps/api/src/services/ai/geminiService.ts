@@ -131,7 +131,7 @@ Key Guidelines:
     ];
 
     try {
-      const modelNames = ['gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-2.5-pro', 'gemini-1.5-flash'];
+      const modelNames = ['gemini-3.5-flash', 'gemini-3.5-flash-lite'];
       let res: Response | null = null;
 
       const requestBody = {
@@ -156,19 +156,23 @@ Key Guidelines:
       };
 
       for (const model of modelNames) {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-        const attempt = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody),
-        });
+        try {
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+          const attempt = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+            signal: AbortSignal.timeout(4500),
+          });
 
-        if (attempt.ok) {
-          res = attempt;
-          break;
-        } else {
-          const errStatus = attempt.status;
-          console.warn(`[GeminiService] model ${model} attempt status=${errStatus}`);
+          if (attempt.ok) {
+            res = attempt;
+            break;
+          } else {
+            console.warn(`[GeminiService] model ${model} attempt failed status=${attempt.status}`);
+          }
+        } catch (fetchErr: any) {
+          console.warn(`[GeminiService] model ${model} fetch error: ${fetchErr?.message || fetchErr}`);
         }
       }
 
