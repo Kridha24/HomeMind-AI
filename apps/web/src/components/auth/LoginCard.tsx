@@ -6,6 +6,7 @@ import { GoogleLoginButton } from './GoogleLoginButton';
 import apiClient from '../../services/apiClient';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSettingStore } from '../../stores/useSettingStore';
+import { auth, RecaptchaVerifier, signInWithPhoneNumber } from '../../config/firebase';
 
 interface LoginCardProps {
   onGoogleClick: () => void;
@@ -45,6 +46,8 @@ export const LoginCard: React.FC<LoginCardProps> = ({
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const recaptchaVerifierRef = useRef<any>(null);
   const otpInputRef = useRef<HTMLInputElement>(null);
 
   // Mandatory Terms & Conditions acceptance
@@ -118,6 +121,34 @@ export const LoginCard: React.FC<LoginCardProps> = ({
     const fullE164 = `+91${phoneNumber}`;
 
     try {
+      // 1. Primary Flow: Google Firebase Real SMS Phone Auth (Zero DLT, 10,000 free SMS/mo)
+      if (import.meta.env.VITE_FIREBASE_API_KEY && auth) {
+        if (recaptchaVerifierRef.current) {
+          try {
+            recaptchaVerifierRef.current.clear();
+          } catch (e) {}
+          recaptchaVerifierRef.current = null;
+        }
+
+        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'login-recaptcha-container', {
+          size: 'invisible',
+          callback: () => {},
+          'expired-callback': () => {
+            setLocalError('Verification expired. Please try sending OTP again.');
+          },
+        });
+
+        const confirmation = await signInWithPhoneNumber(auth, fullE164, recaptchaVerifierRef.current);
+        setConfirmationResult(confirmation);
+        setPhoneStep('OTP');
+        setResendTimer(30);
+        setOtp('');
+        setDevOtp(null);
+        setInfoMessage(`SMS verification code sent to ${fullE164}`);
+        return;
+      }
+
+      // 2. Secondary Flow: Server-side OTP dispatch
       const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber: fullE164 });
       setPhoneStep('OTP');
       setResendTimer(30);
@@ -132,8 +163,23 @@ export const LoginCard: React.FC<LoginCardProps> = ({
         setInfoMessage(res.data.message || `Code sent to ${fullE164}`);
       }
     } catch (err: any) {
-      console.warn('[Phone Auth] Send OTP failed:', err);
-      setLocalError(err.response?.data?.error || 'Could not send verification code. Please try again.');
+      console.warn('[Firebase Phone Auth] Attempt failed, trying server fallback:', err);
+      try {
+        const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber: fullE164 });
+        setPhoneStep('OTP');
+        setResendTimer(30);
+        setOtp('');
+        const returnedCode = res.data.devOtp || res.data.otp;
+        if (returnedCode) {
+          setDevOtp(String(returnedCode));
+          setInfoMessage(`Code sent! (Dev Auto-fill: ${returnedCode})`);
+        } else {
+          setDevOtp(null);
+          setInfoMessage(res.data.message || `Code sent to ${fullE164}`);
+        }
+      } catch (fallbackErr: any) {
+        setLocalError(fallbackErr.response?.data?.error || err.message || 'Could not send verification code. Please try again.');
+      }
     } finally {
       setLocalLoading(false);
     }
@@ -155,10 +201,17 @@ export const LoginCard: React.FC<LoginCardProps> = ({
     const fullE164 = `+91${phoneNumber}`;
 
     try {
+      let firebaseToken: string | undefined;
+      if (confirmationResult) {
+        const userCred = await confirmationResult.confirm(otp.trim());
+        firebaseToken = await userCred.user.getIdToken();
+      }
+
       const res = await apiClient.post('/auth/phone/verify-otp', {
         phoneNumber: fullE164,
         otp: otp.trim(),
         name: userName.trim() || undefined,
+        firebaseToken,
       });
 
       setAuth(res.data.user, res.data.household, res.data.accessToken, res.data.refreshToken);
@@ -169,7 +222,7 @@ export const LoginCard: React.FC<LoginCardProps> = ({
       }
     } catch (err: any) {
       console.warn('[Phone Auth] Verify OTP failed:', err);
-      setLocalError(err.response?.data?.error || 'Invalid verification code. Please check and try again.');
+      setLocalError(err.response?.data?.error || err.message || 'Invalid verification code. Please check and try again.');
     } finally {
       setLocalLoading(false);
     }
@@ -503,6 +556,9 @@ export const LoginCard: React.FC<LoginCardProps> = ({
           )}
         </AnimatePresence>
       </div>
+
+      {/* Invisible Google reCAPTCHA container for Phone Auth */}
+      <div id="login-recaptcha-container" />
     </motion.div>
   );
 };

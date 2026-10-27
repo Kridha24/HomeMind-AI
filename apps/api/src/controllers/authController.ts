@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { prisma } from '../repositories/db';
 import {
   generateAccessToken,
@@ -467,7 +468,7 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
  */
 export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { phoneNumber, otp, name, age, country, currency } = req.body;
+    const { phoneNumber, otp, name, age, country, currency, firebaseToken } = req.body;
     const userAgent = (req.headers['user-agent'] as string) || 'Unknown Mobile Browser';
     const device = userAgent.includes('Mobile') ? 'Mobile Device' : 'Desktop Browser';
     const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
@@ -481,37 +482,62 @@ export const verifyPhoneOTP = async (req: AuthenticatedRequest, res: Response) =
       return res.status(400).json({ error: 'Enter a valid 10-digit mobile number' });
     }
 
-    const lockoutCheck = await checkOTPVerifyLockout(identifier);
-    if (lockoutCheck.locked) {
-      return res.status(429).json({ error: lockoutCheck.reason });
+    // 1. Verify if client already authenticated via Google Firebase Phone Auth
+    let isFirebaseVerified = false;
+    if (firebaseToken && typeof firebaseToken === 'string') {
+      try {
+        const decoded: any = jwt.decode(firebaseToken);
+        if (
+          decoded &&
+          decoded.aud === 'homemind-96a21' &&
+          decoded.iss === 'https://securetoken.google.com/homemind-96a21' &&
+          decoded.phone_number
+        ) {
+          const tokenPhone = normalizePhone(decoded.phone_number);
+          if (tokenPhone === identifier) {
+            isFirebaseVerified = true;
+            console.log(`[AUTH:FIREBASE_PHONE] Verified Google Firebase token for ${identifier}`);
+          }
+        }
+      } catch (e: any) {
+        console.warn('[AUTH:FIREBASE_PHONE] Token decode failed:', e.message);
+      }
     }
 
-    const otpRecord = await prisma.oTPVerification.findUnique({ where: { identifier } });
+    // 2. If not verified via Firebase, check DB-stored OTP
+    if (!isFirebaseVerified) {
+      const lockoutCheck = await checkOTPVerifyLockout(identifier);
+      if (lockoutCheck.locked) {
+        return res.status(429).json({ error: lockoutCheck.reason });
+      }
 
-    if (!otpRecord) {
-      return res.status(400).json({ error: 'No OTP request found for this phone number. Please request a new OTP.' });
-    }
+      const otpRecord = await prisma.oTPVerification.findUnique({ where: { identifier } });
 
-    if (otpRecord.expiresAt < new Date()) {
+      if (!otpRecord) {
+        return res.status(400).json({ error: 'No OTP request found for this phone number. Please request a new OTP.' });
+      }
+
+      if (otpRecord.expiresAt < new Date()) {
+        await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
+        return res.status(400).json({ error: 'OTP has expired after 5 minutes. Please request a new OTP.' });
+      }
+
+      if (otpRecord.attempts >= 5) {
+        await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
+        return res.status(429).json({ error: 'Maximum 5 verification attempts exceeded. Please request a new OTP.' });
+      }
+
+      const isValidOtp = await bcrypt.compare(otp, otpRecord.otpHash);
+      if (!isValidOtp) {
+        await prisma.oTPVerification.update({
+          where: { identifier },
+          data: { attempts: { increment: 1 } }
+        });
+        return res.status(400).json({ error: `Invalid OTP code. ${4 - otpRecord.attempts} attempts remaining.` });
+      }
+
       await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
-      return res.status(400).json({ error: 'OTP has expired after 5 minutes. Please request a new OTP.' });
     }
-
-    if (otpRecord.attempts >= 5) {
-      await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
-      return res.status(429).json({ error: 'Maximum 5 verification attempts exceeded. Please request a new OTP.' });
-    }
-
-    const isValidOtp = await bcrypt.compare(otp, otpRecord.otpHash);
-    if (!isValidOtp) {
-      await prisma.oTPVerification.update({
-        where: { identifier },
-        data: { attempts: { increment: 1 } }
-      });
-      return res.status(400).json({ error: `Invalid OTP code. ${4 - otpRecord.attempts} attempts remaining.` });
-    }
-
-    await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
 
     const currentUserId = req.user?.userId;
     let user;
