@@ -131,7 +131,8 @@ Key Guidelines:
     ];
 
     try {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+      const modelNames = ['gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-2.5-pro', 'gemini-1.5-flash'];
+      let res: Response | null = null;
 
       const requestBody = {
         contents: [
@@ -154,16 +155,26 @@ Key Guidelines:
         },
       };
 
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      });
+      for (const model of modelNames) {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const attempt = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        });
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.warn(`[GeminiService] API error status=${res.status}:`, errorText);
-        return null; // Fallback to semantic engine cleanly
+        if (attempt.ok) {
+          res = attempt;
+          break;
+        } else {
+          const errStatus = attempt.status;
+          console.warn(`[GeminiService] model ${model} attempt status=${errStatus}`);
+        }
+      }
+
+      if (!res || !res.ok) {
+        console.warn(`[GeminiService] all gemini models returned error, falling back to local engine`);
+        return null;
       }
 
       const data = await res.json();
