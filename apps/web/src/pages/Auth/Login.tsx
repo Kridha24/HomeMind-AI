@@ -531,8 +531,8 @@ export const Login: React.FC = () => {
 
       {/* ── 2. SINGLE-SCREEN HERO + VISUAL NETWORK + AUTH MAIN CONTENT ── */}
       <main className="w-full max-w-7xl mx-auto flex flex-col lg:grid lg:grid-cols-12 gap-2.5 sm:gap-4 lg:gap-8 items-center relative z-10 flex-1 min-h-0 py-1 sm:py-2">
-        {/* ── LEFT COLUMN: Emotional Storytelling + Animated Ecosystem + Modules ── */}
-        <section className="w-full lg:col-span-7 xl:col-span-7 flex flex-col justify-center gap-1.5 sm:gap-2.5 lg:gap-3.5 text-center lg:text-left min-h-0">
+        {/* ── LEFT COLUMN: Emotional Storytelling + Animated Ecosystem + Modules (Desktop Only) ── */}
+        <section className="hidden lg:flex w-full lg:col-span-7 xl:col-span-7 flex-col justify-center gap-1.5 sm:gap-2.5 lg:gap-3.5 text-center lg:text-left min-h-0">
           {/* Eyebrow Pill + Micro-line */}
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-1.5 sm:gap-2">
             <motion.div
@@ -594,7 +594,6 @@ export const Login: React.FC = () => {
               whileTap={{ scale: 0.98 }}
               className="relative overflow-hidden px-6 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-violet-600 hover:from-rose-400 hover:via-pink-400 hover:to-violet-500 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-xl shadow-rose-950/30 border border-white/25 transition-all group"
             >
-              {/* Moving light shimmer beam */}
               <motion.div
                 animate={{ x: ['-150%', '200%'] }}
                 transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1 }}
@@ -630,8 +629,8 @@ export const Login: React.FC = () => {
           </div>
         </section>
 
-        {/* ── RIGHT COLUMN: Premium Glass Login Card ── */}
-        <section ref={loginSectionRef} className="w-full lg:col-span-5 xl:col-span-5 flex flex-col items-center justify-center">
+        {/* ── RIGHT COLUMN / MOBILE CENTER: Clean Focused Login Card ── */}
+        <section ref={loginSectionRef} className="w-full lg:col-span-5 xl:col-span-5 flex flex-col items-center justify-center my-auto px-2 sm:px-0">
           <LoginCard
             onGoogleClick={triggerGoogleSignIn}
             googleButtonRef={googleButtonRef}
@@ -651,11 +650,6 @@ export const Login: React.FC = () => {
             }}
           />
         </section>
-
-        {/* ── MOBILE-ONLY FEATURE CARDS ROW (Rendered directly under LoginCard on mobile) ── */}
-        <div className="w-full flex lg:hidden justify-center pt-0.5">
-          <FloatingFeatureCards />
-        </div>
       </main>
 
       {/* ── 3. COMPACT FOOTER (SINGLE-LINE NO-OVERFLOW) ── */}

@@ -187,23 +187,19 @@ export const LoginCard: React.FC<LoginCardProps> = ({
       initial={{ opacity: 0, y: 8, scale: 0.99 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className={`w-full max-w-[430px] p-3.5 xs:p-4 sm:p-6 lg:p-7 space-y-3 sm:space-y-4 lg:space-y-5 rounded-2xl sm:rounded-[28px] relative z-10 transition-colors duration-500 select-none ${
+      className={`w-full max-w-[420px] p-4 sm:p-6 lg:p-7 space-y-3.5 sm:space-y-4 rounded-2xl sm:rounded-3xl relative z-10 transition-colors select-none ${
         isLight
-          ? 'bg-white/85 backdrop-blur-2xl border border-slate-200/90 shadow-2xl shadow-indigo-100/60 text-slate-800'
-          : 'bg-[#070D22]/85 sm:bg-[#070D22]/90 backdrop-blur-2xl border border-white/15 shadow-2xl shadow-black/80 text-white'
+          ? 'bg-white border border-slate-200/90 shadow-xl shadow-slate-200/50 text-slate-800'
+          : 'bg-[#0E131F] border border-slate-800 shadow-2xl text-white'
       }`}
     >
-      {/* Subtle ambient corner edge light */}
-      <div className="absolute top-0 right-1/4 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 w-32 h-32 bg-violet-600/10 rounded-full blur-2xl pointer-events-none" />
-
       {/* Heading & Subheading */}
-      <div className="space-y-0.5 sm:space-y-1 text-center relative z-10">
-        <h2 className={`text-xl sm:text-2xl lg:text-[26px] font-extrabold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-          Welcome Back 👋
+      <div className="space-y-1 text-center relative z-10">
+        <h2 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+          Welcome to HomeMind 👋
         </h2>
-        <p className={`text-[11px] sm:text-xs lg:text-[13px] font-medium ${isLight ? 'text-slate-500' : 'text-slate-300'}`}>
-          Sign in to continue to HomeMind.AI
+        <p className={`text-xs sm:text-[13px] font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+          Sign in to manage your household
         </p>
       </div>
 
@@ -506,79 +502,6 @@ export const LoginCard: React.FC<LoginCardProps> = ({
             </motion.form>
           )}
         </AnimatePresence>
-      </div>
-
-      {/* LOGIN TRUST CARDS */}
-      <div className={`pt-2 border-t space-y-1.5 sm:space-y-2 relative z-10 ${isLight ? 'border-slate-200' : 'border-white/10'}`}>
-        <div className="grid grid-cols-3 gap-1 sm:gap-1.5 lg:gap-2">
-          {/* Trust 1: Data Privacy */}
-          <div
-            className={`p-1.5 sm:p-2 rounded-xl border flex items-center gap-1 sm:gap-1.5 ${
-              isLight ? 'bg-slate-50/80 border-slate-200' : 'bg-[#0B1430]/70 border-white/10'
-            }`}
-          >
-            <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-500 dark:text-emerald-400 flex-shrink-0">
-              <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-            </div>
-            <div className="min-w-0">
-              <span className={`text-[8px] xs:text-[9px] sm:text-[9.5px] font-bold block truncate leading-tight ${isLight ? 'text-slate-700' : 'text-white'}`}>
-                Data stays private
-              </span>
-            </div>
-          </div>
-
-          {/* Trust 2: Secure Auth */}
-          <div
-            className={`p-1.5 sm:p-2 rounded-xl border flex items-center gap-1 sm:gap-1.5 ${
-              isLight ? 'bg-slate-50/80 border-slate-200' : 'bg-[#0B1430]/70 border-white/10'
-            }`}
-          >
-            <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-500 dark:text-blue-400 flex-shrink-0">
-              <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-            </div>
-            <div className="min-w-0">
-              <span className={`text-[8px] xs:text-[9px] sm:text-[9.5px] font-bold block truncate leading-tight ${isLight ? 'text-slate-700' : 'text-white'}`}>
-                Secure & reliable
-              </span>
-            </div>
-          </div>
-
-          {/* Trust 3: Built for Households */}
-          <div
-            className={`p-1.5 sm:p-2 rounded-xl border flex items-center gap-1 sm:gap-1.5 ${
-              isLight ? 'bg-slate-50/80 border-slate-200' : 'bg-[#0B1430]/70 border-white/10'
-            }`}
-          >
-            <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-500 dark:text-purple-400 flex-shrink-0">
-              <Users className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-            </div>
-            <div className="min-w-0">
-              <span className={`text-[8px] xs:text-[9px] sm:text-[9.5px] font-bold block truncate leading-tight ${isLight ? 'text-slate-700' : 'text-white'}`}>
-                Built for families
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* EXPLICIT LEGAL TERMS & PRIVACY CONSENT NOTICE */}
-      <p className={`text-[10px] sm:text-[10.5px] text-center px-1 leading-normal ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-        Consent is mandatory under DPDP regulations to protect household and financial data.
-      </p>
-
-      {/* INDIA / LOCAL IDENTITY CARD */}
-      <div
-        className={`rounded-xl border py-1.5 px-2 text-center relative z-10 ${
-          isLight
-            ? 'bg-amber-50/70 border-amber-200/80'
-            : 'bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-violet-500/10 border-amber-500/20'
-        }`}
-      >
-        <p className={`text-[10px] sm:text-[10.5px] font-semibold tracking-wide flex items-center justify-center gap-1.5 ${
-          isLight ? 'text-amber-800' : 'text-amber-200/90'
-        }`}>
-          <span>Thoughtfully built for modern Indian households 🇮🇳</span>
-        </p>
       </div>
     </motion.div>
   );

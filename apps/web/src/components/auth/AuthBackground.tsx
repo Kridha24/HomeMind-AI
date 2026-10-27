@@ -59,67 +59,69 @@ export const AuthBackground: React.FC = () => {
         }}
       />
 
-      {/* 4. Continuous Live 3D Animated Particle Sphere / Globe */}
+      {/* 4. Continuous Live 3D Animated Particle Sphere / Globe (Desktop Only - disabled on mobile for zero lag) */}
       <div
-        className={`absolute inset-0 z-10 transition-opacity duration-700 ${
+        className={`hidden sm:block absolute inset-0 z-10 transition-opacity duration-700 ${
           isLight ? 'opacity-35' : 'opacity-70'
         }`}
       >
         <ParticleGlobeCanvas />
       </div>
 
-      {/* 5. Slow Ambient Floating Gradient Orbs (Framer Motion) */}
-      <motion.div
-        animate={{
-          x: [0, 25, -20, 0],
-          y: [0, -30, 15, 0],
-          scale: [1, 1.08, 0.95, 1],
-        }}
-        transition={{
-          duration: 16,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        className={`absolute -top-32 -left-32 w-[550px] h-[550px] rounded-full blur-[140px] pointer-events-none transition-colors duration-700 ${
-          isLight
-            ? 'bg-gradient-to-tr from-blue-300/30 via-indigo-200/25 to-pink-200/20'
-            : 'bg-gradient-to-tr from-blue-700/25 via-indigo-600/20 to-pink-500/10'
-        }`}
-      />
+      {/* 5. Ambient Floating Gradient Orbs (Desktop Only - disabled on mobile for buttery smooth 60fps) */}
+      <div className="hidden sm:block">
+        <motion.div
+          animate={{
+            x: [0, 25, -20, 0],
+            y: [0, -30, 15, 0],
+            scale: [1, 1.08, 0.95, 1],
+          }}
+          transition={{
+            duration: 16,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          className={`absolute -top-32 -left-32 w-[550px] h-[550px] rounded-full blur-[140px] pointer-events-none transition-colors duration-700 ${
+            isLight
+              ? 'bg-gradient-to-tr from-blue-300/30 via-indigo-200/25 to-pink-200/20'
+              : 'bg-gradient-to-tr from-blue-700/25 via-indigo-600/20 to-pink-500/10'
+          }`}
+        />
 
-      <motion.div
-        animate={{
-          x: [0, -30, 20, 0],
-          y: [0, 25, -25, 0],
-          scale: [1, 0.94, 1.06, 1],
-        }}
-        transition={{
-          duration: 18,
-          repeat: Infinity,
-          ease: 'easeInOut',
-          delay: 1,
-        }}
-        className={`absolute -bottom-32 right-5 w-[520px] h-[520px] rounded-full blur-[140px] pointer-events-none transition-colors duration-700 ${
-          isLight
-            ? 'bg-gradient-to-br from-indigo-300/25 via-violet-200/20 to-amber-200/25'
-            : 'bg-gradient-to-br from-indigo-600/25 via-violet-800/20 to-amber-500/10'
-        }`}
-      />
+        <motion.div
+          animate={{
+            x: [0, -30, 20, 0],
+            y: [0, 25, -25, 0],
+            scale: [1, 0.94, 1.06, 1],
+          }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 1,
+          }}
+          className={`absolute -bottom-32 right-5 w-[520px] h-[520px] rounded-full blur-[140px] pointer-events-none transition-colors duration-700 ${
+            isLight
+              ? 'bg-gradient-to-br from-indigo-300/25 via-violet-200/20 to-amber-200/25'
+              : 'bg-gradient-to-br from-indigo-600/25 via-violet-800/20 to-amber-500/10'
+          }`}
+        />
 
-      <motion.div
-        animate={{
-          scale: [1, 1.15, 1],
-          opacity: isLight ? [0.15, 0.25, 0.15] : [0.2, 0.35, 0.2],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        className={`absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] rounded-full blur-[160px] pointer-events-none transition-colors duration-700 ${
-          isLight ? 'bg-indigo-300/30' : 'bg-indigo-950/35'
-        }`}
-      />
+        <motion.div
+          animate={{
+            scale: [1, 1.15, 1],
+            opacity: isLight ? [0.15, 0.25, 0.15] : [0.2, 0.35, 0.2],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          className={`absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] rounded-full blur-[160px] pointer-events-none transition-colors duration-700 ${
+            isLight ? 'bg-indigo-300/30' : 'bg-indigo-950/35'
+          }`}
+        />
+      </div>
     </div>
   );
 };
