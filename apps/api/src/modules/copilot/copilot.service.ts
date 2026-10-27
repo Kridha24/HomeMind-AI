@@ -4,6 +4,7 @@ import { ContextManager } from '../../services/ai/context/contextManager';
 import { IntentExtractor } from './intentExtractor';
 import { SemanticParser } from './semanticParser';
 import { ActionExecutor } from './actionExecutor';
+import { GeminiService } from '../../services/ai/geminiService';
 import {
   CopilotProcessRequest,
   CopilotResponse,
@@ -168,6 +169,36 @@ export class CopilotService {
             entityTitle: d.title,
           };
         } catch {}
+      }
+    }
+
+    // Real Generative AI Companion: Google Gemini 1.5 Flash (Option 2)
+    if (GeminiService.isConfigured()) {
+      const summary = `User: ${ctx.userName}. Monthly Income: ${ctx.monthlyIncome}, Monthly Spent: ${ctx.monthlyExpenses}. Pending Tasks: ${ctx.pendingTasks.length}. Low stock items: ${ctx.lowStockGroceries.length}.`;
+      const geminiRes = await GeminiService.processMessage({
+        message,
+        householdId,
+        userId,
+        userName: ctx.userName,
+        currencySymbol: ctx.currencySymbol || '₹',
+        householdContextSummary: summary,
+      });
+
+      if (geminiRes) {
+        return {
+          answer: geminiRes.answer,
+          threadId: threadId || randomUUID(),
+          actionsExecuted: geminiRes.toolCallsExecuted.map((t) => ({
+            tool: t.tool as any,
+            success: t.success,
+            message: t.message,
+            data: t.data,
+          })),
+          suggestions: geminiRes.suggestions,
+          type: geminiRes.toolCallsExecuted.length > 0 ? 'action' : 'conversation',
+          cards: [],
+          invalidatedDomains: geminiRes.toolCallsExecuted.length > 0 ? ['finance', 'dashboard', 'groceries'] : [],
+        };
       }
     }
 

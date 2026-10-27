@@ -48,4 +48,5 @@ export const config = {
   turnUrl: process.env.TURN_URL || process.env.WEBRTC_TURN_URL || '',
   turnSharedSecret: process.env.TURN_SHARED_SECRET || '',
   turnCredentialTtlSeconds: parseInt(process.env.TURN_CREDENTIAL_TTL_SECONDS || '3600', 10),
+  geminiApiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '',
 };

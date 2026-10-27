@@ -2,6 +2,8 @@ import { ContextManager, HouseholdAIContext } from './context/contextManager';
 import { ToolExecutor, ToolResult } from './tools/executor';
 import { prisma } from '../../repositories/db';
 import { CopilotService } from '../../modules/copilot/copilot.service';
+import { TransactionCategorizer } from '../transactionCategorizer';
+import { GeminiService } from './geminiService';
 
 export interface AssistantChatResponse {
   threadId?: string;
@@ -166,9 +168,12 @@ export class AIOrchestrator {
       let title = message.replace(/^(spent|paid|record expense of|add expense of)\s+/i, '').replace(/(\d+(\.\d+)?)/, '').replace(/\b(on|for|at|dollars|rupees|\$|₹)\b/gi, '').trim();
       if (!title) title = 'General Expense';
 
-      const res = await ToolExecutor.execute('add_expense', { title, amount, category: 'General' }, execCtx);
+      const inferredCategory = TransactionCategorizer.categorize(title);
+      const category = inferredCategory && inferredCategory !== 'Other' ? inferredCategory : 'General';
+
+      const res = await ToolExecutor.execute('add_expense', { title, amount, category }, execCtx);
       toolCallsExecuted.push(res);
-      answer = `Done! Recorded expense of **${ctx.currencySymbol}${amount.toLocaleString()}** for **"${title}"**.`;
+      answer = `Done bhai! Recorded expense of **${ctx.currencySymbol}${amount.toLocaleString()}** for **"${title}"** under **${category}** 🛒.`;
       suggestions.push('What is my total spending this month?', 'Show my recent expenses');
     }
 

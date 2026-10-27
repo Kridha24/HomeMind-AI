@@ -696,14 +696,22 @@ export class IntentExtractor {
         lower.includes('diya'))
     ) {
       let category = 'General';
-      if (lower.includes('mess') || lower.includes('food') || lower.includes('dinner') || lower.includes('lunch') || lower.includes('khana') || lower.includes('chai')) {
+      if (
+        lower.includes('mess') || lower.includes('food') || lower.includes('dinner') || lower.includes('lunch') ||
+        lower.includes('khana') || lower.includes('chai') || lower.includes('coffee') || lower.includes('egg') ||
+        lower.includes('eggs') || lower.includes('anda') || lower.includes('ande') || lower.includes('pizza') ||
+        lower.includes('burger') || lower.includes('biryani') || lower.includes('chicken') || lower.includes('paneer') ||
+        lower.includes('snacks') || lower.includes('restaurant') || lower.includes('swiggy') || lower.includes('zomato')
+      ) {
         category = 'Food & Dining';
-      } else if (lower.includes('petrol') || lower.includes('fuel') || lower.includes('cab') || lower.includes('auto') || lower.includes('uber') || lower.includes('metro')) {
+      } else if (lower.includes('petrol') || lower.includes('fuel') || lower.includes('cab') || lower.includes('auto') || lower.includes('uber') || lower.includes('metro') || lower.includes('diesel')) {
         category = 'Transportation';
       } else if (lower.includes('electricity') || lower.includes('bijli') || lower.includes('water') || lower.includes('cylinder') || lower.includes('gas') || lower.includes('wifi')) {
         category = 'Utilities';
-      } else if (lower.includes('grocery') || lower.includes('ration') || lower.includes('sabzi')) {
+      } else if (lower.includes('grocery') || lower.includes('ration') || lower.includes('sabzi') || lower.includes('vegetable') || lower.includes('kirana') || lower.includes('milk') || lower.includes('doodh') || lower.includes('bread') || lower.includes('atta') || lower.includes('rice') || lower.includes('fruits')) {
         category = 'Groceries';
+      } else if (lower.includes('medicine') || lower.includes('dawai') || lower.includes('doctor') || lower.includes('clinic') || lower.includes('hospital')) {
+        category = 'Health & Medicine';
       } else if (lower.includes('rent') || lower.includes('pg')) {
         category = 'Housing & Rent';
       } else if (lower.includes('recharge') || lower.includes('mobile')) {
