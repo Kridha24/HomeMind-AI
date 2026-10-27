@@ -163,23 +163,20 @@ export const LoginCard: React.FC<LoginCardProps> = ({
         setInfoMessage(res.data.message || `Code sent to ${fullE164}`);
       }
     } catch (err: any) {
-      console.warn('[Firebase Phone Auth] Attempt failed, trying server fallback:', err);
-      try {
-        const res = await apiClient.post('/auth/phone/request-otp', { phoneNumber: fullE164 });
-        setPhoneStep('OTP');
-        setResendTimer(30);
-        setOtp('');
-        const returnedCode = res.data.devOtp || res.data.otp;
-        if (returnedCode) {
-          setDevOtp(String(returnedCode));
-          setInfoMessage(`Code sent! (Dev Auto-fill: ${returnedCode})`);
-        } else {
-          setDevOtp(null);
-          setInfoMessage(res.data.message || `Code sent to ${fullE164}`);
-        }
-      } catch (fallbackErr: any) {
-        setLocalError(fallbackErr.response?.data?.error || err.message || 'Could not send verification code. Please try again.');
+      console.error('[Firebase Phone Auth] Error:', err);
+      let errorMsg = err.message || 'Failed to dispatch SMS.';
+      if (err.code === 'auth/operation-not-allowed') {
+        errorMsg = 'Firebase SMS Region: Please enable India (+91) in Firebase Console > Settings > SMS region policy.';
+      } else if (err.code === 'auth/quota-exceeded') {
+        errorMsg = 'Firebase daily SMS quota exceeded (10 SMS/day on free Spark plan). Add a test number in Firebase Console.';
+      } else if (err.code === 'auth/invalid-phone-number') {
+        errorMsg = 'Invalid phone number format. Please check the 10-digit number.';
+      } else if (err.code === 'auth/too-many-requests') {
+        errorMsg = 'Too many requests. Please wait a few minutes before trying again.';
+      } else if (err.code) {
+        errorMsg = `Firebase error (${err.code}): ${err.message}`;
       }
+      setLocalError(errorMsg);
     } finally {
       setLocalLoading(false);
     }
