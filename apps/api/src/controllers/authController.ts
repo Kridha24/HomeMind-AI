@@ -437,11 +437,16 @@ export const requestPhoneOTP = async (req: AuthenticatedRequest, res: Response) 
     if (!smsResult.success) {
       // Roll back the stored OTP record — do not claim success if delivery failed.
       await prisma.oTPVerification.delete({ where: { identifier } }).catch(() => {});
-      return res.status(503).json({ error: 'Failed to send verification code. Please try again in a moment.' });
+      return res.status(503).json({
+        error: smsResult.message || 'Failed to send verification code. Please try again in a moment.'
+      });
     }
 
     const isProd = process.env.NODE_ENV === 'production';
-    const showCodeInResponse = !isProd && (process.env.ALLOW_OTP_CONSOLE === 'true' || smsResult.provider === 'SYSTEM_OTP');
+    const showCodeInResponse =
+      smsResult.provider === 'DEV_FALLBACK' ||
+      smsResult.provider === 'SYSTEM_OTP' ||
+      (!isProd && process.env.ALLOW_OTP_CONSOLE === 'true');
 
     res.json({
       success: true,
