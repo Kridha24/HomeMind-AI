@@ -122,7 +122,7 @@ export const LoginCard: React.FC<LoginCardProps> = ({
 
     try {
       // 1. Primary Flow: Google Firebase Real SMS Phone Auth (Zero DLT, 10,000 free SMS/mo)
-      if (import.meta.env.VITE_FIREBASE_API_KEY && auth) {
+      if (auth) {
         if (recaptchaVerifierRef.current) {
           try {
             recaptchaVerifierRef.current.clear();

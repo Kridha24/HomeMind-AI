@@ -10,12 +10,12 @@ import {
 } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyBW7jYXkBoi06s3_R97mVQqv7iCD0H8b4c',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'homemind-96a21.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'homemind-96a21',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'homemind-96a21.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '91216619042',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:91216619042:web:f4b8c18ae9202668748c7b',
 };
 
 let app: any = null;

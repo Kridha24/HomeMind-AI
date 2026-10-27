@@ -105,10 +105,11 @@ export async function sendMobileSMS(
 
   // 3. Fallback handling
   const isProd = process.env.NODE_ENV === 'production';
-  const configuredTestPhones = (process.env.DEMO_PHONE_NUMBERS || '8340496912')
+  const configuredTestPhones = (process.env.DEMO_PHONE_NUMBERS || '')
     .split(',')
+    .filter(Boolean)
     .map((p) => p.replace(/[^0-9]/g, '').slice(-10));
-  const isTestPhone = configuredTestPhones.includes(tenDigitPhone);
+  const isTestPhone = configuredTestPhones.length > 0 && configuredTestPhones.includes(tenDigitPhone);
 
   // If phone matches developer/test number or non-production with console allowed
   if (isTestPhone) {
